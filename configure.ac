@@ -149,6 +149,5 @@ AC_CHECK_FUNCS(strsep strverscmp)
 
 AC_CHECK_HEADERS(regex.h termios.h)
 
-AC_OUTPUT(Makefile 
-          docs/Makefile)
+AC_OUTPUT(Makefile)
 
