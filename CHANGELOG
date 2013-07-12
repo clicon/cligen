@@ -1,0 +1,154 @@
+$Id: CHANGELOG,v 1.21 2013/06/30 09:30:45 olof Exp $
+     
+3.4.0
+=====
+Changed 'range' variable syntax, the old did not allow negative numbers.
+NOTE: You need to change all variable syntax statements of the form:
+    <a:int range:3-89>
+to 
+    <a:int range[3:89]>
+The old syntax will be kept for some releases.
+
+Setting of terminal length, not hardcode to 80:
+cligen_terminal_length_set(h, 160);
+
+Added help-text to expanded variables. An expand callback now has a 'comments' argument:
+NOTE: You need to change all expand callbacks in your user C-code:
+   int expandcb(cligen_handle h, char *fn_str, cg_var *arg, int *nr, char ***commands);
+to
+   int expandcb(cligen_handle h, char *fn_str, cg_var *arg, int *nr, char ***commands, char ***comments);
+The comments variable is set in the same way as 'commands'. If it is left empty, 
+the help-text in the specification is used.
+
+cligen_print() now prints a complete parsable syntax. It was
+previously not complete for variables.
+
+Removed byacc support. It leaks memory and can't get the generated code to work.
+
+Added 'default' keyword to variable syntax (experimental for optional variables).
+
+Support for clang compiler
+
+R3_3_0 April 2013
+=================
+
+Variable syntax: '<' <name> 'type:'<type>'>' is no longer supported. 
+Use instead: '<' <name>':'<type>'>'.
+NOTE: You need to change all variable syntax statements of the form:
+   <a type:int> 
+to 
+   <a:int> 
+
+Syntax for referencing sub-trees (like function-calls) have been
+introduced. The new reference operator is '@'. A subtree is unfolded
+in the place of the reference, much like a function call or macro. A syntax
+can even refence itself.
+Example:
+   T:
+   a @T;
+gives a recursive syntax on the form 'a a a a a ...'.
+
+Three new variable types introduced: bool, uuid, and (ISO) time. Examples:
+   uuid: f47ac10b-58cc-4372-a567-0e02b2c3d479
+   time: 2008-09-21T18:57:21.003456
+   bool: true, false, on, off
+
+Complete rewrite of cligen_var API. Complete rewrite of and rename of
+varrec->cvec API.
+Both types are now hidden C-variables using handles and accessed via
+get/set functions. cvec being a vector of cv:s.
+Example:
+   cvec *vr;
+   cg_var *cv = NULL;
+   while ((cv = cvec_each(vr, cv)) != NULL) {
+      str = cv_name_get(cv);
+   }
+See cligen_tutorial for a documentation of the API
+
+R3_2_0 January 2012.
+====================
+
+New variable and expand syntax. Example:
+ <name:int fn()>
+Used to be: <name type:int expand:fn>
+NOTE: You need to change all statements of the form:
+<name:int expand:fn> to <name:int fn()>
+
+List of callbacks. Example:
+  a b, x("foo"), y("bar");
+  a b, z("fie");
+Both x, y and z will be called when 'a b' is typed.
+
+regexp variables re-introduced. 
+Example: 
+  <name:string regexp:"[a-z]+[0-8]+\\.[0-9]">;
+  <name:string regexp:"(ab|a)b*c">;
+
+Refactoring (no API changes):
+1. Parse-code - Merged the two yacc parsers into one. This gives
+better performance but more importantly less complex code. Documented in
+docs/block-chart.pdf. 
+2. Search and insertion is made using binary search instead of linear. Load 30K syntax 
+lines now takes 0.2s instead of 13.2s.
+
+R3_1_0 2011-11-19
+=================
+NOTE: API changes (You need to search and replace in your code):
+ cli_output -> cligen_output
+ pt_print -> cligen_parsetree_print
+ cligen_expand(h) -> cligen_expand(h, name)
+ cligen_parsetree_set(h, pt) -> cligen_parsetree_add(h, name, pt)
+                             -> cligen_parsetree_del(h, name)
+ cligen_parsetree(h) -> cligen_parsetree(h, name)
+ cligen_parse_*(str/f, name,...) -> cligen_parse(h, name, str/f,...)
+
+New API functions:
+  char *cligen_mode(cligen_handle ch);
+  int cligen_mode_set(cligen_handle ch, char *mode);
+  int cligen_tabmode(cligen_handle ch);
+  int cligen_tabmode_set(cligen_handle ch, int mode);
+
+R3_0_3 2013-06-30 (branched)
+=================
+Added help-text to expanded variables. An expand callback now has a 'comments' argument:
+NOTE: You need to change all expand callbacks in your user C-code:
+   int expandcb(cligen_handle h, char *fn_str, cg_var *arg, int *nr, char ***commands);
+to
+   int expandcb(cligen_handle h, char *fn_str, cg_var *arg, int *nr, char ***commands, char ***comments);
+The comments variable is set in the same way as 'commands'. If it is left empty, 
+the help-text in the specification is used.
+
+Setting of terminal length, not hardcode to 80:
+cligen_terminal_length_set(h, 160);
+
+Support for clang, and copt as config-option
+
+R3_0_2 2011-10-27
+=================
+url was limited: protocol only allowed some, and trailing slash was mandatory
+vt100 application cursor bug disabling arrow keys
+
+R3_0_1 2011-10-19
+=================
+Callbacks signatures have changed to:
+  int cb(void *handle, varrec args, cg_var *arg)
+CLI specification syntax has radically changed. Example:
+  prompt=foo;
+  command1("helptext"){
+    sub1("help"),callback(arg);
+    sub2, hide;
+  }
+New handles and cleaned up API.
+More or less complete manual.
+
+R3_0_0 2011-10-0
+================
+Pre- R3.0 version. dont use
+
+R2_0
+====
+Stable version.
+
+R1_0
+====
+GPL version available at http://www.nada.kth.se/~olofh (~2004)
