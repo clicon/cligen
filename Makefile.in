@@ -1,0 +1,150 @@
+#
+# 
+# Makefile for cligen CLI generator.
+# CVS Version: $Id: Makefile.in,v 1.52 2013/07/01 16:53:37 olof Exp $ 
+#
+# Copyright (C) 2001-2013 Olof Hagsand
+#
+# This file is part of CLIgen.
+#
+# CLIgen is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# CLIgen is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+#  along with CLIgen; see the file COPYING.
+
+prefix		= @prefix@
+datarootdir	= @datarootdir@
+exec_prefix	= @exec_prefix@
+bindir		= @bindir@
+libdir		= @libdir@
+srcdir		= @srcdir@
+includedir	= @includedir@
+
+CC		= @CC@
+COPT		= @COPT@
+CFLAGS		= -fPIC $(COPT) @CFLAGS@ -DHAVE_CONFIG_H 
+LDFLAGS		= @LDFLAGS@
+LIBS		= @LIBS@
+INCLUDES	= -I. -I@srcdir@ @INCLUDES@
+SH_SUFFIX	= @SH_SUFFIX@
+
+CLIGEN_VERSION = @CLIGEN_VERSION@
+CLIGEN_MAJOR   = @CLIGEN_VERSION_MAJOR@
+CLIGEN_MINOR   = @CLIGEN_VERSION_MINOR@
+# CLIGEN_PATCH   = @CLIGEN_VERSION_PATCH@
+
+# Linker-name: libcligen.so
+# so-name: libcligen.so.3
+# real-name: libcligen.so.3.0
+MYLIB        = libcligen$(SH_SUFFIX).$(CLIGEN_MAJOR).$(CLIGEN_MINOR)
+MYLIBSO      = libcligen$(SH_SUFFIX).$(CLIGEN_MAJOR)
+MYLIBLINK    = libcligen$(SH_SUFFIX)
+
+SRC		= cligen_gen.c cligen_handle.c cligen_var.c cligen_match.c \
+		  cligen_read.c cligen_io.c cligen_expand.c cligen_syntax.c \
+		  cligen_print.c cligen_cvec.c getline.c build.c
+OBJS		= $(SRC:.c=@OBJ_SUFFIX@) 
+APPS		= cligen_hello cligen_file cligen_modes cligen_tutorial
+
+YACC		= @YACC@
+LEX		= @LEX@
+
+all:	$(MYLIB) $(APPS) $(MYLIBLINK)
+tags:	;etags *.[ch]
+
+
+distclean: clean
+	rm -f Makefile config.log config.status config.h TAGS
+	rm -rf autom4te.cache
+
+# Default rule  .c.o:	
+%@OBJ_SUFFIX@ : @srcdir@/%.c
+	$(CC) $(INCLUDES) $(CFLAGS) -c $<
+# For linux?
+.c.o:
+	$(CC) $(INCLUDES) $(CFLAGS) -c $<
+
+.PHONY: build.c
+build.c:	
+	date +"const char CLIGEN_BUILDSTR[64]=\"%Y.%m.%d %H:%M by `whoami` on `hostname`"\"\; > build.c;
+	echo "const char CLIGEN_VERSION[64]=\"$(CLIGEN_VERSION)\""\; >> build.c;
+
+# install-bin install-include
+install: install-lib install-include
+
+install-bin: $(APPS)
+	install -m 755 -d $(bindir) 
+	install -m 755 $(APPS) $(bindir) 
+
+install-lib: $(MYLIB)
+	install -m 755 -d $(libdir) 
+	install -m 755 $(MYLIB) $(libdir) 
+	ln -sf $(MYLIB) $(libdir)/$(MYLIBLINK) # So that other can use -lcligen
+#	ldconfig $(libdir) # not strictly necessary since name is same
+
+
+install-include: *.h
+	install -d $(includedir) 
+	install -m 644 $^ $(includedir) 
+
+uninstall: 
+	rm -f $(libdir)/$(MYLIB)
+
+# CLIGEN parser src
+YACC_SRC        = cligen_parse.y
+LEX_SRC         = cligen_parsel
+YACCOBJS := lex.cligen_parse.o cligen_parse.tab.o 
+
+clean:  ;rm -f $(APPS) $(OBJS) $(YACCOBJS) $(MYLIB) $(MYLIBSO) $(MYLIBLINK) *.tab.c *.tab.h *.tab.o lex.*.c lex.*.o cligen
+
+%.c : %.y  # cancel implicit yacc rule
+%.c : %.l  # cancel implicit lex rule
+
+# top file parse
+lex.cligen_parse.c : cligen_parse.l cligen_parse.tab.h
+	$(LEX) -Pcligen_parse cligen_parse.l # -d is debug 
+
+cligen_parse.tab.c cligen_parse.tab.h: cligen_parse.y
+	$(YACC) -l -d -p cligen_parse cligen_parse.y # -t is debug
+	mv y.tab.c cligen_parse.tab.c
+	mv y.tab.h cligen_parse.tab.h
+
+lex.cligen_parse.o : lex.cligen_parse.c cligen_parse.tab.h
+	$(CC) $(INCLUDES) -DYY_NO_INPUT $(CFLAGS) -c $<
+
+# Applications
+cligen_hello : cligen_hello.c cligen $(MYLIB) 
+	$(CC) $(CFLAGS) $(INCLUDES) $< $(LDFLAGS) $(LIBS) -o $@ $(MYLIB)
+
+cligen_file :	cligen_file.c cligen $(MYLIB) 
+	$(CC) $(CFLAGS) $(INCLUDES) $< $(LDFLAGS) $(LIBS) -o $@ $(MYLIB)
+
+cligen_modes :	cligen_modes.c cligen $(MYLIB) 
+	$(CC) $(CFLAGS) $(INCLUDES) $< $(LDFLAGS) $(LIBS) -o $@ $(MYLIB)
+
+cligen_tutorial :cligen_tutorial.c cligen $(MYLIB) 
+	$(CC) $(CFLAGS) $(INCLUDES) $< $(LDFLAGS) $(LIBS) -o $@ $(MYLIB)
+
+$(MYLIB) : $(OBJS) $(YACCOBJS)
+	$(CC) -shared -o $@ $(OBJS) $(YACCOBJS) -Wl,-soname=$(MYLIB) -Wl $(LIBS)
+
+# link-name is needed for application linking
+$(MYLIBSO) : $(MYLIB)
+
+
+$(MYLIBLINK) : $(MYLIB)
+	ln -sf $(MYLIB) $@
+
+# recursive link to handle application include files.
+cligen : 
+	ln -sf . $@
+
+
