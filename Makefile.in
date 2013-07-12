@@ -52,7 +52,7 @@ SRC		= cligen_gen.c cligen_handle.c cligen_var.c cligen_match.c \
 		  cligen_read.c cligen_io.c cligen_expand.c cligen_syntax.c \
 		  cligen_print.c cligen_cvec.c getline.c build.c
 OBJS		= $(SRC:.c=@OBJ_SUFFIX@) 
-APPS		= cligen_hello cligen_file cligen_modes cligen_tutorial
+APPS		= cligen_hello cligen_file cligen_tutorial
 
 YACC		= @YACC@
 LEX		= @LEX@
@@ -122,16 +122,13 @@ lex.cligen_parse.o : lex.cligen_parse.c cligen_parse.tab.h
 
 # Applications
 cligen_hello : cligen_hello.c cligen $(MYLIB) 
-	$(CC) $(CFLAGS) $(INCLUDES) $< $(LDFLAGS) $(LIBS) -o $@ $(MYLIB)
+	$(CC) $(CFLAGS) $(INCLUDES) $< $(LDFLAGS) $(LIBS) -o $@ -lcligen
 
 cligen_file :	cligen_file.c cligen $(MYLIB) 
-	$(CC) $(CFLAGS) $(INCLUDES) $< $(LDFLAGS) $(LIBS) -o $@ $(MYLIB)
-
-cligen_modes :	cligen_modes.c cligen $(MYLIB) 
-	$(CC) $(CFLAGS) $(INCLUDES) $< $(LDFLAGS) $(LIBS) -o $@ $(MYLIB)
+	$(CC) $(CFLAGS) $(INCLUDES) $< $(LDFLAGS) $(LIBS) -o $@ -lcligen
 
 cligen_tutorial :cligen_tutorial.c cligen $(MYLIB) 
-	$(CC) $(CFLAGS) $(INCLUDES) $< $(LDFLAGS) $(LIBS) -o $@ $(MYLIB)
+	$(CC) $(CFLAGS) $(INCLUDES) $< $(LDFLAGS) $(LIBS) -o $@ -lcligen
 
 $(MYLIB) : $(OBJS) $(YACCOBJS)
 	$(CC) -shared -o $@ $(OBJS) $(YACCOBJS) -Wl,-soname=$(MYLIB) -Wl $(LIBS)
