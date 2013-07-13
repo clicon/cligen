@@ -20,7 +20,10 @@
   along with CLIgen; see the file COPYING.
 */
 
-/* The following are required system include files */
+/* 
+   You include cligen.h which includes the other cligen include files for you.
+   All cligen include files are placed in the sub-directory cligen/cligen*.h. 
+*/
 #include <stdio.h>
 #include <netinet/in.h>
 

@@ -26,7 +26,7 @@ exec_prefix	= @exec_prefix@
 bindir		= @bindir@
 libdir		= @libdir@
 srcdir		= @srcdir@
-includedir	= @includedir@
+includedir	= @includedir@/cligen # Force a sub-directory
 
 CC		= @CC@
 COPT		= @COPT@
@@ -35,6 +35,7 @@ LDFLAGS		= @LDFLAGS@
 LIBS		= @LIBS@
 INCLUDES	= -I. -I@srcdir@ @INCLUDES@
 SH_SUFFIX	= @SH_SUFFIX@
+pdflatex	= @PDFLATEX@
 
 CLIGEN_VERSION = @CLIGEN_VERSION@
 CLIGEN_MAJOR   = @CLIGEN_VERSION_MAJOR@
@@ -51,15 +52,21 @@ MYLIBLINK    = libcligen$(SH_SUFFIX)
 SRC		= cligen_gen.c cligen_handle.c cligen_var.c cligen_match.c \
 		  cligen_read.c cligen_io.c cligen_expand.c cligen_syntax.c \
 		  cligen_print.c cligen_cvec.c getline.c build.c
+
+INCS		= cligen_var.h cligen_cvec.h cligen_gen.h cligen_handle.h \
+		  cligen_print.h cligen_read.h cligen_io.h cligen_expand.h \
+		  cligen_syntax.h cligen.h
+
 OBJS		= $(SRC:.c=@OBJ_SUFFIX@) 
 APPS		= cligen_hello cligen_file cligen_tutorial
 
 YACC		= @YACC@
 LEX		= @LEX@
 
-all:	$(MYLIB) $(APPS) $(MYLIBLINK)
+all:	cligen $(MYLIB) $(APPS) $(MYLIBLINK) cligen_tutorial.pdf
 tags:	;etags *.[ch]
 
+docs:	cligen_tutorial.pdf
 
 distclean: clean
 	rm -f Makefile config.log config.status config.h TAGS
@@ -91,7 +98,9 @@ install-lib: $(MYLIB)
 #	ldconfig $(libdir) # not strictly necessary since name is same
 
 
-install-include: *.h
+# Installs include files in subdir called 'cligen'. Applications should include
+# <cligen/cligen.h>
+install-include: $(INCS)
 	install -d $(includedir) 
 	install -m 644 $^ $(includedir) 
 
@@ -140,8 +149,12 @@ $(MYLIBSO) : $(MYLIB)
 $(MYLIBLINK) : $(MYLIB)
 	ln -sf $(MYLIB) $@
 
-# recursive link to handle application include files.
+cligen_tutorial.pdf: cligen_tutorial.tex 
+	$(pdflatex) $^
+	$(pdflatex) $^
+
+# recursive link to handle application include files, if you have not installed
+# .h files in $(includefile)
 cligen : 
 	ln -sf . $@
-
 
