@@ -167,7 +167,7 @@ cvec_add(cvec *vr, enum cv_type type)
 }
 
 /*! 
- * \brief  Delete a cv variable from a cvec.
+ * \brief  Delete a cv variable from a cvec. Note, cv is not reset
  */
 int
 cvec_del(cvec *vr, cg_var *del)
@@ -382,8 +382,7 @@ cvec_match(cg_obj *co_match,
 	    cv->var_const = iskeyword(co);
 	    /* String value to structured type */
 	    if (cv_parse(val, cv) < 0) {
-		assert(1); /* This should never happen, since it passes in 
-			      match_variable() */
+		/* This should never happen, since it passes in match_variable() */
 		free (val);
 		goto done;
 	    }
