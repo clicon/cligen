@@ -1662,7 +1662,7 @@ cv_cmp(cg_var *cgv1, cg_var *cgv2)
 
     /* Same type? */
     if(cgv1->var_type != cgv2->var_type)
-	return cgv1->var_type - cgv1->var_type;
+	return cgv1->var_type - cgv2->var_type;
 
     switch (cgv1->var_type) {
     case CGV_INT:
