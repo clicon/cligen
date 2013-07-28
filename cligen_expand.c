@@ -246,7 +246,8 @@ pt_expand_1(cligen_handle h, cg_obj *coprev, parse_tree *pt)
 
 		/* Find the referring tree */
 		if ((ptt0 = cligen_tree(h, treeref)) == NULL){
-		    fprintf(stderr, "%s: Subtree not found\n", __FUNCTION__);
+		    fprintf(stderr, "%s: CLIgen subtree %s not found\n", 
+			    __FUNCTION__, treeref);
 		    return -1;
 		}
 

@@ -26,7 +26,8 @@ exec_prefix	= @exec_prefix@
 bindir		= @bindir@
 libdir		= @libdir@
 srcdir		= @srcdir@
-includedir	= @includedir@/cligen # Force a sub-directory
+ # Force a cligen sub-directory
+includedir	= @includedir@/cligen
 
 CC		= @CC@
 COPT		= @COPT@
@@ -106,6 +107,7 @@ install-include: $(INCS)
 
 uninstall: 
 	rm -f $(libdir)/$(MYLIB)
+	rm -f $(includedir)/cligen*.h
 
 # CLIGEN parser src
 YACC_SRC        = cligen_parse.y
