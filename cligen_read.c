@@ -713,7 +713,10 @@ cligen_eval(cligen_handle h, cg_obj *co, cvec *vr)
     for (cc = co->co_callbacks; cc; cc=cc->cc_next){
 	if (cc->cc_fn){
 	    cv = cc->cc_arg ? cv_dup(cc->cc_arg) : NULL;
-	    if ((retval = (*cc->cc_fn)(h, vr, cv)) < 0){
+	    if ((retval = (*cc->cc_fn)(
+		     cligen_userhandle(h)?cligen_userhandle(h):h, 
+		     vr, 
+		     cv)) < 0){
 		if (cv != NULL){
 		    cv_free(cv);
 		}

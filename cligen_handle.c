@@ -16,7 +16,7 @@
   GNU General Public License for more details.
 
   You should have received a copy of the GNU General Public License
-  along with CLIgen; see the file COPYING.
+  along with CLIgen; see the file COPYING. 
 */
 /*! \file */ 
 #include "cligen_config.h"
@@ -103,7 +103,7 @@ struct cligen_handle{
     char       *ch_buf;          /* getline input buffer */
     char       *ch_killbuf;      /* getline killed text */
 
-
+    void       *ch_userhandle;   /* Use this as app-specific callback handle */
     void       *ch_userdata;     /* application-specific data (any data) */
 };
 
@@ -669,6 +669,31 @@ cligen_ignorecase_set(cligen_handle h, int n)
     return 0;
 }
 
+
+/*
+ * cligen_userdata
+ * get user data 
+ */
+void*
+cligen_userhandle(cligen_handle h)
+{
+    struct cligen_handle *ch = handle(h);
+
+    return ch->ch_userhandle;
+}
+
+/*
+ * cligen_userdata_set
+ * set user data as a part of the cligen_handle
+ */
+int
+cligen_userhandle_set(cligen_handle h, void *userhandle)
+{
+    struct cligen_handle *ch = handle(h);
+
+    ch->ch_userhandle = userhandle;
+    return 0;
+}
 
 /*
  * cligen_userdata

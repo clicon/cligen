@@ -31,19 +31,9 @@
  * Prototypes
  */
 cligen_handle cligen_init(void);
-/** 
- * \brief Exit cligen
- */
 int cligen_exit(cligen_handle);
-
-/*!
- * \brief Check cligen
- */
 int cligen_check(cligen_handle h);
 
-/*!  \brief Is cligen exiting?
- *
- */
 int cligen_exiting(cligen_handle h);
 int cligen_exiting_set(cligen_handle h, int status);
 
@@ -101,6 +91,9 @@ int cligen_lexicalorder(cligen_handle h);
 int cligen_lexicalorder_set(cligen_handle h, int n);
 int cligen_ignorecase(cligen_handle h);
 int cligen_ignorecase_set(cligen_handle h, int n);
+
+void *cligen_userhandle(cligen_handle h);
+int cligen_userhandle_set(cligen_handle h, void *userhandle);
 
 void *cligen_userdata(cligen_handle h);
 int cligen_userdata_set(cligen_handle h, void *user);
