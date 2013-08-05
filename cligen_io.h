@@ -37,7 +37,7 @@ int cligen_output(FILE *f, char *template, ... );
 int cligen_regfd(int fd, int (*cb)(int, void*), void *arg);
 int cligen_unregfd(int fd);
 void cligen_redraw(cligen_handle h);
-void cligen_susp_hook(cligen_handle h, int (*fn)(void*, char *, int, int *));
+int cligen_susp_hook(cligen_handle h, cligen_susp_cb_t *fn);
 void cligen_exitchar_add(cligen_handle h, char c);
 int cligen_help(FILE *f, parse_tree pt);
 

@@ -48,7 +48,6 @@
 #define isblank(c) (c==' ')
 #endif /* isblank */
 
-#include "getline.h"
 #include "cligen_var.h"
 #include "cligen_cvec.h"
 #include "cligen_gen.h"
@@ -58,6 +57,8 @@
 #include "cligen_match.h"
 #include "cligen_expand.h"
 #include "cligen_read.h"
+#include "getline.h"
+
 /*
  * Constants and Macros
  */

@@ -37,13 +37,13 @@
 #include <string.h>
 #include <errno.h>
 
-#include "getline.h"
 #include "cligen_var.h"
 #include "cligen_cvec.h"
 #include "cligen_gen.h"
 #include "cligen_read.h"
 #include "cligen_parse.h"
 #include "cligen_handle.h"
+#include "getline.h"
 
 /* Internal functions */
 static int pt_free1(parse_tree, int recursive);

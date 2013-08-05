@@ -38,13 +38,13 @@
 #include <errno.h>
 
 
-#include "getline.h"
 #include "cligen_var.h"
 #include "cligen_cvec.h"
 #include "cligen_gen.h"
 #include "cligen_handle.h"
 #include "cligen_read.h"
 #include "cligen_parse.h"
+#include "getline.h"
 
 #if 0
 #define handle(h) (fprintf(stderr, "%s\n", __FUNCTION__),	\
@@ -117,6 +117,7 @@ cligen_handle
 cligen_init(void)
 {
     struct cligen_handle *ch;
+    cligen_handle h = NULL;
 
     if ((ch = malloc(sizeof(*ch))) == NULL){
 	fprintf(stderr, "%s: malloc: %s\n", __FUNCTION__, strerror(errno));
@@ -124,12 +125,14 @@ cligen_init(void)
     }
     memset(ch, 0, sizeof(*ch));
     ch->ch_magic = CLIGEN_MAGIC;
-    cligen_prompt_set(ch, CLIGEN_PROMPT_DEFAULT);
-    cligen_terminalrows_set(ch, TERM_ROWS_DEFAULT);
-    cliread_init(ch);
-    gl_buf_init(ch);
+    h = (cligen_handle)ch;
+    cligen_prompt_set(h, CLIGEN_PROMPT_DEFAULT);
+    cligen_terminalrows_set(h, TERM_ROWS_DEFAULT);
+    cliread_init(h);
+    gl_buf_init(h);
+
   done:
-    return ch;
+    return h;
 }
 
 /*! 

@@ -44,13 +44,12 @@
 #include <regex.h>
 #endif
 
-#include "getline.h"
 #include "cligen_var.h"
 #include "cligen_cvec.h"
 #include "cligen_gen.h"
 #include "cligen_match.h"
 #include "cligen_cv.h"
-
+#include "getline.h"
 
 /*
  * URL protocol strings

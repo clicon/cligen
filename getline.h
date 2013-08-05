@@ -15,7 +15,7 @@ void           gl_exitchar_add(char c);
 
 void           gl_char_init(void);	
 void           gl_char_cleanup(void);	
-char           *gl_getline(void *h);		/* read a line of input */
+char           *gl_getline(cligen_handle h);		/* read a line of input */
 void            gl_setwidth(int);		/* specify width of screen */
 int             gl_getwidth(void);		/* get width of screen */
 void            gl_histadd(char *);		/* adds entries to hist */
@@ -28,7 +28,7 @@ int             gl_unregfd(int);
 int 	(*gl_in_hook)(void *, char *);
 int 	(*gl_out_hook)(void*, char *);
 int	(*gl_tab_hook)(void*, char *, int, int *);
-int	(*gl_susp_hook)(void*, char *, int, int *);
+cligen_susp_cb_t *gl_susp_hook;
 int	(*gl_qmark_hook)(void*, char *, int);
 
 #else	/* not __STDC__ */

@@ -27,7 +27,16 @@
 #include <stdio.h>
 #include <netinet/in.h>
 
+/* CLIgen handle for external API. See cligen_config.h for internal functions. */
+#ifndef _CLIGEN_H_
+#define _CLIGEN_H_
+#if 1 /* SANITY CHECK */
+typedef struct {int a;} *cligen_handle;
+#else
 typedef void *cligen_handle; /* API */
+#endif
+#endif  /* _CLIGEN_H_ */
+
 
 #include <cligen/cligen_var.h>
 #include <cligen/cligen_cvec.h>

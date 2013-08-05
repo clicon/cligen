@@ -182,10 +182,11 @@ cligen_redraw(cligen_handle h)
 /*! 
  * \brief Register a suspend (^Z) function hook 
  */
-void 
-cligen_susp_hook(cligen_handle h, int (*fn)(void *h, char *, int, int *))
+int
+cligen_susp_hook(cligen_handle h, cligen_susp_cb_t *fn)
 {
     gl_susp_hook = fn; /* XXX global */
+    return 0;
 }
 
 /*! 

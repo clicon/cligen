@@ -56,6 +56,8 @@ typedef int (expand_cb)(cligen_handle h,
 			char ***commands,
 			char ***comments); 
 
+typedef int (cligen_susp_cb_t)(void *h, char *, int, int *);
+
 /* 
  * parse_tree
  * A parse tree is a top object containing a vector of parse-tree nodes 

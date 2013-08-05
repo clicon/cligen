@@ -37,12 +37,13 @@
 #include <string.h>
 #include <errno.h>
 
-#include "getline.h"
 #include "cligen_var.h"
 #include "cligen_cvec.h"
 #include "cligen_gen.h"
 #include "cligen_match.h"
 #include "cligen_cv.h"
+#include "getline.h"
+
 /*! \file cligen_cvec.c */ 
 struct cvec{
     cg_var         *vr_vec;  /* vector of CLIgen variables */

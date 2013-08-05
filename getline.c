@@ -107,7 +107,7 @@ static int      gl_getc(cligen_handle h);	        /* read one char from terminal
 static void     gl_kill(cligen_handle h, int pos);	/* delete to EOL */
 static void     gl_kill_begin(cligen_handle h, int pos);	/* delete to BEGIN of line */
 static void     gl_kill_word(cligen_handle h, int pos);	/* delete word */
-static void     gl_newline(void*);	/* handle \n or \r */
+static void     gl_newline(cligen_handle);	/* handle \n or \r */
 static int      gl_putc(int c);		/* write one char to terminal */
 static int      gl_puts(char *buf);	/* write a line to terminal */
 
@@ -121,7 +121,7 @@ static char    *hist_prev(void);	/* return ptr to prev item */
 static char    *hist_save(char *p);	/* makes copy of a string, without NL */
 
 static void     search_addchar(cligen_handle h, int c);	/* increment search string */
-static void     search_term(void*);	/* reset with current contents */
+static void     search_term(cligen_handle);	/* reset with current contents */
 static void     search_back(cligen_handle h, int new);	/* look back for current string */
 static void     search_forw(cligen_handle h, int new);	/* look forw for current string */
 
@@ -671,7 +671,8 @@ gl_getline(cligen_handle h)
 	    case '\032':                                      /* ^Z */
 		if(gl_susp_hook) {
 		    tmp = gl_pos;
-	            loc = gl_susp_hook(h, gl_buf, gl_strlen(gl_prompt), &tmp);
+	            loc = gl_susp_hook(cligen_userhandle(h)?cligen_userhandle(h):h,
+				       gl_buf, gl_strlen(gl_prompt), &tmp);
 	            if (loc != -1 || tmp != gl_pos)
 	                gl_fixup(h, gl_prompt, loc, tmp);
 		    if (strchr (gl_buf, '\n')) {
