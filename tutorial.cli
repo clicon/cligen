@@ -1,0 +1,37 @@
+  # This file is part of CLIgen.
+  # $Id: tutorial.cli,v 1.8 2013/06/16 11:59:25 olof Exp $
+  # Copyright (C) 2011-2013 Olof Hagsand
+
+  prompt="hello> ";            # Assignment of prompt
+  comment="#";                 # Same comment as in syntax
+  namer="tutor";               # Name of syntax (used when referencing)
+  hello("Greet the world"){    # 'hello' command with help text
+    world, hello("Hello World!"); # 'world' command with callback
+  }
+  # Nested command using callback arguments to differentiate
+  ip("The IP protocol"){       
+    tcp("The TCP protocol") <int>("Port number"), cb("tcp");
+    udp("The UDP protocol") <ipaddr>("IPv4 address"), cb("udp");
+  }
+  # Example of commands on several levels
+  aa bb,cb();{              
+    ff,cb();
+  }
+  # Example of complex variable matching
+  values (<int> | <string> | <long> | aa), cb();
+  # Complex syntax and callback argument handling
+  aa bb (ca("help ca") <int>|cb("help cb")) [dd|ee], letters();
+  # Expand example
+  interface {
+    <ifname:string interface()>("interface name"),cb(); 
+  }
+  # Example of hidden command
+  secret,hide,secret("message");        
+  # Example of changing prompt
+  change prompt <new:string>("New prompt"),setprompt(); 
+  
+  # Example of sub-tree reference (here recursion).
+  recurse @tutorial;
+
+   # Quit CLI
+  quit("quit the CLI"),quit(); 

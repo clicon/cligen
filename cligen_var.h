@@ -96,6 +96,8 @@ char cv_index_get(cg_var *cv);
 char cv_index_set(cg_var *cv, char x);
 void *cv_value_get(cg_var *cv);
 
+char cv_bool_get(cg_var *cv);
+char cv_bool_set(cg_var *cv, char x);
 int32_t cv_int_get(cg_var *cv);
 int32_t cv_int_set(cg_var *cv, int32_t x);
 int64_t cv_long_get(cg_var *cv);
