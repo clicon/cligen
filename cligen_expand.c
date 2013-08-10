@@ -355,8 +355,13 @@ pt_expand_2(cligen_handle h,
 	      commands = NULL;
 	      comments = NULL;
 	      nr = 0;
-	      if ((*co->co_expand_fn)(h, co->co_expand_fn_str, co->co_expand_fn_arg, 
-				      &nr, &commands, &comments) < 0)
+	      if ((*co->co_expand_fn)(
+		     cligen_userhandle(h)?cligen_userhandle(h):h, 
+		     co->co_expand_fn_str, 
+		     co->co_expand_fn_arg, 
+		     &nr, 
+		     &commands, 
+		     &comments) < 0)
 		  return -1;
 	      for (k=0; k<nr; k++){
 		  pt_realloc(ptn);
