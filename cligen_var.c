@@ -1050,6 +1050,9 @@ cv_type2str(enum cv_type type)
 {
     char *str = NULL;
     switch (type){
+    case CGV_ERR:
+	str="err";
+	break;
     case CGV_INT:
 	str="number";
 	break;
@@ -1598,7 +1601,6 @@ cv_validate(cg_var *cv, cg_varspec *cs, char **reason)
     int retval = 1; /* OK */
     long long i = 0;
 
-    assert(cs->cgs_vtype == cv->var_type);
     switch (cs->cgs_vtype){
     case CGV_INT:
 	i = cv_int_get(cv);

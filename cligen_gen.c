@@ -279,6 +279,14 @@ co_copy(cg_obj *co, cg_obj *parent, cg_obj **conp)
 	return -1;
     if (co->co_cvec)
 	con->co_cvec = cvec_dup(co->co_cvec);
+    if (co->co_userdata && co->co_userlen){
+	if ((con->co_userdata = malloc(co->co_userlen)) == NULL){
+	    fprintf(stderr, "%s: malloc: %s\n", __FUNCTION__, strerror(errno));
+	    return -1;
+	}
+	memcpy(con->co_userdata, co->co_userdata, co->co_userlen);
+    }
+
     if (co->co_next)
 	if (pt_copy(co->co_pt, con, &con->co_pt) < 0)
 	    return -1;
@@ -315,12 +323,6 @@ co_copy(cg_obj *co, cg_obj *parent, cg_obj **conp)
 	if (co->co_regex){
 	    if ((con->co_regex = strdup(co->co_regex)) == NULL){
 		fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
-		return -1;
-	    }
-	}
-	if (co->co_default){
-	    if ((con->co_default = cv_dup(co->co_default)) == NULL){
-		fprintf(stderr, "%s: cv_dup: %s\n", __FUNCTION__, strerror(errno));
 		return -1;
 	    }
 	}
@@ -436,6 +438,7 @@ co_eq(cg_obj *co1, cg_obj *co2)
 {
     int eq;
 
+    /* eq == 0 means equal */
     eq = !(co1->co_type == co2->co_type);
     if (eq){ /* special case, keywords */
 	if (co1->co_type == CO_COMMAND && 
@@ -444,10 +447,13 @@ co_eq(cg_obj *co1, cg_obj *co2)
 	    if ((eq = strcmp(co1->co_command, co2->co_keyword)) == 0)
 		goto done;
 	}
+	else
 	if (co2->co_type == CO_COMMAND && 
 	    co1->co_vtype == CGV_STRING && 
 	    iskeyword(co1))
 	    eq = strcmp(co2->co_command, co1->co_keyword);
+	else
+	    eq = str_cmp(co1->co_command, co2->co_command);
 	goto done;
     }
     switch (co1->co_type){
@@ -617,12 +623,14 @@ co_free(cg_obj *co, int recursive)
 	free(co->co_mode);
     if (co->co_value)
 	free(co->co_value);
+    if (co->co_userdata)
+	free(co->co_userdata);
     if (co->co_cvec)
 	cvec_free(co->co_cvec);
     while ((cc = co->co_callbacks) != NULL){
 	if (cc->cc_arg)	
 	    cv_free(cc->cc_arg);
-	if (cc->cc_fn_str)	
+	if (cc->cc_fn_str)     
 	    free(cc->cc_fn_str);
 	co->co_callbacks = cc->cc_next;
 	free(cc);
@@ -637,8 +645,6 @@ co_free(cg_obj *co, int recursive)
 	    free(co->co_choice);
 	if (co->co_regex)
 	    free(co->co_regex);
-	if (co->co_default)
-	    cv_free(co->co_default);
     }
 #ifdef notyet
     if (co->co_cv)
@@ -725,8 +731,13 @@ co_insert_pos(parse_tree pt, cg_obj *co1, int low, int high)
 #else
     if (co2 == NULL)
 	cmp = 1;
-    else
+    else{
+#if 1
 	cmp = co_eq(co1, co2);
+#else
+        cmp = str_cmp(co1->co_command, co2->co_command);
+#endif
+    }
 #endif
     if (cmp < 0)
 	return co_insert_pos(pt, co1, low, mid-1);
@@ -790,6 +801,9 @@ co_insert(parse_tree *pt, cg_obj *co1)
 /*
  * co_find_one
  * Given a parse tree, find the first command that matches NO RECURSION!
+ * Note also that you can only use this if the child-list is alphatetically
+ * sorted. You get this automatically with co_insert(), bit some code
+ * may add children w/o co_insert.
  */
 cg_obj *
 co_find_one(parse_tree pt, char *name)
@@ -851,4 +865,29 @@ cligen_reason(const char *fmt, ...)
 	reason = NULL;
     }
     return reason;	
+}
+
+/*! 
+ * \brief  Apply a function call recursively on all cg_obj:s in a parse-tree
+ */
+int
+pt_apply(parse_tree pt, cg_applyfn_t fn, void *arg)
+{
+    cg_obj *co;
+    int     i;
+    int     retval = -1;
+
+    if (pt.pt_vec == NULL)
+	return 0;
+    for (i=0; i<pt.pt_len; i++){
+	if ((co = pt.pt_vec[i]) == NULL)
+	    continue;
+	if (fn(co, arg) < 0)
+	    goto done;
+	if (pt_apply(co->co_pt, fn, arg) < 0)
+	    goto done;
+    }
+    retval = 0;
+  done:
+    return retval;
 }

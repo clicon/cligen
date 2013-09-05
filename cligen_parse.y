@@ -30,7 +30,7 @@
 }
 
 %token MY_EOF
-%token V_TYPE V_RANGE V_CHOICE V_KEYWORD V_REGEXP V_DEFAULT
+%token V_TYPE V_RANGE V_CHOICE V_KEYWORD V_REGEXP 
 %token DOUBLEPARENT /* (( */
 %token DQ           /* " */
 %token DQP          /* ") */
@@ -726,25 +726,6 @@ cg_regexp(struct cligen_parse_yacc_arg *ya, char *rx)
 }
 
 static int
-cg_default(struct cligen_parse_yacc_arg *ya, char *val)
-{
-    cg_var          *cv; 
-
-    if ((cv = cv_new(ya->ya_var->co_vtype)) == NULL){
-	cligen_parseerror1(ya, "error when creating default value"); 
-	return -1;
-    }
-    if (cv_parse (val, cv) < 0){
-	cligen_parseerror1(ya, "error when parsing default value"); 
-	return 0;
-    }
-    if (ya->ya_var->co_default)
-	cv_free(ya->ya_var->co_default);
-    ya->ya_var->co_default = cv;
-    return 0;
-}
-
-static int
 cg_range(struct cligen_parse_yacc_arg *ya, char *low, char *high)
 {
     int   retval;
@@ -927,10 +908,10 @@ keypair     : NAME '(' ')' { _YA->ya_var->co_expand_fn_str = $1; }
 		free($4); 
 	      }
             | V_RANGE '[' NUMBER ':' NUMBER ']' { 
-		if (cg_range(_ya, $3, $5) < 0) YYERROR; ; 
+		if (cg_range(_ya, $3, $5) < 0) YYERROR; free($3); free($5); 
 	      }
             | V_RANGE ':' NUMBER '-' NUMBER { 
-		if (cg_range(_ya, $3, $5) < 0) YYERROR; ; 
+		if (cg_range(_ya, $3, $5) < 0) YYERROR; free($3); free($5); 
 	      }
             | V_CHOICE ':' choices { _YA->ya_var->co_choice = $3; }
             | V_KEYWORD ':' NAME { 
@@ -938,7 +919,6 @@ keypair     : NAME '(' ')' { _YA->ya_var->co_expand_fn_str = $1; }
 		_YA->ya_var->co_vtype=CGV_STRING; 
 	      }
             | V_REGEXP  ':' DQ charseq DQ { cg_regexp(_ya, $4); }
-            | V_DEFAULT ':' DQ charseq DQ { cg_default(_ya, $4); }
             ;
 
 choices     : NUMBER { $$ = $1;}

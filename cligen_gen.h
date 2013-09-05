@@ -101,7 +101,6 @@ struct cg_varspec{
     int64_t         cgs_range_low;     /* range interval lower limit*/
     int64_t         cgs_range_high;    /* range interval upper limit*/
     char           *cgs_regex;         /* regular expression */
-    struct cg_var  *cgs_default;       /* default value */
 };
 typedef struct cg_varspec cg_varspec;
 
@@ -132,6 +131,10 @@ struct cg_obj{
     char             *co_value;     /* Expanded value can be a string with a 
 				       constant. Store the constant in the original
 				       variable. */
+    void             *co_userdata;  /* User-specific data, malloced and defined by
+				       the user. Will be freed by cligen on exit */
+    size_t            co_userlen;   /* Length of the userdata (need copying) */
+
 #ifdef notyet
     struct cg_var    *co_cv;        /* Store value directly at matching */
 #endif
@@ -156,6 +159,11 @@ typedef struct cg_obj cg_obj; /* in cli_var.h */
 
 typedef cg_obj** pt_vec;  /* vector of (pointers to) parse-tree nodes */
 
+/* Callback for pt_apply() */
+typedef int (cg_applyfn_t)(cg_obj *co, void *arg);
+
+/* Access macro to cligen object variable specification */
+#define co2varspec(co)  &(co)->u.cou_var
 
 /* Access fields for code traversing parse tree */
 #define co_next          co_pt.pt_vec
@@ -170,7 +178,6 @@ typedef cg_obj** pt_vec;  /* vector of (pointers to) parse-tree nodes */
 #define co_range_low	 u.cou_var.cgs_range_low
 #define co_range_high	 u.cou_var.cgs_range_high
 #define co_regex         u.cou_var.cgs_regex
-#define co_default       u.cou_var.cgs_default
 
 #define iskeyword(CV) ((CV)->co_choice!=NULL && strchr((CV)->co_choice, '|')==NULL)
 
@@ -255,6 +262,7 @@ cg_obj *co_insert(parse_tree *pt, cg_obj *co);
 cg_obj *co_find_one(parse_tree pt, char *name);
 int co_value_set(cg_obj *co, char *str);
 char *cligen_reason(const char *fmt, ...);
+int pt_apply(parse_tree pt, cg_applyfn_t fn, void *arg);
 
 #endif /* _CLIGEN_GEN_H_ */
 

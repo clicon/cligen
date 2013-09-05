@@ -69,6 +69,13 @@ co_expand_sub(cg_obj *co, cg_obj *parent, cg_obj **conp)
 	}
     if (co->co_cvec)
 	con->co_cvec = cvec_dup(co->co_cvec);
+    if (co->co_userdata && co->co_userlen){
+	if ((con->co_userdata = malloc(co->co_userlen)) == NULL){
+	    fprintf(stderr, "%s: malloc: %s\n", __FUNCTION__, strerror(errno));
+	    return -1;
+	}
+	memcpy(con->co_userdata, co->co_userdata, co->co_userlen);
+    }
     if (co_callback_copy(co->co_callbacks, &con->co_callbacks, NULL) < 0)
 	return -1;
     if (co->co_help)
@@ -99,11 +106,6 @@ co_expand_sub(cg_obj *co, cg_obj *parent, cg_obj **conp)
 	if (co->co_regex)
 	    if ((con->co_regex = strdup(co->co_regex)) == NULL){
 		fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
-		return -1;
-	    }
-	if (co->co_default)
-	    if ((con->co_default = cv_dup(co->co_default)) == NULL){
-		fprintf(stderr, "%s: cv_dup: %s\n", __FUNCTION__, strerror(errno));
 		return -1;
 	    }
     } /* CO_VARIABLE */
@@ -146,10 +148,6 @@ transform_var_to_cmd(cg_obj *co, char *cmd, char *comment)
 	free(co->co_regex);
 	co->co_regex = NULL;
     }
-    if (co->co_default){
-	cv_free(co->co_default);
-	co->co_default = NULL;
-    }
     co->co_type = CO_COMMAND;
     return 0;
 }
@@ -178,8 +176,11 @@ pt_callback_reference(parse_tree pt, struct cg_callback *cc0)
 	}
 	else {
 	    cc->cc_fn = cc0->cc_fn; /* iterate */
-	    if (cc0->cc_fn_str)
+	    if (cc0->cc_fn_str){
+		if (cc->cc_fn_str)
+		    free (cc->cc_fn_str);
 		cc->cc_fn_str = strdup(cc0->cc_fn_str);
+	    }
 	}
 	if (pt_callback_reference(co->co_pt, cc0) < 0)
 	    goto done;
@@ -253,6 +254,7 @@ pt_expand_1(cligen_handle h, cg_obj *coprev, parse_tree *pt)
 
 		/* make a copy of ptt0 -> ptt */
 		coprev2 = co_up(co);
+
 		if (pt_copy(*ptt0, coprev2, &ptt) < 0){ /* From ptt0 -> ptt */
 		    fprintf(stderr, "%s: Copying parse-tree\n", __FUNCTION__);
 		    return -1;
@@ -273,6 +275,8 @@ pt_expand_1(cligen_handle h, cg_obj *coprev, parse_tree *pt)
 			if (co_insert(pt, cot) == NULL) /* XXX alphabetically */
 			    return -1;
 		    }
+		/* Due to loop above, all co in vec should be moved, it should
+		   be safe to remove */
 		free(ptt.pt_vec);
 		if (coprev && coprev->co_ref) /* coprev2 ? */
 		    coprev->co_ref->co_pt = coprev->co_pt;

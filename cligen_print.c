@@ -61,8 +61,6 @@ int
 cov_print(cg_obj *co, char *cmd, int len, int brief)
 {
     char          *cmd2;
-    char          *str;
-    struct cg_var *cv;
 
     if (co->co_choice){
 	if (strchr(co->co_choice, '|'))
@@ -83,17 +81,6 @@ cov_print(cg_obj *co, char *cmd, int len, int brief)
 		free(cmd2);
 		cmd2 = strdup(cmd);
 	    }
-	    if ((cv = co->co_default) != NULL){
-		if ((str = cv2str_dup(cv)) == NULL){
-		    fprintf(stderr, "%s: cv2str_dup", __FUNCTION__);
-		    return -1;
-		}
-		snprintf(cmd, len, "%s default:\"%s\"", cmd2, str);
-		free(cmd2);
-		free(str);
-		cmd2 = strdup(cmd);
-	    }
-
 	    snprintf(cmd, len, "%s%c", cmd2, VARIABLE_POST);
 	    free(cmd2);
 	}
