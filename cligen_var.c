@@ -1612,7 +1612,7 @@ cv_validate(cg_var *cv, cg_varspec *cs, char **reason)
 	    if (i < cs->cgs_range_low || i > cs->cgs_range_high) {
 		if (reason)
 		    *reason = cligen_reason("Number out of range: %i", i);
-		retval = 0;
+		retval = -1;
 	    }
 	}
     case CGV_STRING:
@@ -1620,18 +1620,19 @@ cv_validate(cg_var *cv, cg_varspec *cs, char **reason)
 	    break;
 	if ((retval = match_regexp(cv_string_get(cv), cs->cgs_regex)) < 0)
 	    break;
-	if (retval == 0)
-	    if (reason &&
-		(*reason = cligen_reason("regexp match fail: %s does not match %s",
-					 cv_string_get(cv), cs->cgs_regex))==NULL)
-		retval = -1;
+	if (retval == 0){
+	    if (reason)
+		*reason = cligen_reason("regexp match fail: %s does not match %s",
+					cv_string_get(cv), cs->cgs_regex);
+	    retval = -1;
+	}
 	break;
     case CGV_ERR:
     case CGV_VOID:
 	retval = 0;
-	if (reason &&
-	    (*reason = cligen_reason("Invalid cv"))==NULL)
-	    retval = -1;
+	if (reason)
+	    *reason = cligen_reason("Invalid cv");
+	retval = -1;
 	break;
     case CGV_BOOL:
     case CGV_INTERFACE:
@@ -1647,7 +1648,7 @@ cv_validate(cg_var *cv, cg_varspec *cs, char **reason)
 	break;
     }
     if (reason && *reason)
-	assert(retval == 0);
+	assert(retval < 0);
     return retval;
 }
 
