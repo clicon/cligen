@@ -139,7 +139,7 @@ stripdup(char *s0)
 <VARIABLE>choice          { return V_CHOICE; }
 <VARIABLE>keyword         { return V_KEYWORD; }
 <VARIABLE>regexp          { return V_REGEXP; }
-<VARIABLE>[0-9]+          { cligen_parselval.string = strdup(yytext); return NUMBER;}
+<VARIABLE>[-+]?[0-9]+          { cligen_parselval.string = strdup(yytext); return NUMBER;}
 <VARIABLE>([^ \t\n>:\-\|\"\(\)\[\]]|\\.)+ { 
                                  cligen_parselval.string = strdup(yytext);
                                  return NAME; }
