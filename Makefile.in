@@ -64,14 +64,15 @@ APPS		= cligen_hello cligen_file cligen_tutorial
 YACC		= @YACC@
 LEX		= @LEX@
 
-all:	cligen $(MYLIB) $(APPS) $(MYLIBLINK) cligen_tutorial.pdf
+all:	cligen $(MYLIB) $(MYLIBLINK) cligen_tutorial.pdf $(APPS)
+
 tags:	;etags *.[ch]
 
 docs:	cligen_tutorial.pdf
 
 distclean: clean
 	rm -f Makefile config.log config.status config.h TAGS
-	rm -rf autom4te.cache
+	rm -rf autom4te.cache cligen_tutorial.pdf cligen_tutorial.log cligen_tutorial.toc cligen_tutorial.aux 
 
 # Default rule  .c.o:	
 %@OBJ_SUFFIX@ : @srcdir@/%.c
