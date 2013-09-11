@@ -103,6 +103,7 @@ struct cligen_handle{
     char       *ch_buf;          /* getline input buffer */
     char       *ch_killbuf;      /* getline killed text */
 
+    int         ch_logsyntax;    /* Debug syntax by printing dynamically on stderr */
     void       *ch_userhandle;   /* Use this as app-specific callback handle */
     void       *ch_userdata;     /* application-specific data (any data) */
 };
@@ -672,6 +673,26 @@ cligen_ignorecase_set(cligen_handle h, int n)
     return 0;
 }
 
+/*! 
+ * \brief Debug syntax by printing dynamically on stderr. Get function.
+ */
+int cligen_logsyntax(cligen_handle h)
+{
+    struct cligen_handle *ch = handle(h);
+
+    return ch->ch_logsyntax;
+}
+
+/*! 
+ * \brief Debug syntax by printing dynamically on stderr. Set function.
+ */
+int cligen_logsyntax_set(cligen_handle h, int n)
+{
+    struct cligen_handle *ch = handle(h);
+
+    ch->ch_logsyntax = n;
+    return 0;
+}
 
 /*
  * cligen_userdata

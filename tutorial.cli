@@ -4,7 +4,7 @@
 
   prompt="hello> ";            # Assignment of prompt
   comment="#";                 # Same comment as in syntax
-  namer="tutor";               # Name of syntax (used when referencing)
+  name="tutorial";             # Name of syntax (used when referencing)
   hello("Greet the world"){    # 'hello' command with help text
     world, hello("Hello World!"); # 'world' command with callback
   }

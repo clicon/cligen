@@ -92,6 +92,9 @@ int cligen_lexicalorder_set(cligen_handle h, int n);
 int cligen_ignorecase(cligen_handle h);
 int cligen_ignorecase_set(cligen_handle h, int n);
 
+int cligen_logsyntax(cligen_handle h);
+int cligen_logsyntax_set(cligen_handle h, int n);
+
 void *cligen_userhandle(cligen_handle h);
 int cligen_userhandle_set(cligen_handle h, void *userhandle);
 
