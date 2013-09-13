@@ -55,12 +55,12 @@ static int pt_print(FILE *f, parse_tree pt, int level, int brief);
  * Example, a string variable with name foo is printed as <foo>
  * Used as help during completion, syntax prints, etc.
  * Input args:
- *  detail:   If set show clispec parsable format, else just <varname>
+ *  brief:   If set show clispec parsable format, else just <varname>
  */
 int 
 cov_print(cg_obj *co, char *cmd, int len, int brief)
 {
-    char          *cmd2;
+    char          *cmd2, *cv;
 
     if (co->co_choice){
 	if (strchr(co->co_choice, '|'))
@@ -78,6 +78,24 @@ cov_print(cg_obj *co, char *cmd, int len, int brief)
 	    if (co->co_range){
 		snprintf(cmd, len, "%s range[%" PRId64 ":%" PRId64 "]", 
 			 cmd2, co->co_range_low, co->co_range_high);
+		free(cmd2);
+		cmd2 = strdup(cmd);
+	    }
+	    if (co->co_expand_fn_str){
+		if (co->co_expand_fn_arg)
+		    cv = cv2str_dup(co->co_expand_fn_arg);
+		else
+		    cv = NULL;
+		snprintf(cmd, len, "%s %s(\"%s\")",  /* XXX: cv2str() */
+			 cmd2, co->co_expand_fn_str, cv?cv:"");
+		if (cv)
+		    free(cv);
+		free(cmd2);
+		cmd2 = strdup(cmd);
+	    }
+	    if (co->co_regex){
+		snprintf(cmd, len, "%s regexp:\"%s\"", 
+			 cmd2, co->co_regex);
 		free(cmd2);
 		cmd2 = strdup(cmd);
 	    }
