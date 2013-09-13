@@ -531,10 +531,7 @@ cliread_parse (cligen_handle h,
 	goto done; 
     if (pt_expand_2(h, pt, &ptn, 0) < 0)      /* expansion */
 	return -1; /* XXX: goto done? */
-/*
- * Here we could insert as a debugging option to see dynamical trees
- *    cligen_print(stdout, ptn, 0);
- */
+
     if ((retval = match_pattern_exact(h, string, ptn, &match_obj, 1)) < 0)
 	goto done;
 
