@@ -902,6 +902,7 @@ keypairs    : keypair
             ;
 
 keypair     : NAME '(' ')' { _YA->ya_var->co_expand_fn_str = $1; }
+            | NAME '(' DQ DQ ')' {_YA->ya_var->co_expand_fn_str = $1; }
             | NAME '(' DQ charseq DQ ')' {
 		_YA->ya_var->co_expand_fn_str = $1; 
 		expand_arg(_ya, "string", $4);
