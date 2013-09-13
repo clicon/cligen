@@ -161,25 +161,30 @@ transform_var_to_cmd(cg_obj *co, char *cmd, char *comment)
 static int
 pt_callback_reference(parse_tree pt, struct cg_callback *cc0)
 {
-    int     i;
-    cg_obj *co;
-    int     retval = -1;
+    int                 i;
+    cg_obj             *co;
+    parse_tree         *ptc;
+    int                 retval = -1;
     struct cg_callback *cc;
 
     for (i=0; i<pt.pt_len; i++){    
 	if ((co = pt.pt_vec[i]) == NULL)
 	    continue;
-	/* Copy the callback from top */
-	if ((cc = co->co_callbacks) == NULL){
-	    if (co_callback_copy(cc0, &co->co_callbacks, NULL) < 0)
-		return -1;
-	}
-	else {
-	    cc->cc_fn = cc0->cc_fn; /* iterate */
-	    if (cc0->cc_fn_str){
-		if (cc->cc_fn_str)
-		    free (cc->cc_fn_str);
-		cc->cc_fn_str = strdup(cc0->cc_fn_str);
+	ptc = &co->co_pt;
+	/* Filter out non-executable non-terminals */
+	if (ptc->pt_len && ptc->pt_vec[0] == NULL){
+	    /* Copy the callback from top */
+	    if ((cc = co->co_callbacks) == NULL){
+		if (co_callback_copy(cc0, &co->co_callbacks, NULL) < 0)
+		    return -1;
+	    }
+	    else {
+		cc->cc_fn = cc0->cc_fn; /* iterate */
+		if (cc0->cc_fn_str){
+		    if (cc->cc_fn_str)
+			free (cc->cc_fn_str);
+		    cc->cc_fn_str = strdup(cc0->cc_fn_str);
+		}
 	    }
 	}
 	if (pt_callback_reference(co->co_pt, cc0) < 0)
@@ -398,6 +403,8 @@ pt_expand_2(cligen_handle h,
 	}
     } /* for */
     cligen_parsetree_sort(*ptn, 1);
+    if (cligen_logsyntax(h) > 0)
+	cligen_print(stderr, *ptn, 0);
      return 0;
 }
 
