@@ -104,7 +104,7 @@ install-lib: $(MYLIB)
 # <cligen/cligen.h>
 install-include: $(INCS)
 	install -d $(includedir) 
-	install -m 644 $^ $(includedir) 
+	install -m 644 $(INCS) $(includedir) 
 
 uninstall: 
 	rm -f $(libdir)/$(MYLIB)
