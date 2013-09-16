@@ -64,7 +64,7 @@ APPS		= cligen_hello cligen_file cligen_tutorial
 YACC		= @YACC@
 LEX		= @LEX@
 
-all:	cligen $(MYLIB) $(MYLIBLINK) cligen_tutorial.pdf $(APPS)
+all:	cligen $(MYLIB) $(MYLIBLINK) $(APPS)
 
 tags:	;etags *.[ch]
 
@@ -90,21 +90,21 @@ build.c:
 install: install-lib install-include
 
 install-bin: $(APPS)
-	install -m 755 -d $(bindir) 
-	install -m 755 $(APPS) $(bindir) 
+	install -m 755 -d $(DESTDIR)$(bindir) 
+	install -m 755 $(APPS) $(DESTDIR)$(bindir) 
 
 install-lib: $(MYLIB)
-	install -m 755 -d $(libdir) 
-	install -m 755 $(MYLIB) $(libdir) 
-	ln -sf $(MYLIB) $(libdir)/$(MYLIBLINK) # So that other can use -lcligen
-#	ldconfig $(libdir) # not strictly necessary since name is same
+	install -m 755 -d $(DESTDIR)$(libdir) 
+	install -m 755 $(MYLIB) $(DESTDIR)$(libdir) 
+	ln -sf $(MYLIB) $(DESTDIR)$(libdir)/$(MYLIBLINK) # So that other can use -lcligen
+#	ldconfig $(DESTDIR)$(libdir) # not strictly necessary since name is same
 
 
 # Installs include files in subdir called 'cligen'. Applications should include
 # <cligen/cligen.h>
 install-include: $(INCS)
-	install -d $(includedir) 
-	install -m 644 $(INCS) $(includedir) 
+	install -d $(DESTDIR)$(includedir) 
+	install -m 644 $(INCS) $(DESTDIR)$(includedir) 
 
 uninstall: 
 	rm -f $(libdir)/$(MYLIB)
@@ -151,10 +151,6 @@ $(MYLIBSO) : $(MYLIB)
 
 $(MYLIBLINK) : $(MYLIB)
 	ln -sf $(MYLIB) $@
-
-cligen_tutorial.pdf: cligen_tutorial.tex 
-	$(pdflatex) $^
-	$(pdflatex) $^
 
 # recursive link to handle application include files, if you have not installed
 # .h files in $(includefile)
