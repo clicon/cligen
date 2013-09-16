@@ -981,7 +981,7 @@ interfaces. If the helptexts are not given, the helptext in the specification is
 
 \begin{verbatim}
   int 
-  expand_ifname((cligen_handle h, char *name, cg_var *arg, 
+  expand_ifname((cligen_handle h, char *name, cvec *vars, cg_var *arg, 
                 int *nr, char ***commands, char ***helptext)
   {
     *commands = calloc(2, sizeof(char*)); 
@@ -1198,6 +1198,9 @@ This appendix contains a list of cligen API functions. There are several more wh
 
 {\tt int cvec\_match(cg\_obj *co\_match, char   *cmd, cvec   *vr)}\\*
 \emph{ Create cv list by matching a CLIgen parse-tree and an input string. }
+
+{\tt int cvec\_start(char   *cmd)}\\*
+\emph{ Create a cv list with a single string element. }
 
 {\tt int cvec\_print(FILE *f, cvec *vr)}\\*
 \emph{ Pretty print cligen variable list to a file}

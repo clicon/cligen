@@ -50,6 +50,7 @@ cg_var *cvec_each(cvec *vr, cg_var *prev);
 cg_var *cvec_each1(cvec *vr, cg_var *prev);
 cvec   *cvec_dup(cvec *old);
 int     cvec_match(struct cg_obj *co_match, char *cmd, cvec *vr);
+cvec   *cvec_start(char *cmd);
 int     cvec_print(FILE *f, cvec *vr);
 
 cg_var *cvec_find(cvec *vr, char *name);

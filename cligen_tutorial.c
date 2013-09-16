@@ -172,8 +172,8 @@ str2fn(char *name, void *arg, char **error)
  * would have introduced som more dynamics.
  */
 int
-cli_expand_cb(cligen_handle h, char *fn_str, cg_var *cv, int *nr, char ***commands, 
-	      char ***comments)
+cli_expand_cb(void *h, char *fn_str, cvec *vars, cg_var *cv, 
+	      int *nr, char ***commands, char ***comments)
 {
     int n = 2;
     /* Interface name expansion. */

@@ -68,9 +68,10 @@
 /*
  * Local prototypes
  */
-static int show_multi(cligen_handle h, FILE *fout, char *s, parse_tree pt);
-static int show_multi_long(cligen_handle h, FILE *fout, char *s, parse_tree pt);
-static int complete(cligen_handle h, char *s0, int *lenp, parse_tree pt);
+static int show_multi(cligen_handle h, FILE *fout, char *s, parse_tree pt, cvec *cvec);
+static int show_multi_long(cligen_handle h, FILE *fout, char *s, parse_tree pt, cvec *);
+static int complete(cligen_handle h, char *s0, int *lenp, parse_tree pt, cvec *cvec);
+
 
 /*
  * cli_qmark_hook
@@ -88,10 +89,11 @@ static int
 cli_qmark_hook (void *arg, char *string, int cursor_loc)
 {
     cligen_handle h = (cligen_handle)arg;
-    parse_tree *pt;     /* Orig */
-    int        retval = -1;
-    char      *mode;
-    parse_tree ptn={0,};     /* Expanded */
+    parse_tree   *pt;     /* Orig parse-tree */
+    int           retval = -1;
+    char         *mode;
+    parse_tree    ptn={0,};     /* Expanded */
+    cvec         *cvec = NULL;
 
     fputs ("\n", stdout);
     mode = cligen_tree_active(h);
@@ -101,12 +103,16 @@ cli_qmark_hook (void *arg, char *string, int cursor_loc)
     }
     if (pt_expand_1(h, NULL, pt) < 0) /* sub-tree expansion */
 	goto quit; 
-    if (pt_expand_2(h, pt, &ptn, 1) < 0)      /* expansion */
+    if ((cvec = cvec_start(string)) == NULL)
+	goto quit;
+    if (pt_expand_2(h, pt, cvec, &ptn, 1) < 0)      /* expansion */
 	return -1;
-    if (show_multi_long(h, stdout, string, ptn) <0)
+    if (show_multi_long(h, stdout, string, ptn, cvec) <0)
 	goto quit;
     retval = 1;
   quit:
+    if (cvec)
+	cvec_free(cvec);
     if (cligen_parsetree_free(ptn, 0) < 0)
 	return -1;
     if (pt_expand_cleanup_2(*pt) < 0) 
@@ -136,11 +142,12 @@ static int
 cli_tab_hook(void *arg, char *string, int prompt_width, int *cursorp)
 {
     cligen_handle h = (cligen_handle)arg;
-    int	      old_cursor;
-    parse_tree *pt;     /* Orig */
-    int       retval = -1;
-    char      *treename;
-    parse_tree ptn={0,};     /* Expanded */
+    int	          old_cursor;
+    parse_tree   *pt;     /* Orig */
+    int           retval = -1;
+    char         *treename;
+    parse_tree    ptn={0,};     /* Expanded */
+    cvec         *cvec = NULL;
 
     old_cursor = *cursorp;  /* Save old location of cursor */
     treename = cligen_tree_active(h);
@@ -149,25 +156,29 @@ cli_tab_hook(void *arg, char *string, int prompt_width, int *cursorp)
 	return -1;
     }
     if (pt_expand_1(h, NULL, pt) < 0) /* sub-tree expansion */
+	goto quit;
+    if ((cvec = cvec_start(string)) == NULL)
 	goto quit; 
-    if (pt_expand_2(h, pt, &ptn, 1) < 0)      /* expansion */
+    if (pt_expand_2(h, pt, cvec, &ptn, 1) < 0)      /* expansion */
 	return -1;
-    if (complete(h, string, cursorp, ptn) < 0)
+    if (complete(h, string, cursorp, ptn, cvec) < 0)
 	goto quit;
     else {
 	if (old_cursor == *cursorp) { 	/* Cursor hasnt changed */
 	    fputs ("\n", stdout);
 	    if (cligen_tabmode(h) == 1){
-		if (show_multi_long(h, stdout, string, ptn) < 0)
+		if (show_multi_long(h, stdout, string, ptn, cvec) < 0)
 		    goto quit;
 	    }
 	    else
-		if (show_multi(h, stdout, string, ptn) < 0)
+		if (show_multi(h, stdout, string, ptn, cvec) < 0)
 		    goto quit;
 	}
     }
     retval = -2; /* To getline: -2 means new line, redraw everything.. */
   quit:
+    if (cvec)
+	cvec_free(cvec);
     if (cligen_parsetree_free(ptn, 0) < 0)
 	return -1;
     if (pt_expand_cleanup_2(*pt) < 0)
@@ -242,17 +253,23 @@ column_print(FILE *fout, int col, pt_vec pt, int min, int max, int level)
  * show_multi
  * Show briefly the commands available (show no help)
  * Typically called when TAB is pressed and there are multiple options.
- * INPUT:
+ * IN:
  *   fout    This is where the output (help text) is shown.
  *   string  Input string to match
  *   pt      Vector of commands (array of cligen object pointers (cg_obj)
  *   pt_max  Length of the pt array
+ * OUT:
+ *   cvec      cligen variable vector containing vars/values pair for completion
  * RETURNS:
  *   0       OK
  *  -1       Error
  */
 static int
-show_multi(cligen_handle h, FILE *fout, char *string, parse_tree pt)
+show_multi(cligen_handle h, 
+	   FILE         *fout, 
+	   char         *string, 
+	   parse_tree    pt, 
+	   cvec         *cvec)
 {
     int    nr = 0;
     int    level;
@@ -263,7 +280,7 @@ show_multi(cligen_handle h, FILE *fout, char *string, parse_tree pt)
 
     if (string != NULL){
 	if ((nr = match_pattern(h, string, pt, 0, 1,
-				&pt1, &matchv, &matchlen, NULL)) < 0)
+				&pt1, &matchv, &matchlen, cvec, NULL)) < 0)
 	    goto done;
     }
     if ((level = command_levels(string)) < 0)
@@ -285,11 +302,13 @@ show_multi(cligen_handle h, FILE *fout, char *string, parse_tree pt)
  * show_multi_long
  * Show one row per command with help text for each command
  * Typically called when a question mark is pressed
- * INPUT:
+ * IN:
+ *   h       cligen handle
  *   fout    This is where the output (help text) is shown.
  *   string  Input string to match
  *   pt      Parse tree
-
+ * OUT:
+ *   cvec      cligen variable vector containing vars/values pair for completion
  * RETURNS:
  *   0       OK
  *   -1      Error
@@ -306,27 +325,32 @@ Possible completions:
 
  */
 static int
-show_multi_long(cligen_handle h, FILE *fout, char *string, parse_tree pt)
+show_multi_long(cligen_handle h, 
+		FILE         *fout, 
+		char         *string, 
+		parse_tree    pt, 
+		cvec         *cvec)
 {
-    int   nr = 0;
-    int	i;
-    int   level;
-    pt_vec pt1;
-    char	*tmp, *tmpp;
-    char	cmd[COLUMN_WIDTH+1];
-    int matchlen = 0;
-    int *matchv = NULL;
-    int mv;
-    int res;
-    char var[128];
-    int  retval = -1;
-    cg_obj *co;
-    int  skip;
+    int          nr = 0;
+    int	         i;
+    int          level;
+    pt_vec       pt1;
+    char	*tmp;
+    char	*tmpp;
+    char 	 cmd[COLUMN_WIDTH+1];
+    int          matchlen = 0;
+    int         *matchv = NULL;
+    int          mv;
+    int          res;
+    char         var[128];
+    int          retval = -1;
+    cg_obj      *co;
+    int          skip;
 
     memset(cmd, 0, COLUMN_WIDTH+1); /* always a zero in last char */
     /* Build match vector, but why would string ever be NULL? */
     if (string != NULL){
-	if ((nr = match_pattern(h, string, pt, 0, 1, &pt1, &matchv, &matchlen, NULL)) < 0)
+	if ((nr = match_pattern(h, string, pt, 0, 1, &pt1, &matchv, &matchlen, cvec, NULL)) < 0)
 	    goto done;
     }
     if ((level = command_levels(string)) < 0)
@@ -347,7 +371,7 @@ show_multi_long(cligen_handle h, FILE *fout, char *string, parse_tree pt)
 	   Example: x [y|z] and we have typed 'x ', then show
 	   help for y and z and a 'cr' for 'x'.
 	 */
-	if ((res = match_pattern_exact(h, tmpp, pt, NULL, 0))  < 0){
+	if ((res = match_pattern_exact(h, tmpp, pt, 0, cvec, NULL))  < 0){
 	    free(tmp);
 	    goto done;
 	}
@@ -412,7 +436,7 @@ show_multi_long(cligen_handle h, FILE *fout, char *string, parse_tree pt)
  *   0       success
  */
 static int 
-complete(cligen_handle h, char *string, int *cursorp, parse_tree pt)
+complete(cligen_handle h, char *string, int *cursorp, parse_tree pt, cvec *cvec)
 {
     char    *s;
     int     cursor = *cursorp;
@@ -427,7 +451,7 @@ complete(cligen_handle h, char *string, int *cursorp, parse_tree pt)
     }
     strncpy(s, string, gl_bufsize(h));
     s[cursor] = '\0';
-    if (match_complete(h, s, pt, gl_bufsize(h)) < 0)
+    if (match_complete(h, s, pt, gl_bufsize(h), cvec) < 0)
 	return -1;
     extra = strlen(s) - cursor;      /* Extra characters added? */
     if (extra){
@@ -490,8 +514,8 @@ cli_trim (char **line, char comment)
 }
 
 
-/* 
- * Given an input string, return a parse-tree.
+/*! 
+ * \brief Given an input string, return a parse-tree.
  *
  * Given an input string and a parse-tree, return a matching parse-tree node, a
  * CLIgen keyword and CLIgen variable record vector. 
@@ -522,17 +546,20 @@ cliread_parse (cligen_handle h,
 	       cg_obj      **co_orig,
 	       cvec         *vr)
 {
-    int       retval = -1;
-    cg_obj *match_obj;
-    parse_tree ptn={0,};     /* Expanded */
+    int           retval = -1;
+    cg_obj       *match_obj;
+    parse_tree    ptn={0,};     /* Expanded */
+    cvec         *cvec = NULL;
 
     cli_trim (&string, cligen_comment(h));
     if (pt_expand_1(h, NULL, pt) < 0) /* sub-tree expansion, ie @ */
 	goto done; 
-    if (pt_expand_2(h, pt, &ptn, 0) < 0)      /* expansion */
-	return -1; /* XXX: goto done? */
+    if ((cvec = cvec_start(string)) == NULL)
+	goto done;
+    if (pt_expand_2(h, pt, cvec, &ptn, 0) < 0)      /* expansion */
+	goto done;
 
-    if ((retval = match_pattern_exact(h, string, ptn, &match_obj, 1)) < 0)
+    if ((retval = match_pattern_exact(h, string, ptn, 1, cvec, &match_obj)) < 0)
 	goto done;
 
     /* Map from ghost object match_obj to real object */
@@ -547,6 +574,8 @@ cliread_parse (cligen_handle h,
 	}
     }
   done:
+    if (cvec)
+	cvec_free(cvec);
     if (cligen_parsetree_free(ptn, 0) < 0)
 	return -1;
     if (pt_expand_cleanup_2(*pt) < 0)

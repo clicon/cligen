@@ -41,7 +41,7 @@ typedef expand_cb *(expand_str2fn_t)(char *str, void *arg, char **err);
  * Prototypes
  */
 int pt_expand_1(cligen_handle h, cg_obj *coprev, parse_tree *pt);
-int pt_expand_2(cligen_handle h, parse_tree *pt, parse_tree *ptn, int hide);
+int pt_expand_2(cligen_handle h, parse_tree *pt, cvec *cvec, parse_tree *ptn, int hide);
 int pt_expand_cleanup_1(parse_tree *pt);
 int pt_expand_cleanup_2(parse_tree pt);
 int cligen_expand_register(parse_tree pt, expand_cb *fn);

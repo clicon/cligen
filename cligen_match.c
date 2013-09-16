@@ -520,6 +520,30 @@ match_pattern_terminal(cligen_handle h,
 }
 
 /*
+ * Help function to append a cv to a cvec. For expansion cvec passed to pt_expand_2
+ * IN:
+ *  co     A cligen variable that has a matching value
+ *  cmd    Value in string of the variable
+ * OUT:
+ *  cvec   The cligen variable vector to push a cv with name of co and value in cmd
+ */
+static cg_var *
+add_cov_to_cvec(cg_obj *co, char *cmd, cvec *cvec)
+{
+    cg_var *cv = NULL;
+
+    if ((cv = cvec_add(cvec, co->co_vtype)) == NULL)
+	return NULL;
+    cv_name_set(cv, co->co_command);
+    cv_const_set(cv, iskeyword(co));
+    if (cv_parse(cmd, cv) < 0) {
+	cvec_del(cvec, cv);
+	return NULL;
+    }
+    return cv;
+}
+
+/*
  * match_pattern_node
  * Non-terminal. Need to match exact.
  * INPUT:
@@ -538,15 +562,21 @@ match_pattern_terminal(cligen_handle h,
  *   matchv    A vector of integers containing which 
  *   matchlen  Length of matchv. That is, # of matches and same as return 
  *              value (if 0-n)
+ *   cvec      cligen variable vector containing vars/values pair for completion
  *   reason0   If retval = 0, this may be malloced to indicate reason for not
  *             matching variables, if given. Need to be free:d
  */
 static int 
 match_pattern_node(cligen_handle h, 
-		   char *string0, parse_tree pt,
-		   int level, int use_pref, int hide,
+		   char *string0, 
+		   parse_tree pt,
+		   int level, 
+		   int use_pref, 
+		   int hide,
 		   pt_vec *ptp, 
-		   int *matchv[], int *matchlen,
+		   int *matchv[], 
+		   int *matchlen,
+		   cvec  *cvec,
 		   char **reason0
 		   )
 {
@@ -566,6 +596,7 @@ match_pattern_node(cligen_handle h,
     char *reason;
     int findreason;
     parse_tree ptn={0,};     /* Expanded */
+    cg_var *cv = NULL;
 
     co_match = NULL;
     if (level > command_levels(string0)){
@@ -650,11 +681,19 @@ match_pattern_node(cligen_handle h,
     if ((cmd_levels = command_levels(string0)) < 0)
 	goto error;
 
+    co_orig = co_match->co_ref?co_match->co_ref: co_match;
     if (pt_expand_1(h, co_match, &co_match->co_pt) < 0) /* sub-tree expansion */
 	goto error; 
-    if (pt_expand_2(h, &co_match->co_pt, &ptn, hide) < 0) /* expand/choice variables */
-	goto error;
 
+    if (co_match->co_type == CO_VARIABLE)
+	if ((cv = add_cov_to_cvec(co_match, string, cvec)) == NULL)
+	    goto error;
+    /* co_orig is original object in case of expansion */
+    if (co_match->co_type == CO_COMMAND && co_orig->co_type == CO_VARIABLE)
+	if ((cv = add_cov_to_cvec(co_orig, string, cvec)) == NULL)
+	    goto error;
+    if (pt_expand_2(h, &co_match->co_pt, cvec, &ptn, hide) < 0) /* expand/choice variables */
+	goto error;
     if (level+1 == cmd_levels)
 	retval = match_pattern_terminal(h,
 					string0, ptn, 
@@ -664,14 +703,15 @@ match_pattern_node(cligen_handle h,
 	retval = match_pattern_node(h, 
 				    string0, ptn,
 				    level+1, use_pref, hide,
-				    ptp, matchv, matchlen, reason0);
-    co_orig = co_match->co_ref?co_match->co_ref: co_match;
+				    ptp, matchv, matchlen, cvec, reason0);
+
     if (pt_expand_add(co_orig, ptn) < 0) /* add expanded ptn to orig parsetree */
 	goto error;
-    if (co_match->co_type == CO_COMMAND && co_orig->co_type == CO_VARIABLE){
+    if (co_match->co_type == CO_COMMAND && co_orig->co_type == CO_VARIABLE)
 	if (co_value_set(co_orig, co_match->co_command) < 0)
 	    goto error;
-    }
+
+
     /* Cleanup made on top-level */
     
     /* 
@@ -693,6 +733,8 @@ match_pattern_node(cligen_handle h,
 	(*matchv)[0] = rest_match;
     }
   quit:
+    if (cv)
+	cvec_del(cvec, cv);
     /* Only the last level may have multiple matches */
     if (string)
 	free(string);
@@ -722,6 +764,7 @@ match_pattern_node(cligen_handle h,
  *   matchv    A vector of integers containing which 
  *   matchlen  Length of matchv. That is, # of matches and same as return 
  *              value (if 0-n)
+ *   cvec      cligen variable vector containing vars/values pair for completion
  *   reason0   If retval = 0, this may be malloced to indicate reason for not
  *             matching variables, if given. Neeed to be free:d
  *
@@ -733,6 +776,7 @@ match_pattern(cligen_handle h,
 	      char *string, parse_tree pt, int use_pref, int hide,
 	      pt_vec *ptp, 
 	      int *matchv[], int *matchlen, 
+	      cvec *cvec,
 	      char **reason0)
 {
     int retval;
@@ -750,6 +794,7 @@ match_pattern(cligen_handle h,
 	retval = match_pattern_node(h, 
 				    string, pt, 0, use_pref, hide,
 				    ptp, matchv, matchlen, 
+				    cvec,
 				    reason0);
     return retval;
 }
@@ -762,6 +807,7 @@ match_pattern(cligen_handle h,
  *   pt         CLIgen parse tree, vector of cligen objects.
  *   exact      Try to find an exact match. if 0 dont bother about errors.
  * OUTPUT:
+ *   cvec      cligen variable vector containing vars/values pair for completion
  *   match_obj  Exact object to return
  * RETURNS:
  *  -1       Error
@@ -773,10 +819,11 @@ match_pattern(cligen_handle h,
  */
 int 
 match_pattern_exact(cligen_handle h, 
-		    char *string, 
-		    parse_tree pt, 
-		    cg_obj **match_obj, 
-		    int exact)
+		    char         *string, 
+		    parse_tree    pt, 
+		    int           exact,
+		    cvec         *cvec,
+		    cg_obj      **match_obj)
 {
   pt_vec  res_pt;
   cg_obj *co;
@@ -790,7 +837,7 @@ match_pattern_exact(cligen_handle h,
   if (exact)
       cligen_nomatch_set(h, NULL); 
   if ((ret = match_pattern(h, string, pt, 1, 0, &res_pt, 
-			   &matchv, &matchlen, &reason)) < 0)
+			   &matchv, &matchlen, cvec, &reason)) < 0)
       return -1;
   if (ret == 0) {
       if (exact){
@@ -870,17 +917,25 @@ match_pattern_exact(cligen_handle h,
  * Try to complete a string as far as possible using the syntax.
  * 
  * Parameters
+ * IN
+ *   h       cligen handle
  *   string  Input string to match
  *   pt      Vector of commands (array of cligen object pointers (cg_obj)
  *   pt_max  Length of the pt array
  *   maxlen  Max length of string
+ * OUT
+ *   cvec      cligen variable vector containing vars/values pair for completion
  * RETURNS:
  *   -1 - Error 
  *   0  - No matches, no completions made
  *   1  - We have completed by adding characters at the end of "string"
  */
 int 
-match_complete(cligen_handle h, char *string, parse_tree pt, int maxlen)
+match_complete(cligen_handle h, 
+	       char         *string, 
+	       parse_tree    pt, 
+	       int           maxlen, 
+	       cvec         *cvec)
 {
     int level;
     int slen;
@@ -903,7 +958,7 @@ match_complete(cligen_handle h, char *string, parse_tree pt, int maxlen)
 	    s++;
  again:
     matchlen = 0;
-    if ((nr = match_pattern(h, s, pt, 0, 1, &pt1, &matchv, &matchlen, NULL)) < 0)
+    if ((nr = match_pattern(h, s, pt, 0, 1, &pt1, &matchv, &matchlen, cvec, NULL)) < 0)
 	goto done;
     if (nr==0){
 	retval = 0;

@@ -167,6 +167,7 @@ cvec_add(cvec *vr, enum cv_type type)
     return cv;
 }
 
+
 /*! 
  * \brief  Delete a cv variable from a cvec. Note, cv is not reset
  */
@@ -409,6 +410,31 @@ cvec_match(cg_obj *co_match,
   done:
     return retval;
 } /* cvec_match */
+
+
+/*! 
+ * \brief Create a cv list with a single string element.
+ *
+ * Help function when creating cvec to cligen callbacks.
+ */
+cvec *
+cvec_start(char *cmd)
+{
+    cvec *cvec;
+    cg_var    *cv;
+
+    if ((cvec = cvec_new(1)) == NULL){
+	fprintf(stderr, "%s: cvec_new: %s\n", __FUNCTION__, strerror(errno));
+	return NULL;
+    }
+    cv = cvec_i(cvec, 0);
+    cv->var_type = CGV_REST;
+    cv_name_set(cv, "cmd"); /* the whole command string */
+    cv_string_set(cv, cmd); /* the whole command string */
+    return cvec;
+}
+
+
 
 /*! 
  * \brief Pretty print cligen variable list to a file

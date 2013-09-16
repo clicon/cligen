@@ -31,12 +31,12 @@
  * Function Prototypes
  */
 int match_pattern(cligen_handle h, char *, parse_tree , int, int, pt_vec *, 
-		  int **, int *, char **);
-int match_pattern_exact(cligen_handle h, char *, parse_tree , cg_obj **, int exact);
+		  int **, int *, cvec *, char **);
+int match_pattern_exact(cligen_handle h, char *, parse_tree, int exact, cvec *, cg_obj **);
 int command_levels(char *string);
 int extract_substring(char *string0, int level, char **sp);
 int extract_substring_rest(char *string0, int level, char **sp);
-int match_complete(cligen_handle h, char *string0, parse_tree pt, int maxlen);
+int match_complete(cligen_handle h, char *string0, parse_tree pt, int maxlen, cvec *cvec);
 
 #endif /* _CLIGEN_MATCH_H */
 

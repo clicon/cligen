@@ -304,32 +304,34 @@ pt_expand_1(cligen_handle h, cg_obj *coprev, parse_tree *pt)
  * (eg <string expand:foo>) are transformed into a set of new commands
  * with a reference point back to the original.
  * Arguments:
+ *   h:       cligen handle
  *   ptr:     original parse-tree consisting of a vector of cligen objects
  *   parent:  parent of original co object
  *   ptn:     shadow parse-tree initially an empty pointer, its value is returned.
  */
 int
 pt_expand_2(cligen_handle h, 
-	    parse_tree *ptr, 
-	    parse_tree *ptn, 
+	    parse_tree   *ptr, 
+	    cvec         *cvec,
+	    parse_tree   *ptn, 
 	    int hide) 
 {
-    int            i, k, nr;
+    int          i, k, nr;
     cg_obj      *co;
     cg_obj      *con;
     char       **commands;
-    char       **comments;
-    cg_obj *parent = NULL;
+    char       **helptexts;
+    cg_obj      *parent = NULL;
+    int          retval = -1;
 
     ptn->pt_len = 0;
     ptn->pt_vec = NULL;
     if (ptr->pt_vec == NULL)
 	return 0;
-
     for (i=0; i<ptr->pt_len; i++){ /* Build ptn (new) from ptr (orig) */
 	if ((co = ptr->pt_vec[i]) != NULL){
 	    if (co_value_set(co, NULL) < 0)
-		return -1;
+		goto done;
 	    if (hide && co->co_hide)
 		continue;
 
@@ -346,10 +348,10 @@ pt_expand_2(cligen_handle h,
 		    pt_realloc(ptn);
 		    if (co_expand_sub(co, parent, 
 					    &ptn->pt_vec[ptn->pt_len-1]) < 0)
-			return -1;
+			goto done;
 		    con = ptn->pt_vec[ptn->pt_len-1];
 		    if (transform_var_to_cmd(con, strdup(c), NULL) < 0) 
-			return -1;
+			goto done;
 		}
 		if (cp)
 		  free(cp);
@@ -357,35 +359,36 @@ pt_expand_2(cligen_handle h,
 	    }
 	    else
 		/*
-		 * New Expand variable - call expand callback and insert expanded
+		 * expand variable - call expand callback and insert expanded
 		 * commands in place of the variable
 		 */
 	    if (co->co_type == CO_VARIABLE && co->co_expand_fn != NULL){
 	      commands = NULL;
-	      comments = NULL;
+	      helptexts = NULL;
 	      nr = 0;
 	      if ((*co->co_expand_fn)(
 		     cligen_userhandle(h)?cligen_userhandle(h):h, 
 		     co->co_expand_fn_str, 
+		     cvec,
 		     co->co_expand_fn_arg, 
 		     &nr, 
 		     &commands, 
-		     &comments) < 0)
-		  return -1;
+		     &helptexts) < 0)
+		  goto done;
 	      for (k=0; k<nr; k++){
 		  pt_realloc(ptn);
 		  if (co_expand_sub(co, parent, 
 					  &ptn->pt_vec[ptn->pt_len-1]) < 0)
-		      return -1;
+		      goto done;
 		  con = ptn->pt_vec[ptn->pt_len-1];
 		  if (transform_var_to_cmd(con, commands[k], 
-					   comments?comments[k]:NULL) < 0)
-		      return -1;
+					   helptexts?helptexts[k]:NULL) < 0)
+		      goto done;
 	      }
 	      if (commands)
 		  free(commands);
-	      if (comments)
-		  free(comments);
+	      if (helptexts)
+		  free(helptexts);
 	    }
 	    else{
 		/* Copy vector element */
@@ -393,7 +396,7 @@ pt_expand_2(cligen_handle h,
 		/* Copy cg_obj */
 		  if (co_expand_sub(co, parent, 
 					  &ptn->pt_vec[ptn->pt_len-1]) < 0)
-		    return -1;
+		      goto done;
 		/* Reference old cg_obj */
 //		  con = ptn->pt_vec[ptn->pt_len-1];
 	    }
@@ -403,9 +406,13 @@ pt_expand_2(cligen_handle h,
 	}
     } /* for */
     cligen_parsetree_sort(*ptn, 1);
-    if (cligen_logsyntax(h) > 0)
+    if (cligen_logsyntax(h) > 0){
+	fprintf(stderr, "%s:\n", __FUNCTION__);
 	cligen_print(stderr, *ptn, 0);
-     return 0;
+    }
+    retval = 0;
+  done:
+     return retval;
 }
 
 /* 

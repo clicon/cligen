@@ -79,8 +79,8 @@ cligen_exec_cb(cligen_handle handle, cvec *vars, cg_var *arg)
 }
 
 int
-expand3(cligen_handle h, char *fn_str, cg_var *arg, int *nr, char ***commands, 
-	char ***comments)
+expand3(void *h, char *fn_str, cvec *vars, cg_var *arg, 
+	int *nr, char ***commands, char ***comments)
 {
     int n = 2;
     char buf[64];
@@ -98,8 +98,8 @@ expand3(cligen_handle h, char *fn_str, cg_var *arg, int *nr, char ***commands,
 }
 
 int
-expand4(cligen_handle h, char *fn_str, cg_var *arg, int *nr, char ***commands, 
-	char ***comments)
+expand4(void *h, char *fn_str, cvec *vars, cg_var *arg, 
+	int *nr, char ***commands, char ***comments)
 {
     int n = 2;
     char buf[64];
@@ -126,6 +126,7 @@ expand4(cligen_handle h, char *fn_str, cg_var *arg, int *nr, char ***commands,
 int
 cli_expand_fn(cligen_handle h,
 	      char *name, 
+	      cvec *vars, 
 	      cg_var *cv,
 	      int *nr, 
 	      char ***commands)
