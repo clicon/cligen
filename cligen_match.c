@@ -537,6 +537,7 @@ add_cov_to_cvec(cg_obj *co, char *cmd, cvec *cvec)
     cv_name_set(cv, co->co_command);
     cv_const_set(cv, iskeyword(co));
     if (cv_parse(cmd, cv) < 0) {
+	cv_reset(cv);
 	cvec_del(cvec, cv);
 	return NULL;
     }
@@ -681,17 +682,19 @@ match_pattern_node(cligen_handle h,
     if ((cmd_levels = command_levels(string0)) < 0)
 	goto error;
 
+    /* co_orig is original object in case of expansion */
     co_orig = co_match->co_ref?co_match->co_ref: co_match;
     if (pt_expand_1(h, co_match, &co_match->co_pt) < 0) /* sub-tree expansion */
 	goto error; 
 
-    if (co_match->co_type == CO_VARIABLE)
+    if (co_match->co_type == CO_VARIABLE){
 	if ((cv = add_cov_to_cvec(co_match, string, cvec)) == NULL)
 	    goto error;
-    /* co_orig is original object in case of expansion */
-    if (co_match->co_type == CO_COMMAND && co_orig->co_type == CO_VARIABLE)
-	if ((cv = add_cov_to_cvec(co_orig, string, cvec)) == NULL)
-	    goto error;
+    }
+    else
+	if (co_match->co_type == CO_COMMAND && co_orig->co_type == CO_VARIABLE)
+	    if ((cv = add_cov_to_cvec(co_orig, string, cvec)) == NULL)
+		goto error;
     if (pt_expand_2(h, &co_match->co_pt, cvec, &ptn, hide) < 0) /* expand/choice variables */
 	goto error;
     if (level+1 == cmd_levels)
@@ -733,8 +736,11 @@ match_pattern_node(cligen_handle h,
 	(*matchv)[0] = rest_match;
     }
   quit:
-    if (cv)
+    if (cv){ /* cv may be stale */
+	cv = cvec_i(cvec, cvec_len(cvec)-1);
+	cv_reset(cv);
 	cvec_del(cvec, cv);
+    }
     /* Only the last level may have multiple matches */
     if (string)
 	free(string);

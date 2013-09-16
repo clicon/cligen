@@ -1185,7 +1185,7 @@ This appendix contains a list of cligen API functions. There are several more wh
 \emph{  Append a new cligen variable (cv) to cligen variable vector (cvec) and return it.}
 
 {\tt int cvec\_del(cvec *vr, cg\_var *del)}\\*
-\emph{  Delete a cv variable from a cvec.}
+\emph{  Delete a cv variable from a cvec. Note: cv is not reset & cv may be stale!}
 
 {\tt int cvec\_len(cvec *vr)}\\*
 \emph{ return length of a cvec.}

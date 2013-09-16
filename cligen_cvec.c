@@ -169,7 +169,12 @@ cvec_add(cvec *vr, enum cv_type type)
 
 
 /*! 
- * \brief  Delete a cv variable from a cvec. Note, cv is not reset
+ * \brief Delete a cv variable from a cvec. Note: cv is not reset & cv may be stale!
+ *
+ * This is a dangerous command since the cv it deletes (such as created by cvec_add)
+ * may have been modified with realloc (eg cvec_add/delete) and therefore can not be 
+ * used as a reference.  Safer methods are to use cvec_find/cvec_i to find a cv and 
+ * then to immediately remove it. 
  */
 int
 cvec_del(cvec *vr, cg_var *del)
