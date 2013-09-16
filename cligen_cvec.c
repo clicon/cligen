@@ -59,9 +59,10 @@ static int excludekeys = 0;
 
 /*! 
  * \brief  Create and initialize a new cligen variable vector (cvec)
- *
- * input parameters:
- * len  number of cv elements. Can be zero and elements added incrementally.
+ * 
+ * Returned cvec needs to be freed with cvec_free().
+ * IN
+ *   len  Number of cv elements. Can be zero and elements added incrementally.
  */
 cvec *
 cvec_new(int len)
