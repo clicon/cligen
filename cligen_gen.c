@@ -869,6 +869,9 @@ cligen_reason(const char *fmt, ...)
 
 /*! 
  * \brief  Apply a function call recursively on all cg_obj:s in a parse-tree
+ *
+ * Recursively traverse all cg_obj in a parse-tree and apply fn(arg) for each
+ * object found. The function is called with the cg_obj and an argument as args.
  */
 int
 pt_apply(parse_tree pt, cg_applyfn_t fn, void *arg)

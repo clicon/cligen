@@ -98,7 +98,4 @@ int cligen_logsyntax_set(cligen_handle h, int n);
 void *cligen_userhandle(cligen_handle h);
 int cligen_userhandle_set(cligen_handle h, void *userhandle);
 
-void *cligen_userdata(cligen_handle h);
-int cligen_userdata_set(cligen_handle h, void *user);
-
 #endif /* _CLIGEN_HANDLE_H_ */

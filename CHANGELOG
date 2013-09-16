@@ -10,24 +10,36 @@ to
 The old syntax will be kept for some releases.
 
 Setting of terminal length, not hardcode to 80:
-cligen_terminal_length_set(h, 160);
+   cligen_terminal_length_set(h, 160);
 
-Added help-text to expanded variables. An expand callback now has a 'comments' argument:
+Added help-text and cligen variable vector to expanded variables. An
+expand callback now has a 'vars' and 'helptext' argument:
 NOTE: You need to change all expand callbacks in your user C-code:
-   int expandcb(cligen_handle h, char *fn_str, cg_var *arg, int *nr, char ***commands);
+   int expandcb(cligen_handle h, char *fn_str, cg_var *arg, 
+                int *nr, char ***commands);
 to
-   int expandcb(cligen_handle h, char *fn_str, cg_var *arg, int *nr, char ***commands, char ***comments);
-The comments variable is set in the same way as 'commands'. If it is left empty, 
+   int expandcb(cligen_handle h, char *fn_str, cvec *vars, cg_var *arg, 
+                int *nr, char ***commands, char ***helptexts);
+The helptext variable is set in the same way as 'commands'. If it is left empty, 
 the help-text in the specification is used.
+'vars' is a cligen variable vector of the command line. Same semantics as in cligen
+calbacks.
 
-cligen_print() now prints a complete parsable syntax. It was
-previously not complete for variables.
+cligen_print() now prints a complete parsable syntax when brief=0. It was
+previously not complete for variables. It now prints also expand and regex.
 
 Removed byacc support. It leaks memory and can't get the generated code to work.
 
-Added 'default' keyword to variable syntax (experimental for optional variables).
-
 Support for clang compiler
+
+Added a userdata field for cligen_objects (co) to add app-specific
+fields. The default field is removed and can be implemented by
+userdata.
+
+Added pt_apply that applies a function call recursively on all cg_obj:s in a parse-tree
+
+Added cligen_logsyntax[_set]() as a debug-function to track dynamic
+cligen syntax, including tree-references and completion.
 
 R3_3_0 April 2013
 =================

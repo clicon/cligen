@@ -469,7 +469,7 @@ cligen_submode_set(cligen_handle h, char *name, parse_tree *pt)
 #endif /* CLIGEN_SUBMODE */
 
 /*! 
- * \brief Get completion mode
+ * \brief Get completion mode. 0: complete 1 level. 1: complete all
  *
  *  0   for each <TAB> complete one level. (default)
  *  1   complete all unique levels at once
@@ -485,7 +485,7 @@ cligen_completion(cligen_handle h)
 }
 
 /*! 
- * \brief Set completion mode
+ * \brief Set completion mode. 0: complete 1 level. 1: complete all
  */
 int
 cligen_completion_set(cligen_handle h, int mode)
@@ -496,7 +496,8 @@ cligen_completion_set(cligen_handle h, int mode)
     return 0;
 }
 
-/*
+/*!
+ * \brief Get Error string explaining why there was no match.
  * Fill error string buffer
  * Why is there no match of an input string in the parse-tree?
  * The call to cliread_parse/getline/eval returns CG_NOMATCH and this is where
@@ -510,6 +511,9 @@ cligen_nomatch(cligen_handle h)
     return ch->ch_nomatch;
 }
 
+/*!
+ * \brief Set Error string explaining why there was no match.
+ */
 int
 cligen_nomatch_set(cligen_handle h, const char *fmt, ...)
 {
@@ -593,9 +597,8 @@ cligen_terminal_length_set(cligen_handle h, int length)
 
 
 /*! 
- * \brief Get tab-mode, 
+ * \brief Get tab-mode. 0 is 'short/ios' mode, 1 is long/junos mode.
  *
- * 0 means short mode (eg like ios), 1 means long mode (eg like junos)
  */
 int 
 cligen_tabmode(cligen_handle h)
@@ -606,7 +609,7 @@ cligen_tabmode(cligen_handle h)
 }
 
 /*! 
- * \brief Set tab-mode, 
+ * \brief Set tab-mode, 0 is 'short/ios' mode, 1 is long/junos mode.
  */
 int 
 cligen_tabmode_set(cligen_handle h, int mode)
@@ -694,9 +697,11 @@ int cligen_logsyntax_set(cligen_handle h, int n)
     return 0;
 }
 
-/*
- * cligen_userdata
- * get user data 
+/*!
+ * \brief Get app-specific handle for callbacks instead of cligen handle.
+ *
+ * An application may choose to use another handle than cligen_handle in callbacks
+ * and completion functions. 
  */
 void*
 cligen_userhandle(cligen_handle h)
@@ -706,9 +711,8 @@ cligen_userhandle(cligen_handle h)
     return ch->ch_userhandle;
 }
 
-/*
- * cligen_userdata_set
- * set user data as a part of the cligen_handle
+/*!
+ * \brief Set app-specific handle for callbacks instead of cligen handle
  */
 int
 cligen_userhandle_set(cligen_handle h, void *userhandle)
@@ -716,31 +720,6 @@ cligen_userhandle_set(cligen_handle h, void *userhandle)
     struct cligen_handle *ch = handle(h);
 
     ch->ch_userhandle = userhandle;
-    return 0;
-}
-
-/*
- * cligen_userdata
- * get user data 
- */
-void*
-cligen_userdata(cligen_handle h)
-{
-    struct cligen_handle *ch = handle(h);
-
-    return ch->ch_userdata;
-}
-
-/*
- * cligen_userdata_set
- * set user data as a part of the cligen_handle
- */
-int
-cligen_userdata_set(cligen_handle h, void *user)
-{
-    struct cligen_handle *ch = handle(h);
-
-    ch->ch_userdata = user;
     return 0;
 }
 

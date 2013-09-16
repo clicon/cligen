@@ -16,9 +16,9 @@
 
 \begin{document}
 
-% rnr logo
+% If you want a logo
 % \lhead{\includegraphics[height=9mm]{../../doc/logga_crop.png}}
-\date{June, 2013}
+\date{September, 2013}
 \maketitle
 \setcounter{tocdepth}{2}
 \tableofcontents
@@ -962,7 +962,7 @@ Several callbacks may be associated with a syntax. Example:
 \end{verbatim}
 In this case, all three functions: {\tt callback}, {\tt extra} and {\tt extra2} are called, one after the other.
 
-\subsection{Expansion}
+\subsection{Completion}
 \label{sec:expand}
 
 If expand variables (see Section~\ref{sec:expand1}) are used, the
@@ -1125,10 +1125,10 @@ This appendix contains a list of cligen API functions. There are several more wh
 \emph{ Set currently active parsetree by name.}
 
 {\tt int cligen\_completion(cligen\_handle h)}\\*
-\emph{ Get completion mode}
+\emph{ Get completion mode. 0: complete 1 level. 1: complete all}
 
 {\tt int cligen\_completion\_set(cligen\_handle h, int mode)}\\*
-\emph{ Set completion mode}
+\emph{ Set completion mode. 0: complete 1 level. 1: complete all}
 
 {\tt int cligen\_terminalrows(cligen\_handle h)}\\*
 \emph{ Get number of displayed terminal rows.}
@@ -1143,10 +1143,10 @@ This appendix contains a list of cligen API functions. There are several more wh
 \emph{ Set length of lines (number of 'columns' in a line).}
 
 {\tt int cligen\_tabmode(cligen\_handle h)}\\*
-\emph{ Get tab-mode, }
+\emph{ Get tab-mode. 0 is short/ios mode, 1 is long/junos mode.}
 
 {\tt int cligen\_tabmode\_set(cligen\_handle h, int mode)}\\*
-\emph{ Set tab-mode, }
+\emph{ Set tab-mode, 0 is short/ios mode, 1 is long/junos mode.}
 
 {\tt int cligen\_lexicalorder(cligen\_handle h)}\\*
 \emph{ Get lexical matching order: strcmp (0) or strverscmp (1).}
@@ -1159,6 +1159,12 @@ This appendix contains a list of cligen API functions. There are several more wh
 
 {\tt int cligen\_ignorecase\_set(cligen\_handle h, int n)}\\*
 \emph{ Ignore uppercase/lowercase or not}
+
+{\tt int cligen\_userhandle\_set(cligen\_handle h, void *userhandle);}\\*
+\emph{Set app-spefici handle for callbacks instead of cligen handle}
+
+{\tt int cligen\_logsyntax\_set(cligen\_handle h, int n)}
+\emph{Debug syntax by printing dynamically on stderr. Get function.}
 
 {\tt cvec *cvec\_new(int len)}\\*
 \emph{  Create and initialize a new cligen variable vector (cvec)}
@@ -1265,7 +1271,7 @@ This appendix contains a list of cligen API functions. There are several more wh
 {\tt void *cv\_value\_get(cg\_var *cv)}\\*
 \emph{ Get value of cv without specific type set}
 
-{\tt char cv\_bool\_get(cg\_var *cv)}\\*
+<{\tt char cv\_bool\_get(cg\_var *cv)}\\*
 \emph{ Get boolean value of cv}
 
 {\tt int32\_t cv\_int\_get(cg\_var *cv)}\\*
@@ -1358,10 +1364,10 @@ This appendix contains a list of cligen API functions. There are several more wh
 {\tt int cv\_free(cg\_var *cv)}\\*
 \emph{ Free a single CLIgen variable (cv) AND frees the cv itself}
 
+{\tt int pt\_apply(parse\_tree pt, cg\_applyfn\_t fn, void *arg)}\\*
+\emph{ Apply a function call recursively on all cg\_obj:s in a parse-tree.}
+
 \normalsize
-
-
-
 
 
 \newpage
