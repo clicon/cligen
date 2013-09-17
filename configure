@@ -610,7 +610,6 @@ EXE_SUFFIX
 SH_SUFFIX
 AR_SUFFIX
 OBJ_SUFFIX
-COPT
 INCLUDES
 LEXLIB
 LEX_OUTPUT_ROOT
@@ -678,9 +677,6 @@ SHELL'
 ac_subst_files=''
 ac_user_opts='
 enable_option_checking
-with_cc
-with_cflags
-with_copt
 enable_gl_select
 '
       ac_precious_vars='build_alias
@@ -1309,13 +1305,6 @@ Optional Features:
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
   --enable-gl-select         enable gl_select - Allow more file descriptors than stdin
 [default=no]
-
-Optional Packages:
-  --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
-  --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
-  --with-cc=CC            Set C-compiler to CC
-  --with-cflags=CFLAGS        Set non-default cflags
-  --with-copt=COPT        Set to -g or -O2 (default) for example
 
 Some influential environment variables:
   CC          C compiler command
@@ -2112,6 +2101,10 @@ ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
+
+# Default CFLAGS unless set by environment.
+: ${CFLAGS="-O2"}
+
 ac_config_headers="$ac_config_headers cligen_config.h"
 
 
@@ -2124,11 +2117,10 @@ ac_config_headers="$ac_config_headers cligen_config.h"
 CLIGEN_VERSION_MAJOR="3"
 CLIGEN_VERSION_MINOR="4"
 CLIGEN_VERSION_PATCH="0"
-CLIGEN_VERSION="$CLIGEN_VERSION_MAJOR.$CLIGEN_VERSION_MINOR.${CLIGEN_VERSION_PATCH}_PRE1"
+CLIGEN_VERSION="$CLIGEN_VERSION_MAJOR.$CLIGEN_VERSION_MINOR.${CLIGEN_VERSION_PATCH}"
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: CLIGEN version is $CLIGEN_VERSION" >&5
 $as_echo "CLIGEN version is $CLIGEN_VERSION" >&6; }
-
 
 ac_aux_dir=
 for ac_dir in "$srcdir" "$srcdir/.." "$srcdir/../.."; do
@@ -3370,9 +3362,9 @@ fi
 
 
 
-
 #
 $as_echo "#define AUTOCONF 1" >>confdefs.h
+
 
 
 echo "$host_cpu $host_vendor $host_os"
@@ -3381,53 +3373,18 @@ echo "yacc=$YACC lex=$LEX"
 if test "$YACC" != "bison -y"; then
    as_fn_error $? "CLIGEN does not find bison.  There are several problems with yacc and byacc. Please install bison." "$LINENO" 5
    # byacc leaks, may need byacc -P?
-   echo "Please install bison."
-   #  YACC="byacc -P"
-   $as_echo "#define USE_BYACC 1" >>confdefs.h
-
 fi
 
-
-# Check if explicit given a CC which overrides the default
-
-# Check whether --with-cc was given.
-if test "${with_cc+set}" = set; then :
-  withval=$with_cc; if test "$withval" = "gcc"; then
-      CC=gcc
-  elif test "$withval" = "vcc" -o "$withval" = "cl"; then
-      # vcc (MS visual c++)
-      CC=vcc
-  else
-      CC=$withval  #unknown
-  fi
-
-fi
-
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: Compiler is $CC" >&5
+$as_echo "Compiler is $CC" >&6; }
 
 #
-# Set options for each compiler
-# NOTE: There is code for MS visualc++ but it is currently not supported
-if test "$CC" = "vcc"; then # Microsoft VisualC++
-      #  CFLAGS="${CFLAGS} -wccc-"    # Suppress "Cond. always true/false"
-      CFLAGS=""
-      CC=cl  # Actual visual cc name
-      $as_echo "#define WIN32 1" >>confdefs.h
-
-      LIBS="${LIBS} WS2_32.lib" # For GetMessage()
-	#      LDFLAGS="-g"
-      OBJ_SUFFIX=".obj"
-      EXE_SUFFIX=".exe"
-      AR_SUFFIX=".lib"
-      SH_SUFFIX=".dll"
-      AR="rm \$@; lib"
-      COPT=""
-      RANLIB="echo"  # Just a dummy, we don't have any replacement
-else
-      LIBS="${LIBS} -L." #
-      CFLAGS="-Wall -Werror -x c"
-      LDFLAGS=""
-      COPT=-O2
-      { $as_echo "$as_me:${as_lineno-$LINENO}: checking for main in -lm" >&5
+# Set options for each compiler. Suffix is for WIN32
+LIBS="${LIBS} -L." #
+LDFLAGS=""
+CPPFLAGS="-DHAVE_CONFIG_H ${CPPFLAGS}"
+CFLAGS="${CFLAGS} -Wall"
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for main in -lm" >&5
 $as_echo_n "checking for main in -lm... " >&6; }
 if ${ac_cv_lib_m_main+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -3466,34 +3423,16 @@ _ACEOF
 
 fi
 
-      EXE_SUFFIX=""
-      OBJ_SUFFIX=".o"
-      AR_SUFFIX=".a"
-      SH_SUFFIX=".so"
-      AR="ar"
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: compiler is $CC" >&5
-$as_echo "compiler is $CC" >&6; }
-
-
-# Check whether --with-cflags was given.
-if test "${with_cflags+set}" = set; then :
-  withval=$with_cflags; CFLAGS=$withval
-
-fi
+EXE_SUFFIX=""
+OBJ_SUFFIX=".o"
+AR_SUFFIX=".a"
+SH_SUFFIX=".so"
+AR="ar"
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: CFLAGS is $CFLAGS" >&5
 $as_echo "CFLAGS is $CFLAGS" >&6; }
-
-
-# Check whether --with-copt was given.
-if test "${with_copt+set}" = set; then :
-  withval=$with_copt; COPT=$withval
-
-fi
-
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: COPT is $COPT" >&5
-$as_echo "COPT is $COPT" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: CPPFLAGS is $CPPFLAGS" >&5
+$as_echo "CPPFLAGS is $CPPFLAGS" >&6; }
 
 # Check for package options
 # Check whether --enable-gl_select was given.

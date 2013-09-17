@@ -3,14 +3,15 @@ cligen
 
 CLIgen is a Command-Line Interface generator written by Olof Hagsand.
 
-Well, actually it is not really a generator, since it does not
-_generate_ code for CLI:s. Instead, it builds and interprets
+Well, actually it is not really a generator, since it does
+not_generate_ code for CLI:s. Instead, it builds and interprets
 datastructures (a parse-tree) which a library (libcligen) interprets
 in runtime.  It is fast and efficient and helps you develop CLI:s
-faster. You enter a CLI syntax either in a file or in-line in C, you
+easier. You enter a CLI syntax either in a file or in-line in C, you
 write callback functions and then you call the right library
 routines. The callback functions add the semantics, that is, what the
-commands in the CLI are supposed to do.
+commands in the CLI are supposed to do. This is all covered in the
+cligen_tutorial.pdf.[tutorial](http://www.hagsand.se/cligen/cligen_tutorial.pdf).
 
 CLIgen is _not_ a system in itself, you need to build your own
 'backend'. We have started another project: 'clicon' which is actually
@@ -24,14 +25,11 @@ applications, you should include cligen.h and link with the library.
 
 The directory contains source for CLIgen. There are several example 
 applications:
-    cligen_hello   Simplest possible. Just builds a 'hello world' greeting 
-    		   by in-line C
-    cligen_file	   Read a syntax specification from file. You must supply 
-    		   the file
-    cligen_tutorial Samples of techniques used in docs/cligen_tutorial.pdf
+* cligen_hello Simplest possible. Just builds a 'hello world' greeting by in-line C
+* cligen_file Read a syntax specification from file. You must supply the file.
+* cligen_tutorial Samples of techniques used in cligen_tutorial.pdf.
 
-Reference documentation is found in the 'man' directory. There is a
-tutorial in the docs directory.
+There cligen_tutorial.pdf is a tutorial.
 
 CLIgen is covered by GPLv2.
 

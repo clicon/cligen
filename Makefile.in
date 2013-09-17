@@ -30,8 +30,7 @@ srcdir		= @srcdir@
 includedir	= @includedir@/cligen
 
 CC		= @CC@
-COPT		= @COPT@
-CFLAGS		= -fPIC $(COPT) @CFLAGS@ -DHAVE_CONFIG_H 
+CFLAGS		= -fPIC @CFLAGS@
 LDFLAGS		= @LDFLAGS@
 LIBS		= @LIBS@
 INCLUDES	= -I. -I@srcdir@ @INCLUDES@
@@ -68,11 +67,9 @@ all:	cligen $(MYLIB) $(MYLIBLINK) $(APPS)
 
 tags:	;etags *.[ch]
 
-docs:	cligen_tutorial.pdf
-
 distclean: clean
 	rm -f Makefile config.log config.status config.h TAGS
-	rm -rf autom4te.cache cligen_tutorial.pdf cligen_tutorial.log cligen_tutorial.toc cligen_tutorial.aux 
+	rm -rf autom4te.cache build.c cligen_config.h
 
 # Default rule  .c.o:	
 %@OBJ_SUFFIX@ : @srcdir@/%.c

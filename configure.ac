@@ -23,6 +23,10 @@
 #
 
 AC_INIT(cligen.h)
+
+# Default CFLAGS unless set by environment.
+: ${CFLAGS="-O2"}
+
 AC_CONFIG_HEADER(cligen_config.h)
 
 # cligen versions spread to Makefile's (.so files)
@@ -34,10 +38,9 @@ AC_SUBST(CLIGEN_VERSION_PATCH)
 CLIGEN_VERSION_MAJOR="3"
 CLIGEN_VERSION_MINOR="4"
 CLIGEN_VERSION_PATCH="0"
-CLIGEN_VERSION="$CLIGEN_VERSION_MAJOR.$CLIGEN_VERSION_MINOR.${CLIGEN_VERSION_PATCH}_PRE1"
+CLIGEN_VERSION="$CLIGEN_VERSION_MAJOR.$CLIGEN_VERSION_MINOR.${CLIGEN_VERSION_PATCH}"
 
 AC_MSG_RESULT(CLIGEN version is $CLIGEN_VERSION)
-
 
 AC_CANONICAL_HOST
 AC_PROG_CC()
@@ -49,7 +52,6 @@ AC_SUBST(CFLAGS)
 AC_SUBST(LDFLAGS)
 AC_SUBST(INCLUDES)
 AC_SUBST(LIBS)
-AC_SUBST(COPT)
 AC_SUBST(OBJ_SUFFIX)
 AC_SUBST(AR_SUFFIX)
 AC_SUBST(SH_SUFFIX)
@@ -59,73 +61,32 @@ AC_SUBST(RANLIB)
 #
 AC_DEFINE(AUTOCONF)
 
+
 echo "$host_cpu $host_vendor $host_os"
 echo "yacc=$YACC lex=$LEX"
 
 if test "$YACC" != "bison -y"; then
    AC_MSG_ERROR(CLIGEN does not find bison.  There are several problems with yacc and byacc. Please install bison.)
    # byacc leaks, may need byacc -P?
-   echo "Please install bison."
-   #  YACC="byacc -P"
-   AC_DEFINE(USE_BYACC)
 fi
 
-
-# Check if explicit given a CC which overrides the default
-AC_ARG_WITH(cc,
-[  --with-cc=CC            Set C-compiler to CC],
-  if test "$withval" = "gcc"; then
-      CC=gcc 
-  elif test "$withval" = "vcc" -o "$withval" = "cl"; then
-      # vcc (MS visual c++) 
-      CC=vcc
-  else
-      CC=$withval  #unknown
-  fi
-)
+AC_MSG_RESULT(Compiler is $CC)	
 
 #
-# Set options for each compiler
-# NOTE: There is code for MS visualc++ but it is currently not supported
-if test "$CC" = "vcc"; then # Microsoft VisualC++ 
-      #  CFLAGS="${CFLAGS} -wccc-"    # Suppress "Cond. always true/false"
-      CFLAGS=""
-      CC=cl  # Actual visual cc name
-      AC_DEFINE(WIN32)	
-      LIBS="${LIBS} WS2_32.lib" # For GetMessage()
-	#      LDFLAGS="-g"
-      OBJ_SUFFIX=".obj"
-      EXE_SUFFIX=".exe"
-      AR_SUFFIX=".lib"
-      SH_SUFFIX=".dll"
-      AR="rm \$@; lib"
-      COPT=""
-      RANLIB="echo"  # Just a dummy, we don't have any replacement
-else
-      LIBS="${LIBS} -L." # 
-      CFLAGS="-Wall -Werror -x c" 
-      LDFLAGS=""
-      COPT=-O2
-      AC_CHECK_LIB(m, main)
-      EXE_SUFFIX=""
-      OBJ_SUFFIX=".o"
-      AR_SUFFIX=".a"
-      SH_SUFFIX=".so"
-      AR="ar"
-fi
-AC_MSG_RESULT(compiler is $CC)	
+# Set options for each compiler. Suffix is for WIN32
+LIBS="${LIBS} -L." # 
+LDFLAGS=""
+CPPFLAGS="-DHAVE_CONFIG_H ${CPPFLAGS}"
+CFLAGS="${CFLAGS} -Wall" 
+AC_CHECK_LIB(m, main)
+EXE_SUFFIX=""
+OBJ_SUFFIX=".o"
+AR_SUFFIX=".a"
+SH_SUFFIX=".so"
+AR="ar"
 
-AC_ARG_WITH(cflags,
-[  --with-cflags=CFLAGS        Set non-default cflags],
-   CFLAGS=$withval
-)
 AC_MSG_RESULT(CFLAGS is $CFLAGS)	
-
-AC_ARG_WITH(copt,
-[  --with-copt=COPT        Set to -g or -O2 (default) for example],
-   COPT=$withval
-)
-AC_MSG_RESULT(COPT is $COPT)	
+AC_MSG_RESULT(CPPFLAGS is $CPPFLAGS)	
 
 # Check for package options
 AC_ARG_ENABLE(gl_select, [  --enable-gl-select         enable gl_select - Allow more file descriptors than stdin
