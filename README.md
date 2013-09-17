@@ -10,8 +10,9 @@ in runtime.  It is fast and efficient and helps you develop CLI:s
 easier. You enter a CLI syntax either in a file or in-line in C, you
 write callback functions and then you call the right library
 routines. The callback functions add the semantics, that is, what the
-commands in the CLI are supposed to do. This is all covered in the
-cligen_tutorial.pdf.[tutorial](http://www.hagsand.se/cligen/cligen_tutorial.pdf).
+commands in the CLI are supposed to do. 
+
+This is all covered in the [CLIgen tutorial](http://www.hagsand.se/cligen/cligen_tutorial.pdf).
 
 CLIgen is _not_ a system in itself, you need to build your own
 'backend'. We have started another project: 'clicon' which is actually
@@ -29,9 +30,7 @@ applications:
 * cligen_file Read a syntax specification from file. You must supply the file.
 * cligen_tutorial Samples of techniques used in cligen_tutorial.pdf.
 
-There cligen_tutorial.pdf is a tutorial.
-
-CLIgen is covered by GPLv2.
+CLIgen is covered by GPLv2, but can be obtained with a commercial license.
 
 I can be found at olof@hagsand.se.
 
