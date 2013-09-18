@@ -33,7 +33,7 @@ struct cg_var {
     int	var_type;   /* Type according to enum cv_type */
     char *var_name; /* Name of variable as appears in <name ...> in the syntax */
     char var_const; /* Keyword */
-    char var_index; /* unique/index variable */
+    char var_flag ; /* Application-specific flags, no semantics by cligen */
     union {
 	char	varu_bool;
 	int32_t	varu_int;

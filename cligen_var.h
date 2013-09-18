@@ -92,8 +92,11 @@ enum cv_type cv_type_get(cg_var *cv);
 enum cv_type cv_type_set(cg_var *cv, enum cv_type x);
 char cv_const_get(cg_var *cv);
 char cv_const_set(cg_var *cv, int c);
-char cv_index_get(cg_var *cv);
-char cv_index_set(cg_var *cv, char x);
+
+char cv_flag(cg_var *cv, char mask);
+char cv_flag_clr(cg_var *cv, char mask);
+char cv_flag_set(cg_var *cv, char mask);
+
 void *cv_value_get(cg_var *cv);
 
 char cv_bool_get(cg_var *cv);

@@ -60,6 +60,7 @@ static int excludekeys = 0;
 /*! 
  * \brief  Create and initialize a new cligen variable vector (cvec)
  * 
+ * See also cvec_init()
  * Returned cvec needs to be freed with cvec_free().
  * IN
  *   len  Number of cv elements. Can be zero and elements added incrementally.
@@ -97,6 +98,7 @@ cvec_free(cvec *vr)
 /*! 
  * \brief Initialize a cligen variable vector (cvec) with 'len' numbers of variables.
  *
+ * See also cvec_new()
  * input parameters:
  *  vr   the vector
  *  len  number of cv elements. Can be zero and elements added incrementally.
@@ -440,8 +442,6 @@ cvec_start(char *cmd)
     return cvec;
 }
 
-
-
 /*! 
  * \brief Pretty print cligen variable list to a file
  */
@@ -452,7 +452,7 @@ cvec_print(FILE *f, cvec *vr)
     int     i = 0;
 
     while ((cv = cvec_each(vr, cv)) != NULL) {
-	fprintf(f, "%d : %s%s = ", i++, cv->var_index?"!":"", cv->var_name);
+	fprintf(f, "%d : %s = ", i++, cv_name_get(cv));
 	cv_print(f, cv);
 	fprintf(f, "\n");
     }

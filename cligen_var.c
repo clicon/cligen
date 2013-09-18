@@ -121,16 +121,31 @@ cv_const_set(cg_var *cv, int c)
     return (cv->var_const = c);
 }
 
-char 
-cv_index_get(cg_var *cv)
+/*!
+ * \brief Get application-specific cv flag
+ */
+char
+cv_flag(cg_var *cv, char mask)
 {
-    return cv->var_index;
+    return cv->var_flag & mask;
 }
 
-char 
-cv_index_set(cg_var *cv, char x)
+/*!
+ * \brief Clear application-specific cv flag 
+ */
+char
+cv_flag_clr(cg_var *cv, char mask)
 {
-    return (cv->var_index = x);
+    return cv->var_flag ^= mask;
+}
+
+/*!
+ * \brief Set application-specific cv flag 
+ */
+char
+cv_flag_set(cg_var *cv, char mask)
+{
+    return cv->var_flag |= mask;
 }
 
 /*! 

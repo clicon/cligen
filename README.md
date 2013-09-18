@@ -12,7 +12,8 @@ write callback functions and then you call the right library
 routines. The callback functions add the semantics, that is, what the
 commands in the CLI are supposed to do. 
 
-This is all covered in the [CLIgen tutorial](http://www.hagsand.se/cligen/cligen_tutorial.pdf).
+Presentations and tutorial is found on the [CLIgen project
+page](http://www.hagsand.se/cligen)
 
 CLIgen is _not_ a system in itself, you need to build your own
 'backend'. We have started another project: 'clicon' which is actually
@@ -35,7 +36,7 @@ CLIgen is covered by GPLv2, but can be obtained with a commercial license.
 I can be found at olof@hagsand.se.
 
 getline
--------
+
 CLIgen uses getline with the following copyright:
 
 Copyright (C) 1991, 1992, 1993 by Chris Thewalt (thewalt@ce.berkeley.edu)
