@@ -49,13 +49,13 @@ struct cvec{
     cg_var         *vr_vec;  /* vector of CLIgen variables */
     int             vr_len;  /* length of vector */
 };
+
 /*
  * cv_exclude_keys
  * set if you want to backward compliant: dont include keys in cgv vec to callback
  * that is, regular 'keys' and keys like: '<string keyword=foo>'
  */
 static int excludekeys = 0;
-
 
 /*! 
  * \brief  Create and initialize a new cligen variable vector (cvec)
