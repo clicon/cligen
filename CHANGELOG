@@ -1,7 +1,7 @@
 $Id: CHANGELOG,v 1.21 2013/06/30 09:30:45 olof Exp $
      
-R3.4.0
-======
+R3.4.0 September 2013
+=====================
 Changed 'range' variable syntax, the old did not allow negative numbers.
 NOTE: You need to change all variable syntax statements of the form:
     <a:int range:3-89>
