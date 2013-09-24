@@ -63,8 +63,10 @@ AC_DEFINE(AUTOCONF)
 
 
 echo "$host_cpu $host_vendor $host_os"
-echo "yacc=$YACC lex=$LEX"
 
+if test "$LEX" = ":"; then
+   AC_MSG_ERROR(CLIGEN does not find lex or flex.)
+fi
 if test "$YACC" != "bison -y"; then
    AC_MSG_ERROR(CLIGEN does not find bison.  There are several problems with yacc and byacc. Please install bison.)
    # byacc leaks, may need byacc -P?

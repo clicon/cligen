@@ -3368,8 +3368,10 @@ $as_echo "#define AUTOCONF 1" >>confdefs.h
 
 
 echo "$host_cpu $host_vendor $host_os"
-echo "yacc=$YACC lex=$LEX"
 
+if test "$LEX" = ":"; then
+   as_fn_error $? "CLIGEN does not find lex or flex." "$LINENO" 5
+fi
 if test "$YACC" != "bison -y"; then
    as_fn_error $? "CLIGEN does not find bison.  There are several problems with yacc and byacc. Please install bison." "$LINENO" 5
    # byacc leaks, may need byacc -P?
