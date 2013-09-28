@@ -140,7 +140,7 @@ cligen_tutorial :cligen_tutorial.c cligen $(MYLIB)
 	$(CC) $(CFLAGS) $(INCLUDES) $< $(LDFLAGS) $(LIBS) -o $@ -lcligen
 
 $(MYLIB) : $(OBJS) $(YACCOBJS)
-	$(CC) -shared -o $@ $(OBJS) $(YACCOBJS) -Wl,-soname=$(MYLIB) -Wl $(LIBS)
+	$(CC) -shared -o $@ $(OBJS) $(YACCOBJS) -Wl,-soname=$(MYLIB) $(LIBS)
 
 # link-name is needed for application linking
 $(MYLIBSO) : $(MYLIB)
