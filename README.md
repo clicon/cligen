@@ -13,7 +13,7 @@ routines. The callback functions add the semantics, that is, what the
 commands in the CLI are supposed to do. 
 
 Presentations and tutorial is found on the [CLIgen project
-page](http://www.hagsand.se/cligen)
+page](http://www.cligen.se)
 
 CLIgen is _not_ a system in itself, you need to build your own
 'backend'. We have started another project: 'clicon' which is actually
