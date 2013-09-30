@@ -40,7 +40,6 @@ pdflatex	= @PDFLATEX@
 CLIGEN_VERSION = @CLIGEN_VERSION@
 CLIGEN_MAJOR   = @CLIGEN_VERSION_MAJOR@
 CLIGEN_MINOR   = @CLIGEN_VERSION_MINOR@
-# CLIGEN_PATCH   = @CLIGEN_VERSION_PATCH@
 
 # Linker-name: libcligen.so
 # so-name: libcligen.so.3
@@ -93,8 +92,8 @@ install-bin: $(APPS)
 install-lib: $(MYLIB)
 	install -m 755 -d $(DESTDIR)$(libdir) 
 	install -m 755 $(MYLIB) $(DESTDIR)$(libdir) 
-	ln -sf $(MYLIB) $(DESTDIR)$(libdir)/$(MYLIBLINK) # So that other can use -lcligen
-#	ldconfig $(DESTDIR)$(libdir) # not strictly necessary since name is same
+	ln -sf $(MYLIB) $(DESTDIR)$(libdir)/$(MYLIBSO)     # -l:libcligen.so.3
+	ln -sf $(MYLIBSO) $(DESTDIR)$(libdir)/$(MYLIBLINK) # -l:libcligen.so
 
 
 # Installs include files in subdir called 'cligen'. Applications should include
@@ -112,7 +111,11 @@ YACC_SRC        = cligen_parse.y
 LEX_SRC         = cligen_parsel
 YACCOBJS := lex.cligen_parse.o cligen_parse.tab.o 
 
-clean:  ;rm -f $(APPS) $(OBJS) $(YACCOBJS) $(MYLIB) $(MYLIBSO) $(MYLIBLINK) *.tab.c *.tab.h *.tab.o lex.*.c lex.*.o cligen
+clean:  
+	rm -f $(APPS) $(OBJS) $(YACCOBJS) 
+	rm -f $(MYLIB) $(MYLIBSO) $(MYLIBLINK) 
+	rm -f *.tab.c *.tab.h *.tab.o 
+	rm -f lex.*.c lex.*.o cligen
 
 %.c : %.y  # cancel implicit yacc rule
 %.c : %.l  # cancel implicit lex rule
@@ -131,13 +134,13 @@ lex.cligen_parse.o : lex.cligen_parse.c cligen_parse.tab.h
 
 # Applications
 cligen_hello : cligen_hello.c cligen $(MYLIB) 
-	$(CC) $(CFLAGS) $(INCLUDES) $< $(LDFLAGS) $(LIBS) -o $@ -lcligen
+	$(CC) $(CFLAGS) $(INCLUDES) $< $(LDFLAGS) $(LIBS) -o $@ -l:$(MYLIB)
 
 cligen_file :	cligen_file.c cligen $(MYLIB) 
-	$(CC) $(CFLAGS) $(INCLUDES) $< $(LDFLAGS) $(LIBS) -o $@ -lcligen
+	$(CC) $(CFLAGS) $(INCLUDES) $< $(LDFLAGS) $(LIBS) -o $@ -l:$(MYLIB)
 
 cligen_tutorial :cligen_tutorial.c cligen $(MYLIB) 
-	$(CC) $(CFLAGS) $(INCLUDES) $< $(LDFLAGS) $(LIBS) -o $@ -lcligen
+	$(CC) $(CFLAGS) $(INCLUDES) $< $(LDFLAGS) $(LIBS) -o $@ -l:$(MYLIB)
 
 $(MYLIB) : $(OBJS) $(YACCOBJS)
 	$(CC) -shared -o $@ $(OBJS) $(YACCOBJS) -Wl,-soname=$(MYLIB) $(LIBS)
@@ -145,9 +148,8 @@ $(MYLIB) : $(OBJS) $(YACCOBJS)
 # link-name is needed for application linking
 $(MYLIBSO) : $(MYLIB)
 
-
 $(MYLIBLINK) : $(MYLIB)
-	ln -sf $(MYLIB) $@
+#	ln -sf $(MYLIB) $@
 
 # recursive link to handle application include files, if you have not installed
 # .h files in $(includefile)
