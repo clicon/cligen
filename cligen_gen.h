@@ -54,8 +54,19 @@ typedef int (expand_cb)(void *h,              /* handler: cligen or userhandle *
 			cvec *cvec,           /* vars vector of values in command */
 			cg_var *arg,          /* argument given to callback */
 			int *len,             /* len of return commands & helptxt */
-			char ***commands,     /* vector of function pointers */
+			char ***commands,     /* vector of function strings */
 			char ***helptexts);   /* vector of help-texts */
+
+/* expand_cb2 is an update of expand_cb where entries are added using
+ * cvec_add rather than by realloc(). Just a better interface.
+ * should be merged into new applications.
+ */
+typedef int (expand_cb2)(void *h,              /* handler: cligen or userhandle */
+			 char *name,           /* name of this function (in text) */
+			 cvec *cvec,           /* vars vector of values in command */
+			 cg_var *arg,          /* argument given to callback */
+			 struct cvec *commands,/* vector of commands */
+			 struct cvec *helptexts); /* vector of help-texts */
 
 typedef int (cligen_susp_cb_t)(void *h, char *, int, int *);
 

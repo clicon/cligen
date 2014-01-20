@@ -80,38 +80,40 @@ cligen_exec_cb(cligen_handle handle, cvec *vars, cg_var *arg)
 
 int
 expand3(void *h, char *fn_str, cvec *vars, cg_var *arg, 
-	int *nr, char ***commands, char ***comments)
+	cvec *commands, cvec *helptexts)
 {
-    int n = 2;
     char buf[64];
+    cg_var *cv;
 
     if (arg)
 	cv2str(arg, buf, sizeof(buf)-1);
     /* Interface name expansion. */
-    *commands = calloc(n, sizeof(char*));
-    (*commands)[0] = strdup("bu0");
-    (*commands)[1] = strdup("bu1");
-    *nr = n;
-    *comments = calloc(n, sizeof(char*));
+    if ((cv = cvec_add(commands, CGV_STRING)) == NULL)
+	return -1;
+    cv_string_set(cv, "bu0");
+    if ((cv = cvec_add(commands, CGV_STRING)) == NULL)
+	return -1;
+    cv_string_set(cv, "bu1");
 
     return 0;
 }
 
 int
 expand4(void *h, char *fn_str, cvec *vars, cg_var *arg, 
-	int *nr, char ***commands, char ***comments)
+	cvec *commands, cvec *helptexts)
 {
-    int n = 2;
     char buf[64];
+    cg_var *cv;
 
     if (arg)
 	cv2str(arg, buf, sizeof(buf)-1);
     /* Interface name expansion. */
-    *commands = calloc(n, sizeof(char*));
-    (*commands)[0] = strdup("40");
-    (*commands)[1] = strdup("41");
-    *nr = n;
-    *comments = calloc(n, sizeof(char*));
+    if ((cv = cvec_add(commands, CGV_STRING)) == NULL)
+	return -1;
+    cv_string_set(cv, "40");
+    if ((cv = cvec_add(commands, CGV_STRING)) == NULL)
+	return -1;
+    cv_string_set(cv, "41");
 
     return 0;
 }
@@ -251,7 +253,7 @@ str2fn(char *name, void *arg, char **error)
     return callback; /* allow any function (for testing) */
 }
 
-expand_cb *
+expand_cb2 *
 expand_str2fn(char *name, void *arg, char **error)
 {
     *error = NULL;

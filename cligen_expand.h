@@ -35,7 +35,7 @@
  * cf cg_fnstype_t
  */
 typedef expand_cb *(expand_str2fn_t)(char *str, void *arg, char **err);
-
+typedef expand_cb2 *(expand_str2fn_t2)(char *str, void *arg, char **err);
 
 /*
  * Prototypes
