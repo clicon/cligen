@@ -336,7 +336,7 @@ main(int argc, char *argv[])
 	goto done;
 //    if (cligen_expand_register(pt, cli_expand_fn) < 0)     
 //	goto done;
-    if (cligen_expand_str2fn(pt, expand_str2fn, NULL) < 0)     
+    if (cligen_expand_str2fn(pt, (expand_str2fn_t *)expand_str2fn, NULL) < 0)     
 	goto done;
     if ((str = cvec_find_str(globals, "prompt")) != NULL)
 	cligen_prompt_set(h, str);
