@@ -35,6 +35,13 @@ hello_cb(cligen_handle h, cvec *vars, cg_var *arg)
     return 0;
 }
 
+cg_fnstype_t *
+str2fn(char *name, void *arg, char **error)
+{
+    return hello_cb;
+}
+
+
 /* This is the command syntax specification */
 static char *hello_syntax = "prompt=\"hello> \";\n" 
     "hello(\"Greet the world\") world, cb(\"Hello World!\");"
@@ -58,7 +65,8 @@ main(int argc, char *argv[])
 	goto done;
     if (cligen_parse_str(h, hello_syntax, "hello world", &pt, globals) < 0)
 	goto done;
-    cligen_callback_register(pt, hello_cb);
+    if (cligen_callback_str2fn(pt, str2fn, NULL) < 0)     
+	goto done;
     /* find global assignments: prompt and comment sign */
     if ((cv = cvec_find(globals, "prompt")) != NULL)
 	cligen_prompt_set(h, cv_string_get(cv));

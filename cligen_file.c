@@ -78,46 +78,7 @@ cligen_exec_cb(cligen_handle handle, cvec *vars, cg_var *arg)
     return ret;
 }
 
-int
-expand3(void *h, char *fn_str, cvec *vars, cg_var *arg, 
-	cvec *commands, cvec *helptexts)
-{
-    char buf[64];
-    cg_var *cv;
-
-    if (arg)
-	cv2str(arg, buf, sizeof(buf)-1);
-    /* Interface name expansion. */
-    if ((cv = cvec_add(commands, CGV_STRING)) == NULL)
-	return -1;
-    cv_string_set(cv, "bu0");
-    if ((cv = cvec_add(commands, CGV_STRING)) == NULL)
-	return -1;
-    cv_string_set(cv, "bu1");
-
-    return 0;
-}
-
-int
-expand4(void *h, char *fn_str, cvec *vars, cg_var *arg, 
-	cvec *commands, cvec *helptexts)
-{
-    char buf[64];
-    cg_var *cv;
-
-    if (arg)
-	cv2str(arg, buf, sizeof(buf)-1);
-    /* Interface name expansion. */
-    if ((cv = cvec_add(commands, CGV_STRING)) == NULL)
-	return -1;
-    cv_string_set(cv, "40");
-    if ((cv = cvec_add(commands, CGV_STRING)) == NULL)
-	return -1;
-    cv_string_set(cv, "41");
-
-    return 0;
-}
-
+#ifdef notused
 /*
  * This is an example of a generic expansion function which starts a program
  * and creates an expand list based on its output
@@ -208,6 +169,7 @@ cli_expand_fn(cligen_handle h,
 	free(filename);
     return retval;
 }
+#endif /* notused */
 
 /*
  * This is the actual callback.
@@ -252,16 +214,6 @@ str2fn(char *name, void *arg, char **error)
 	return cligen_exec_cb;
     return callback; /* allow any function (for testing) */
 }
-
-expand_cb2 *
-expand_str2fn(char *name, void *arg, char **error)
-{
-    *error = NULL;
-    if (strcmp(name, "expand3") == 0)
-	return expand3;
-    return expand4; /* allow any function (for testing) */
-}
-
 
 /*
  * Global variables.
@@ -333,10 +285,6 @@ main(int argc, char *argv[])
 
     /* map functions */
     if (cligen_callback_str2fn(pt, str2fn, NULL) < 0)     
-	goto done;
-//    if (cligen_expand_register(pt, cli_expand_fn) < 0)     
-//	goto done;
-    if (cligen_expand_str2fn(pt, expand_str2fn, NULL) < 0)     
 	goto done;
     if ((str = cvec_find_str(globals, "prompt")) != NULL)
 	cligen_prompt_set(h, str);

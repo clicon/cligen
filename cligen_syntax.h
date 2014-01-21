@@ -23,6 +23,11 @@
 #define _CLIGEN_SYNTAX_H_
 
 /*
+ * Types
+ */
+typedef void *(str2fn_mapper)(char *str, void *arg, char **err);
+
+/*
  * Prototypes
  */
 int
@@ -48,7 +53,9 @@ int cligen_parse_line(cligen_handle h,
 	       cg_var       *arg,
 	       int           hide);
 
-int cligen_callback_register(parse_tree, cg_fnstype_t *fn);
+int cligen_str2fn(parse_tree pt, 
+		  str2fn_mapper *str2fn1, void *fnarg1, 
+		  str2fn_mapper *str2fn2, void *fnarg2);
 int cligen_callback_str2fn(parse_tree, cg_str2fn_t *str2fn, void *fnarg);
 int cligen_parse_debug(int d); 
 

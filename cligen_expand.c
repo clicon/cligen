@@ -34,6 +34,7 @@
 #include "cligen_handle.h"
 #include "cligen_print.h"
 #include "cligen_expand.h"
+#include "cligen_syntax.h"
 
 /* Callback function for expand variables */
 
@@ -500,56 +501,27 @@ pt_expand_add(cg_obj *co, parse_tree ptn)
 }
 
 
-/*
- * cligen_expand_register
- * Register (same) callback for all commands in a syntax where expand is set, 
- * regardless of setting (sy_callback_str) in syntax.
- * Just to use a generic, default callback everywhere
- */
-int
-cligen_expand_register(parse_tree pt, expand_cb *fn)
-{
-    int i;
-    cg_obj *co;
 
-    for (i=0; i<pt.pt_len; i++)
-	if ((co = pt.pt_vec[i]) != NULL){
-	    if (co->co_expand_fn_str != NULL)
-		co->co_expand_fn = fn;
-	    if (cligen_expand_register(co->co_pt, fn) < 0) /* Recurse */
-		return -1;
-	}
-    return 0;
-}
 
 /*
- * cligen_expand_str2n
- * Register expand callback for commands using callback function
- * See cligen_callback_str2fn
+ * \brief  Register functions for variable completion in parse-tree using translator
+ *
+ * This is wrapper for better type-checking of the mapper (str2fn) function. See 
+ * cligen_str2fn for the underlying function (without type-checking).
  */
 int
 cligen_expand_str2fn(parse_tree pt, expand_str2fn_t *str2fn, void *fnarg)
 {
-    int     i;
-    cg_obj *co;
-    char   *callback_err = NULL;   /* Error from str2fn callback */
-
-    for (i=0; i<pt.pt_len; i++){    
-	if ((co = pt.pt_vec[i]) != NULL){
-	    if (co->co_expand_fn_str != NULL && co->co_expand_fn == NULL){
-		co->co_expand_fn = str2fn(co->co_expand_fn_str, fnarg, &callback_err);
-		if (callback_err != NULL){
-		    fprintf(stderr, "%s: error: No such function: %s\n",
-			    __FUNCTION__, co->co_expand_fn_str);
-		    return -1;
-		}
-	    }
-	    if (cligen_expand_str2fn(co->co_pt, str2fn, fnarg) < 0)
-		return -1;
-	}
-    }
-    return 0;
+    return cligen_str2fn(pt, NULL, NULL, (str2fn_mapper*)str2fn, fnarg);
 }
+
+#ifdef notyet
+int
+cligen_expand_str2fn2(parse_tree pt, expand_str2fn_t2 *str2fn, void *fnarg)
+{
+    return cligen_str2fn(pt, NULL, NULL, (str2fn_mapper*)str2fn, fnarg);
+}
+#endif
 
 /*
  * reference_path_match

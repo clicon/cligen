@@ -173,18 +173,26 @@ str2fn(char *name, void *arg, char **error)
  */
 int
 cli_expand_cb(void *h, char *fn_str, cvec *vars, cg_var *cv, 
-	      int *nr, char ***commands, char ***comments)
+	      int  *nr,
+	      char ***commands,     /* vector of function strings */
+	      char ***helptexts)   /* vector of help-texts */
 {
     int n = 2;
-    /* Interface name expansion. */
+     /* Interface name expansion. */
     *commands = calloc(n, sizeof(char*));
     (*commands)[0] = strdup("eth0");
     (*commands)[1] = strdup("eth1");
     *nr = n;
-    *comments = calloc(n, sizeof(char*));
-    (*comments)[0] = strdup("Interface A");
-    (*comments)[1] = strdup("Interface B");
+    *helptexts = calloc(n, sizeof(char*));
+    (*helptexts)[0] = strdup("Interface A");
+    (*helptexts)[1] = strdup("Interface B");
     return 0;
+}
+
+static expand_cb *
+str2fn_exp(char *name, void *arg, char **error)
+{
+    return cli_expand_cb;
 }
 
 
@@ -261,7 +269,7 @@ main(int argc, char *argv[])
     cligen_print(stdout, pt, 0);
     fflush(stdout);
 
-    if (cligen_expand_register(pt, cli_expand_cb) < 0)
+    if (cligen_expand_str2fn(pt, str2fn_exp, NULL) < 0)
         return -1;
 
     /* Run the CLI command interpreter */

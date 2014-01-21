@@ -169,79 +169,92 @@ cligen_parse_file(cligen_handle h,
     return retval;
 }
 
-
-/*! 
- * \brief  Register (same) callback for all commands in a syntax.
+/*
+ * \brief  Assign functions for callbacks in a parse-tree using a translate function
  *
- * Regardless of setting (sy_callback_str) in syntax.
+ * Assume a CLIgen syntax:
+ *   a <b:string f()>, g();
+ * where f and g are functions:
+ *    f is called when "a <TAB>" is entered
+ *    g is called when "a 42 <CR>" is entered.
+ * In the syntax, "f" and "g" are strings and need to be translated to actual function
+ * (pointers).
+ * This function goes through a complete parse-tree (pt) and applies the translator
+ * functions str2fn1 and str2fn2, if existring, to callback strings (eg "f" and "g") 
+ * in the parse-tree to produce function pointers (eg f, g) which are stored in the
+ * parse-tree nodes. Later, at evaluation time, the actual functions (f, g) can be
+ * called when evaluating/interpreting the syntax.
+ * IN: 
+ *   pt      parse-tree. Loop thru this
+ *   str2fn1 Translator from strings to function pointers for command callbacks. 
+ *            E.g. for g() above.
+ *   fnarg1  Function argument for command callbacks (at evaluation time).
+ *   str2fn2 Translator from strings to function pointers for expand variable
+ *           callbacks. E.g. for f() above.
+ *   fnarg1  Function argument for expand callbacks (at evaluation time).
+ * RETURNS:
+ *   0   OK
+ *  -1   error and statement written on stderr
+ *
+ * NOTE: str2fn may return NULL on error and should then supply a (static) error string 
+ * NOTE: str2fn does not use type-checking for its return value (the actual function)
+ *       for a simpler implementation.
+ *       If you need full type-checking, see the wrapper functions:
+ *               cligen_callback_str2fn() and cligen_expand_str2fn()
  */
 int
-cligen_callback_register(parse_tree pt, cg_fnstype_t *fn)
+cligen_str2fn(parse_tree pt, 
+	      str2fn_mapper *str2fn1, void *fnarg1, 
+	      str2fn_mapper *str2fn2, void *fnarg2)
 {
-    int i;
-    cg_obj *co;
+    int                 retval = -1;
+    cg_obj             *co;
+    char               *callback_err = NULL;   /* Error from str2fn callback */
     struct cg_callback *cc;
+    int     i;
 
     for (i=0; i<pt.pt_len; i++){    
 	if ((co = pt.pt_vec[i]) != NULL){
-	    if ((cc = co->co_callbacks) == NULL){
-		if ((cc = malloc(sizeof(*cc))) == NULL){
-		    fprintf(stderr, "%s: malloc: %s\n", __FUNCTION__, strerror(errno));
-		    return -1;
+	    /* first map command callbacks */
+	    if (str2fn1 != NULL)
+		for (cc = co->co_callbacks; cc; cc=cc->cc_next){
+		    if (cc->cc_fn_str != NULL && cc->cc_fn == NULL){
+			cc->cc_fn = str2fn1(cc->cc_fn_str, fnarg1, &callback_err);
+			if (callback_err != NULL){
+			    fprintf(stderr, "%s: error: No such function: %s\n",
+				    __FUNCTION__, cc->cc_fn_str);
+			    goto done;
+			}
+		    }
 		}
-		memset(cc, 0, sizeof(*cc));
-		co->co_callbacks = cc;
-	    }
-	    cc->cc_fn = fn;
-	    cligen_callback_register(co->co_pt, fn);
+	    /* then variable expand callbacks */
+	    if (str2fn2 != NULL)
+		if (co->co_expand_fn_str != NULL && co->co_expand_fn == NULL){
+		    co->co_expand_fn = str2fn2(co->co_expand_fn_str, fnarg2, &callback_err);
+		    if (callback_err != NULL){
+			fprintf(stderr, "%s: error: No such function: %s\n",
+				__FUNCTION__, co->co_expand_fn_str);
+			goto done;
+		    }
+		}
+	    /* recursive call to next level */
+	    if (cligen_str2fn(co->co_pt, str2fn1, fnarg1, str2fn2, fnarg2) < 0)
+		goto done;
 	}
     }
-    return 0;
+    retval = 0;
+  done:
+    return retval;
 }
 
 /*
- * \brief  Register callback for commands using callback function
+ * \brief  Assign functions for callbacks in a parse-tree using a translate function
  *
- * Alternative is to just loop yourself
- * The function also requires a mapping function between strings and functions.
- * This is a little hairy and can be solved in several ways, but the problem is 
- * as follows. The file contains callback names as strings. But the parse-tree
- * stores the function as a 'cg_fnstype_t', that is a resolved symbol (LISP would have
- * been nice,...). We could save the string name of the function and make the
- * function lookup later (in the evaluation) or we do it now when we build the
- * parse-tree. I settled on this later approach.
- * Anyway, the caller therefore has to supply a function which maps strings to 
- * functions. This could be done statically, but more powerful is to use dynamic
- * loading. In both these cases, thislibrary routine cannot do the mapping so
- * it needs the information in some way. A vector as input could do the job, but
- * in this way a dynamic search is easier to make. 
- * NOTE: str2fn can return NULL as a valid value, therefore it should allocate
- * an error string and return it in the error parameter.
+ * This is wrapper for better type-checking of the mapper (str2fn) function. See 
+ * cligen_str2fn for the underlying function (without type-checking).
  */
 int
 cligen_callback_str2fn(parse_tree pt, cg_str2fn_t *str2fn, void *fnarg)
 {
-    int     i;
-    cg_obj *co;
-    char   *callback_err = NULL;   /* Error from str2fn callback */
-    struct cg_callback *cc;
-
-    for (i=0; i<pt.pt_len; i++){    
-	if ((co = pt.pt_vec[i]) != NULL){
-	    for (cc = co->co_callbacks; cc; cc=cc->cc_next){
-		if (cc->cc_fn_str != NULL && cc->cc_fn == NULL){
-		    cc->cc_fn = str2fn(cc->cc_fn_str, fnarg, &callback_err);
-		    if (callback_err != NULL){
-			fprintf(stderr, "%s: error: No such function: %s\n",
-				__FUNCTION__, cc->cc_fn_str);
-			return -1;
-		    }
-		}
-	    }
-	    if (cligen_callback_str2fn(co->co_pt, str2fn, fnarg) < 0)
-		return -1;
-	}
-    }
-    return 0;
+    return cligen_str2fn(pt, (str2fn_mapper*)str2fn, fnarg, NULL, NULL);
 }
-
