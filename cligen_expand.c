@@ -500,9 +500,6 @@ pt_expand_add(cg_obj *co, parse_tree ptn)
     return 0;
 }
 
-
-
-
 /*
  * \brief  Register functions for variable completion in parse-tree using translator
  *
