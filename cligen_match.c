@@ -137,24 +137,32 @@ match_perfect(char *string, cg_obj *co)
 
 /*
  * next_token
- * Given a string, return the next token. The string is modified to return
+ * Given a string (s0), return the next token. The string is modified to return
  * the remainder of the string after the identified token.
- * A token is found either as characters delimited by one or many spaces.
+ * A token is found either as characters delimited by one or many delimiters.
  * Or as a pair of double-quotes(") with any characters in between.
  * if there are trailing spaces after the token, trail is set to one.
  * If string is NULL or "", NULL is returned.
  * If empty token found, s0 is NULL
- * NOTE: token must be freed after use.
+ * Example:
+ *   s0 = "  foo bar"
+ * results in token="foo", leading=1
+ * INOUT
+ *   s0     - string, the string is modified like strtok
+ * OUT:
+ *  token0  - A malloced token.  NOTE: token must be freed after use.
+ *  leading0  - if leading delimiters eg " thisisatoken"
+ * 
  */
 static int
-next_token(char **s0, char **token0, int *trail0)
+next_token(char **s0, char **token0, int *leading0)
 {
   char *s;
   char *st;
   char *token = NULL;
   size_t len;
   int quote=0;
-  int trail=0;
+  int leading=0;
 
   s = *s0;
   if (s==NULL){
@@ -164,7 +172,7 @@ next_token(char **s0, char **token0, int *trail0)
   for (s=*s0; *s; s++){ /* First iterate through delimiters */
     if (index(CLIGEN_DELIMITERS, *s) == NULL)
       break;
-    trail++;
+    leading++;
   }
   if (*s && index(CLIGEN_QUOTES, *s) != NULL){
     quote++;
@@ -207,7 +215,7 @@ next_token(char **s0, char **token0, int *trail0)
   token[len] = '\0';
   *s0 = s;
  done:
-  *trail0 = trail;
+  *leading0 = leading;
   *token0 = token;
   return 0;
 }

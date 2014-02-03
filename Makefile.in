@@ -64,7 +64,7 @@ LEX		= @LEX@
 
 all:	cligen $(MYLIB) $(MYLIBLINK) $(APPS)
 
-tags:	;etags *.[ch]
+tags:	;etags *.[chyl]
 
 distclean: clean
 	rm -f Makefile config.log config.status config.h TAGS
