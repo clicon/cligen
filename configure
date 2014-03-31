@@ -677,7 +677,6 @@ SHELL'
 ac_subst_files=''
 ac_user_opts='
 enable_option_checking
-enable_gl_select
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1298,13 +1297,6 @@ fi
 if test -n "$ac_init_help"; then
 
   cat <<\_ACEOF
-
-Optional Features:
-  --disable-option-checking  ignore unrecognized --enable/--with options
-  --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
-  --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
-  --enable-gl-select         enable gl_select - Allow more file descriptors than stdin
-[default=no]
 
 Some influential environment variables:
   CC          C compiler command
@@ -3436,25 +3428,10 @@ $as_echo "CFLAGS is $CFLAGS" >&6; }
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: CPPFLAGS is $CPPFLAGS" >&5
 $as_echo "CPPFLAGS is $CPPFLAGS" >&6; }
 
-# Check for package options
-# Check whether --enable-gl_select was given.
-if test "${enable_gl_select+set}" = set; then :
-  enableval=$enable_gl_select;
-  if test "$enableval" = no; then
-    ac_enable_gl_select=no
-  else
-    ac_enable_gl_select=yes
-  fi
+# Option that neables registration of callbacks for reading file-descriptirs: cligen_regfd
+# This used to be optional but is now mainline, since we got two lib variants.
+$as_echo "#define GL_SELECT 1" >>confdefs.h
 
-else
-   ac_enable_gl_select=no
-fi
-
-
-if test "$ac_enable_gl_select" = "yes"; then
-   $as_echo "#define GL_SELECT 1" >>confdefs.h
-
-fi
 
 # Extract the first word of "pdflatex", so it can be a program name with args.
 set dummy pdflatex; ac_word=$2

@@ -90,19 +90,9 @@ AR="ar"
 AC_MSG_RESULT(CFLAGS is $CFLAGS)	
 AC_MSG_RESULT(CPPFLAGS is $CPPFLAGS)	
 
-# Check for package options
-AC_ARG_ENABLE(gl_select, [  --enable-gl-select         enable gl_select - Allow more file descriptors than stdin
-[[default=no]]],[
-  if test "$enableval" = no; then
-    ac_enable_gl_select=no
-  else
-    ac_enable_gl_select=yes
-  fi
-  ],[ ac_enable_gl_select=no])
-
-if test "$ac_enable_gl_select" = "yes"; then
-   AC_DEFINE(GL_SELECT)
-fi
+# Option that neables registration of callbacks for reading file-descriptirs: cligen_regfd
+# This used to be optional but is now mainline, since we got two lib variants.
+AC_DEFINE(GL_SELECT)
 
 AC_PATH_PROG(PDFLATEX, pdflatex)
 AC_DEFINE_UNQUOTED(PROG_PDFLATEX, "$PDFLATEX")

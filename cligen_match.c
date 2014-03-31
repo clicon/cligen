@@ -879,6 +879,8 @@ match_pattern_exact(cligen_handle h,
 		  break;
 	      }
 	  }
+	  if (string1)
+	      free(string1);
       }
   }
   if (ret != 1){
