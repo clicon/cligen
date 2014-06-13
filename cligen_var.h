@@ -144,7 +144,7 @@ char   *cv2str_dup(cg_var *cv);
 int     cv_print(FILE *f, cg_var *cgv);
 
 int     cv_cmp(cg_var *cgv1, cg_var *cgv2);
-int     cv_cp(cg_var *new, cg_var *old);
+int     cv_cp(cg_var *n, cg_var *old);
 cg_var *cv_dup(cg_var *old);
 int     cv_parse(char *str, cg_var *cgv); 
 int     cv_parse1(char *str, cg_var *cgv, char **reason); /* better err-handling */

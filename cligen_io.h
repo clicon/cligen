@@ -33,7 +33,7 @@
  * Prototypes
  */
 int cli_output_reset(void);
-int cligen_output(FILE *f, char *template, ... );
+int cligen_output(FILE *f, char *templ, ... );
 int cligen_regfd(int fd, int (*cb)(int, void*), void *arg);
 int cligen_unregfd(int fd);
 void cligen_redraw(cligen_handle h);
