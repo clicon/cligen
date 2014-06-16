@@ -178,7 +178,7 @@ co_new(char *cmd, cg_obj *prev)
     return co;
 }
 
-/*
+/*! Enlarge the child-vector (pattern) of a parse-tree
  *
  * Suppose we have a pattern pt, with lists of cg_obj's 1..4:
  * pt -> .-.-.-.
@@ -205,13 +205,14 @@ pt_realloc(parse_tree *pt)
     return 0;
 }
 
-/*
- * co_callback_copy
- * copy a linked list of cg_obj callback objects, including function pointer, function name,
- * variables.
- *  cc0    - The object to copy from
- *  ccn    - Pointer to the object to copy to (is allocated)
- *  cgv    - if given, is a string that overrides the arg in cc.
+/*! Copy a linked list of cg_obj callback objects
+ *
+ * Copy a linked list of cg_obj callback objects, including function pointer, 
+ * function name,
+ *
+ * @param cc0    - The object to copy from
+ * @param ccn    - Pointer to the object to copy to (is allocated)
+ * @param cgv    - if given, is a string that overrides the arg in cc.
  */
 int
 co_callback_copy(struct cg_callback *cc0, struct cg_callback **ccn, cg_var *cgv)
@@ -244,14 +245,13 @@ co_callback_copy(struct cg_callback *cc0, struct cg_callback **ccn, cg_var *cgv)
     return 0;
 }
 
-/*
- * co_copy
- * recursively copy a cligen object.
- * Arguments:
- *  co     - The object to copy from
- *  parent - The parent of the new object (need not be same as parent of co)
- *  conp   - Pointer to the object to copy to (is allocated)
- * (see also co_expand_sub)
+/*! Recursively copy a cligen object.
+ *
+ * See also co_expand_sub
+ *
+ * @param  co     - The object to copy from
+ * @param parent - The parent of the new object (need not be same as parent of co)
+ * @param conp   - Pointer to the object to copy to (is allocated)
  */
 int
 co_copy(cg_obj *co, cg_obj *parent, cg_obj **conp)
@@ -331,13 +331,13 @@ co_copy(cg_obj *co, cg_obj *parent, cg_obj **conp)
     return 0;
 }
 
-/*! 
- * \brief  Recursively copy a parse-tree.
+/*! Recursively copy a parse-tree.
  *
  * No common pointers between the two structures
- *  pt       Original parse-tree
- *  parent   The parent of the new parsetree (need not be same as parent of pt)
- *  ptnp     New parse-tree
+ *
+ * @param pt       Original parse-tree
+ * @param parent   The parent of the new parsetree (need not be same as parent of pt)
+ * @param ptnp     New parse-tree
  */
 int
 pt_copy(parse_tree pt, cg_obj *parent, parse_tree *ptnp)
@@ -419,9 +419,8 @@ str_cmp(char *s1, char *s2)
 }
 
 
-/*
- * co_eq
- * Examine equality between two cligen objects (cg_obj)
+/*! Examine equality between two cligen objects (cg_obj)
+ *
  * Two cligen objects are equal if they have:
  * - same type (variable or command)
  * - if command, they should have same command name
@@ -429,9 +428,10 @@ str_cmp(char *s1, char *s2)
  *          + same variable type.
  *          + same expand, choice, range and regexp options. 
  * cf str_cmp
- * Return 0 of equal
- *       <0 if co1 is less than co2
- *       >0 if co1 is greater than co2
+ *
+ * @retval  0    If equal
+ * @retval <0    if co1 is less than co2
+ * @retval >0    if co1 is greater than co2
  */
 static int 
 co_eq(cg_obj *co1, cg_obj *co2)
@@ -867,8 +867,7 @@ cligen_reason(const char *fmt, ...)
     return reason;	
 }
 
-/*! 
- * \brief  Apply a function call recursively on all cg_obj:s in a parse-tree
+/*! Apply a function call recursively on all cg_obj:s in a parse-tree
  *
  * Recursively traverse all cg_obj in a parse-tree and apply fn(arg) for each
  * object found. The function is called with the cg_obj and an argument as args.

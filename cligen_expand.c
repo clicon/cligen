@@ -220,15 +220,14 @@ pt_reference_trunc(parse_tree pt)
 
 
 
-/*
- * pt_expand_1
- * Take a top-object parse-tree (pt), and expand all tree references in its
- * children. One level only. Parse-tree is expanded itself (not copy).
- * Arguments:
- *  h       Handle needed to resolve tree-references (@tree)
- *  coprev  Parent, if any
- *  pt      parse-tree to expand
+/*! Take a top-object parse-tree (pt), and expand all tree references in its children. 
+ * 
+ * One level only. Parse-tree is expanded itself (not copy).
  * XXX: CIRCULAR COPY. You copy from S already expanded tree! Gaah
+ *
+ * @param h       Handle needed to resolve tree-references (@tree)
+ * @param coprev  Parent, if any
+ * @param pt      parse-tree to expand
  */
 int
 pt_expand_1(cligen_handle h, cg_obj *coprev, parse_tree *pt)

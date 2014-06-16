@@ -44,7 +44,6 @@
 #include "cligen_cv.h"
 #include "getline.h"
 
-/*! \file cligen_cvec.c */ 
 struct cvec{
     cg_var         *vr_vec;  /* vector of CLIgen variables */
     int             vr_len;  /* length of vector */
@@ -57,13 +56,14 @@ struct cvec{
  */
 static int excludekeys = 0;
 
-/*! 
- * \brief  Create and initialize a new cligen variable vector (cvec)
+/*! Create and initialize a new cligen variable vector (cvec)
  * 
  * See also cvec_init()
  * Returned cvec needs to be freed with cvec_free().
- * IN
- *   len  Number of cv elements. Can be zero and elements added incrementally.
+ *
+ * @param  len    Number of cv elements. Can be zero and elements added incrementally.
+ * @retval NULL   errno set
+ * @retval cv     allocated cligen var
  */
 cvec *
 cvec_new(int len)
@@ -80,8 +80,7 @@ cvec_new(int len)
     return vr;
 }
 
-/*! 
- * \brief Free a cvec
+/*! Free a cvec
  *
  * Typically done internally after a call to a callback, the callback should not free
  * but needs to copy if it wants to use a variable.
@@ -95,13 +94,12 @@ cvec_free(cvec *vr)
     return 0;
 }
 
-/*! 
- * \brief Initialize a cligen variable vector (cvec) with 'len' numbers of variables.
+/*! Initialize a cligen variable vector (cvec) with 'len' numbers of variables.
  *
  * See also cvec_new()
- * input parameters:
- *  vr   the vector
- *  len  number of cv elements. Can be zero and elements added incrementally.
+ *
+ * @param vr   the vector
+ * @param len  number of cv elements. Can be zero and elements added incrementally.
  */
 int
 cvec_init(cvec *vr, int len)
@@ -112,8 +110,7 @@ cvec_init(cvec *vr, int len)
     return 0;
 }
 
-/*! 
- * \brief Like cvec_free but does not actually free the cvec.
+/*! Like cvec_free but does not actually free the cvec.
  */
 int
 cvec_reset(cvec *vr)
@@ -128,8 +125,7 @@ cvec_reset(cvec *vr)
     return 0;
 }
 
-/*! 
- * \brief  Given an cv in a cligen variable vector (cvec) return the next cv.
+/*! Given a cv in a cligen variable vector (cvec) return the next cv.
  *
  * Given an element (cv0) in a cligen variable vector (cvec) return the next element.
  * if cv0 is NULL, return first element.
@@ -150,8 +146,7 @@ cvec_next(cvec *vr, cg_var *cv0)
     return cv;
 }
 
-/*! 
- * \brief  Append a new cligen variable (cv) to cligen variable vector (cvec) and return it.
+/*! Append a new cligen variable (cv) to cligen variable vector (cvec) and return it.
  *
  * See also cv_new, but this is allocated contiguosly as a part of a cvec.
  */
@@ -171,8 +166,7 @@ cvec_add(cvec *vr, enum cv_type type)
 }
 
 
-/*! 
- * \brief Delete a cv variable from a cvec. Note: cv is not reset & cv may be stale!
+/*! Delete a cv variable from a cvec. Note: cv is not reset & cv may be stale!
  *
  * This is a dangerous command since the cv it deletes (such as created by cvec_add)
  * may have been modified with realloc (eg cvec_add/delete) and therefore can not be 
@@ -208,8 +202,7 @@ cvec_del(cvec *vr, cg_var *del)
     return cvec_len(vr);
 }
 
-/*! 
- * \brief return length of a cvec.
+/*! Return allocated length of a cvec.
  */
 int     
 cvec_len(cvec *vr)
@@ -217,8 +210,7 @@ cvec_len(cvec *vr)
     return vr->vr_len;
 }
 
-/*! 
- * \brief return i:th element of cligen variable vector cvec.
+/*! Return i:th element of cligen variable vector cvec.
  */
 cg_var *
 cvec_i(cvec *vr, int i)
@@ -228,19 +220,19 @@ cvec_i(cvec *vr, int i)
     return NULL;
 }
 
-/*! 
- * \brief Iterate through all cligen variables in a cvec list
+/*! Iterate through all cligen variables in a cvec list
  *
- * Arguments:
- *	vr	  	- Cligen variable list
- *	prev		- Last cgv (or NULL)
+ * @code
+ *	   cg_var *cv = NULL;
+ *	   while ((cv = cvec_each(vr, cv)) != NULL) {
+ *	     ...
+ *	   }
+ * @endcode
  *
- * Returns: next variable structure or NULL when end of list reached.
- * Usage:  	
- *		   cg_var *cv = NULL;
- *		   while ((cv = cvec_each(vr, cv)) != NULL) {
- *		     ...
- *		   }
+ * @param  vr	  	Cligen variable list
+ * @param  prev		Last cgv (or NULL)
+ * @retval cv           Next variable structure.
+ * @retval NULL         When end of list reached.
  */
 cg_var *
 cvec_each(cvec *vr, cg_var *prev)
@@ -254,8 +246,7 @@ cvec_each(cvec *vr, cg_var *prev)
   return cvec_next(vr, prev);
 }
 
-/*! 
- * \brief Like cvec_each but skip element 0. 
+/*! Like cvec_each but skip element 0. 
  *
  * Common in many cvecs where [0] is the command-line and all
  * others are arguments.
@@ -272,8 +263,7 @@ cvec_each1(cvec *vr, cg_var *prev)
   return cvec_next(vr, prev);
 }
 
-/*! 
- * \brief  Create a new cvec by copying from an original
+/*! Create a new cvec by copying from an original
  *
  * The new cvec needs to be freed by cvec_free().
  * One can make a cvec_cp() as well but it is a little trickier to match vr_vec.
@@ -296,8 +286,7 @@ cvec_dup(cvec *old)
     return new;
 }
 
-/*! 
- * \brief Create cv list by matching a CLIgen parse-tree and an input string. 
+/*! Create cv list by matching a CLIgen parse-tree and an input string. 
  *
  * The matched parse-tree is  given by a syntax-node in a leaf, and by following 
  * the parse-tree 'upwards' in the tree, a syntactic string can be found. 
@@ -308,15 +297,12 @@ cvec_dup(cvec *old)
  *
  * The variable vr should be freed with cvec_reset()!
  *
- * INPUT:
- *   co_match:  Leaf CLIgen syntax node
- *   cmd:       Command string 
- *   vr         Initialized cvec (cvec_new or cvec_reset)
- * OUTPUT:
- *   vr         CLIgen variable record         
- * RETURNS:
- *    0:        OK
- *   -1:        Error
+ * @param  [in]     co_match    Leaf CLIgen syntax node
+ * @param  [in]     cmd         Command string 
+ * @param  [in,out] vr          Initialized cvec (cvec_new or cvec_reset). CLIgen 
+ *                              variable record         
+ * @retval          0           OK
+ * @retval          -1          Error
  */
 int
 cvec_match(cg_obj *co_match, 
@@ -420,8 +406,7 @@ cvec_match(cg_obj *co_match,
 } /* cvec_match */
 
 
-/*! 
- * \brief Create a cv list with a single string element.
+/*! Create a cv list with a single string element.
  *
  * Help function when creating cvec to cligen callbacks.
  */
@@ -442,8 +427,7 @@ cvec_start(char *cmd)
     return cvec;
 }
 
-/*! 
- * \brief Pretty print cligen variable list to a file
+/*! Pretty print cligen variable list to a file
  */
 int
 cvec_print(FILE *f, cvec *vr)
@@ -459,8 +443,7 @@ cvec_print(FILE *f, cvec *vr)
     return 0;
 }
 
-/*! 
- * \brief Return first cv in a cvec matching a name
+/*! Return first cv in a cvec matching a name
  *
  * Given an CLIgen variable vector cvec, and the name of a variable, return the first 
  * matching entry. 
@@ -476,8 +459,7 @@ cvec_find(cvec *vr, char *name)
     return NULL;
 }
 
-/*! 
- * \brief  Like cvec_find, but only search non-keywords
+/*! Like cvec_find, but only search non-keywords
  */
 cg_var *
 cvec_find_var(cvec *vr, char *name)
@@ -508,8 +490,7 @@ cvec_var_i(cvec *vr, char *name)
 #endif
 
 
-/*! 
- * \brief Like cvec_find, but only search keywords
+/*! Like cvec_find, but only search keywords
  */
 cg_var *
 cvec_find_keyword(cvec *vr, char *name)
@@ -522,8 +503,7 @@ cvec_find_keyword(cvec *vr, char *name)
     return NULL;
 }
 
-/*! 
- * \brief  Typed version of cvec_find that returns the string value.
+/*! Typed version of cvec_find that returns the string value.
  *
  * Note: (1) Does not see the difference between not finding the cv, and finding one
  *           with wrong type - in both cases NULL is returned.
@@ -540,8 +520,7 @@ cvec_find_str(cvec *vr, char *name)
 }
 
 
-/*! 
- * \brief Changes cvec find function behaviour, exclude keywords or include them.
+/*! Changes cvec find function behaviour, exclude keywords or include them.
  */
 int 
 cv_exclude_keys(int status)

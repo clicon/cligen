@@ -18,7 +18,6 @@
   You should have received a copy of the GNU General Public License
   along with CLIgen; see the file COPYING.
 */
-/*! \file */ 
 #include "cligen_config.h"
 
 #include <stdio.h>
@@ -46,16 +45,15 @@
 /* Static prototypes */
 static int pt_print(FILE *f, parse_tree pt, int level, int brief);
 
-/*! 
- * \brief Print the syntax specification of a variable syntax spec to string
+/*! Print the syntax specification of a variable syntax spec to string
  *
  * That is, the inverse of parsing.
  * But it is not complete, it actually only prints the name within <>
  * and no comments.
  * Example, a string variable with name foo is printed as <foo>
  * Used as help during completion, syntax prints, etc.
- * Input args:
- *  brief:   If set show clispec parsable format, else just <varname>
+ *
+ * @param brief   If set show clispec parsable format, else just <varname>
  */
 int 
 cov_print(cg_obj *co, char *cmd, int len, int brief)
@@ -190,8 +188,7 @@ pt_print(FILE *f, parse_tree pt, int marginal, int brief)
     return 0;
 }
 
-/*! 
- * \brief  Print CLIgen parse-tree to file, brief or detailed.
+/*! Print CLIgen parse-tree to file, brief or detailed.
  */
 int 
 cligen_print(FILE *f, parse_tree pt, int brief)

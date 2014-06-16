@@ -19,7 +19,6 @@
   You should have received a copy of the GNU General Public License
   along with CLIgen; see the file COPYING.
 */
-/*! \file */ 
 #include "cligen_config.h"
 
 #include <stdio.h>
@@ -514,8 +513,7 @@ cli_trim (char **line, char comment)
 }
 
 
-/*! 
- * \brief Given an input string, return a parse-tree.
+/*! Given an input string, return a parse-tree.
  *
  * Given an input string and a parse-tree, return a matching parse-tree node, a
  * CLIgen keyword and CLIgen variable record vector. 
@@ -526,18 +524,16 @@ cli_trim (char **line, char comment)
  * Use this function if you already have a string but you want it syntax-checked 
  * and parsed.
  *
- * INPUT:
- *   string  Input string to match
- *   pt0     parse-tree
- * OUTPUT: (if retval == 1).
- *   co_orig  Object that matches 
- *   vr          variable vector
- * RETURNS:
- *  -2      Eof
- *  -1      Error
- *   0      No match
- *   1      Exactly one match
- *   2+     Multiple matches
+ * @param  [in]  string    Input string to match
+ * @param  [in]  pt0       Parse-tree
+ * @param  [out] co_orig   Object that matches (if retval == 1).
+ * @param  [out] vr        Variable vector (if retval == 1).
+ *
+ * @retval  -2             Eof
+ * @retval -1              Error
+ * @retval  0              No match
+ * @retval  1              Exactly one match
+ * @retval  2+             Multiple matches
  */
 int 
 cliread_parse (cligen_handle h, 
@@ -651,25 +647,22 @@ cliread_getline(cligen_handle h,
 }
 #endif /* notused */
 
-/*! 
- * \brief Read line from terminal, parse the string, and invoke callbacks.
+/*! Read line from terminal, parse the string, and invoke callbacks.
  *
  * 
  * Return both results from parsing (function return), and eventual result
  * from callback (if function return =1).
  * Use this function if you want the whole enchilada without special operation
- * INPUT:
- *   prompt  Prompt string to show at beginning of line
-
- * OUTPUT:
- *   line    Pointer to new string input from terminal
- *   cb_ret: retval of callback (only if functions return value is 1)
- * RETURNS:
- *  -2      eof  CG_EOF
- *  -1      Error
- *   0      No match
- *   1      Exactly one match
- *   2+     Multiple matches
+ *
+ * @param [in]  prompt  Prompt string to show at beginning of line
+ * @param [out] line    Pointer to new string input from terminal
+ * @param [out] cb_ret  Retval of callback (only if functions return value is 1)
+ *
+ * @retval  -2      eof  CG_EOF
+ * @retval  -1      Error
+ * @retval   0      No match
+ * @retval   1      Exactly one match
+ * @retval   2+     Multiple matches
  */
 int
 cliread_eval(cligen_handle   h,
@@ -709,20 +702,17 @@ cliread_eval(cligen_handle   h,
     return retval;
 }
 	       
-/*! 
- * Evaluate a matched CV and a cv variable list
+/*! Evaluate a matched CV and a cv variable list
  *
- * cligen_eval
- * INPUT:
- *   h      Application-specific pointer to a struct
- *   co     Object that has been matched. This is the object furthest down 
- *          in the syntax tree. By backtracking to the top the complete path
- *          can be retreived.
- *   vr     A vector of cligen variables present in the string.
+ * @param  h      Application-specific pointer to a struct
+ * @param  co     Object that has been matched. This is the object furthest down 
+ *                in the syntax tree. By backtracking to the top the complete path
+ *                can be retreived.
+ * @param  vr     A vector of cligen variables present in the string.
  *
  * RETURNS:
- *    If there is a callback, the return value of the callback is returned,
- *    otherwise 0.
+ * @retval   int If there is a callback, the return value of the callback is returned,
+ * @retval   0   otherwise
  *
  * This is the only place where cligen callbacks are invoked
  */

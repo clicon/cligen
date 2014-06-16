@@ -19,7 +19,7 @@
   You should have received a copy of the GNU General Public License
   along with CLIgen; see the file COPYING.
  */
-/*! \file */ 
+
 #include "cligen_config.h"
 
 
@@ -58,10 +58,11 @@ cli_output_reset(void)
     d_lines = 0;
     return 0;
 }
-/*!
- * \brief CLIgen output function. All output should be made via this function.
+/*! CLIgen output function. All printf-style output should be made via this function.
  * 
- * It deals with formatting, page breaks, etc.
+ * It deals with formatting, page breaks, etc. 
+ * NOTE: Many style of outputs cannot be handled this way. Spawning more/less process
+ * is more general.
  */
 int
 cligen_output(FILE *f, char *template, ... )
@@ -179,8 +180,7 @@ cligen_redraw(cligen_handle h)
     gl_redraw(h);
 }
 
-/*! 
- * \brief Register a suspend (^Z) function hook 
+/*! Register a suspend (^Z) function hook 
  */
 int
 cligen_susp_hook(cligen_handle h, cligen_susp_cb_t *fn)
@@ -189,8 +189,7 @@ cligen_susp_hook(cligen_handle h, cligen_susp_cb_t *fn)
     return 0;
 }
 
-/*! 
- * \brief Register extra exit characters (in addition to ctrl-c)
+/*! Register extra exit characters (in addition to ctrl-c)
  */
 void 
 cligen_exitchar_add(cligen_handle h, char c)
@@ -199,8 +198,7 @@ cligen_exitchar_add(cligen_handle h, char c)
 }
 
 
-/*! 
- * \brief Print top-level help (all commands) of a parse-tree
+/*! Print top-level help (all commands) of a parse-tree
  */
 int
 cligen_help(FILE *f, parse_tree pt)

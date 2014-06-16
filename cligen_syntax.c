@@ -18,7 +18,6 @@
   You should have received a copy of the GNU General Public License
   along with CLIgen; see the file COPYING.
 */
-/*! \file */ 
 #include "cligen_config.h"
 
 #include <stdio.h>
@@ -36,8 +35,7 @@
 #include "cligen_read.h"
 #include "cligen_syntax.h"
 
-/*!
- * \brief Parse a string containing a CLIgen spec into a parse-tree
+/*! Parse a string containing a CLIgen spec into a parse-tree
  * 
  * Syntax parsing. A string is input and a syntax-tree is returned (or error). 
  * A variable record is also returned containing a list of (global) variable values.
@@ -46,12 +44,14 @@
  * to tag a syntax-spec with assignments or callbacks. Help strings are delimited with ("").
  * '#' anywhere on the line means the rest is comment.
  * Example:
+ * @code
  * global=foo;
  * a("command") b, fn1();{
  *    c("help"), fn2("arg"), local=3;
  *    d("help");
  * }
  * (e | d)
+ * @endcode
  * Gives the following allowed strings: "a b", "a b c", "a b d", "e", "d".
  * ;
  */
@@ -121,8 +121,7 @@ cligen_parse_str(cligen_handle h,
 
 }
 
-/*! 
- * \brief Parse a file containing a CLIgen spec into a parse-tree
+/*! Parse a file containing a CLIgen spec into a parse-tree
  *
  * Similar to cligen_parse_str(), just read a file first
  */

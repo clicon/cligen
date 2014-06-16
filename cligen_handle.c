@@ -18,7 +18,6 @@
   You should have received a copy of the GNU General Public License
   along with CLIgen; see the file COPYING. 
 */
-/*! \file */ 
 #include "cligen_config.h"
 
 #include <stdio.h>
@@ -110,8 +109,7 @@ struct cligen_handle{
 
 
 
-/*! 
- * \brief This is the first call the CLIgen API and returns a handle. 
+/*! This is the first call the CLIgen API and returns a handle. 
  *
  */
 cligen_handle 
@@ -136,8 +134,7 @@ cligen_init(void)
     return h;
 }
 
-/*! 
- * \brief This is the last call to the CLIgen API
+/*! This is the last call to the CLIgen API
  */
 int
 cligen_exit(cligen_handle h)
@@ -201,8 +198,7 @@ cligen_comment(cligen_handle h)
     return ch->ch_comment;
 }
 
-/*! 
- * \brief Set comment character.
+/*! Set comment character.
  */
 int
 cligen_comment_set(cligen_handle h, char c)
@@ -224,8 +220,7 @@ cligen_prompt(cligen_handle h)
     return ch->ch_prompt;
 }
 
-/*! 
- * \brief Set CLIgen prompt string.
+/*! Set CLIgen prompt string.
  */
 int
 cligen_prompt_set(cligen_handle h, char *prompt)
@@ -243,8 +238,7 @@ cligen_prompt_set(cligen_handle h, char *prompt)
     return 0;
 }
 
-/*! 
- * \brief Get a parsetree, if name==NULL, return first parse-tree
+/*! Get a parsetree, if name==NULL, return first parse-tree
  */
 parse_tree *
 cligen_tree(cligen_handle h, char *name)
@@ -281,8 +275,7 @@ cligen_treetop(cligen_handle h, char *name)
 
 
 
-/*! 
- * \brief Add a new parsetree
+/*! Add a new parsetree
  */
 int 
 cligen_tree_add(cligen_handle h, char *name, parse_tree pt)
@@ -336,8 +329,7 @@ cligen_tree_del(cligen_handle h, char *name)
     return 0;
 }
 
-/*! 
- * \brief Get name of currently active parsetree.
+/*! Get name of currently active parsetree.
  */
 char*
 cligen_tree_active(cligen_handle h)
@@ -347,8 +339,7 @@ cligen_tree_active(cligen_handle h)
     return ch->ch_tree_active;
 }
 
-/*! 
- * \brief Set currently active parsetree by name.
+/*! Set currently active parsetree by name.
  */
 int
 cligen_tree_active_set(cligen_handle h, char *treename)
@@ -468,13 +459,13 @@ cligen_submode_set(cligen_handle h, char *name, parse_tree *pt)
 }
 #endif /* CLIGEN_SUBMODE */
 
-/*! 
- * \brief Get completion mode. 0: complete 1 level. 1: complete all
+/*! Get completion mode. 0: complete 1 level. 1: complete all
  *
- *  0   for each <TAB> complete one level. (default)
- *  1   complete all unique levels at once
- * Example: syntax is 'a b;'. mode = 0 gives completion to 'a ' on first TAB and to 'a b '
- * on second. mode = 1 gives completion to 'a b ' on first TAB.
+ * Example: syntax is 'a b;'. mode = 0 gives completion to 'a ' on first TAB and 
+ * to 'a b ' on second. mode = 1 gives completion to 'a b ' on first TAB.
+ *
+ * @retval 0   for each <TAB> complete one level. (default)
+ * @retval 1   complete all unique levels at once
  */
 int
 cligen_completion(cligen_handle h)
@@ -484,8 +475,9 @@ cligen_completion(cligen_handle h)
     return ch->ch_completion;
 }
 
-/*! 
- * \brief Set completion mode. 0: complete 1 level. 1: complete all
+/*! Set completion mode. 
+ *
+ * @param mode    0: complete 1 level. 1: complete all
  */
 int
 cligen_completion_set(cligen_handle h, int mode)
@@ -496,8 +488,8 @@ cligen_completion_set(cligen_handle h, int mode)
     return 0;
 }
 
-/*!
- * \brief Get Error string explaining why there was no match.
+/*! Get Error string explaining why there was no match.
+ *
  * Fill error string buffer
  * Why is there no match of an input string in the parse-tree?
  * The call to cliread_parse/getline/eval returns CG_NOMATCH and this is where
@@ -511,8 +503,7 @@ cligen_nomatch(cligen_handle h)
     return ch->ch_nomatch;
 }
 
-/*!
- * \brief Set Error string explaining why there was no match.
+/*! Set Error string explaining why there was no match.
  */
 int
 cligen_nomatch_set(cligen_handle h, const char *fmt, ...)
@@ -547,8 +538,7 @@ cligen_nomatch_set(cligen_handle h, const char *fmt, ...)
 
 static int _terminalrows; /* XXX: global since cli_output dont take handle */
 
-/*! 
- * \brief Get number of displayed terminal rows.
+/*! Get number of displayed terminal rows.
  */
 int 
 cligen_terminalrows(cligen_handle h)
@@ -558,8 +548,7 @@ cligen_terminalrows(cligen_handle h)
     return _terminalrows; /* ch->ch_terminalrows; */
 }
 
-/*! 
- * \brief Set number of displayed terminal rows.
+/*! Set number of displayed terminal rows.
  */
 int 
 cligen_terminalrows_set(cligen_handle h, int rows)
@@ -571,8 +560,7 @@ cligen_terminalrows_set(cligen_handle h, int rows)
     return 0;
 }
 
-/*! 
- * \brief Get length of lines (number of 'columns' in a line)
+/*! Get length of lines (number of 'columns' in a line)
  */
 int 
 cligen_terminal_length(cligen_handle h)
@@ -582,8 +570,7 @@ cligen_terminal_length(cligen_handle h)
     return gl_getwidth();
 }
 
-/*! 
- * \brief Set length of lines (number of 'columns' in a line)
+/*! Set length of lines (number of 'columns' in a line)
  */
 int 
 cligen_terminal_length_set(cligen_handle h, int length)
@@ -596,9 +583,10 @@ cligen_terminal_length_set(cligen_handle h, int length)
 }
 
 
-/*! 
- * \brief Get tab-mode. 0 is 'short/ios' mode, 1 is long/junos mode.
+/*! Get tab-mode. 
  *
+ * @retval 0    'short/ios' mode.
+ * @retval 1    long/junos mode.
  */
 int 
 cligen_tabmode(cligen_handle h)
@@ -608,8 +596,9 @@ cligen_tabmode(cligen_handle h)
     return ch->ch_tabmode;
 }
 
-/*! 
- * \brief Set tab-mode, 0 is 'short/ios' mode, 1 is long/junos mode.
+/*! Set tab-mode
+ *
+ * @param  0 is 'short/ios' mode, 1 is long/junos mode.
  */
 int 
 cligen_tabmode_set(cligen_handle h, int mode)
@@ -620,11 +609,12 @@ cligen_tabmode_set(cligen_handle h, int mode)
     return 0;
 }
 
-
 static int _lexicalorder = 0; /* XXX shouldnt be global */
 
-/*! 
- * \brief Get lexical matching order: strcmp (0) or strverscmp (1).
+/*! Get lexical matching order
+ * 
+ * @retval 0  strcmp
+ * @retval 1  strverscmp
  */
 int
 cligen_lexicalorder(cligen_handle h)
@@ -635,8 +625,9 @@ cligen_lexicalorder(cligen_handle h)
     return _lexicalorder;
 }
 
-/*! 
- * \brief Set lexical matching order: strcmp (0) or strverscmp (1).
+/*! Set lexical matching order.
+ * 
+ * @param n  strcmp (0) or strverscmp (1).
  */
 int
 cligen_lexicalorder_set(cligen_handle h, int n)
@@ -651,8 +642,7 @@ cligen_lexicalorder_set(cligen_handle h, int n)
 static int _ignorecase = 0; /* XXX shouldnt be global */
 
 
-/*! 
- * \brief Ignore uppercase/lowercase or not
+/*! Ignore uppercase/lowercase or not
  */
 int
 cligen_ignorecase(cligen_handle h)
@@ -663,8 +653,7 @@ cligen_ignorecase(cligen_handle h)
     return _ignorecase;
 }
 
-/*! 
- * \brief Ignore uppercase/lowercase or not
+/*! Ignore uppercase/lowercase or not
  */
 int
 cligen_ignorecase_set(cligen_handle h, int n)
@@ -676,8 +665,7 @@ cligen_ignorecase_set(cligen_handle h, int n)
     return 0;
 }
 
-/*! 
- * \brief Debug syntax by printing dynamically on stderr. Get function.
+/*! Debug syntax by printing dynamically on stderr. Get function.
  */
 int cligen_logsyntax(cligen_handle h)
 {
@@ -686,8 +674,7 @@ int cligen_logsyntax(cligen_handle h)
     return ch->ch_logsyntax;
 }
 
-/*! 
- * \brief Debug syntax by printing dynamically on stderr. Set function.
+/*! Debug syntax by printing dynamically on stderr. Set function.
  */
 int cligen_logsyntax_set(cligen_handle h, int n)
 {
@@ -697,8 +684,7 @@ int cligen_logsyntax_set(cligen_handle h, int n)
     return 0;
 }
 
-/*!
- * \brief Get app-specific handle for callbacks instead of cligen handle.
+/*! Get app-specific handle for callbacks instead of cligen handle.
  *
  * An application may choose to use another handle than cligen_handle in callbacks
  * and completion functions. 
@@ -711,8 +697,7 @@ cligen_userhandle(cligen_handle h)
     return ch->ch_userhandle;
 }
 
-/*!
- * \brief Set app-specific handle for callbacks instead of cligen handle
+/*! Set app-specific handle for callbacks instead of cligen handle
  */
 int
 cligen_userhandle_set(cligen_handle h, void *userhandle)

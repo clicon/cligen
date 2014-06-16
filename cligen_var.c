@@ -23,7 +23,6 @@
   when matching.
   Note that a cg_obj is a syntax object and contains a part that specifies cgv:s called cov
 */
-/*! \file */ 
 #include "cligen_config.h"
 
 #include <stdio.h>
@@ -66,8 +65,7 @@ static char *cg_urlprotostr[] = {
     NULL
 };
 
-/*! 
- * \brief Get name of cligen variable cv
+/*! Get name of cligen variable cv
  */
 char *
 cv_name_get(cg_var *cv)
@@ -75,8 +73,7 @@ cv_name_get(cg_var *cv)
     return cv->var_name;
 }
 
-/*! 
- * \brief allocate new string from original. Free previous string if existing.
+/*! Allocate new string from original. Free previous string if existing.
  */
 char *
 cv_name_set(cg_var *cv, char *s0)
@@ -94,8 +91,7 @@ cv_name_set(cg_var *cv, char *s0)
     return s1; 
 }
 
-/*! 
- * \brief Get cv type
+/*! Get cv type
  */
 enum cv_type
 cv_type_get(cg_var *cv)
@@ -121,8 +117,7 @@ cv_const_set(cg_var *cv, int c)
     return (cv->var_const = c);
 }
 
-/*!
- * \brief Get application-specific cv flag
+/*! Get application-specific cv flag
  */
 char
 cv_flag(cg_var *cv, char mask)
@@ -130,8 +125,7 @@ cv_flag(cg_var *cv, char mask)
     return cv->var_flag & mask;
 }
 
-/*!
- * \brief Clear application-specific cv flag 
+/*! Clear application-specific cv flag 
  */
 char
 cv_flag_clr(cg_var *cv, char mask)
@@ -139,8 +133,7 @@ cv_flag_clr(cg_var *cv, char mask)
     return cv->var_flag ^= mask;
 }
 
-/*!
- * \brief Set application-specific cv flag 
+/*! Set application-specific cv flag 
  */
 char
 cv_flag_set(cg_var *cv, char mask)
@@ -148,8 +141,7 @@ cv_flag_set(cg_var *cv, char mask)
     return cv->var_flag |= mask;
 }
 
-/*! 
- * \brief Get value of cv without specific type set
+/*! Get value of cv without specific type set
  */
 void *
 cv_value_get(cg_var *cv)
@@ -157,8 +149,7 @@ cv_value_get(cg_var *cv)
     return &cv->u;
 }
 
-/*! 
- * \brief Get boolean value of cv
+/*! Get boolean value of cv
  */
 char
 cv_bool_get(cg_var *cv)
@@ -172,8 +163,7 @@ cv_bool_set(cg_var *cv, char x)
     return (cv->u.varu_bool = x);
 }
 
-/*! 
- * \brief Get integer value of cv
+/*! Get integer value of cv
  */
 int32_t
 cv_int_get(cg_var *cv)
@@ -187,8 +177,7 @@ cv_int_set(cg_var *cv, int32_t x)
     return (cv->u.varu_int = x);
 }
 
-/*! 
- * \brief Get 64-bit integer value of cv
+/*! Get 64-bit integer value of cv
  */
 int64_t
 cv_long_get(cg_var *cv)
@@ -202,8 +191,7 @@ cv_long_set(cg_var *cv, int64_t x)
     return (cv->u.varu_long = x);
 }
 
-/*! 
- * \brief Get pointer to cv string. 
+/*! Get pointer to cv string. 
  *
  * String can be modified in-line but must call _set function to reallocate.
  */
@@ -213,8 +201,7 @@ cv_string_get(cg_var *cv)
     return ((cv)->u.varu_string);
 }
 
-/*! 
- * \brief allocate new string from original. Free previous string if existing.
+/*! Allocate new string from original. Free previous string if existing.
  */
 char *
 cv_string_set(cg_var *cv, char *s0)
@@ -232,8 +219,7 @@ cv_string_set(cg_var *cv, char *s0)
     return s1; 
 }
 
-/*! 
- * \brief Get ipv4addr, pointer returned, can be used to set value.
+/*! Get ipv4addr, pointer returned, can be used to set value.
  */
 struct in_addr *
 cv_ipv4addr_get(cg_var *cv)
@@ -241,8 +227,7 @@ cv_ipv4addr_get(cg_var *cv)
     return &cv->u.varu_ipv4addr.varipv4_ipv4addr;
 }
 
-/*! 
- * \brief Get ipv4addr length of cv
+/*! Get ipv4addr length of cv
  */
 uint8_t
 cv_ipv4masklen_get(cg_var *cv)
@@ -250,8 +235,7 @@ cv_ipv4masklen_get(cg_var *cv)
     return cv->u.varu_ipv4addr.varipv4_masklen;
 }
 
-/*! 
- * \brief Get ipv6addr, pointer returned, can be used to set value.
+/*! Get ipv6addr, pointer returned, can be used to set value.
  */
 struct in6_addr *
 cv_ipv6addr_get(cg_var *cv)
@@ -259,8 +243,7 @@ cv_ipv6addr_get(cg_var *cv)
     return &cv->u.varu_ipv6addr.varipv6_ipv6addr;
 }
 
-/*! 
- * \brief Get ipv6addr length of cv
+/*! Get ipv6addr length of cv
  */
 uint8_t
 cv_ipv6masklen_get(cg_var *cv)
@@ -268,8 +251,7 @@ cv_ipv6masklen_get(cg_var *cv)
     return cv->u.varu_ipv6addr.varipv6_masklen;
 }
 
-/*! 
- * \brief  Returns a pointer to 6-byte mac-address array. 
+/*! Returns a pointer to 6-byte mac-address array. 
  *
  * This can be used to set the address too
  */
@@ -279,8 +261,7 @@ cv_mac_get(cg_var *cv)
     return cv->u.varu_macaddr;
 }
 
-/*! 
- * \brief Returns a pointer to uuid byte array. 
+/*! Returns a pointer to uuid byte array. 
  * 
  * This can be used to set the uuid too.
  */
@@ -297,8 +278,7 @@ cv_uuid_set(cg_var *cv, unsigned char *u)
     return cv->u.varu_uuid;
 }
 
-/*! 
- * \brief Returns a struct timeval by value.
+/*! Returns a struct timeval by value.
  */
 struct timeval
 cv_time_get(cg_var *cv)
@@ -317,8 +297,7 @@ cv_time_set(cg_var *cv, struct timeval t)
     return t;
 }
 
-/*! 
- * \brief  Get pointer to URL proto string. 
+/*! Get pointer to URL proto string. 
  *
  * String can be modified in-line but must call _set function to reallocate.
  */
@@ -344,8 +323,7 @@ cv_urlproto_set(cg_var *cv, char *s0)
     return s1; 
 }
 
-/*! 
- * \brief  Get pointer to URL address string. 
+/*! Get pointer to URL address string. 
  *
  * String can be modified in-line but must call _set function to reallocate.
  */
@@ -375,8 +353,7 @@ cv_urladdr_set(cg_var *cv, char *s0)
     return s1; 
 }
 
-/*! 
- * \brief  Get pointer to URL path string. 
+/*! Get pointer to URL path string. 
  *
  * String can be modified in-line but must call _set function to reallocate.
  */
@@ -406,8 +383,7 @@ cv_urlpath_set(cg_var *cv, char *s0)
     return s1; 
 }
 
-/*! 
- * \brief  Get pointer to URL user string. 
+/*! Get pointer to URL user string. 
  *
  * String can be modified in-line but must call _set function to reallocate.
  */
@@ -437,8 +413,7 @@ cv_urluser_set(cg_var *cv, char *s0)
     return s1; 
 }
 
-/*! 
- * \brief  Get pointer to URL passwd string. 
+/*! Get pointer to URL passwd string. 
  *
  * String can be modified in-line but must call _set function to reallocate.
  */
@@ -1017,10 +992,8 @@ done:
 }
 
 
-/*! 
- * \brief Translate (parse) a string to a CV type.
+/*! Translate (parse) a string to a CV type.
  */
-
 enum cv_type
 cv_str2type(char *str)
 {
@@ -1057,8 +1030,7 @@ cv_str2type(char *str)
   return CGV_ERR;
 }
 
-/*! 
- * \brief Translate (print) a cv type to a static string.
+/*! Translate (print) a cv type to a static string.
  */
 char *
 cv_type2str(enum cv_type type)
@@ -1120,8 +1092,7 @@ cv_type2str(enum cv_type type)
     return str;
 }
 
-/*! 
- * \brief  Return length of cligen variable value (as encoded in binary)
+/*! Return length of cligen variable value (as encoded in binary)
  *
  * Special with strings that are only pointed to by the variable.
  * In that case the lengths of the strings pointed to are added, trailing
@@ -1189,8 +1160,7 @@ cv_len(cg_var *cv)
 }
 
 
-/*! 
- * \brief Print value of CLIgen variable using printf style formats.
+/*! Print value of CLIgen variable using printf style formats.
  *
  * The value is printed in the string 'str' which has length 'size'.
  * You can use str=NULL to get the expected length.
@@ -1292,8 +1262,7 @@ cv2str(cg_var *cv, char *str, size_t size)
     return len;
 }
 
-/*! 
- * \brief Like cv2str, but allocate a string with right length.
+/*! Like cv2str, but allocate a string with right length.
  *
  * The string should be freed after use.
  */
@@ -1315,8 +1284,7 @@ cv2str_dup(cg_var *cv)
     return str;
 }
 
-/*! 
- * \brief Pretty print cligen variable value to a file
+/*! Pretty print cligen variable value to a file
  *
  * Same as cv2str but on file
  */
@@ -1409,29 +1377,28 @@ cv_print(FILE *f, cg_var *cv)
     return len;
 }
 
-/*! 
- * \brief parse cv from string. 
+/*! Parse cv from string. 
  *
  * An initialized cv is expected with a type field as created
  * by cv_new() or prepared by cv_reset().
  * Validate cligen variable cv using the spec in cs.
  *
- * Arguments:
- * IN    str   Input string. Example, number variable, str can be "7834" or "0x7634"
- * INOUT cgv   cligen variable, as prepared by cv_reset()/cv_new()
- * OUT reason: If given, and if return value is 0, contains a malloced string
- *              describing the reason why the validation failed.
+ * @param [in]     str    Input string. Example, number variable, str can be "7834" or "0x7634"
+ * @param [in,out] cgv    cligen variable, as prepared by cv_reset()/cv_new()
+ * @param [out]    reason If given, and if return value is 0, contains a malloced string
+ *                        describing the reason why the validation failed.
  *
- * Return values:
- * -1 : Error (fatal), with errno set to indicate error
- *  0 : Validation not OK, malloced reason is returned
- *  1 : Validation OK
  *
- * Example:
+ * @retval -1  Error (fatal), with errno set to indicate error
+ * @retval 0   Validation not OK, malloced reason is returned
+ * @retval 1   Validation OK
+ *
+ * @code
  *  cg_var *cv = cv_new(CGV_STRING);
  *  char   *reason=NULL;
  *  cv_parse1("mystring", cv, &reason):
  *  free(reason);
+ * @endcode
  */
 int
 cv_parse1(char *str0, cg_var *cv, char **reason)
@@ -1596,19 +1563,15 @@ cv_parse(char *str, cg_var *cv)
     return 0;
 }
 
-/*! 
- * \brief  Validate cligen variable cv using the spec in cs.
+/*! Validate cligen variable cv using the spec in cs.
  *
- * Arguments:
- * IN cv:      A cligen variable to validate. This is a correctly parsed cv.
- * IN cs:      A cligen variable specification object that defines the cv.
- * OUT reason: If given, and if return value is 0, contains a malloced string
- *             describing the reason why the validation failed.
- *
- * Return values:
- * -1 : Error (fatal), with errno set to indicate error
- *  0 : Validation not OK, malloced reason is returned
- *  1 : Validation OK
+ * @param [in]  cv      A cligen variable to validate. This is a correctly parsed cv.
+ * @param [in]  cs      A cligen variable specification object that defines the cv.
+ * @param [out] reason  If given, and if return value is 0, contains a malloced string
+ *                      describing the reason why the validation failed.
+ * @retval -1  Error (fatal), with errno set to indicate error
+ * @retval 0   Validation not OK, malloced reason is returned
+ * @retval 1   Validation OK
  */
 int
 cv_validate(cg_var *cv, cg_varspec *cs, char **reason)
@@ -1667,10 +1630,10 @@ cv_validate(cg_var *cv, cg_varspec *cs, char **reason)
     return retval;
 }
 
-/*! 
- * \brief Compare two cv:s
+/*! Compare two cv:s
  *
- * Return 0 if match or a strcmp style return if it does not match.
+ * @retval 0   equal
+ * @retval !0  not equal, as trcmp return values
  */
 int 
 cv_cmp(cg_var *cgv1, cg_var *cgv2)
@@ -1733,15 +1696,14 @@ cv_cmp(cg_var *cgv1, cg_var *cgv2)
     return -1;
 }
 
-/*! 
- * \brief Copy from one cv to a new cv.
+/*! Copy from one cv to a new cv.
  *
  * The new cv should have been be initialized, such as after cv_new() or
  * after cv_reset().
  * The new cv may involve duplicating strings, etc.
- * Returns:
- *  0  0n success, 
- *  -1 On error with errno set (strdup errors)
+
+ * @retval 0   0n success, 
+ * @retval -1  On error with errno set (strdup errors)
  */
 int
 cv_cp(cg_var *new, cg_var *old)
@@ -1799,8 +1761,7 @@ cv_cp(cg_var *new, cg_var *old)
     return retval;
 }
 
-/*! 
- * \brief Create a new cgv and copy the contents from the original. 
+/*! Create a new cgv and copy the contents from the original. 
  *
  * This may involve duplicating strings, etc.
  * The new cv needs to be freed by cv_free().
@@ -1819,13 +1780,13 @@ cv_dup(cg_var *old)
     return new;
 }
 
-/*! 
- * \brief Create new cligen variable. 
+/*! Create new cligen variable. 
  *
- * Return:
- *  On success the malloc.ed cligen variable that needs to be freed after use.
- *  NULL on error, error printed on stderr
- *  See also cvec_add
+ * See also cvec_add. 
+ * Note: returnred cv needs to be freed with cv_free()
+ *
+ * @retval NULL  on error, error printed on stder
+ * @retval cv    on success the malloc:ed cligen variable. Needs to be freed w cv_free()
  */
 cg_var *
 cv_new(enum cv_type type)
@@ -1841,8 +1802,7 @@ cv_new(enum cv_type type)
 
 }
 
-/*! 
- * \brief Free pointers and resets a single CLIgen variable cv
+/*! Free pointers and resets a single CLIgen variable cv
  *
  * But does not free the cgv itself! 
  * the type is maintained after reset.
@@ -1877,8 +1837,7 @@ cv_reset(cg_var *cgv)
     return 0;
 }
 
-/*! 
- * \brief Free a single CLIgen variable (cv) AND frees the cv itself
+/*! Free a single CLIgen variable (cv) AND frees the cv itself
  *
  * For new code
  */
