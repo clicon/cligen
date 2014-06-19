@@ -168,8 +168,7 @@ cligen_parse_file(cligen_handle h,
     return retval;
 }
 
-/*
- * \brief  Assign functions for callbacks in a parse-tree using a translate function
+/*! Assign functions for callbacks in a parse-tree using a translate function
  *
  * Assume a CLIgen syntax:
  *   a <b:string f()>, g();
@@ -183,17 +182,17 @@ cligen_parse_file(cligen_handle h,
  * in the parse-tree to produce function pointers (eg f, g) which are stored in the
  * parse-tree nodes. Later, at evaluation time, the actual functions (f, g) can be
  * called when evaluating/interpreting the syntax.
- * IN: 
- *   pt      parse-tree. Loop thru this
- *   str2fn1 Translator from strings to function pointers for command callbacks. 
- *            E.g. for g() above.
- *   fnarg1  Function argument for command callbacks (at evaluation time).
- *   str2fn2 Translator from strings to function pointers for expand variable
- *           callbacks. E.g. for f() above.
- *   fnarg1  Function argument for expand callbacks (at evaluation time).
- * RETURNS:
- *   0   OK
- *  -1   error and statement written on stderr
+ *
+ * @param  pt      parse-tree. Loop thru this
+ * @param  str2fn1 Translator from strings to function pointers for command callbacks. 
+ *         E.g. for g() above.
+ * @param  fnarg1  Function argument for command callbacks (at evaluation time).
+ * @param  str2fn2 Translator from strings to function pointers for expand variable
+ *         callbacks. E.g. for f() above.
+ *         fnarg1  Function argument for expand callbacks (at evaluation time).
+ *
+ * @retval   0   OK
+ * @retval  -1   error and statement written on stderr
  *
  * NOTE: str2fn may return NULL on error and should then supply a (static) error string 
  * NOTE: str2fn does not use type-checking for its return value (the actual function)
@@ -246,8 +245,7 @@ cligen_str2fn(parse_tree pt,
     return retval;
 }
 
-/*
- * \brief  Assign functions for callbacks in a parse-tree using a translate function
+/*! Assign functions for callbacks in a parse-tree using a translate function
  *
  * This is wrapper for better type-checking of the mapper (str2fn) function. See 
  * cligen_str2fn for the underlying function (without type-checking).

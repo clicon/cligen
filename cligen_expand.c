@@ -499,8 +499,7 @@ pt_expand_add(cg_obj *co, parse_tree ptn)
     return 0;
 }
 
-/*
- * \brief  Register functions for variable completion in parse-tree using translator
+/*! Register functions for variable completion in parse-tree using translator
  *
  * This is wrapper for better type-checking of the mapper (str2fn) function. See 
  * cligen_str2fn for the underlying function (without type-checking).
