@@ -17,9 +17,10 @@ page](http://www.cligen.se)
 
 CLIgen is _not_ a system in itself, you need to build your own
 'backend'. We have started another project: 'clicon' which is actually
-a whole system where you load dynamic frontend and backend
-modules. Clicon offers you a system, with embedded database, commit
-semantics, netconf interface, etc. CLIgen is a part of clicon.
+a whole system where you load dynamic frontend and backend modules
+[CLICON project page](http://www.clicon.org). Clicon offers you a
+system, with embedded database, commit semantics, YANG and NETCONF interface,
+etc. CLIgen is a part of clicon.
 
 The source code here is built and installed using configure; make;
 sudo make install. The source builds a single library. If you build
