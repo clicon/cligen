@@ -1570,7 +1570,7 @@ cv_parse(char *str, cg_var *cv)
  * @param [out] reason  If given, and if return value is 0, contains a malloced string
  *                      describing the reason why the validation failed.
  * @retval -1  Error (fatal), with errno set to indicate error
- * @retval 0   Validation not OK, malloced reason is returned
+ * @retval 0   Validation not OK, malloced reason is returned. returned reason must be freed
  * @retval 1   Validation OK
  */
 int

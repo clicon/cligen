@@ -733,6 +733,7 @@ cligen_eval(cligen_handle h, cg_obj *co, cvec *vr)
     for (cc = co->co_callbacks; cc; cc=cc->cc_next){
 	if (cc->cc_fn){
 	    cv = cc->cc_arg ? cv_dup(cc->cc_arg) : NULL;
+	    cligen_fn_str_set(h, cc->cc_fn_str);
 	    if ((retval = (*cc->cc_fn)(
 		     cligen_userhandle(h)?cligen_userhandle(h):h, 
 		     vr, 
@@ -740,10 +741,12 @@ cligen_eval(cligen_handle h, cg_obj *co, cvec *vr)
 		if (cv != NULL){
 		    cv_free(cv);
 		}
+		cligen_fn_str_set(h, NULL);
 		break;
 	    }
 	    if (cv != NULL)
 		cv_free(cv);
+	    cligen_fn_str_set(h, NULL);
 	}
     }
     return retval;

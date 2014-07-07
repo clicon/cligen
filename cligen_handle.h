@@ -56,6 +56,9 @@ int cligen_tree_active_set(cligen_handle h, char *mode);
 cg_obj *cligen_co_match(cligen_handle h);
 int cligen_co_match_set(cligen_handle h, cg_obj *co);
 
+char *cligen_fn_str_get(cligen_handle h);
+int cligen_fn_str_set(cligen_handle h, char *fn_str);
+
 //#ifdef CLIGEN_SUBMODE
 parse_tree *cligen_submode(cligen_handle h, char *name);
 int cligen_submode_set(cligen_handle h, char *name, parse_tree *pt);

@@ -86,6 +86,7 @@ struct cligen_handle{
     pt_element *ch_tree;         /* Linked list of parsetrees */
     char       *ch_tree_active;  /* Name of active parse-tree, if null use 1st */
     cg_obj     *ch_co_match;     /* Matching object in latest evaluation */
+    char       *ch_fn_str;       /* Name of active callback function */
     int         ch_completion;   /* completion mode */    
     char       *ch_nomatch;      /* Why did a string not match an evaluation? */
     int         ch_terminal_rows; /* Number of output terminal rows */
@@ -150,6 +151,8 @@ cligen_exit(cligen_handle h)
 	free(ch->ch_nomatch);
     if (ch->ch_tree_active)
 	free(ch->ch_tree_active);
+    if (ch->ch_fn_str)
+	free(ch->ch_fn_str);
     while ((pe = ch->ch_tree) != NULL){
 	ch->ch_tree =  pe->pe_next;
 	free(pe->pe_name);
@@ -233,8 +236,10 @@ cligen_prompt_set(cligen_handle h, char *prompt)
 	free(ch->ch_prompt);
 	ch->ch_prompt = NULL;
     }
-    if (prompt)
-	ch->ch_prompt = strdup(prompt);
+    if (prompt){
+	if ((ch->ch_prompt = strdup(prompt)) == NULL)
+	    return -1;
+    }
     return 0;
 }
 
@@ -347,12 +352,12 @@ cligen_tree_active_set(cligen_handle h, char *treename)
     struct cligen_handle *ch = handle(h);
 
     if (ch->ch_tree_active){
-	if (strcmp(treename, ch->ch_tree_active) == 0)
-	    return 0;
 	free(ch->ch_tree_active);
 	ch->ch_tree_active = NULL;
     }
-    ch->ch_tree_active = treename?strdup(treename):NULL;
+    if (treename)
+	if ((ch->ch_tree_active = strdup(treename)) == NULL)
+	    return -1;
     return 0;
 }
 
@@ -377,6 +382,29 @@ cligen_co_match_set(cligen_handle h, cg_obj *co)
     return 0;
 }
 
+char *
+cligen_fn_str_get(cligen_handle h)
+{
+    struct cligen_handle *ch = handle(h);
+
+    return ch->ch_fn_str;
+}
+
+int
+cligen_fn_str_set(cligen_handle h, char *fn_str)
+{
+    struct cligen_handle *ch = handle(h);
+
+    if (ch->ch_fn_str){
+	free(ch->ch_fn_str);
+	ch->ch_fn_str = NULL;
+    }
+    if (fn_str){
+	if ((ch->ch_fn_str = strdup(fn_str)) == NULL)
+	    return -1;
+    }
+    return 0;
+}
 
 
 #ifdef CLIGEN_SUBMODE
