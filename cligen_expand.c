@@ -225,7 +225,7 @@ pt_reference_trunc(parse_tree pt)
  * One level only. Parse-tree is expanded itself (not copy).
  * XXX: CIRCULAR COPY. You copy from S already expanded tree! Gaah
  *
- * @param h       Handle needed to resolve tree-references (@tree)
+ * @param h       Handle needed to resolve tree-references (\@tree)
  * @param coprev  Parent, if any
  * @param pt      parse-tree to expand
  */

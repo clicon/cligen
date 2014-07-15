@@ -92,7 +92,7 @@ cligen_parse_str(cligen_handle h,
 	    goto done;
 	if (cgy_init(&ya, co_top) < 0)
 	    goto done;
-	if (cligen_parseparse(&ya) != 0) {
+	if (cligen_parseparse(&ya) != 0) { /* yacc returns 1 on error */
 	    cgy_exit(&ya);
 	    cgl_exit(&ya);
 	    goto done;
@@ -189,7 +189,7 @@ cligen_parse_file(cligen_handle h,
  * @param  fnarg1  Function argument for command callbacks (at evaluation time).
  * @param  str2fn2 Translator from strings to function pointers for expand variable
  *         callbacks. E.g. for f() above.
- *         fnarg1  Function argument for expand callbacks (at evaluation time).
+ * @param  fnarg2  Function argument for expand callbacks (at evaluation time).
  *
  * @retval   0   OK
  * @retval  -1   error and statement written on stderr

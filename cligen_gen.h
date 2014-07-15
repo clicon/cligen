@@ -72,32 +72,35 @@ typedef int (expand_cb2)(void *h,              /* handler: cligen or userhandle 
 
 typedef int (cligen_susp_cb_t)(void *h, char *, int, int *);
 
-/* 
- * parse_tree
- * A parse tree is a top object containing a vector of parse-tree nodes 
+/*! A parse tree is a top object containing a vector of parse-tree nodes 
+ *
+ * @code
  *      o
  *      ^
  *      |
  *      up
- *   [0 1..n]
+ *   [0 1..n] <--- parse-tree
  *    | |  |
  *    v v  v
  *    o o  o
+ * @endcode
  */
 struct parse_tree{
-    struct cg_obj     **pt_vec;    /* vector of pointers to parse-tree nodes */
-    int                 pt_len;    /* length of vector */
-    struct parse_tree  *pt_up;     /* parent cligen object, if any */
-    int                 pt_obj;    /* if this parse-tree is a part of a cg_obj (can be 
+    struct cg_obj     **pt_vec;    /**< vector of pointers to parse-tree nodes */
+    int                 pt_len;    /**< length of vector */
+    struct parse_tree  *pt_up;     /**< parent cligen object, if any */
+    int                 pt_obj;    /**< if this parse-tree is a part of a cg_obj (can be 
 				      typecast to (cg_obj*). See co_up() below */
 };
 typedef struct parse_tree parse_tree;
 
+/*! A CLIgen object may have one or several callbacks. This type defines one callback
+ */
 struct cg_callback  { /* Linked list of command callbacks */
-    struct  cg_callback *cc_next;
-    cg_fnstype_t        *cc_fn;      /* callback/function pointer.  */
-    char                *cc_fn_str;  /* callback/function name. malloced */
-    cg_var              *cc_arg;     /* callback/function argument */
+    struct  cg_callback *cc_next;    /**< Next callback in list.  */
+    cg_fnstype_t        *cc_fn;      /**< callback/function pointer.  */
+    char                *cc_fn_str;  /**< callback/function name. malloced */
+    cg_var              *cc_arg;     /**< callback/function argument */
 };
 
 /*
@@ -118,9 +121,18 @@ struct cg_varspec{
 };
 typedef struct cg_varspec cg_varspec;
 
-/* 
- * cligen object is a parse-tree node. Either a command (string) or a variable <type> 
- * 
+/*! cligen object is a parse-tree node. A cg_obj is either a command or a variable
+ * A cg_obj 
+ * @code
+ *      o <--- cg_obj
+ *      ^
+ *      |
+ *      up
+ *   [0 1..n]
+ *    | |  |
+ *    v v  v
+ *    o o  o   <--- cg_obj
+ * @endcode
  */
 struct cg_obj{
     parse_tree        co_pt;        /* Child parse-tree (see co_next macro below) */
@@ -128,7 +140,7 @@ struct cg_obj{
     enum cg_objtype   co_type;      /* Type of object */
     char              co_delimiter; /* Delimiter (after this obj) */
     char             *co_command;   /* malloc:ed matching string / name or type */
-    struct cg_callback *co_callbacks; /* linked list of callbacks and arguments */
+    struct cg_callback *co_callbacks;/* linked list of callbacks and arguments */
     cvec             *co_cvec;       /* List of cligen variables (XXX: not visible to callbacks) */
     int               co_mark;      /* Only used internally (for recursion avoidance) */
     char	     *co_help;	    /* Brief helptext */

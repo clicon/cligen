@@ -50,10 +50,13 @@ static int pt_print(FILE *f, parse_tree pt, int level, int brief);
  * That is, the inverse of parsing.
  * But it is not complete, it actually only prints the name within <>
  * and no comments.
- * Example, a string variable with name foo is printed as <foo>
+ * Example, a string variable with name foo is printed as \<foo>
  * Used as help during completion, syntax prints, etc.
  *
- * @param brief   If set show clispec parsable format, else just <varname>
+ * @param co   [in]    cligen object from where to print
+ * @param cmd  [out]   string to print to
+ * @param len  [in]    Length of string
+ * @param brief [in]   If set, just \<varname>, otherwise clispec parsable format
  */
 int 
 cov_print(cg_obj *co, char *cmd, int len, int brief)
@@ -189,6 +192,10 @@ pt_print(FILE *f, parse_tree pt, int marginal, int brief)
 }
 
 /*! Print CLIgen parse-tree to file, brief or detailed.
+ *
+ * @param f   [in] File to print to
+ * @param pt  [in] Cligen parse-tree consisting of cg objects and variables
+ * @param brief [in] Print bried output, otherwise clispec parsable format
  */
 int 
 cligen_print(FILE *f, parse_tree pt, int brief)

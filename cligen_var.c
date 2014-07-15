@@ -1382,9 +1382,10 @@ cv_print(FILE *f, cg_var *cv)
  * An initialized cv is expected with a type field as created
  * by cv_new() or prepared by cv_reset().
  * Validate cligen variable cv using the spec in cs.
+ * See also cv_parse() which does has simpler error handling.
  *
- * @param [in]     str    Input string. Example, number variable, str can be "7834" or "0x7634"
- * @param [in,out] cgv    cligen variable, as prepared by cv_reset()/cv_new()
+ * @param [in]     str0    Input string. Example, number variable, str can be "7834" or "0x7634"
+ * @param [in,out] cv    cligen variable, as prepared by cv_reset()/cv_new()
  * @param [out]    reason If given, and if return value is 0, contains a malloced string
  *                        describing the reason why the validation failed.
  *
@@ -1531,6 +1532,7 @@ cv_parse1(char *str0, cg_var *cv, char **reason)
  * parse cv from string. An initialized cv is expected with a type field as created
  * by cv_new() or prepared by cv_reset().
  * Validate cligen variable cv using the spec in cs.
+ * See also cv_parse() which has extended error handling.
  *
  * Arguments:
  * IN    str   Input string. Example, number variable, str can be "7834" or "0x7634"

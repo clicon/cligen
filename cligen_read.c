@@ -524,8 +524,9 @@ cli_trim (char **line, char comment)
  * Use this function if you already have a string but you want it syntax-checked 
  * and parsed.
  *
+ * @param  [in]  h         Cligen handle
  * @param  [in]  string    Input string to match
- * @param  [in]  pt0       Parse-tree
+ * @param  [in]  pt        Parse-tree
  * @param  [out] co_orig   Object that matches (if retval == 1).
  * @param  [out] vr        Variable vector (if retval == 1).
  *
@@ -654,9 +655,9 @@ cliread_getline(cligen_handle h,
  * from callback (if function return =1).
  * Use this function if you want the whole enchilada without special operation
  *
- * @param [in]  prompt  Prompt string to show at beginning of line
- * @param [out] line    Pointer to new string input from terminal
- * @param [out] cb_ret  Retval of callback (only if functions return value is 1)
+ * @param [in]  h       CLIgen handle
+  * @param [out] line   Pointer to new string input from terminal
+ * @param [out] cb_retval  Retval of callback (only if functions return value is 1)
  *
  * @retval  -2      eof  CG_EOF
  * @retval  -1      Error
@@ -665,8 +666,8 @@ cliread_getline(cligen_handle h,
  * @retval   2+     Multiple matches
  */
 int
-cliread_eval(cligen_handle   h,
-	     char           **line,
+cliread_eval(cligen_handle     h,
+	     char            **line,
 	     int              *cb_retval)
 {
     cg_obj     *match;    /* matching syntax node */
