@@ -49,7 +49,7 @@ typedef int (cg_fnstype_t)(cligen_handle h, cvec *vars, cg_var *arg);
            1 if did not handle expand 
           -1 on error.
 */
-typedef int (expand_cb)(void *h,              /* handler: cligen or userhandle */
+typedef int (expand_cb)(cligen_handle h,      /* handler: cligen or userhandle */
 			char *name,           /* name of this function (in text) */
 			cvec *cvec,           /* vars vector of values in command */
 			cg_var *arg,          /* argument given to callback */

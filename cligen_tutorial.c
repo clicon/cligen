@@ -172,7 +172,7 @@ str2fn(char *name, void *arg, char **error)
  * would have introduced som more dynamics.
  */
 int
-cli_expand_cb(void *h, char *fn_str, cvec *vars, cg_var *cv, 
+cli_expand_cb(cligen_handle h, char *fn_str, cvec *vars, cg_var *cv, 
 	      int  *nr,
 	      char ***commands,     /* vector of function strings */
 	      char ***helptexts)   /* vector of help-texts */

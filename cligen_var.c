@@ -1223,12 +1223,12 @@ cv2str(cg_var *cv, char *str, size_t size)
 	break;
     case CGV_MACADDR:
 	len = snprintf(str, size, "%02x:%02x:%02x:%02x:%02x:%02x", 
-		       cv->var_macaddr[0],
-		       cv->var_macaddr[1],
-		       cv->var_macaddr[2],
-		       cv->var_macaddr[3],
-		       cv->var_macaddr[4],
-		       cv->var_macaddr[5]);
+		       (uint8_t)cv->var_macaddr[0],
+		       (uint8_t)cv->var_macaddr[1],
+		       (uint8_t)cv->var_macaddr[2],
+		       (uint8_t)cv->var_macaddr[3],
+		       (uint8_t)cv->var_macaddr[4],
+		       (uint8_t)cv->var_macaddr[5]);
 
 	break;
     case CGV_URL: /* <proto>://[<user>[:<passwd>]@]<addr>[/<path>] */
