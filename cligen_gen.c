@@ -51,9 +51,24 @@ static int pt_free1(parse_tree, int recursive);
 /*
  * preference. 
  * Prefer more specific commands/variables 
- * if you have to choose from several.
- * The preference is:
- * command > (ip|mac) > int w range > int > long > interface > regexp > string > rest
+ * if you have to choose from several. 
+ * The preference is (higher more preferred):
+ *
+ * command / keyword
+ * (ip|mac) 
+ * decimal64
+ * int8 with range , uint8 with range 
+ * ...
+ * int64 with range , uint64 with range 
+ * int8 , uint8
+ * ...
+ * int64 , uint64
+ * interface
+ * regexp
+ * string 
+ * rest
+ * NOTE: havent thought so much about preferences with ints: be careful if you offer
+ * a choice: <int32>|<uint16>. Which is most preferred if both match?
  */
 static int
 cov_pref(cg_obj *co)
@@ -64,17 +79,57 @@ cov_pref(cg_obj *co)
     case CGV_ERR:
 	pref = 0; /* Illegal */
 	break;
-    case CGV_INT:
+	/* ints in range 22-60 */
+    case CGV_INT8:
 	if (co->co_range)
-	    pref = 32;
+	    pref = 60;
 	else
-	    pref = 30;
+	    pref = 52;
 	break;
-    case CGV_LONG:
+    case CGV_INT16:
 	if (co->co_range)
-	    pref = 29;
+	    pref = 58;
 	else
-	    pref = 28;
+	    pref = 50;
+	break;
+    case CGV_INT32:
+	if (co->co_range)
+	    pref = 56;
+	else
+	    pref = 48;
+	break;
+    case CGV_INT64:
+	if (co->co_range)
+	    pref = 54;
+	else
+	    pref = 46;
+	break;
+    case CGV_UINT8:
+	if (co->co_range)
+	    pref = 59;
+	else
+	    pref = 51;
+	break;
+    case CGV_UINT16:
+	if (co->co_range)
+	    pref = 57;
+	else
+	    pref = 49;
+	break;
+    case CGV_UINT32:
+	if (co->co_range)
+	    pref = 55;
+	else
+	    pref = 47;
+	break;
+    case CGV_UINT64:
+	if (co->co_range)
+	    pref = 53;
+	else
+	    pref = 45;
+	break;
+    case CGV_DEC64:
+	pref = 62;
 	break;
     case CGV_BOOL:
 	pref = 12;
@@ -153,8 +208,9 @@ co_pref(cg_obj *co, int exact)
 }
 
 
-/* 
- * Create new cligen parse-tree object
+/*! Create new cligen parse-tree command object
+ *
+ * That is, a cligen parse-tree object with type == CO_COMMAND
  */
 cg_obj *
 co_new(char *cmd, cg_obj *prev)
@@ -177,6 +233,36 @@ co_new(char *cmd, cg_obj *prev)
 #endif
     return co;
 }
+
+/*! Create new cligen parse-tree variable object
+ *
+ * That is, a cligen parse-tree object with type == CO_VARIABLE
+ * See also co_new
+ */
+cg_obj *
+cov_new(enum cv_type cvtype, cg_obj *prev)
+{
+    cg_obj *co;
+
+    if ((co = malloc(sizeof(cg_obj))) == NULL){
+	perror("co_new: malloc");
+	return NULL;
+    }
+    memset(co, 0, sizeof(cg_obj));
+    co->co_type    = CO_VARIABLE;
+    co->co_vtype   = cvtype;
+    if (prev)
+	co_up_set(co, prev);
+    co->co_max = 0;                  /* pt len */
+    co->co_next = NULL;
+    co->co_delimiter = ' ';
+    co->co_dec64_n = CGV_DEC64_N_DEFAULT;
+#ifdef notyet
+    co->co_cv = cv_new(CGV_ERR);
+#endif
+    return co;
+}
+
 
 /*! Enlarge the child-vector (pattern) of a parse-tree
  *
@@ -489,7 +575,7 @@ co_eq(cg_obj *co1, cg_obj *co2)
 	    goto done;
 	}
 	/* Examine int and range */
-	if (co1->co_vtype == CGV_INT || co1->co_vtype == CGV_LONG){
+	if (cv_isint(co1->co_vtype)) {
 	    if (co1->co_range == co2->co_range){
 		eq = 0;
 		goto done;
@@ -600,7 +686,6 @@ cligen_parsetree_sort(parse_tree pt, int recursive)
     }
 }
 
-
 /*
  * Free an individual syntax node (cg_obj).
  * Note that the co_var pointer is not freed. The application
@@ -680,7 +765,6 @@ cligen_parsetree_free(parse_tree pt, int recursive)
 {
     return pt_free1(pt, recursive);
 }
-
 
 static cg_obj *
 co_search1(parse_tree pt, char *name, int low, int high)

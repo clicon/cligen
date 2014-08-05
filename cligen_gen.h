@@ -118,8 +118,12 @@ struct cg_varspec{
     int64_t         cgs_range_low;     /* range interval lower limit*/
     int64_t         cgs_range_high;    /* range interval upper limit*/
     char           *cgs_regex;         /* regular expression */
+    uint8_t         cgs_dec64_n;       /* negative decimal exponential 1..18 */
 };
 typedef struct cg_varspec cg_varspec;
+
+/* Default number of fraction digits if type is DEC64 */
+#define CGV_DEC64_N_DEFAULT 2
 
 /*! cligen object is a parse-tree node. A cg_obj is either a command or a variable
  * A cg_obj 
@@ -204,6 +208,7 @@ typedef int (cg_applyfn_t)(cg_obj *co, void *arg);
 #define co_range_low	 u.cou_var.cgs_range_low
 #define co_range_high	 u.cou_var.cgs_range_high
 #define co_regex         u.cou_var.cgs_regex
+#define co_dec64_n       u.cou_var.cgs_dec64_n
 
 #define iskeyword(CV) ((CV)->co_choice!=NULL && strchr((CV)->co_choice, '|')==NULL)
 
@@ -273,6 +278,7 @@ typedef cg_fnstype_t *(cg_str2fn_t)(char *str, void *arg, char **err);
  */
 void cligen_parsetree_sort(parse_tree pt, int recursive);
 cg_obj *co_new(char *cmd, cg_obj *prev);
+cg_obj *cov_new(enum cv_type cvtype, cg_obj *prev);
 int co_pref(cg_obj *co, int exact);
 int pt_realloc(parse_tree *);
 

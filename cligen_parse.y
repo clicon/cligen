@@ -30,7 +30,7 @@
 }
 
 %token MY_EOF
-%token V_TYPE V_RANGE V_CHOICE V_KEYWORD V_REGEXP 
+%token V_TYPE V_RANGE V_CHOICE V_KEYWORD V_REGEXP V_FRACTION_DIGITS
 %token DOUBLEPARENT /* (( */
 %token DQ           /* " */
 %token DQP          /* ") */
@@ -135,7 +135,6 @@ create_cv(struct cligen_parse_yacc_arg *ya, char *type, char *str)
     return cv;
 }
 
-
 /*
  */
 static int
@@ -154,12 +153,12 @@ cgy_flag(struct cligen_parse_yacc_arg *ya, char *var)
 		goto done;
 	    }
 	}
-	if ((cv = cvec_add(ya->ya_cvec, CGV_INT)) == NULL){
+	if ((cv = cvec_add(ya->ya_cvec, CGV_INT32)) == NULL){
 	    fprintf(stderr, "%s: realloc:%s\n", __FUNCTION__, strerror(errno));
 	    goto done;
 	}
 	cv_name_set(cv, var);
-	cv_int_set(cv, 1);
+	cv_int32_set(cv, 1);
     }
     retval = 0;
   done:
@@ -311,20 +310,17 @@ cgy_list_delete(struct cgy_list **cl0)
 static cg_obj *
 cgy_var_pre(struct cligen_parse_yacc_arg *ya)
 {
-    cg_obj *co_new;
+    cg_obj *co;
 
-    if ((co_new = malloc(sizeof(cg_obj))) == NULL){
+    /* Create unassigned variable object */
+    if ((co = cov_new(CGV_ERR, NULL)) == NULL){
 	fprintf(stderr, "%s: malloc: %s\n", __FUNCTION__, strerror(errno));
 	cligen_parseerror1(ya, "Allocating cligen object"); 
 	return NULL;
     }
-    memset(co_new, 0, sizeof(cg_obj));
-    co_new->co_type      = CO_VARIABLE;
-    co_new->co_max       = 0;
-    co_new->co_delimiter = ' ';
     if (debug)
 	fprintf(stderr, "%s: pre\n", __FUNCTION__);
-    return co_new;
+    return co;
 }
 
 /* 
@@ -728,10 +724,15 @@ cg_regexp(struct cligen_parse_yacc_arg *ya, char *rx)
 static int
 cg_range(struct cligen_parse_yacc_arg *ya, char *low, char *high)
 {
-    int   retval;
-    char *reason = NULL;
+    int     retval;
+    char   *reason = NULL;
+    cg_obj *yv;
 
-    if ((retval = parse_int64(low, &ya->ya_var->co_range_low, &reason)) < 0){
+    if ((yv = ya->ya_var) == NULL){
+	fprintf(stderr, "No var obj");
+	return -1;
+    }
+    if ((retval = parse_int64(low, &yv->co_range_low, &reason)) < 0){
 	fprintf(stderr, "range: %s\n", strerror(errno));
 	return -1;
     }
@@ -739,7 +740,7 @@ cg_range(struct cligen_parse_yacc_arg *ya, char *low, char *high)
 	cligen_parseerror1(ya, reason); 
 	return 0;
     }
-    if ((retval = parse_int64(high, &ya->ya_var->co_range_high, &reason)) < 0){
+    if ((retval = parse_int64(high, &yv->co_range_high, &reason)) < 0){
 	fprintf(stderr, "range: %s\n", strerror(errno));
 	return -1;
     }
@@ -748,6 +749,24 @@ cg_range(struct cligen_parse_yacc_arg *ya, char *low, char *high)
 	return 0;
     }
     ya->ya_var->co_range++;
+    return 0;
+}
+
+
+static int
+cg_dec64_n(struct cligen_parse_yacc_arg *ya, char *fraction_digits)
+{
+    cg_obj *yv;
+    char   *reason = NULL;
+
+    if ((yv = ya->ya_var) == NULL){
+	fprintf(stderr, "No var obj");
+	return -1;
+    }
+    if (parse_uint8(fraction_digits, &yv->co_dec64_n, NULL) != 1){
+	cligen_parseerror1(ya, reason); 
+	return -1;
+    }
     return 0;
 }
 
@@ -913,6 +932,9 @@ keypair     : NAME '(' ')' { _YA->ya_var->co_expand_fn_str = $1; }
 	      }
             | V_RANGE ':' NUMBER '-' NUMBER { 
 		if (cg_range(_ya, $3, $5) < 0) YYERROR; free($3); free($5); 
+	      }
+            | V_FRACTION_DIGITS ':' NUMBER { 
+		if (cg_dec64_n(_ya, $3) < 0) YYERROR; free($3); 
 	      }
             | V_CHOICE ':' choices { _YA->ya_var->co_choice = $3; }
             | V_KEYWORD ':' NAME { 

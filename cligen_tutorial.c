@@ -79,7 +79,7 @@ letters(cligen_handle h, cvec *vars, cg_var *arg)
     if ((str = cvec_find_str(vars, "ca")) != NULL)
         printf("%s\n", str);
     if ((cv = cvec_find(vars, "int")) != NULL)
-        printf("%d\n", cv_int_get(cv));
+        printf("%d\n", cv_int32_get(cv));
     if ((str = cvec_find_str(vars, "cb")) != NULL)
         printf("%s\n", str);
     if ((str = cvec_find_str(vars, "dd")) != NULL)

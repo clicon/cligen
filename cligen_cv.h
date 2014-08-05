@@ -28,46 +28,64 @@
 /*
  * Cligen Variable structure
  * cg_var / cv
+ * Note that a cv holds a value. The specification of a cv is a cg_varspec
  */
 struct cg_var {
-    int	var_type;   /* Type according to enum cv_type */
-    char *var_name; /* Name of variable as appears in <name ...> in the syntax */
-    char var_const; /* Keyword */
-    char var_flag ; /* Application-specific flags, no semantics by cligen */
+    enum cv_type var_type;   /* Type according to enum cv_type */
+    char        *var_name; /* Name of variable as appears in <name ...> in the syntax */
+    char         var_const; /* Set if the variable is a keyword */
+    char         var_flag ; /* Application-specific flags, no semantics by cligen */
     union {
-	char	varu_bool;
-	int32_t	varu_int;
-	int64_t	varu_long;
-	char   *varu_string;
-	char   *varu_interface;
+	char	 varu_bool;
+	int8_t	 varu_int8;
+	int16_t	 varu_int16;
+	int32_t	 varu_int32;
+	int64_t	 varu_int64;
+	uint8_t	 varu_uint8;
+	uint16_t varu_uint16;
+	uint32_t varu_uint32;
+	uint64_t varu_uint64;
+	char    *varu_string;
+	char    *varu_interface;
 	struct {
-	    struct in_addr	varipv4_ipv4addr;
-	    uint8_t		varipv4_masklen;
+	    int64_t  vardec64_i;    /* base number i in i x 10^-n */
+	    uint8_t  vardec64_n;    /* fraction n in i x 10^-n */
+	} varu_dec64;
+	struct {
+	    struct in_addr  varipv4_ipv4addr;
+	    uint8_t	    varipv4_masklen;
 	} varu_ipv4addr;
 	struct {
-	    struct in6_addr	varipv6_ipv6addr;
-	    uint8_t		varipv6_masklen;
+	    struct in6_addr varipv6_ipv6addr;
+	    uint8_t	    varipv6_masklen;
 	} varu_ipv6addr;
-
-	char	               varu_macaddr[6];
+	char	            varu_macaddr[6];
 	struct {
-	    char               *varurl_proto;
-	    char 	       *varurl_addr; 
-	    char	       *varurl_path;
-	    char	       *varurl_user;
-	    char	       *varurl_passwd;
+	    char           *varurl_proto;
+	    char 	   *varurl_addr; 
+	    char	   *varurl_path;
+	    char	   *varurl_user;
+	    char	   *varurl_passwd;
 	} varu_url;
-	uuid_t	               varu_uuid;
-	struct timeval         varu_time;
+	uuid_t	            varu_uuid;
+	struct timeval      varu_time;
     } u;
 };
 
 /*
- * Access macros (moved from .h)
+ * Access macros
  */
 #define var_bool	u.varu_bool
-#define var_int		u.varu_int
-#define var_long	u.varu_long
+#define var_int8	u.varu_int8
+#define var_int16	u.varu_int16
+#define var_int32	u.varu_int32
+#define var_int64	u.varu_int64
+#define var_uint8	u.varu_uint8
+#define var_uint16	u.varu_uint16
+#define var_uint32	u.varu_uint32
+#define var_uint64	u.varu_uint64
+#define var_dec64_i	u.varu_dec64.vardec64_i
+#define var_dec64_n	u.varu_dec64.vardec64_n
 #define var_string	u.varu_string
 #define var_void	u.varu_string
 #define var_rest	u.varu_string

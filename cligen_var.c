@@ -28,6 +28,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <limits.h>
 #include <inttypes.h>
 #include <unistd.h>
 #include <sys/types.h>
@@ -39,6 +40,7 @@
 #include <assert.h>
 #include <string.h>
 #include <errno.h>
+#include <math.h>
 #ifdef HAVE_REGEX_H
 #include <regex.h>
 #endif
@@ -163,32 +165,187 @@ cv_bool_set(cg_var *cv, char x)
     return (cv->u.varu_bool = x);
 }
 
-/*! Get integer value of cv
+/*! Get 8-bit integer value of cv
  */
-int32_t
-cv_int_get(cg_var *cv)
+int8_t
+cv_int8_get(cg_var *cv)
 {
-    return ((cv)->u.varu_int);
+    return ((cv)->u.varu_int8);
 }
 
-int32_t
-cv_int_set(cg_var *cv, int32_t x)
+/*! Set 8-bit integer value of cv
+ */
+int8_t
+cv_int8_set(cg_var *cv, int8_t x)
 {
-    return (cv->u.varu_int = x);
+    return (cv->u.varu_int8 = x);
+}
+
+/*! Get 16-bit integer value of cv
+ */
+int16_t
+cv_int16_get(cg_var *cv)
+{
+    return ((cv)->u.varu_int16);
+}
+
+/*! Set 16-bit integer value of cv
+ */
+int16_t
+cv_int16_set(cg_var *cv, int16_t x)
+{
+    return (cv->u.varu_int16 = x);
+}
+
+/*! Get 32-bit integer value of cv
+ */
+int32_t
+cv_int32_get(cg_var *cv)
+{
+    return ((cv)->u.varu_int32);
+}
+
+/*! Set 32-bit integer value of cv
+ */
+int32_t
+cv_int32_set(cg_var *cv, int32_t x)
+{
+    return (cv->u.varu_int32 = x);
 }
 
 /*! Get 64-bit integer value of cv
  */
 int64_t
-cv_long_get(cg_var *cv)
+cv_int64_get(cg_var *cv)
 {
-    return ((cv)->u.varu_long);
+    return ((cv)->u.varu_int64);
 }
 
+/*! Set 64-bit integer value of cv
+ */
+int64_t
+cv_int64_set(cg_var *cv, int64_t x)
+{
+    return (cv->u.varu_int64 = x);
+}
+
+#ifdef BACK_COMPAT_TYPE
+#undef cv_int_get
+#undef cv_int_set
+#undef cv_long_get
+#undef cv_long_set
+/*
+ * This necessary for binary (linkage) backward compatibility, for recompiling
+ * this is not necessary.
+ */
+int32_t
+cv_int_get(cg_var *cv)
+{
+    return cv_int32_get(cv);
+}
+int32_t
+cv_int_set(cg_var *cv, int32_t x)
+{
+    return cv_int32_set(cv, x);
+}
+int64_t
+cv_long_get(cg_var *cv)
+{
+    return cv_int64_get(cv);
+}
 int64_t
 cv_long_set(cg_var *cv, int64_t x)
 {
-    return (cv->u.varu_long = x);
+    return cv_int64_set(cv, x);
+}
+#endif /* BACK_COMPAT_TYPE */
+
+/*! Get 8-bit unsigned integer value of cv
+ */
+uint8_t
+cv_uint8_get(cg_var *cv)
+{
+    return ((cv)->u.varu_uint8);
+}
+
+/*! Set 8-bit unsigned integer value of cv
+ */
+uint8_t
+cv_uint8_set(cg_var *cv, uint8_t x)
+{
+    return (cv->u.varu_uint8 = x);
+}
+
+/*! Get 16-bit unsigned integer value of cv
+ */
+uint16_t
+cv_uint16_get(cg_var *cv)
+{
+    return ((cv)->u.varu_uint16);
+}
+
+/*! Set 16-bit unsigned integer value of cv
+ */
+uint16_t
+cv_uint16_set(cg_var *cv, uint16_t x)
+{
+    return (cv->u.varu_uint16 = x);
+}
+
+/*! Get 32-bit unsigned integer value of cv
+ */
+uint32_t
+cv_uint32_get(cg_var *cv)
+{
+    return ((cv)->u.varu_uint32);
+}
+
+/*! Set 32-bit unsigned integer value of cv
+ */
+uint32_t
+cv_uint32_set(cg_var *cv, uint32_t x)
+{
+    return (cv->u.varu_uint32 = x);
+}
+
+/*! Get 64-bit unsigned integer value of cv
+ */
+uint64_t
+cv_uint64_get(cg_var *cv)
+{
+    return ((cv)->u.varu_uint64);
+}
+
+/*! Set 64-bit unsigned integer value of cv
+ */
+uint64_t
+cv_uint64_set(cg_var *cv, uint64_t x)
+{
+    return (cv->u.varu_uint64 = x);
+}
+
+uint8_t 
+cv_dec64_n_get(cg_var *cv)
+{
+    return ((cv)->var_dec64_n);
+}
+
+uint8_t 
+cv_dec64_n_set(cg_var *cv, uint8_t x)
+{
+    return (cv->var_dec64_n = x);
+}
+
+int64_t 
+cv_dec64_i_get(cg_var *cv)
+{
+    return ((cv)->var_dec64_i);
+}
+
+int64_t 
+cv_dec64_i_set(cg_var *cv, int64_t x)
+{
+    return (cv->var_dec64_i = x);
 }
 
 /*! Get pointer to cv string. 
@@ -447,44 +604,139 @@ cv_urlpasswd_set(cg_var *cv, char *s0)
  * cv Access methods end
  */
 
+/*! Parse an int8 number and check for errors
+ * @param[in]  str     String containing number to parse
+ * @param[out] val     Value on success
+ * @param[out] reason  Error string on failure
+ * @retval -1 : Error (fatal), with errno set to indicate error
+ * @retval  0 : Validation not OK, malloced reason is returned
+ * @retval  1 : Validation OK, value returned in val parameter
+ */
+static int
+parse_int8(char *str, int8_t *val, char **reason)
+{
+    int64_t  i;
+    int      retval;
+    
+    if ((retval = parse_int64(str, &i, reason)) != 1)
+	goto done;
+    if (i > 127 || i < -128){
+	if (reason != NULL)
+	    if ((*reason = cligen_reason("%s is out of range(type is int8)", str)) == NULL){
+		retval = -1; /* malloc */
+		goto done;
+	    }
+	retval = 0;
+	goto done;
+    }
+    *val = (int8_t)i;
+  done:
+    return retval;
+}
 
-/*
- * -1 : Error (fatal), with errno set to indicate error
- *  0 : Validation not OK, malloced reason is returned
- *  1 : Validation OK
+/*! Parse an int16 number and check for errors
+ * @param[in]  str     String containing number to parse
+ * @param[out] val     Value on success
+ * @param[out] reason  Error string on failure
+ * @retval -1 : Error (fatal), with errno set to indicate error
+ * @retval  0 : Validation not OK, malloced reason is returned
+ * @retval  1 : Validation OK, value returned in val parameter
+ */
+static int
+parse_int16(char *str, int16_t *val, char **reason)
+{
+    int64_t i;
+    int      retval;
+    
+    if ((retval = parse_int64(str, &i, reason)) != 1)
+	goto done;
+    if (i > 32676 || i < -32768){
+	if (reason != NULL)
+	    if ((*reason = cligen_reason("%s is out of range(type is int16)", str)) == NULL){
+		retval = -1;
+		goto done;
+	    }
+	retval = 0;
+	goto done;
+    }
+    *val = (int16_t)i;
+  done:
+    return retval;
+}
+
+/*! Parse an int32 number and check for errors
+ * @param[in]  str     String containing number to parse
+ * @param[out] val     Value on success
+ * @param[out] reason  Error string on failure
+ * @retval -1 : Error (fatal), with errno set to indicate error
+ * @retval  0 : Validation not OK, malloced reason is returned
+ * @retval  1 : Validation OK, value returned in val parameter
  */
 static int
 parse_int32(char *str, int32_t *val, char **reason)
 {
-    uint64_t i;
+    int64_t  i;
+    int      retval;
+    
+    if ((retval = parse_int64(str, &i, reason)) != 1)
+	goto done;
+    if (i > INT_MAX || i < INT_MIN){
+	if (reason != NULL)
+	    if ((*reason = cligen_reason("%s is out of range(type is int32)", str)) == NULL){
+		retval = -1; /* malloc */
+		goto done;
+	    }
+	retval = 0;
+	goto done;
+    }
+    *val = (int16_t)i;
+  done:
+    return retval;
+
+}
+
+/*! Parse an int64 number and check for errors
+ * @param[in]  str     String containing number to parse
+ * @param[out] val     Value on success
+ * @param[out] reason  Error string on failure
+ * @retval -1 : Error (fatal), with errno set to indicate error
+ * @retval  0 : Validation not OK, malloced reason is returned
+ * @retval  1 : Validation OK, value returned in val parameter
+ */
+int
+parse_int64(char *str, int64_t *val, char **reason)
+{
+    int64_t i;
     char    *ep;
     int      retval = -1;
 
     errno = 0;
-    i = strtoul(str, &ep, 0);
+    i = strtoll(str, &ep, 0);
     if (str[0] == '\0' || *ep != '\0'){
-	if (reason == NULL){
-	    retval = 0;
-	    goto done;
-	}
-	if ((*reason = cligen_reason("%s is not a number", str)) == NULL){
-	    retval = -1;
-	    goto done;
-	}
+	if (reason != NULL)
+	    if ((*reason = cligen_reason("%s is not a number", str)) == NULL){
+		retval = -1;
+		goto done;
+	    }
 	retval = 0;
 	goto done;
     }
-    if (errno == ERANGE){
-	if (reason == NULL){
+    if (errno != 0){
+	if ((i == LLONG_MIN || i == LLONG_MAX) && errno == ERANGE){ 
+	    if (reason != NULL)
+		if ((*reason = cligen_reason("%s is out of range (type is int64)", str)) == NULL){
+		    retval = -1; /* malloc */
+		    goto done;
+		}
 	    retval = 0;
 	    goto done;
 	}
-	if ((*reason = cligen_reason("%s is out of range (type is int32_t)", str)) == NULL){
-	    retval = -1;
-	    goto done;
+	else{
+	    if ((*reason = cligen_reason("%s: %s", str, strerror(errno))) == NULL){
+		retval = -1;
+		goto done;
+	    }
 	}
-	retval = 0;
-	goto done;
     }
     *val = i;
     retval = 1; /* OK */
@@ -492,15 +744,109 @@ parse_int32(char *str, int32_t *val, char **reason)
     return retval;
 }
 
-/*
- * parse_int64
- * return value:
- * -1 : fatal error 
- *  0 : parse error
- *  1 : ok
+
+/*! Parse an uint8 number and check for errors
+ * @param[in]  str     String containing number to parse
+ * @param[out] val     Value on success
+ * @param[out] reason  Error string on failure
+ * @retval -1 : Error (fatal), with errno set to indicate error
+ * @retval  0 : Validation not OK, malloced reason is returned
+ * @retval  1 : Validation OK, value returned in val parameter
  */
 int
-parse_int64(char *str, int64_t *val, char **reason)
+parse_uint8(char *str, uint8_t *val, char **reason)
+{
+    uint64_t i;
+    int      retval;
+    
+    if ((retval = parse_uint64(str, &i, reason)) != 1)
+	goto done;
+    if (i > 255){
+	if (reason != NULL)
+	    if ((*reason = cligen_reason("%s is out of range(type is uint8)", str)) == NULL){
+		retval = -1; /* malloc */
+		goto done;
+	    }
+	retval = 0;
+	goto done;
+    }
+    *val = (uint8_t)i;
+  done:
+    return retval;
+}
+
+/*! Parse an uint16 number and check for errors
+ * @param[in]  str     String containing number to parse
+ * @param[out] val     Value on success
+ * @param[out] reason  Error string on failure
+ * @retval -1 : Error (fatal), with errno set to indicate error
+ * @retval  0 : Validation not OK, malloced reason is returned
+ * @retval  1 : Validation OK, value returned in val parameter
+ */
+static int
+parse_uint16(char *str, uint16_t *val, char **reason)
+{
+    uint64_t i;
+    int      retval;
+    
+    if ((retval = parse_uint64(str, &i, reason)) != 1)
+	goto done;
+    if (i > 65535){
+	if (reason != NULL)
+	    if ((*reason = cligen_reason("%s is out of range(type is uint16)", str)) == NULL){
+		retval = -1; /* malloc */
+		goto done;
+	    }
+	retval = 0;
+	goto done;
+    }
+    *val = (uint16_t)i;
+  done:
+    return retval;
+}
+
+/*! Parse an uint32 number and check for errors
+ * @param[in]  str     String containing number to parse
+ * @param[out] val     Value on success
+ * @param[out] reason  Error string on failure
+ * @retval -1 : Error (fatal), with errno set to indicate error
+ * @retval  0 : Validation not OK, malloced reason is returned
+ * @retval  1 : Validation OK, value returned in val parameter
+ */
+static int
+parse_uint32(char *str, uint32_t *val, char **reason)
+{
+    uint64_t i;
+    int      retval;
+    
+    if ((retval = parse_uint64(str, &i, reason)) != 1)
+	goto done;
+    if (i > UINT_MAX){
+	if (reason != NULL)
+	    if ((*reason = cligen_reason("%s is out of range(type is uint32)", str)) == NULL){
+		retval = -1; /* malloc */
+		goto done;
+	    }
+	retval = 0;
+	goto done;
+    }
+    *val = (uint16_t)i;
+  done:
+    return retval;
+
+}
+
+/*! Parse an uint64 number and check for errors
+ * @param[in]  str     String containing number to parse
+ * @param[out] val     Value on success
+ * @param[out] reason  Error string on failure
+ * @retval -1 : Error (fatal), with errno set to indicate error
+ * @retval  0 : Validation not OK, malloced reason is returned
+ * @retval  1 : Validation OK, value returned in val parameter
+ * NOTE: we have to detect a minus sign ourselves,....
+ */
+int
+parse_uint64(char *str, uint64_t *val, char **reason)
 {
     uint64_t i;
     char    *ep;
@@ -509,26 +855,40 @@ parse_int64(char *str, int64_t *val, char **reason)
     errno = 0;
     i = strtoull(str, &ep, 0);
     if (str[0] == '\0' || *ep != '\0'){
-	if (reason == NULL){
-	    retval = 0;
-	    goto done;
-	}
-	if ((*reason = cligen_reason("%s is not a number", str)) == NULL){
-	    retval = -1;
-	    goto done;
-	}
+	if (reason != NULL)
+	    if ((*reason = cligen_reason("%s is not a number", str)) == NULL){
+		retval = -1; /* malloc */
+		goto done;
+	    }
 	retval = 0;
 	goto done;
     }
-    if (i == 18446744073709551615ULL && errno == ERANGE){ /* ULONG_MAX */
-	if (reason == NULL){
+    if (errno != 0){
+	if (i == ULLONG_MAX && errno == ERANGE){ 
+	    if (reason != NULL)
+		if ((*reason = cligen_reason("%s is out of range (type is uint64)", str)) == NULL){
+		    retval = -1; /* malloc */
+		    goto done;
+		}
 	    retval = 0;
 	    goto done;
 	}
-	if ((*reason = cligen_reason("%s is out of range (type is int64_t)", str)) == NULL){
-	    retval = -1;
+	else{
+	    if ((*reason = cligen_reason("%s: %s", str, strerror(errno))) == NULL){
+		retval = -1; /* malloc */
+		goto done;
+	    }
+	    retval = 0;
 	    goto done;
 	}
+    }
+    /* strtoull does _not_ detect negative numbers,... */
+    if (strchr(str, '-') != NULL){
+	if (reason != NULL)
+	    if ((*reason = cligen_reason("%s is out of range (type is uint64)", str)) == NULL){
+		retval = -1; /* malloc */
+		goto done;
+	    }
 	retval = 0;
 	goto done;
     }
@@ -538,25 +898,90 @@ parse_int64(char *str, int64_t *val, char **reason)
     return retval;
 }
 
-int
+/*! Parse a decimal64 value
+ */
+static int
+parse_dec64(char *str, uint8_t n, int64_t *dec64_i, char **reason)
+{
+    int      retval = 1;
+    char    *s0 = NULL; /* the whole string, eg aaa.bbb*/
+    char    *s1;        /* the first part (eg aaa)  */
+    char    *s2;        /* the second part (eg bbb)  */
+    char     ss[64];
+    int      len1;
+    int      len2 = 0;
+    int      i;
+
+/*
+     +----------------+-----------------------+----------------------+
+     | fraction-digit | min                   | max                  |
+     +----------------+-----------------------+----------------------+
+     | 1              | -922337203685477580.8 | 922337203685477580.7 |
+     | 18             | -9.223372036854775808 | 9.223372036854775807 |
+     +----------------+-----------------------+----------------------+
+*/
+
+    assert(0<n && n<19);
+    if ((s0 = strdup(str)) == NULL){
+	retval = -1; /* malloc */
+	goto done;
+    }
+    s2 = s0;
+    s1 = strsep(&s2, ".");
+
+    len1 = strlen(s1);
+    memcpy(ss, s1, len1);
+
+    /*
+     *     | s1 |.| s2 |
+     *     | s1 | s2 |000|
+     *           <---n-->
+     */
+    if (s2){
+	len2 = strlen(s2);
+	if (len2 > n){
+	    if (reason != NULL)
+		if ((*reason = cligen_reason("%s has %d fraction-digits but may only have %d", str, len2, n)) == NULL){
+		    retval = -1; /* malloc */
+		    goto done;
+		}
+	    retval = 0;
+	    goto done;
+	}
+	memcpy(ss+len1, s2, len2); 
+    }
+    /* Fill out with trailing zeroes if any 
+       | s1 | s2 |
+      
+     */
+    for (i=len1+len2; i<len1+n; i++)
+	ss[i] = '0';
+    ss[len1+n] = '\0'; /* trailing zero */
+    if ((retval = parse_int64(ss, dec64_i, reason)) != 1)
+	goto done;
+  done:
+    if (s0)
+	free(s0);
+    return retval;
+}
+
+static int
 parse_bool(char *str, char *val, char **reason)
 {
     int i;
     int retval = 1;
 
-    if (strcmp(str, "true") == 0 || strcmp(str, "on") == 0){
+    if (strcmp(str, "true") == 0 || strcmp(str, "on") == 0)
 	i = 1;
-    }
     else
-	if (strcmp(str, "false") == 0 || strcmp(str, "off") == 0){
+	if (strcmp(str, "false") == 0 || strcmp(str, "off") == 0)
 	    i = 0;
-	}
 	else{
 	    if (reason)
 		if ((*reason = cligen_reason("%s is not a boolean value", str)) == NULL){
 		    retval = -1;
 		    goto done;
-	}
+		}
 	    retval = 0;
 	    goto done;
 	}
@@ -997,10 +1422,30 @@ done:
 enum cv_type
 cv_str2type(char *str)
 {
+    if (strcmp(str, "int8") == 0)
+	return CGV_INT8;
+    if (strcmp(str, "int16") == 0)
+	return CGV_INT16;
+    if (strcmp(str, "int32") == 0)
+	return CGV_INT32;
+    if (strcmp(str, "int64") == 0)
+	return CGV_INT64;
+    if (strcmp(str, "uint8") == 0)
+	return CGV_UINT8;
+    if (strcmp(str, "uint16") == 0)
+	return CGV_UINT16;
+    if (strcmp(str, "uint32") == 0)
+	return CGV_UINT32;
+    if (strcmp(str, "uint64") == 0)
+	return CGV_UINT64;
+#ifdef BACK_COMPAT_TYPE
    if (strcmp(str, "number") == 0 || strcmp(str, "int") == 0)
-    return CGV_INT;
-  if (strcmp(str, "long") == 0)
-     return CGV_LONG;
+       return CGV_INT32;
+   if (strcmp(str, "long") == 0)
+       return CGV_INT64;
+#endif
+  if (strcmp(str, "decimal64") == 0)
+     return CGV_DEC64;
   if (strcmp(str, "bool") == 0)
      return CGV_BOOL;
   if (strcmp(str, "string") == 0)
@@ -1040,11 +1485,32 @@ cv_type2str(enum cv_type type)
     case CGV_ERR:
 	str="err";
 	break;
-    case CGV_INT:
-	str="number";
+    case CGV_INT8:
+	str="int8";
 	break;
-    case CGV_LONG:
-	str="long";
+    case CGV_INT16:
+	str="int16";
+	break;
+    case CGV_INT32:
+	str="int32";
+	break;
+    case CGV_INT64:
+	str="int64";
+	break;
+    case CGV_UINT8:
+	str="uint8";
+	break;
+    case CGV_UINT16:
+	str="uint16";
+	break;
+    case CGV_UINT32:
+	str="uint32";
+	break;
+    case CGV_UINT64:
+	str="uint64";
+	break;
+    case CGV_DEC64:
+	str="decimal64";
 	break;
     case CGV_BOOL:
 	str="bool";
@@ -1104,11 +1570,32 @@ cv_len(cg_var *cv)
     int len = 0;
 
     switch (cv->var_type){
-    case CGV_INT:
-	len = sizeof(cv->var_int);
+    case CGV_INT8:
+	len = sizeof(cv->var_int8);
 	break;
-    case CGV_LONG:
-	len = sizeof(cv->var_long);
+    case CGV_INT16:
+	len = sizeof(cv->var_int16);
+	break;
+    case CGV_INT32:
+	len = sizeof(cv->var_int32);
+	break;
+    case CGV_INT64:
+	len = sizeof(cv->var_int64);
+	break;
+    case CGV_UINT8:
+	len = sizeof(cv->var_uint8);
+	break;
+    case CGV_UINT16:
+	len = sizeof(cv->var_uint16);
+	break;
+    case CGV_UINT32:
+	len = sizeof(cv->var_uint32);
+	break;
+    case CGV_UINT64:
+	len = sizeof(cv->var_uint64);
+	break;
+    case CGV_DEC64:
+	len = sizeof(cv->var_dec64_i) + sizeof(cv->var_dec64_n);
 	break;
     case CGV_BOOL:
 	len = sizeof(cv->var_bool);
@@ -1160,6 +1647,35 @@ cv_len(cg_var *cv)
 }
 
 
+/*! print a dec64 cv to a string 
+ *
+ * @param  cv   A cligen variable of type CGV_DEC64 to print
+ * @param  s0   A string that must hold the dec64
+ * @param  len  A string that must hold the dec64
+ * @retval 0    OK
+ * @retval -1   Error with error msg on stderr. 
+ */
+static int
+cv_dec64_print(cg_var *cv, char *s0, int *s0len)
+{
+    int     i;
+    uint8_t n = cv->var_dec64_n;;
+    int     len;
+
+    assert(0<n && n<19);
+    len = snprintf(s0, *s0len, "%" PRId64, cv->var_dec64_i);
+    *s0len -= len;
+    /* Shift fraction digits right, including null character. 
+     * eg:  xyz --> x.yz (if n==2)
+     */
+    for (i=len; i>=len-n; i--) 
+	s0[i+1] = s0[i];
+    (*s0len)--;
+    s0[len-n] = '.';
+    return 0;
+}
+
+
 /*! Print value of CLIgen variable using printf style formats.
  *
  * The value is printed in the string 'str' which has length 'size'.
@@ -1178,12 +1694,38 @@ cv2str(cg_var *cv, char *str, size_t size)
     char straddr[INET6_ADDRSTRLEN];
 
     switch (cv->var_type){
-    case CGV_INT:
-	len = snprintf(str, size, "%" PRId32, cv->var_int);
+    case CGV_INT8:
+	len = snprintf(str, size, "%" PRId8, cv->var_int8);
 	break;
-    case CGV_LONG:
-	len = snprintf(str, size, "%" PRId64, cv->var_long);
+    case CGV_INT16:
+	len = snprintf(str, size, "%" PRId16, cv->var_int16);
 	break;
+    case CGV_INT32:
+	len = snprintf(str, size, "%" PRId32, cv->var_int32);
+	break;
+    case CGV_INT64:
+	len = snprintf(str, size, "%" PRId64, cv->var_int64);
+	break;
+    case CGV_UINT8:
+	len = snprintf(str, size, "%" PRIu8, cv->var_uint8);
+	break;
+    case CGV_UINT16:
+	len = snprintf(str, size, "%" PRIu16, cv->var_uint16);
+	break;
+    case CGV_UINT32:
+	len = snprintf(str, size, "%" PRIu32, cv->var_uint32);
+	break;
+    case CGV_UINT64:
+	len = snprintf(str, size, "%" PRIu64, cv->var_uint64);
+	break;
+    case CGV_DEC64:{
+	char ss[64];
+	int  sslen = sizeof(ss);
+
+	cv_dec64_print(cv, ss, &sslen);
+	len = snprintf(str, size, "%s", ss);
+	break;
+    }
     case CGV_BOOL:
 	if (cv->var_bool)
 	    len = snprintf(str, size, "true");
@@ -1295,12 +1837,38 @@ cv_print(FILE *f, cg_var *cv)
     char straddr[INET6_ADDRSTRLEN];
 
     switch (cv->var_type){
-    case CGV_INT:
-	fprintf(f, "%" PRId32, cv->var_int);
+    case CGV_INT8:
+	fprintf(f, "%" PRId8, cv->var_int8);
 	break;
-    case CGV_LONG:
-	fprintf(f, "%" PRId64, cv->var_long);
+    case CGV_INT16:
+	fprintf(f, "%" PRId16, cv->var_int16);
 	break;
+    case CGV_INT32:
+	fprintf(f, "%" PRId32, cv->var_int32);
+	break;
+    case CGV_INT64:
+	fprintf(f, "%" PRId64, cv->var_int64);
+	break;
+    case CGV_UINT8:
+	fprintf(f, "%" PRIu8, cv->var_uint8);
+	break;
+    case CGV_UINT16:
+	fprintf(f, "%" PRIu16, cv->var_uint16);
+	break;
+    case CGV_UINT32:
+	fprintf(f, "%" PRIu32, cv->var_uint32);
+	break;
+    case CGV_UINT64:
+	fprintf(f, "%" PRIu64, cv->var_uint64);
+	break;
+    case CGV_DEC64:{
+	char ss[64];
+	int  sslen = sizeof(ss);
+
+	cv_dec64_print(cv, ss, &sslen);
+	fprintf(f, "%s", ss);
+	break;
+    }
     case CGV_BOOL:
 	if (cv->var_bool)
 	    fprintf(f, "true");
@@ -1379,16 +1947,19 @@ cv_print(FILE *f, cg_var *cv)
 
 /*! Parse cv from string. 
  *
- * An initialized cv is expected with a type field as created
- * by cv_new() or prepared by cv_reset().
- * Validate cligen variable cv using the spec in cs.
+ * This function expects an initialized cv as created by cv_new() or
+ * prepared by cv_reset(). 
+ * The following is required of a cv before calling this function:
+ *  - A type field. So that the parser knows how to parse the string
+ *  - For decimal64 the fraction_digits (n) must be known.
+ *
  * See also cv_parse() which does has simpler error handling.
+ * and cv_validate() where the cv is validated against a cligen object specification.
  *
- * @param [in]     str0    Input string. Example, number variable, str can be "7834" or "0x7634"
- * @param [in,out] cv    cligen variable, as prepared by cv_reset()/cv_new()
- * @param [out]    reason If given, and if return value is 0, contains a malloced string
- *                        describing the reason why the validation failed.
- *
+ * @param  str0    Input string. Example, number variable, str can be "7834" or "0x7634"
+ * @param  cv      cligen variable, as prepared by cv_reset()/cv_new()
+ * @param  reason  If given, and if return value is 0, contains a malloced string
+ *                 describing the reason why the validation failed.
  *
  * @retval -1  Error (fatal), with errno set to indicate error
  * @retval 0   Validation not OK, malloced reason is returned
@@ -1397,7 +1968,8 @@ cv_print(FILE *f, cg_var *cv)
  * @code
  *  cg_var *cv = cv_new(CGV_STRING);
  *  char   *reason=NULL;
- *  cv_parse1("mystring", cv, &reason):
+ *  if (cv_parse1("mystring", cv, &reason) < p0)
+ *    cv_free(cv);
  *  free(reason);
  * @endcode
  */
@@ -1412,11 +1984,32 @@ cv_parse1(char *str0, cg_var *cv, char **reason)
     if ((str = strdup(str0)) == NULL)
 	goto done;
     switch (cv->var_type) {
-    case CGV_INT:
-	retval = parse_int32(str, &cv->var_int, reason);
+    case CGV_INT8:
+	retval = parse_int8(str, &cv->var_int8, reason);
 	break;
-    case CGV_LONG:
-	retval = parse_int64(str, &cv->var_long, reason);
+    case CGV_INT16:
+	retval = parse_int16(str, &cv->var_int16, reason);
+	break;
+    case CGV_INT32:
+	retval = parse_int32(str, &cv->var_int32, reason);
+	break;
+    case CGV_INT64:
+	retval = parse_int64(str, &cv->var_int64, reason);
+	break;
+    case CGV_UINT8:
+	retval = parse_uint8(str, &cv->var_uint8, reason);
+	break;
+    case CGV_UINT16:
+	retval = parse_uint16(str, &cv->var_uint16, reason);
+	break;
+    case CGV_UINT32:
+	retval = parse_uint32(str, &cv->var_uint32, reason);
+	break;
+    case CGV_UINT64:
+	retval = parse_uint64(str, &cv->var_uint64, reason);
+	break;
+    case CGV_DEC64:
+	retval = parse_dec64(str, cv->var_dec64_n, &cv->var_dec64_i, reason);
 	break;
     case CGV_BOOL:
 	retval = parse_bool(str, &cv->var_bool, reason);
@@ -1518,7 +2111,7 @@ cv_parse1(char *str0, cg_var *cv, char **reason)
 	if (reason) 
 	    *reason = cligen_reason("Invalid variable");
 	break;
-    }
+    } /* switch */
   done:
     if (str)
 	free (str);
@@ -1527,26 +2120,28 @@ cv_parse1(char *str0, cg_var *cv, char **reason)
     return retval;
 }
 
-/*
- * cv_parse
- * parse cv from string. An initialized cv is expected with a type field as created
- * by cv_new() or prepared by cv_reset().
- * Validate cligen variable cv using the spec in cs.
- * See also cv_parse() which has extended error handling.
+/*! Parse cv from string. 
+ *
+ * This function expects an initialized cv as created by cv_new() or
+ * prepared by cv_reset(). 
+ * The following is required of a cv before calling this function:
+ *  - A type field. So that the parser knows how to parse the string
+ *  - For decimal64 the fraction_digits (n) must be known.
+ *
+ * See also cv_parse1() which has extended error handling.
+ * and cv_validate() where the cv is validated against a cligen object specification.
  *
  * Arguments:
- * IN    str   Input string. Example, number variable, str can be "7834" or "0x7634"
- * INOUT cgv   cligen variable, as prepared by cv_reset()/cv_new()
+ * @param  str  Input string. Example, number variable, str can be "7834" or "0x7634"
+ * @param  cv   cligen variable, as prepared by cv_reset()/cv_new()
+ * @retval -1 Error (fatal), or parsing error, printf error in stderr.
+ * @retval  0 Parse OK
  *
- * Return values:
- * -1 : Error (fatal), or parsing error, printf error in stderr.
- *  0 : Parse OK
- *
- * Example:
+ * @code
  *  cg_var *cv = cv_new(CGV_STRING);
  *  if (cv_parse("mystring", cv) < 0)
-         cv_free(cv);
-
+ *    cv_free(cv);
+ * @endcode
  */
 int
 cv_parse(char *str, cg_var *cv)
@@ -1565,6 +2160,17 @@ cv_parse(char *str, cg_var *cv)
     return 0;
 }
 
+static int
+cv_validate_range(int64_t i, int64_t low, int64_t high, char **reason)
+{
+    if (i < low || i > high) {
+	if (reason)
+	    *reason = cligen_reason("Number out of range: %i", i);
+	return 0; /* No match */
+    }
+    return 1; /* OK */
+}
+
 /*! Validate cligen variable cv using the spec in cs.
  *
  * @param [in]  cv      A cligen variable to validate. This is a correctly parsed cv.
@@ -1578,23 +2184,54 @@ cv_parse(char *str, cg_var *cv)
 int
 cv_validate(cg_var *cv, cg_varspec *cs, char **reason)
 {
-    int retval = 1; /* OK */
-    long long i = 0;
+    int      retval = 1; /* OK */
+    int64_t  i = 0;
+    uint64_t u = 0;
 
     switch (cs->cgs_vtype){
-    case CGV_INT:
-	i = cv_int_get(cv);
-    case CGV_LONG: /* fallthru */
-	 /* Check range if specified */
-	if (cs->cgs_vtype == CGV_LONG)
-	    i = cv_long_get(cv);
-	if (cs->cgs_range){
-	    if (i < cs->cgs_range_low || i > cs->cgs_range_high) {
-		if (reason)
-		    *reason = cligen_reason("Number out of range: %i", i);
-		retval = 0;
-	    }
-	}
+    case CGV_INT8:
+	i = cv_int8_get(cv);
+	if (cs->cgs_range)
+	    retval = cv_validate_range(i, cs->cgs_range_low, cs->cgs_range_high, reason);
+	break;
+    case CGV_INT16:
+	i = cv_int16_get(cv);
+	if (cs->cgs_range)
+	    retval = cv_validate_range(i, cs->cgs_range_low, cs->cgs_range_high, reason);
+	break;
+    case CGV_INT32:
+	i = cv_int32_get(cv);
+	if (cs->cgs_range)
+	    retval = cv_validate_range(i, cs->cgs_range_low, cs->cgs_range_high, reason);
+	break;
+    case CGV_INT64:
+	i = cv_int64_get(cv);
+	if (cs->cgs_range)
+	    retval = cv_validate_range(i, cs->cgs_range_low, cs->cgs_range_high, reason);
+	break;
+    case CGV_UINT8:
+	u = cv_uint8_get(cv);
+	if (cs->cgs_range)
+	    retval = cv_validate_range(u, cs->cgs_range_low, cs->cgs_range_high, reason);
+	break;
+    case CGV_UINT16:
+	u = cv_uint16_get(cv);
+	if (cs->cgs_range)
+	    retval = cv_validate_range(u, cs->cgs_range_low, cs->cgs_range_high, reason);
+	break;
+    case CGV_UINT32:
+	u = cv_uint32_get(cv);
+	if (cs->cgs_range)
+	    retval = cv_validate_range(u, cs->cgs_range_low, cs->cgs_range_high, reason);
+	break;
+    case CGV_UINT64:
+	u = cv_uint64_get(cv);
+	if (cs->cgs_range)
+	    retval = cv_validate_range(u, cs->cgs_range_low, cs->cgs_range_high, reason);
+	break;
+    case CGV_DEC64:
+	cv->var_dec64_n = cs->cgs_dec64_n;
+	break;
     case CGV_STRING:
 	if (cs->cgs_regex == NULL)
 	    break;
@@ -1647,10 +2284,27 @@ cv_cmp(cg_var *cgv1, cg_var *cgv2)
 	return cgv1->var_type - cgv2->var_type;
 
     switch (cgv1->var_type) {
-    case CGV_INT:
-	return (cgv1->var_int - cgv2->var_int);
-    case CGV_LONG:
-	return (cgv1->var_long - cgv2->var_long);
+    case CGV_ERR:
+	return 0;
+    case CGV_INT8:
+	return (cgv1->var_int8 - cgv2->var_int8);
+    case CGV_INT16:
+	return (cgv1->var_int16 - cgv2->var_int16);
+    case CGV_INT32:
+	return (cgv1->var_int32 - cgv2->var_int32);
+    case CGV_INT64:
+	return (cgv1->var_int64 - cgv2->var_int64);
+    case CGV_UINT8:
+	return (cgv1->var_uint8 - cgv2->var_uint8);
+    case CGV_UINT16:
+	return (cgv1->var_uint16 - cgv2->var_uint16);
+    case CGV_UINT32:
+	return (cgv1->var_uint32 - cgv2->var_uint32);
+    case CGV_UINT64:
+	return (cgv1->var_uint64 - cgv2->var_uint64);
+    case CGV_DEC64:
+	return (cgv1->var_dec64_i - cgv2->var_dec64_i && 
+		cgv1->var_dec64_n - cgv2->var_dec64_n);
     case CGV_BOOL:
 	return (cgv1->var_bool - cgv2->var_bool);
     case CGV_REST:
@@ -1717,8 +2371,17 @@ cv_cp(cg_var *new, cg_var *old)
 	if ((new->var_name = strdup(old->var_name)) == NULL)
 	    goto done;
     switch (new->var_type) {
-    case CGV_INT:
-    case CGV_LONG:
+    case CGV_ERR:
+	break;
+    case CGV_INT8:
+    case CGV_INT16:
+    case CGV_INT32:
+    case CGV_INT64:
+    case CGV_UINT8:
+    case CGV_UINT16:
+    case CGV_UINT32:
+    case CGV_UINT64:
+    case CGV_DEC64:
     case CGV_BOOL:
 	break;
     case CGV_REST:

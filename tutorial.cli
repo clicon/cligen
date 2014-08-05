@@ -10,7 +10,7 @@
   }
   # Nested command using callback arguments to differentiate
   ip("The IP protocol"){       
-    tcp("The TCP protocol") <int>("Port number"), cb("tcp");
+    tcp("The TCP protocol") <int32>("Port number"), cb("tcp");
     udp("The UDP protocol") <ipaddr>("IPv4 address"), cb("udp");
   }
   # Example of commands on several levels
@@ -18,9 +18,9 @@
     ff,cb();
   }
   # Example of complex variable matching
-  values (<int> | <string> | <long> | aa), cb();
+  values (<int32> | <string> | <int64> | aa), cb();
   # Complex syntax and callback argument handling
-  aa bb (ca("help ca") <int>|cb("help cb")) [dd|ee], letters();
+  aa bb (ca("help ca") <int32>|cb("help cb")) [dd|ee], letters();
   # Expand example
   interface {
     <ifname:string interface()>("interface name"),cb(); 

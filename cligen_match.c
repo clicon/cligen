@@ -74,6 +74,8 @@ match_variable(cg_obj *co, char *str, char **reason)
     cs = &co->u.cou_var;
     if ((cv = cv_new(co->co_vtype)) == NULL)
 	goto done;
+    if (co->co_vtype == CGV_DEC64) /* XXX: Seems misplaced? / too specific */
+	cv_dec64_n_set(cv, cs->cgs_dec64_n);
     if ((retval = cv_parse1(str, cv, reason)) <= 0) 
 	goto done;
     retval = cv_validate(cv, cs, reason);

@@ -376,6 +376,8 @@ cvec_match(cg_obj *co_match,
 	    cv->var_type = co->co_vtype;
 	    cv->var_name = strdup(co->co_command);
 	    cv->var_const = iskeyword(co);
+	    if (co->co_vtype == CGV_DEC64) /* XXX: Seems misplaced? / too specific */
+		cv_dec64_n_set(cv, co->co_dec64_n);
 	    /* String value to structured type */
 	    if (cv_parse(val, cv) < 0) {
 		/* This should never happen, since it passes in match_variable() */
