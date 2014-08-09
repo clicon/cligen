@@ -330,6 +330,7 @@ cv_dec64_n_get(cg_var *cv)
     return ((cv)->var_dec64_n);
 }
 
+/* XXX range check? 1..18 */
 uint8_t 
 cv_dec64_n_set(cg_var *cv, uint8_t x)
 {
@@ -689,7 +690,7 @@ parse_int32(char *str, int32_t *val, char **reason)
 	retval = 0;
 	goto done;
     }
-    *val = (int16_t)i;
+    *val = (int32_t)i;
   done:
     return retval;
 
@@ -830,7 +831,7 @@ parse_uint32(char *str, uint32_t *val, char **reason)
 	retval = 0;
 	goto done;
     }
-    *val = (uint16_t)i;
+    *val = (uint32_t)i;
   done:
     return retval;
 
@@ -921,7 +922,15 @@ parse_dec64(char *str, uint8_t n, int64_t *dec64_i, char **reason)
      +----------------+-----------------------+----------------------+
 */
 
-    assert(0<n && n<19);
+    if (n<=0 || n>18){
+	if (reason != NULL)
+	    if ((*reason = cligen_reason("%s: %d fraction-digits given but should be in interval [1:18]", __FUNCTION__, n)) == NULL){
+		retval = -1; /* malloc */
+		goto done;
+	    }
+	retval = 0;
+	goto done;
+    }
     if ((s0 = strdup(str)) == NULL){
 	retval = -1; /* malloc */
 	goto done;
