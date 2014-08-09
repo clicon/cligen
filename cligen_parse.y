@@ -30,7 +30,7 @@
 }
 
 %token MY_EOF
-%token V_TYPE V_RANGE V_CHOICE V_KEYWORD V_REGEXP V_FRACTION_DIGITS
+%token V_TYPE V_RANGE V_LENGTH V_CHOICE V_KEYWORD V_REGEXP V_FRACTION_DIGITS
 %token DOUBLEPARENT /* (( */
 %token DQ           /* " */
 %token DQP          /* ") */
@@ -721,8 +721,43 @@ cg_regexp(struct cligen_parse_yacc_arg *ya, char *rx)
     return 0;
 }
 
+/* <x:int length[min:max]> */
 static int
 cg_range(struct cligen_parse_yacc_arg *ya, char *low, char *high)
+{
+    int     retval;
+    char   *reason = NULL;
+    cg_obj *yv;
+
+    if ((yv = ya->ya_var) == NULL){
+	fprintf(stderr, "No var obj");
+	return -1;
+    }
+    if ((retval = parse_int64(low, &yv->co_range_low, &reason)) < 0){
+	fprintf(stderr, "range: %s\n", strerror(errno));
+	return -1;
+    }
+    if (retval == 0){
+	cligen_parseerror1(ya, reason); 
+	return 0;
+    }
+    if ((retval = parse_int64(high, &yv->co_range_high, &reason)) < 0){
+	fprintf(stderr, "range: %s\n", strerror(errno));
+	return -1;
+    }
+    if (retval == 0){
+	cligen_parseerror1(ya, reason); 
+	return 0;
+    }
+    ya->ya_var->co_range++;
+    return 0;
+}
+
+/* <x:string length[min:max]> 
+   Note that the co_range structure fields are re-used for string length restrictions.
+ */
+static int
+cg_length(struct cligen_parse_yacc_arg *ya, char *low, char *high)
 {
     int     retval;
     char   *reason = NULL;
@@ -932,6 +967,9 @@ keypair     : NAME '(' ')' { _YA->ya_var->co_expand_fn_str = $1; }
 	      }
             | V_RANGE ':' NUMBER '-' NUMBER { 
 		if (cg_range(_ya, $3, $5) < 0) YYERROR; free($3); free($5); 
+	      }
+            | V_LENGTH '[' NUMBER ':' NUMBER ']' { 
+		if (cg_length(_ya, $3, $5) < 0) YYERROR; free($3); free($5); 
 	      }
             | V_FRACTION_DIGITS ':' NUMBER { 
 		if (cg_dec64_n(_ya, $3) < 0) YYERROR; free($3); 

@@ -114,9 +114,9 @@ struct cg_varspec{
     expand_cb      *cgs_expand_fn;     /* expand callback */
     cg_var         *cgs_expand_fn_arg; /* expand callback arg */
     char           *cgs_choice;        /* list of choices */
-    int             cgs_range;         /* range interval valid */
-    int64_t         cgs_range_low;     /* range interval lower limit*/
-    int64_t         cgs_range_high;    /* range interval upper limit*/
+    int             cgs_range;         /* int range / string length interval valid */
+    int64_t         cgs_range_low;     /* range/length interval lower limit */
+    int64_t         cgs_range_high;    /* range/length interval upper limit */
     char           *cgs_regex;         /* regular expression */
     uint8_t         cgs_dec64_n;       /* negative decimal exponential 1..18 */
 };

@@ -77,8 +77,14 @@ cov_print(cg_obj *co, char *cmd, int len, int brief)
 
 	    cmd2 = strdup(cmd);
 	    if (co->co_range){
-		snprintf(cmd, len, "%s range[%" PRId64 ":%" PRId64 "]", 
-			 cmd2, co->co_range_low, co->co_range_high);
+		if (cv_isint(co->co_vtype)){
+		    snprintf(cmd, len, "%s range[%" PRId64 ":%" PRId64 "]", 
+			     cmd2, co->co_range_low, co->co_range_high);
+		}
+		else{
+		    snprintf(cmd, len, "%s length[%" PRId64 ":%" PRId64 "]", 
+			     cmd2, co->co_range_low, co->co_range_high);
+		}
 		free(cmd2);
 		cmd2 = strdup(cmd);
 	    }

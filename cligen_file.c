@@ -36,7 +36,7 @@
  * General callback for executing shells. The argument is a command
  * followed by arguments as defined in the input syntax.
  * Simple example:
- *   CLIgen input syntax:     <a type:int>, cligen_exec_cb("ls ${a}");
+ *   CLIgen input syntax:     <a type:int32>, cligen_exec_cb("ls ${a}");
  *   CLI input:               > 42
  *   Shell command:           ls 42
  * More advanced example:

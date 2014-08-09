@@ -1663,7 +1663,7 @@ cv_dec64_print(cg_var *cv, char *s0, int *s0len)
     int     len;
 
     assert(0<n && n<19);
-    len = snprintf(s0, *s0len, "%" PRId64, cv->var_dec64_i);
+    len = snprintf(s0, *s0len, "%" PRId64, cv_dec64_i_get(cv));
     *s0len -= len;
     /* Shift fraction digits right, including null character. 
      * eg:  xyz --> x.yz (if n==2)
@@ -2009,7 +2009,7 @@ cv_parse1(char *str0, cg_var *cv, char **reason)
 	retval = parse_uint64(str, &cv->var_uint64, reason);
 	break;
     case CGV_DEC64:
-	retval = parse_dec64(str, cv->var_dec64_n, &cv->var_dec64_i, reason);
+	retval = parse_dec64(str, cv_dec64_n_get(cv), &cv->var_dec64_i, reason);
 	break;
     case CGV_BOOL:
 	retval = parse_bool(str, &cv->var_bool, reason);
@@ -2165,7 +2165,7 @@ cv_validate_range(int64_t i, int64_t low, int64_t high, char **reason)
 {
     if (i < low || i > high) {
 	if (reason)
-	    *reason = cligen_reason("Number out of range: %i", i);
+	    *reason = cligen_reason("Number out of range: %d", i);
 	return 0; /* No match */
     }
     return 1; /* OK */
@@ -2187,6 +2187,7 @@ cv_validate(cg_var *cv, cg_varspec *cs, char **reason)
     int      retval = 1; /* OK */
     int64_t  i = 0;
     uint64_t u = 0;
+    char    *str;
 
     switch (cs->cgs_vtype){
     case CGV_INT8:
@@ -2230,18 +2231,39 @@ cv_validate(cg_var *cv, cg_varspec *cs, char **reason)
 	    retval = cv_validate_range(u, cs->cgs_range_low, cs->cgs_range_high, reason);
 	break;
     case CGV_DEC64:
-	cv->var_dec64_n = cs->cgs_dec64_n;
+	if (cv_dec64_n_get(cv) != cs->cgs_dec64_n){
+	    if (reason)
+		*reason = cligen_reason("Decimal 64 fraction-bits mismatch %d(cv) != %d(spec)",
+					cv->var_dec64_n, cs->cgs_dec64_n);
+	    retval = 0;
+	}
+#ifdef notyet 
+	/* Validate range for dec64 */
+	i = cv_dec64_i_get(cv);
+#endif
 	break;
     case CGV_STRING:
-	if (cs->cgs_regex == NULL)
-	    break;
-	if ((retval = match_regexp(cv_string_get(cv), cs->cgs_regex)) < 0)
-	    break;
-	if (retval == 0){
-	    if (reason)
-		*reason = cligen_reason("regexp match fail: %s does not match %s",
-					cv_string_get(cv), cs->cgs_regex);
-	    retval = 0;
+	str = cv_string_get(cv);
+	if (cs->cgs_range){
+	    i = strlen(str);
+	    if (i < cs->cgs_range_low || i > cs->cgs_range_high) {
+		if (reason)
+		    *reason = cligen_reason("Length of string is %d, should be in range [%d:%d]", 
+					    i, cs->cgs_range_low, cs->cgs_range_high);
+		retval = 0; /* No match */
+		break;
+	    }
+	}
+	if (cs->cgs_regex != NULL){
+	    if ((retval = match_regexp(cv_string_get(cv), cs->cgs_regex)) < 0)
+		break;
+	    if (retval == 0){
+		if (reason)
+		    *reason = cligen_reason("regexp match fail: %s does not match %s",
+					    cv_string_get(cv), cs->cgs_regex);
+		retval = 0;
+		break;
+	    }
 	}
 	break;
     case CGV_ERR:
@@ -2303,8 +2325,8 @@ cv_cmp(cg_var *cgv1, cg_var *cgv2)
     case CGV_UINT64:
 	return (cgv1->var_uint64 - cgv2->var_uint64);
     case CGV_DEC64:
-	return (cgv1->var_dec64_i - cgv2->var_dec64_i && 
-		cgv1->var_dec64_n - cgv2->var_dec64_n);
+	return (cv_dec64_i_get(cgv1) - cv_dec64_i_get(cgv2) && 
+		cv_dec64_n_get(cgv1) - cv_dec64_n_get(cgv2));
     case CGV_BOOL:
 	return (cgv1->var_bool - cgv2->var_bool);
     case CGV_REST:

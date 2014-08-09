@@ -136,6 +136,7 @@ stripdup(char *s0)
 <VARIABLE>\"              { _YA->ya_lex_string_state =VARIABLE;BEGIN(STRING); return DQ; }
 <VARIABLE>type            { return V_TYPE; }
 <VARIABLE>range           { return V_RANGE; }
+<VARIABLE>length          { return V_LENGTH; }
 <VARIABLE>fraction-digits { return V_FRACTION_DIGITS; }
 <VARIABLE>choice          { return V_CHOICE; }
 <VARIABLE>keyword         { return V_KEYWORD; }
