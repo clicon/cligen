@@ -1,56 +1,86 @@
-/*
-  CLI generator. Take idl as input and generate a tree for use in cli.
-  CVS Version: $Id: cligen_config.h.in,v 1.6 2012/11/29 20:58:00 olof Exp $ 
+/* cligen_config.h.in.  Generated from configure.ac by autoheader.  */
 
-  Copyright (C) 2001-2011 Olof Hagsand
+/* This is for backward compatibility with int and long types that should be
+   replaced with int32 and int64 respectively. Both in C-code (eg
+   cv_int_get(), cv_long_get()) and CLIGEN parser (eg <x:int>, <x:long>) */
+#undef CLIGEN_COMPAT_INT
 
-  This file is part of CLIgen.
+/* Enable BSD select semantics allowing multiple input file descriptors to be
+   enabled at once, Not just stdin. Each extra fd is registered with
+   cligen_regfd() */
+#undef CLIGEN_REGFD
 
-  CLIgen is free software; you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation; either version 2 of the License, or
-  (at your option) any later version.
-
-  CLIgen is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details.
-
-  You should have received a copy of the GNU General Public License
-  along with CLIgen; see the file COPYING.
- */ 
-
-/* Define if you have the <regex.h> header file.  */
-#undef HAVE_REGEX_H
-
-/* Define if you have the <termios.h> header file.  */
-#undef HAVE_TERMIOS_H
-
-/* Define if struct sockaddr has field sa_len. */
-#undef HAVE_STRUCT_SOCKADDR_SA_LEN
-
-/* Experimental sub-modes */
+/* Experimental CLIGEN sub-modes */
 #undef CLIGEN_SUBMODE
 
-/* AC_CHECK_FUNCS */
+/* Define to 1 if you have the <inttypes.h> header file. */
+#undef HAVE_INTTYPES_H
+
+/* Define to 1 if you have the `m' library (-lm). */
+#undef HAVE_LIBM
+
+/* Define to 1 if you have the `socket' library (-lsocket). */
+#undef HAVE_LIBSOCKET
+
+/* Define to 1 if you have the <memory.h> header file. */
+#undef HAVE_MEMORY_H
+
+/* Define to 1 if you have the <regex.h> header file. */
+#undef HAVE_REGEX_H
+
+/* Define to 1 if you have the <stdint.h> header file. */
+#undef HAVE_STDINT_H
+
+/* Define to 1 if you have the <stdlib.h> header file. */
+#undef HAVE_STDLIB_H
+
+/* Define to 1 if you have the <strings.h> header file. */
+#undef HAVE_STRINGS_H
+
+/* Define to 1 if you have the <string.h> header file. */
+#undef HAVE_STRING_H
+
+/* Define to 1 if you have the `strsep' function. */
 #undef HAVE_STRSEP
+
+/* Define to 1 if you have the `strverscmp' function. */
 #undef HAVE_STRVERSCMP
 
-/* Enable gl_select() */
-#undef GL_SELECT
+/* Define to 1 if you have the <sys/stat.h> header file. */
+#undef HAVE_SYS_STAT_H
 
-#undef USE_BYACC
+/* Define to 1 if you have the <sys/types.h> header file. */
+#undef HAVE_SYS_TYPES_H
 
+/* Define to 1 if you have the <termios.h> header file. */
+#undef HAVE_TERMIOS_H
 
-/* This is for backward compatibility with int and long types that should be 
- * replaced with int32 and int64 respectively. Also, you can choose from uints and
- * 8/16/32/64 ints in the new system
- */
-#define BACK_COMPAT_TYPE 1
+/* Define to 1 if you have the <unistd.h> header file. */
+#undef HAVE_UNISTD_H
 
+/* Define to the address where bug reports for this package should be sent. */
+#undef PACKAGE_BUGREPORT
 
-#if 1 /* SANITY CHECK */
-typedef struct {int a;} *cligen_handle;
-#else
-typedef void *cligen_handle; /* API */
-#endif
+/* Define to the full name of this package. */
+#undef PACKAGE_NAME
+
+/* Define to the full name and version of this package. */
+#undef PACKAGE_STRING
+
+/* Define to the one symbol short name of this package. */
+#undef PACKAGE_TARNAME
+
+/* Define to the home page for this package. */
+#undef PACKAGE_URL
+
+/* Define to the version of this package. */
+#undef PACKAGE_VERSION
+
+/* Define to 1 if you have the ANSI C header files. */
+#undef STDC_HEADERS
+
+/* Define to 1 if `lex' declares `yytext' as a `char *' by default, not a
+   `char[]'. */
+#undef YYTEXT_POINTER
+
+#include <cligen_custom.h>

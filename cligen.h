@@ -42,7 +42,7 @@ typedef void *cligen_handle; /* API */
  * replaced with int32 and int64 respectively. Also, you can choose from uints and
  * 8/16/32/64 ints in the new system
  */
-#define BACK_COMPAT_TYPE 1
+#define CLIGEN_COMPAT_INT 1
 
 #include <cligen/cligen_var.h>
 #include <cligen/cligen_cvec.h>

@@ -288,7 +288,7 @@ int c;
 #endif /* MSDOS || __EMX__ || __GO32__ */
 
 
-#if GL_SELECT
+#if CLIGEN_REGFD
 struct regfd {
     int fd;
     int (*cb)(int, void*);
@@ -422,7 +422,7 @@ gl_getc(cligen_handle h)
     char            ch;
 #endif
 
-#if GL_SELECT 
+#if CLIGEN_REGFD 
     gl_select(); /* block until something arives on stdin */
 #endif
 #ifdef __unix__

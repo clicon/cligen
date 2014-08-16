@@ -1,7 +1,5 @@
 /*
-  CVS Version: $Id: cligen_var.h,v 1.24 2013/04/16 17:11:58 olof Exp $ 
-
-  Copyright (C) 2001-2013 Olof Hagsand
+  Copyright (C) 2001-2014 Olof Hagsand
 
   This file is part of CLIgen.
 
@@ -65,7 +63,7 @@ enum cv_type{
 };
 
 /* Backward compatible int and long */
-#ifdef BACK_COMPAT_TYPE
+#ifdef CLIGEN_COMPAT_INT
 #define CGV_INT  CGV_INT32
 #define CGV_LONG CGV_INT64
 

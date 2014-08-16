@@ -1,7 +1,5 @@
 /*
-  CVS Version: $Id: cligen_var.c,v 1.37 2013/04/16 18:20:15 olof Exp $ 
-
-  Copyright (C) 2001-2013 Olof Hagsand
+  Copyright (C) 2001-2014 Olof Hagsand
 
   This file is part of CLIgen.
 
@@ -229,7 +227,7 @@ cv_int64_set(cg_var *cv, int64_t x)
     return (cv->u.varu_int64 = x);
 }
 
-#ifdef BACK_COMPAT_TYPE
+#ifdef CLIGEN_COMPAT_INT
 #undef cv_int_get
 #undef cv_int_set
 #undef cv_long_get
@@ -258,7 +256,7 @@ cv_long_set(cg_var *cv, int64_t x)
 {
     return cv_int64_set(cv, x);
 }
-#endif /* BACK_COMPAT_TYPE */
+#endif /* CLIGEN_COMPAT_INT */
 
 /*! Get 8-bit unsigned integer value of cv
  */
@@ -1447,7 +1445,7 @@ cv_str2type(char *str)
 	return CGV_UINT32;
     if (strcmp(str, "uint64") == 0)
 	return CGV_UINT64;
-#ifdef BACK_COMPAT_TYPE
+#ifdef CLIGEN_COMPAT_INT
    if (strcmp(str, "number") == 0 || strcmp(str, "int") == 0)
        return CGV_INT32;
    if (strcmp(str, "long") == 0)

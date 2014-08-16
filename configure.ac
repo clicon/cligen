@@ -4,7 +4,7 @@
 # 	autoconf
 # in the directory containing this script.
 #
-#  Copyright (C) 2001-2011 Olof Hagsand
+#  Copyright (C) 2001-2014 Olof Hagsand
 #
 #  This file is part of CLIgen.
 #
@@ -59,8 +59,6 @@ AC_SUBST(EXE_SUFFIX)
 AC_SUBST(AR)
 AC_SUBST(RANLIB)
 #
-AC_DEFINE(AUTOCONF)
-
 
 echo "$host_cpu $host_vendor $host_os"
 
@@ -90,20 +88,31 @@ AR="ar"
 AC_MSG_RESULT(CFLAGS is $CFLAGS)	
 AC_MSG_RESULT(CPPFLAGS is $CPPFLAGS)	
 
-# Option that neables registration of callbacks for reading file-descriptirs: cligen_regfd
-# This used to be optional but is now mainline, since we got two lib variants.
-AC_DEFINE(GL_SELECT)
-
-AC_PATH_PROG(PDFLATEX, pdflatex)
-AC_DEFINE_UNQUOTED(PROG_PDFLATEX, "$PDFLATEX")
+# Enable BSD select semantics allowing multiple input file descriptors to be enabled at once,
+# Not just stdin. Each extra fd requires a callback which is registered with cligen_regfd()])
+AH_TEMPLATE([CLIGEN_REGFD], 
+[Enable BSD select semantics allowing multiple input file descriptors to be enabled at once,
+ Not just stdin. Each extra fd is registered with cligen_regfd()])
+AC_DEFINE(CLIGEN_REGFD)
 
 # Experimental sub-modes
+AH_TEMPLATE([CLIGEN_SUBMODE], [Experimental CLIGEN sub-modes])
 AC_DEFINE(CLIGEN_SUBMODE)
+
+# 
+AH_TEMPLATE([CLIGEN_COMPAT_INT], 
+[This is for backward compatibility with int and long types that should be 
+ replaced with int32 and int64 respectively. 
+ Both in C-code (eg cv_int_get(), cv_long_get()) and CLIGEN parser (eg <x:int>, <x:long>)
+])
+AC_DEFINE(CLIGEN_COMPAT_INT)
 
 AC_CHECK_LIB(socket, socket)
 AC_CHECK_FUNCS(strsep strverscmp)
 
 AC_CHECK_HEADERS(regex.h termios.h)
+
+AH_BOTTOM([#include <cligen_custom.h>])
 
 AC_OUTPUT(Makefile)
 

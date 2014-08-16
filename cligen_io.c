@@ -158,7 +158,7 @@ cli_yesno (const char *fmt, ...)
 }
 #endif
 
-#if GL_SELECT
+#if CLIGEN_REGFD
 /* The following three callback functions are just wrappers in order to
    not expose getline to external interface */
 int 
@@ -172,7 +172,7 @@ cligen_unregfd(int fd)
 {
     return gl_unregfd(fd);
 }
-#endif /* GL_SELECT */
+#endif /* CLIGEN_REGFD */
 
 void 
 cligen_redraw(cligen_handle h)
