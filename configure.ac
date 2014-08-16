@@ -1,8 +1,3 @@
-# Autoconf script for CLIgen
-# $Id: configure.ac,v 1.41 2013/07/02 05:47:50 olof Exp $
-# To rebuild the `configure' script from this, execute the command
-# 	autoconf
-# in the directory containing this script.
 #
 #  Copyright (C) 2001-2014 Olof Hagsand
 #
@@ -21,6 +16,9 @@
 #  You should have received a copy of the GNU General Public License
 #  along with CLIgen; see the file COPYING.  
 #
+# To rebuild the `configure' script from this, execute the command
+# 	autoconf
+# in the directory containing this script.
 
 AC_INIT(cligen.h)
 

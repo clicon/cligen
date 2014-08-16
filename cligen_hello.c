@@ -1,8 +1,7 @@
 /*
   CLIgen hello world application
 
-  CVS Version: $Id: cligen_hello.c,v 1.29 2013/04/12 10:59:52 olof Exp $ 
-  Copyright (C) 2011-2013 Olof Hagsand
+  Copyright (C) 2001-2014 Olof Hagsand
 
   This file is part of CLIgen.
 

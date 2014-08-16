@@ -1,7 +1,5 @@
 /*
-  CVS Version: $Id: cligen_parse.l,v 1.48 2013/06/16 17:19:28 olof Exp $ 
-
-  Copyright (C) 2010-2011 Olof Hagsand
+  Copyright (C) 2001-2014 Olof Hagsand
 
   This file is part of CLIgen.
 

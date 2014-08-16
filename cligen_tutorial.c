@@ -1,8 +1,7 @@
 /*
   CLIgen tutorial application
 
-  CVS Version: $Id: cligen_tutorial.c,v 1.10 2013/06/16 12:01:18 olof Exp $ 
-  Copyright (C) 2001-2013 Olof Hagsand
+  Copyright (C) 2001-2014 Olof Hagsand
 
   This file is part of CLIgen.
 

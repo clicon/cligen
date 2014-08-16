@@ -1,8 +1,7 @@
 /*
-  CLI generator. Take idl as input and generate a tree for use in cli.
-  CVS Version: $Id: cligen.h,v 1.13 2013/04/12 10:59:52 olof Exp $ 
+  CLIgen is a CLI generator. 
 
-  Copyright (C) 2001-2013 Olof Hagsand
+  Copyright (C) 2001-2014 Olof Hagsand
 
   This file is part of CLIgen.
 

@@ -1,5 +1,4 @@
 /*
- * $Id: getline.c,v 1.30 2013/06/30 09:30:45 olof Exp $
  * Copyright (C) 1991, 1992, 1993 by Chris Thewalt (thewalt@ce.berkeley.edu)
  *
  * Permission to use, copy, modify, and distribute this software 

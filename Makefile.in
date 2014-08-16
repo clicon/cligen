@@ -1,9 +1,7 @@
 #
-# 
 # Makefile for cligen CLI generator.
-# CVS Version: $Id: Makefile.in,v 1.52 2013/07/01 16:53:37 olof Exp $ 
 #
-# Copyright (C) 2001-2013 Olof Hagsand
+# Copyright (C) 2001-2014 Olof Hagsand
 #
 # This file is part of CLIgen.
 #
@@ -79,7 +77,8 @@ distclean: clean
 
 .PHONY: build.c
 build.c:	
-	date +"const char CLIGEN_BUILDSTR[64]=\"%Y.%m.%d %H:%M by `whoami` on `hostname`"\"\; > build.c;
+	echo "/* This file is generated from the CLIgen Makefile */" > build.c;
+	date +"const char CLIGEN_BUILDSTR[64]=\"%Y.%m.%d %H:%M by `whoami` on `hostname`"\"\; >> build.c;
 	echo "const char CLIGEN_VERSION[64]=\"$(CLIGEN_VERSION)\""\; >> build.c;
 
 # install-bin install-include

@@ -1,9 +1,7 @@
 /*
   CLI generator. 
 
-  CVS Version: $Id: cligen_parse.h,v 1.31 2013/06/20 10:42:40 olof Exp $ 
-
-  Copyright (C) 2010-2013 Olof Hagsand
+  Copyright (C) 2001-2014 Olof Hagsand
 
   This file is part of CLIgen.
 

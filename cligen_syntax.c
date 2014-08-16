@@ -1,7 +1,5 @@
 /*
-  CVS Version: $Id: cligen_syntax.c,v 1.38 2013/04/13 12:24:44 olof Exp $ 
-
-  Copyright (C) 2001-2013 Olof Hagsand
+  Copyright (C) 2001-2014 Olof Hagsand
 
   This file is part of CLIgen.
 

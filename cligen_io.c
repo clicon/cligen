@@ -1,8 +1,7 @@
 /*
   CLI generator input/output support functions.
-  CVS Version: $Id: cligen_io.c,v 1.13 2013/06/16 11:55:16 olof Exp $ 
 
-  Copyright (C) 2001-2013 Olof Hagsand
+  Copyright (C) 2001-2014 Olof Hagsand
 
   This file is part of CLIgen.
 

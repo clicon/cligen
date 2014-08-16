@@ -1,8 +1,7 @@
 /*
   CLI generator match functions, used in runtime checks.
-  CVS Version: $Id: cligen_match.c,v 1.20 2013/04/12 10:59:52 olof Exp $ 
 
-  Copyright (C) 2001-2013 Olof Hagsand
+  Copyright (C) 2001-2014 Olof Hagsand
 
   This file is part of CLIgen.
 

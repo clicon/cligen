@@ -1,8 +1,7 @@
 /*
   CLI generator readline. Do input processing and matching.
-  CVS Version: $Id: cligen_read.h,v 1.13 2013/04/12 10:59:52 olof Exp $ 
 
-  Copyright (C) 2001-2013 Olof Hagsand
+  Copyright (C) 2001-2014 Olof Hagsand
 
   This file is part of CLIgen.
 
