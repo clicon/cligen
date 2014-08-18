@@ -847,13 +847,12 @@ cgy_exit(struct cligen_parse_yacc_arg *ya)
 %%
 
 file          : lines MY_EOF{if(debug)printf("file->lines\n"); YYACCEPT;} 
-              | MY_EOF {if(debug)printf("file->\n"); YYACCEPT;} 
               ;
 
 lines        : lines line {
                   if(debug)printf("lines->lines line\n");
                  } 
-              | line  { if(debug)printf("lines->line\n"); } 
+              |   { if(debug)printf("lines->\n"); } 
               ;
 
 line          : decltop line1	{ if (debug) printf("line->decltop line1\n"); }	
@@ -865,13 +864,12 @@ line1        :  line2  { if (debug) printf("line1->line2\n"); }
               ;
 
 line2        : ';' { if (debug) printf("line2->';'\n"); if (cgy_terminal(_ya) < 0) YYERROR;if (ctx_peek_swap2(_ya) < 0) YYERROR; } 
-              | '{' '}' { if (debug) printf("line2->'{' '}'\n"); }
               | '{' {if (ctx_push(_ya) < 0) YYERROR; } 
                 lines 
                 '}' { if (debug) printf("line2->'{' lines '}'\n");if (ctx_pop(_ya) < 0) YYERROR;if (ctx_peek_swap2(_ya) < 0) YYERROR; }
               | ';' { if (cgy_terminal(_ya) < 0) YYERROR; } 
                 '{' { if (ctx_push(_ya) < 0) YYERROR; }
-                lines 
+                lines
                 '}' { if (debug) printf("line2->';' '{' lines '}'\n");if (ctx_pop(_ya) < 0) YYERROR;if (ctx_peek_swap2(_ya) < 0) YYERROR; }
               ;
 
@@ -931,7 +929,7 @@ decl        : cmd {if (debug)fprintf(stderr, "decl->cmd\n");}
             | cmd PDQ DQP { if (debug)fprintf(stderr, "decl->cmd (\"\")\n");}
             ;
 
-cmd         : NAME { if (debug)fprintf(stderr, "cmd->NAME\n");if (cgy_cmd(_ya, $1) < 0) YYERROR; free($1); } 
+cmd         : NAME { if (debug)fprintf(stderr, "cmd->NAME(%s)\n", $1);if (cgy_cmd(_ya, $1) < 0) YYERROR; free($1); } 
             | '@' NAME { if (debug)fprintf(stderr, "cmd->@NAME\n");if (cgy_reference(_ya, $2) < 0) YYERROR; free($2); } 
             | '<' { if ((_YA->ya_var = cgy_var_pre(_YA)) == NULL) YYERROR; }
                variable '>'  { if (cgy_var_post(_ya) < 0) YYERROR; }

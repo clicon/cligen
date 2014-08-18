@@ -258,7 +258,7 @@ cligen_tree(cligen_handle h, char *name)
     pt_element *pe;
     struct cligen_handle *ch = handle(h);
 
-    for (pe = ch->ch_tree; pe; pe = pe->pe_next)
+    for (pe = ch->ch_tree; pe; pe = pe->pe_next){
 	if (name==NULL || strcmp(pe->pe_name, name) == 0){
 #ifdef CLIGEN_SUBMODE
 	    if (pe->pe_submode)
@@ -266,6 +266,7 @@ cligen_tree(cligen_handle h, char *name)
 #endif /* SUBMODE */
 	    return &pe->pe_parsetree;
 	}
+    }
     return NULL;
 }
 

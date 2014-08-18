@@ -16,7 +16,7 @@
   You should have received a copy of the GNU General Public License
   along with CLIgen; see the file COPYING.
 
-  Custom file as boilerplate appended by clicon_config.h 
+  Custom file as boilerplate appended by cligen_config.h 
 */
 #if 1 /* SANITY CHECK */
 typedef struct {int a;} *cligen_handle;
