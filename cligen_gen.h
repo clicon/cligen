@@ -112,9 +112,9 @@ struct cg_varspec{
     expand_cb      *cgs_expand_fn;     /* expand callback */
     cg_var         *cgs_expand_fn_arg; /* expand callback arg */
     char           *cgs_choice;        /* list of choices */
-    int             cgs_range;         /* int range / string length interval valid */
-    int64_t         cgs_range_low;     /* range/length interval lower limit */
-    int64_t         cgs_range_high;    /* range/length interval upper limit */
+    int             cgs_range;         /* int range / str length interval valid */
+    cg_var         *cgs_rangecv_low;   /* range/length interval lower limit */
+    cg_var         *cgs_rangecv_high;  /* range/length interval upper limit */
     char           *cgs_regex;         /* regular expression */
     uint8_t         cgs_dec64_n;       /* negative decimal exponential 1..18 */
 };
@@ -203,8 +203,8 @@ typedef int (cg_applyfn_t)(cg_obj *co, void *arg);
 #define co_choice	 u.cou_var.cgs_choice
 #define co_keyword	 u.cou_var.cgs_choice
 #define co_range	 u.cou_var.cgs_range
-#define co_range_low	 u.cou_var.cgs_range_low
-#define co_range_high	 u.cou_var.cgs_range_high
+#define co_rangecv_low	 u.cou_var.cgs_rangecv_low
+#define co_rangecv_high	 u.cou_var.cgs_rangecv_high
 #define co_regex         u.cou_var.cgs_regex
 #define co_dec64_n       u.cou_var.cgs_dec64_n
 

@@ -60,6 +60,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <limits.h>
 #include <assert.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -719,70 +720,73 @@ cg_regexp(struct cligen_parse_yacc_arg *ya, char *rx)
     return 0;
 }
 
-/* <x:int length[min:max]> */
+/* <x:int length[min:max]> or <x:int length[max]> */
 static int
-cg_range(struct cligen_parse_yacc_arg *ya, char *low, char *high)
+cg_range(struct cligen_parse_yacc_arg *ya, char *minstr, char *maxstr)
 {
-    int     retval;
+    int     retval = -1;
     char   *reason = NULL;
     cg_obj *yv;
+    cg_var *cv;
+    int     cvret;
 
     if ((yv = ya->ya_var) == NULL){
 	fprintf(stderr, "No var obj");
-	return -1;
+	goto done;
     }
-    if ((retval = parse_int64(low, &yv->co_range_low, &reason)) < 0){
-	fprintf(stderr, "range: %s\n", strerror(errno));
-	return -1;
+    if (minstr != NULL){
+	if ((cv = cv_new(yv->co_vtype)) == NULL){
+	    fprintf(stderr, "cv_new %s\n", strerror(errno));
+	    goto done;
+	}
+	if (cv_name_set(cv, "range_low") == NULL){
+	    fprintf(stderr, "cv_name_set %s\n", strerror(errno));
+	    goto done;
+	}
+	if ((cvret = cv_parse1(minstr, cv, &reason)) < 0){
+	    fprintf(stderr, "cv_parse1 %s\n", strerror(errno));
+	    goto done;
+	}
+	if (cvret == 0){ /* parsing failed */
+	    cligen_parseerror1(ya, reason); 
+	    free(reason);
+	    goto done;
+	}
+	yv->co_rangecv_low = cv;
     }
-    if (retval == 0){
+    if ((cv = cv_new(yv->co_vtype)) == NULL){
+	fprintf(stderr, "cv_new %s\n", strerror(errno));
+	goto done;
+    }
+    if (cv_name_set(cv, "range_high") == NULL){
+	fprintf(stderr, "cv_name_set %s\n", strerror(errno));
+	goto done;
+    }
+    if ((cvret = cv_parse1(maxstr, cv, &reason)) < 0){
+	fprintf(stderr, "cv_parse1 %s\n", strerror(errno));
+	goto done;
+    }
+    if (cvret == 0){ /* parsing failed */
 	cligen_parseerror1(ya, reason); 
-	return 0;
+	free(reason);
+	goto done;
     }
-    if ((retval = parse_int64(high, &yv->co_range_high, &reason)) < 0){
-	fprintf(stderr, "range: %s\n", strerror(errno));
-	return -1;
-    }
-    if (retval == 0){
-	cligen_parseerror1(ya, reason); 
-	return 0;
-    }
+    yv->co_rangecv_high = cv;
+
     ya->ya_var->co_range++;
-    return 0;
+    retval = 0;
+  done:
+    return retval;
 }
 
 /* <x:string length[min:max]> 
    Note that the co_range structure fields are re-used for string length restrictions.
+   XXX: do same as cg_range
  */
 static int
-cg_length(struct cligen_parse_yacc_arg *ya, char *low, char *high)
+cg_length(struct cligen_parse_yacc_arg *ya, char *minstr, char *maxstr)
 {
-    int     retval;
-    char   *reason = NULL;
-    cg_obj *yv;
-
-    if ((yv = ya->ya_var) == NULL){
-	fprintf(stderr, "No var obj");
-	return -1;
-    }
-    if ((retval = parse_int64(low, &yv->co_range_low, &reason)) < 0){
-	fprintf(stderr, "range: %s\n", strerror(errno));
-	return -1;
-    }
-    if (retval == 0){
-	cligen_parseerror1(ya, reason); 
-	return 0;
-    }
-    if ((retval = parse_int64(high, &yv->co_range_high, &reason)) < 0){
-	fprintf(stderr, "range: %s\n", strerror(errno));
-	return -1;
-    }
-    if (retval == 0){
-	cligen_parseerror1(ya, reason); 
-	return 0;
-    }
-    ya->ya_var->co_range++;
-    return 0;
+    return cg_range(ya, minstr, maxstr);
 }
 
 
@@ -961,11 +965,17 @@ keypair     : NAME '(' ')' { _YA->ya_var->co_expand_fn_str = $1; }
             | V_RANGE '[' NUMBER ':' NUMBER ']' { 
 		if (cg_range(_ya, $3, $5) < 0) YYERROR; free($3); free($5); 
 	      }
+            | V_RANGE '[' NUMBER ']' { 
+		if (cg_range(_ya, NULL, $3) < 0) YYERROR; free($3); 
+	      }
             | V_RANGE ':' NUMBER '-' NUMBER { 
 		if (cg_range(_ya, $3, $5) < 0) YYERROR; free($3); free($5); 
 	      }
             | V_LENGTH '[' NUMBER ':' NUMBER ']' { 
 		if (cg_length(_ya, $3, $5) < 0) YYERROR; free($3); free($5); 
+	      }
+            | V_LENGTH '[' NUMBER ']' { 
+		if (cg_length(_ya, NULL, $3) < 0) YYERROR; free($3); 
 	      }
             | V_FRACTION_DIGITS ':' NUMBER { 
 		if (cg_dec64_n(_ya, $3) < 0) YYERROR; free($3); 

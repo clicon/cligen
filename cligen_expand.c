@@ -98,6 +98,12 @@ co_expand_sub(cg_obj *co, cg_obj *parent, cg_obj **conp)
 	if (co->co_expand_fn_arg)
 	    if ((con->co_expand_fn_arg = cv_dup(co->co_expand_fn_arg)) == NULL)
 		return -1;
+	if (co->co_rangecv_low)
+	    if ((con->co_rangecv_low = cv_dup(co->co_rangecv_low)) == NULL)
+		return -1;
+	if (co->co_rangecv_high)
+	    if ((con->co_rangecv_high = cv_dup(co->co_rangecv_high)) == NULL)
+		return -1;
 	if (co->co_choice)
 	    if ((con->co_choice = strdup(co->co_choice)) == NULL){
 		fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
@@ -139,6 +145,14 @@ transform_var_to_cmd(cg_obj *co, char *cmd, char *comment)
     if (co->co_expand_fn_arg){
 	cv_free(co->co_expand_fn_arg);
 	co->co_expand_fn_arg = NULL;
+    }
+    if (co->co_rangecv_low){
+	cv_free(co->co_rangecv_low);
+	co->co_rangecv_low = NULL;
+    }
+    if (co->co_rangecv_high){
+	cv_free(co->co_rangecv_high);
+	co->co_rangecv_high = NULL;
     }
     if (co->co_choice){
 	free(co->co_choice);

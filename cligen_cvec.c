@@ -78,17 +78,17 @@ cvec_new(int len)
     return vr;
 }
 
-/*! Free a cvec
+/*! Free a cligen  variable vector (cvec)
  *
- * Typically done internally after a call to a callback, the callback should not free
- * but needs to copy if it wants to use a variable.
- * The cvec is typically created by cvec_match.
+ * Reset and free a cligen vector as previously created by cvec_new(). this includes
+ * freeing all cv:s that the cvec consists of.
+ * @param  cvec    Number of cv elements. Can be zero and elements added incrementally.
  */
 int
-cvec_free(cvec *vr)
+cvec_free(cvec *cvec)
 {
-    cvec_reset(vr);
-    free(vr);
+    cvec_reset(cvec);
+    free(cvec);
     return 0;
 }
 

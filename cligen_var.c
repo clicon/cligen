@@ -1693,6 +1693,7 @@ cv_dec64_print(cg_var *cv, char *s0, int *s0len)
  * Typically used by external code when transforming cgv:s.
  * Note, for strings, the length returned is _excluding_ the null byte, but the length
  * in supplied in the argument list is _including_ the null byte.
+ * See cv_print  which also prints a CV but to a file
  */
 int
 cv2str(cg_var *cv, char *str, size_t size)
@@ -1811,9 +1812,10 @@ cv2str(cg_var *cv, char *str, size_t size)
     return len;
 }
 
-/*! Like cv2str, but allocate a string with right length.
+/*! Print value of CLIgen variable using printf style formats into a new string
  *
  * The string should be freed after use.
+ * See also cv2str
  */
 char *
 cv2str_dup(cg_var *cv)
@@ -1835,7 +1837,7 @@ cv2str_dup(cg_var *cv)
 
 /*! Pretty print cligen variable value to a file
  *
- * Same as cv2str but on file
+ * See also cv2str which also prints a CV but to a string
  */
 int
 cv_print(FILE *f, cg_var *cv)
@@ -2167,16 +2169,10 @@ cv_parse(char *str, cg_var *cv)
     return 0;
 }
 
-static int
-cv_validate_range(int64_t i, int64_t low, int64_t high, char **reason)
-{
-    if (i < low || i > high) {
-	if (reason)
-	    *reason = cligen_reason("Number out of range: %d", i);
-	return 0; /* No match */
-    }
-    return 1; /* OK */
-}
+
+#define range_check(i, rmin, rmax, type)       \
+    (rmin && ((i) < cv_##type##_get(rmin))) || \
+    (rmax && ((i) > cv_##type##_get(rmax))))
 
 /*! Validate cligen variable cv using the spec in cs.
  *
@@ -2198,44 +2194,84 @@ cv_validate(cg_var *cv, cg_varspec *cs, char **reason)
 
     switch (cs->cgs_vtype){
     case CGV_INT8:
-	i = cv_int8_get(cv);
-	if (cs->cgs_range)
-	    retval = cv_validate_range(i, cs->cgs_range_low, cs->cgs_range_high, reason);
+	if (cs->cgs_range){
+	    i = cv_int8_get(cv);
+	    if (range_check(i, cs->cgs_rangecv_low, cs->cgs_rangecv_high, int8){
+		    if (reason)
+			*reason = cligen_reason("Number out of range: %ld", i);
+		    retval = 0; /* No match */
+		}
+	}
 	break;
     case CGV_INT16:
-	i = cv_int16_get(cv);
-	if (cs->cgs_range)
-	    retval = cv_validate_range(i, cs->cgs_range_low, cs->cgs_range_high, reason);
+	if (cs->cgs_range){
+	    i = cv_int16_get(cv);
+	    if (range_check(i, cs->cgs_rangecv_low, cs->cgs_rangecv_high, int16){
+		    if (reason)
+			*reason = cligen_reason("Number out of range: %ld", i);
+		    retval = 0; /* No match */
+		}
+	}
 	break;
     case CGV_INT32:
-	i = cv_int32_get(cv);
-	if (cs->cgs_range)
-	    retval = cv_validate_range(i, cs->cgs_range_low, cs->cgs_range_high, reason);
+	if (cs->cgs_range){
+	    i = cv_int32_get(cv);
+	    if (range_check(i, cs->cgs_rangecv_low, cs->cgs_rangecv_high, int32){
+		    if (reason)
+			*reason = cligen_reason("Number out of range: %ld", i);
+		    retval = 0; /* No match */
+		}
+	}
 	break;
     case CGV_INT64:
-	i = cv_int64_get(cv);
-	if (cs->cgs_range)
-	    retval = cv_validate_range(i, cs->cgs_range_low, cs->cgs_range_high, reason);
+	if (cs->cgs_range){
+	    i = cv_int64_get(cv);
+	    if (range_check(i, cs->cgs_rangecv_low, cs->cgs_rangecv_high, int64){
+		    if (reason)
+			*reason = cligen_reason("Number out of range: %ld", i);
+		    retval = 0; /* No match */
+		}
+	}
 	break;
     case CGV_UINT8:
-	u = cv_uint8_get(cv);
-	if (cs->cgs_range)
-	    retval = cv_validate_range(u, cs->cgs_range_low, cs->cgs_range_high, reason);
+	if (cs->cgs_range){
+	    u = cv_uint8_get(cv);
+	    if (range_check(u, cs->cgs_rangecv_low, cs->cgs_rangecv_high, uint8){
+		    if (reason)
+			*reason = cligen_reason("Number out of range: %lu", u);
+		    retval = 0; /* No match */
+		}
+	}
 	break;
     case CGV_UINT16:
-	u = cv_uint16_get(cv);
-	if (cs->cgs_range)
-	    retval = cv_validate_range(u, cs->cgs_range_low, cs->cgs_range_high, reason);
+	if (cs->cgs_range){
+	    u = cv_uint16_get(cv);
+	    if (range_check(u, cs->cgs_rangecv_low, cs->cgs_rangecv_high, uint16){
+		    if (reason)
+			*reason = cligen_reason("Number out of range: %lu", u);
+		    retval = 0; /* No match */
+		}
+	}
 	break;
     case CGV_UINT32:
-	u = cv_uint32_get(cv);
-	if (cs->cgs_range)
-	    retval = cv_validate_range(u, cs->cgs_range_low, cs->cgs_range_high, reason);
+	if (cs->cgs_range){
+	    u = cv_uint32_get(cv);
+	    if (range_check(u, cs->cgs_rangecv_low, cs->cgs_rangecv_high, uint32){
+		    if (reason)
+			*reason = cligen_reason("Number out of range: %lu", u);
+		    retval = 0; /* No match */
+		}
+	}
 	break;
     case CGV_UINT64:
-	u = cv_uint64_get(cv);
-	if (cs->cgs_range)
-	    retval = cv_validate_range(u, cs->cgs_range_low, cs->cgs_range_high, reason);
+	if (cs->cgs_range){
+	    u = cv_uint64_get(cv);
+	    if (range_check(u, cs->cgs_rangecv_low, cs->cgs_rangecv_high, uint64){
+		    if (reason)
+			*reason = cligen_reason("Number out of range: %lu", u);
+		    retval = 0; /* No match */
+		}
+	}
 	break;
     case CGV_DEC64:
 	if (cv_dec64_n_get(cv) != cs->cgs_dec64_n){
@@ -2252,14 +2288,12 @@ cv_validate(cg_var *cv, cg_varspec *cs, char **reason)
     case CGV_STRING:
 	str = cv_string_get(cv);
 	if (cs->cgs_range){
-	    i = strlen(str);
-	    if (i < cs->cgs_range_low || i > cs->cgs_range_high) {
-		if (reason)
-		    *reason = cligen_reason("Length of string is %d, should be in range [%d:%d]", 
-					    i, cs->cgs_range_low, cs->cgs_range_high);
-		retval = 0; /* No match */
-		break;
-	    }
+	    u = strlen(str);
+	    if (range_check(u, cs->cgs_rangecv_low, cs->cgs_rangecv_high, uint64){
+		    if (reason)
+			*reason = cligen_reason("Number out of range: %lu", u);
+		    retval = 0; /* No match */
+		}
 	}
 	if (cs->cgs_regex != NULL){
 	    if ((retval = match_regexp(cv_string_get(cv), cs->cgs_regex)) < 0)

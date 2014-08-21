@@ -50,6 +50,7 @@ static int pt_print(FILE *f, parse_tree pt, int level, int brief);
  * and no comments.
  * Example, a string variable with name foo is printed as \<foo>
  * Used as help during completion, syntax prints, etc.
+ * XXX: And it does not honor len properly
  *
  * @param co   [in]    cligen object from where to print
  * @param cmd  [out]   string to print to
@@ -73,19 +74,21 @@ cov_print(cg_obj *co, char *cmd, int len, int brief)
 	else{
 	    snprintf(cmd, len, "%c%s:%s", VARIABLE_PRE, co->co_command, cv_type2str(co->co_vtype));
 
-	    cmd2 = strdup(cmd);
 	    if (co->co_range){
-		if (cv_isint(co->co_vtype)){
-		    snprintf(cmd, len, "%s range[%" PRId64 ":%" PRId64 "]", 
-			     cmd2, co->co_range_low, co->co_range_high);
+		if (cv_isint(co->co_vtype))
+		    strncat(cmd, " range[", len);
+		else
+		    strncat(cmd, " length[", len);
+		if (co->co_rangecv_low){
+		    cv2str(co->co_rangecv_low, cmd+strlen(cmd), len);
+		    strncat(cmd, ":", len);
 		}
-		else{
-		    snprintf(cmd, len, "%s length[%" PRId64 ":%" PRId64 "]", 
-			     cmd2, co->co_range_low, co->co_range_high);
+		if (co->co_rangecv_high){
+		    cv2str(co->co_rangecv_high, cmd+strlen(cmd), len);
 		}
-		free(cmd2);
-		cmd2 = strdup(cmd);
+		strncat(cmd, "]", len);
 	    }
+	    cmd2 = strdup(cmd);
 	    if (co->co_expand_fn_str){
 		if (co->co_expand_fn_arg)
 		    cv = cv2str_dup(co->co_expand_fn_arg);

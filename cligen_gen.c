@@ -394,6 +394,12 @@ co_copy(cg_obj *co, cg_obj *parent, cg_obj **conp)
 		fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
 		return -1;
 	    }
+	if (co->co_rangecv_low)
+	    if ((con->co_rangecv_low = cv_dup(co->co_rangecv_low)) == NULL)
+		return -1;
+	if (co->co_rangecv_high)
+	    if ((con->co_rangecv_high = cv_dup(co->co_rangecv_high)) == NULL)
+		return -1;
 	if (co->co_expand_fn_arg)
 	    if ((con->co_expand_fn_arg = cv_dup(co->co_expand_fn_arg)) == NULL)
 		return -1;
@@ -524,7 +530,9 @@ co_eq(cg_obj *co1, cg_obj *co2)
 
     /* eq == 0 means equal */
     eq = !(co1->co_type == co2->co_type);
-    if (eq){ /* special case, keywords */
+    if (eq){ 
+	/* One is command and one variable, but need to check special case, 
+	   if the variable is a KEYWORD, then it can be eq to a command. */
 	if (co1->co_type == CO_COMMAND && 
 	    co2->co_vtype == CGV_STRING && 
 	    iskeyword(co2)){
@@ -534,10 +542,10 @@ co_eq(cg_obj *co1, cg_obj *co2)
 	else
 	if (co2->co_type == CO_COMMAND && 
 	    co1->co_vtype == CGV_STRING && 
-	    iskeyword(co1))
+	    iskeyword(co1)){
 	    eq = strcmp(co2->co_command, co1->co_keyword);
-	else
-	    eq = str_cmp(co1->co_command, co2->co_command);
+	    goto done;
+	}
 	goto done;
     }
     switch (co1->co_type){
@@ -574,22 +582,30 @@ co_eq(cg_obj *co1, cg_obj *co2)
 	}
 	/* Examine int and range */
 	if (cv_isint(co1->co_vtype)) {
-	    if (co1->co_range == co2->co_range){
-		eq = 0;
+	    if ((eq = co1->co_range - co2->co_range) != 0)
+		goto done;
+	    /* either both 0 or both 1 */
+	    if (co1->co_range){ /* both ranges set */
+		if (co1->co_rangecv_low && co2->co_rangecv_low){
+		    if ((eq = cv_cmp(co1->co_rangecv_low, co2->co_rangecv_low)) != 0)
+			goto done;
+		}
+		else
+		    if (co1->co_rangecv_low || co2->co_rangecv_low){
+			eq = 1;
+			goto done;
+		    }
+		if (co1->co_rangecv_high && co2->co_rangecv_high){
+		    if ((eq = cv_cmp(co1->co_rangecv_high, co2->co_rangecv_high)) != 0)
+			goto done;
+		}
+		else
+		    if (co1->co_rangecv_high || co2->co_rangecv_high){
+			eq = 1;
+			goto done;
+		    }
 		goto done;
 	    }
-	    else
-		if (co1->co_range){ /* both ranges set */
-		    if ((co1->co_range_low == co2->co_range_low) &&
-			(co1->co_range_high == co2->co_range_high)){
-			    eq = 0;
-			    goto done;
-			}
-		    if ((eq = co2->co_range_low - co1->co_range_low) != 0)
-			goto done;
-		    eq = co2->co_range_high - co1->co_range_high;
-		    goto done;
-		}
 	}
 	break;
     }
@@ -728,6 +744,10 @@ co_free(cg_obj *co, int recursive)
 	    free(co->co_choice);
 	if (co->co_regex)
 	    free(co->co_regex);
+	if (co->co_rangecv_low)
+	    cv_free(co->co_rangecv_low);
+	if (co->co_rangecv_high)
+	    cv_free(co->co_rangecv_high);
     }
 #ifdef notyet
     if (co->co_cv)
