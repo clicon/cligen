@@ -694,23 +694,17 @@ parse_int32(char *str, int32_t *val, char **reason)
 
 }
 
-/*! Parse an int64 number and check for errors
- * @param[in]  str     String containing number to parse
- * @param[out] val     Value on success
- * @param[out] reason  Error string on failure
- * @retval -1 : Error (fatal), with errno set to indicate error
- * @retval  0 : Validation not OK, malloced reason is returned
- * @retval  1 : Validation OK, value returned in val parameter
- */
+
+/*! Like parse_int64 with specified base */
 int
-parse_int64(char *str, int64_t *val, char **reason)
+parse_int64_base(char *str, int base, int64_t *val, char **reason)
 {
     int64_t i;
     char    *ep;
     int      retval = -1;
 
     errno = 0;
-    i = strtoll(str, &ep, 0);
+    i = strtoll(str, &ep, base);
     if (str[0] == '\0' || *ep != '\0'){
 	if (reason != NULL)
 	    if ((*reason = cligen_reason("%s is not a number", str)) == NULL){
@@ -741,6 +735,20 @@ parse_int64(char *str, int64_t *val, char **reason)
     retval = 1; /* OK */
   done:
     return retval;
+}
+
+/*! Parse an int64 number and check for errors
+ * @param[in]  str     String containing number to parse
+ * @param[out] val     Value on success
+ * @param[out] reason  Error string on failure
+ * @retval -1 : Error (fatal), with errno set to indicate error
+ * @retval  0 : Validation not OK, malloced reason is returned
+ * @retval  1 : Validation OK, value returned in val parameter
+ */
+int
+parse_int64(char *str, int64_t *val, char **reason)
+{
+    return parse_int64_base(str, 0, val, reason);
 }
 
 
@@ -898,6 +906,13 @@ parse_uint64(char *str, uint64_t *val, char **reason)
 }
 
 /*! Parse a decimal64 value
+ * @param[in]  str        String to parse
+ * @param[in]  n          number of decimals
+ * @param[out] dec64_i    64-bit number
+ * @param[out] reason     if given, malloced err string (retval=0), needs freeing
+ * @retval -1             fatal error
+ * @retval 0              parse error, reason in reason
+ * @retval 1              OK
  */
 static int
 parse_dec64(char *str, uint8_t n, int64_t *dec64_i, char **reason)
@@ -922,7 +937,7 @@ parse_dec64(char *str, uint8_t n, int64_t *dec64_i, char **reason)
 
     if (n<=0 || n>18){
 	if (reason != NULL)
-	    if ((*reason = cligen_reason("%s: %d fraction-digits given but should be in interval [1:18]", __FUNCTION__, n)) == NULL){
+	    if ((*reason = cligen_reason("%s: fraction-digit=%d given but should be in interval [1:18]", __FUNCTION__, n)) == NULL){
 		retval = -1; /* malloc */
 		goto done;
 	    }
@@ -959,12 +974,12 @@ parse_dec64(char *str, uint8_t n, int64_t *dec64_i, char **reason)
     }
     /* Fill out with trailing zeroes if any 
        | s1 | s2 |
-      
      */
     for (i=len1+len2; i<len1+n; i++)
 	ss[i] = '0';
     ss[len1+n] = '\0'; /* trailing zero */
-    if ((retval = parse_int64(ss, dec64_i, reason)) != 1)
+    /* XXX: remove any beginning zeros */
+    if ((retval = parse_int64_base(ss, 10, dec64_i, reason)) != 1)
 	goto done;
   done:
     if (s0)
@@ -1654,31 +1669,44 @@ cv_len(cg_var *cv)
 }
 
 
-/*! print a dec64 cv to a string 
+/*! Print a dec64 cv to a string 
  *
- * @param  cv   A cligen variable of type CGV_DEC64 to print
- * @param  s0   A string that must hold the dec64
- * @param  len  A string that must hold the dec64
- * @retval 0    OK
- * @retval -1   Error with error msg on stderr. 
+ * @param[in]     cv   A cligen variable of type CGV_DEC64 to print
+ * @param[out]    s0   A string that will hold the dec64
+ * @param[inout]  len  A string that holds available free space in s0
+ * @retval        0    OK
+ * @retval        -1   Error with error msg on stderr. 
  */
 static int
 cv_dec64_print(cg_var *cv, char *s0, int *s0len)
 {
-    int     i;
-    uint8_t n = cv->var_dec64_n;;
-    int     len;
+    int      i;
+    uint8_t  n = cv->var_dec64_n;;
+    int      len;
+    int64_t di;
 
     assert(0<n && n<19);
-    len = snprintf(s0, *s0len, "%" PRId64, cv_dec64_i_get(cv));
+    /* Convert negative numbers to positive and prepend a '-' at the end */
+    di = cv_dec64_i_get(cv);
+    if (di<0)
+	di = -di;
+    len = snprintf(s0, *s0len, "%0*" PRId64, n+1, di);
+    assert(len>=n);
     *s0len -= len;
     /* Shift fraction digits right, including null character. 
-     * eg:  xyz --> x.yz (if n==2)
+     * eg:  xyz --> x.yz (if n==2) 
      */
     for (i=len; i>=len-n; i--) 
 	s0[i+1] = s0[i];
     (*s0len)--;
     s0[len-n] = '.';
+    /* prepend a '-' if the number is negative*/    
+    if (cv_dec64_i_get(cv)<0){ 
+	for (i=len; i>=0; i--)
+	    s0[i+1] = s0[i];
+	s0[0] = '-';
+	(*s0len)--;
+    }
     return 0;
 }
 
@@ -2171,8 +2199,8 @@ cv_parse(char *str, cg_var *cv)
 
 
 #define range_check(i, rmin, rmax, type)       \
-    (rmin && ((i) < cv_##type##_get(rmin))) || \
-    (rmax && ((i) > cv_##type##_get(rmax))))
+    ((rmin && (i) < cv_##type##_get(rmin)) || \
+     (rmax && (i) > cv_##type##_get(rmax)))
 
 /*! Validate cligen variable cv using the spec in cs.
  *
@@ -2196,81 +2224,89 @@ cv_validate(cg_var *cv, cg_varspec *cs, char **reason)
     case CGV_INT8:
 	if (cs->cgs_range){
 	    i = cv_int8_get(cv);
-	    if (range_check(i, cs->cgs_rangecv_low, cs->cgs_rangecv_high, int8){
-		    if (reason)
-			*reason = cligen_reason("Number out of range: %ld", i);
-		    retval = 0; /* No match */
-		}
+	    if (range_check(i, cs->cgs_rangecv_low, cs->cgs_rangecv_high, int8)){
+		if (reason)
+		    *reason = cligen_reason("Number out of range: %ld", i);
+		retval = 0; /* No match */
+		break;
+	    }
 	}
 	break;
     case CGV_INT16:
 	if (cs->cgs_range){
 	    i = cv_int16_get(cv);
-	    if (range_check(i, cs->cgs_rangecv_low, cs->cgs_rangecv_high, int16){
-		    if (reason)
-			*reason = cligen_reason("Number out of range: %ld", i);
-		    retval = 0; /* No match */
-		}
+	    if (range_check(i, cs->cgs_rangecv_low, cs->cgs_rangecv_high, int16)){
+		if (reason)
+		    *reason = cligen_reason("Number out of range: %ld", i);
+		retval = 0; /* No match */
+		break;
+	    }
 	}
 	break;
     case CGV_INT32:
 	if (cs->cgs_range){
 	    i = cv_int32_get(cv);
-	    if (range_check(i, cs->cgs_rangecv_low, cs->cgs_rangecv_high, int32){
-		    if (reason)
-			*reason = cligen_reason("Number out of range: %ld", i);
-		    retval = 0; /* No match */
-		}
+	    if (range_check(i, cs->cgs_rangecv_low, cs->cgs_rangecv_high, int32)){
+		if (reason)
+		    *reason = cligen_reason("Number out of range: %ld", i);
+		retval = 0; /* No match */
+		break;
+	    }
 	}
 	break;
     case CGV_INT64:
 	if (cs->cgs_range){
 	    i = cv_int64_get(cv);
-	    if (range_check(i, cs->cgs_rangecv_low, cs->cgs_rangecv_high, int64){
-		    if (reason)
-			*reason = cligen_reason("Number out of range: %ld", i);
-		    retval = 0; /* No match */
-		}
+	    if (range_check(i, cs->cgs_rangecv_low, cs->cgs_rangecv_high, int64)){
+		if (reason)
+		    *reason = cligen_reason("Number out of range: %ld", i);
+		retval = 0; /* No match */
+		break;
+	    }
 	}
 	break;
     case CGV_UINT8:
 	if (cs->cgs_range){
 	    u = cv_uint8_get(cv);
-	    if (range_check(u, cs->cgs_rangecv_low, cs->cgs_rangecv_high, uint8){
-		    if (reason)
-			*reason = cligen_reason("Number out of range: %lu", u);
-		    retval = 0; /* No match */
-		}
+	    if (range_check(u, cs->cgs_rangecv_low, cs->cgs_rangecv_high, uint8)){
+		if (reason)
+		    *reason = cligen_reason("Number out of range: %lu", u);
+		retval = 0; /* No match */
+		break;
+	    }
 	}
 	break;
     case CGV_UINT16:
 	if (cs->cgs_range){
 	    u = cv_uint16_get(cv);
-	    if (range_check(u, cs->cgs_rangecv_low, cs->cgs_rangecv_high, uint16){
-		    if (reason)
-			*reason = cligen_reason("Number out of range: %lu", u);
-		    retval = 0; /* No match */
-		}
+	    if (range_check(u, cs->cgs_rangecv_low, cs->cgs_rangecv_high, uint16)){
+		if (reason)
+		    *reason = cligen_reason("Number out of range: %lu", u);
+		retval = 0; /* No match */
+		break;
+	    }
 	}
 	break;
     case CGV_UINT32:
 	if (cs->cgs_range){
 	    u = cv_uint32_get(cv);
-	    if (range_check(u, cs->cgs_rangecv_low, cs->cgs_rangecv_high, uint32){
-		    if (reason)
-			*reason = cligen_reason("Number out of range: %lu", u);
-		    retval = 0; /* No match */
-		}
+	    if (range_check(u, cs->cgs_rangecv_low, cs->cgs_rangecv_high, uint32)){
+		if (reason)
+		    *reason = cligen_reason("Number out of range: %lu", u);
+		retval = 0; /* No match */
+		break;
+	    }
 	}
 	break;
     case CGV_UINT64:
 	if (cs->cgs_range){
 	    u = cv_uint64_get(cv);
-	    if (range_check(u, cs->cgs_rangecv_low, cs->cgs_rangecv_high, uint64){
-		    if (reason)
-			*reason = cligen_reason("Number out of range: %lu", u);
-		    retval = 0; /* No match */
-		}
+	    if (range_check(u, cs->cgs_rangecv_low, cs->cgs_rangecv_high, uint64)){
+		if (reason)
+		    *reason = cligen_reason("Number out of range: %lu", u);
+		retval = 0; /* No match */
+		break;
+	    }
 	}
 	break;
     case CGV_DEC64:
@@ -2280,20 +2316,29 @@ cv_validate(cg_var *cv, cg_varspec *cs, char **reason)
 					cv->var_dec64_n, cs->cgs_dec64_n);
 	    retval = 0;
 	}
-#ifdef notyet 
-	/* Validate range for dec64 */
-	i = cv_dec64_i_get(cv);
-#endif
+	if (cs->cgs_range){
+	    i = cv_int64_get(cv);
+	    if (range_check(i, cs->cgs_rangecv_low, cs->cgs_rangecv_high, int64)){
+		if (reason){
+		    char *s = cv2str_dup(cv);
+		    *reason = cligen_reason("Number out of range: %s", s);
+		    free(s);
+		}
+		retval = 0; /* No match */
+		break;
+	    }
+	}
 	break;
     case CGV_STRING:
 	str = cv_string_get(cv);
 	if (cs->cgs_range){
 	    u = strlen(str);
-	    if (range_check(u, cs->cgs_rangecv_low, cs->cgs_rangecv_high, uint64){
-		    if (reason)
-			*reason = cligen_reason("Number out of range: %lu", u);
-		    retval = 0; /* No match */
-		}
+	    if (range_check(u, cs->cgs_rangecv_low, cs->cgs_rangecv_high, uint64)){
+		if (reason)
+		    *reason = cligen_reason("String length not within limits: %lu", u);
+		retval = 0; /* No match */
+		break;
+	    }
 	}
 	if (cs->cgs_regex != NULL){
 	    if ((retval = match_regexp(cv_string_get(cv), cs->cgs_regex)) < 0)

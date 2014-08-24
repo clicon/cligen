@@ -125,7 +125,6 @@ stripdup(char *s0)
 <VARIABLE>\n              { _YA->ya_linenum++; }
 <VARIABLE>\>              { BEGIN(INITIAL); return *yytext; }
 <VARIABLE>\:              { return *yytext; }
-<VARIABLE>\-              { return *yytext; }
 <VARIABLE>\|              { return *yytext; }
 <VARIABLE>\(              { return *yytext; }
 <VARIABLE>\)              { return *yytext; }
@@ -139,8 +138,9 @@ stripdup(char *s0)
 <VARIABLE>choice          { return V_CHOICE; }
 <VARIABLE>keyword         { return V_KEYWORD; }
 <VARIABLE>regexp          { return V_REGEXP; }
+<VARIABLE>[-+]?[0-9]+\.[0-9]+ { cligen_parselval.string = strdup(yytext); return DECIMAL;}
 <VARIABLE>[-+]?[0-9]+     { cligen_parselval.string = strdup(yytext); return NUMBER;}
-<VARIABLE>([^ \t\n>:\-\|\"\(\)\[\]]|\\.)+ { 
+<VARIABLE>([^ \t\n>:\|\"\(\)\[\]]|\\.)+ { 
                                  cligen_parselval.string = strdup(yytext);
                                  return NAME; }
 

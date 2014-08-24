@@ -173,6 +173,7 @@ char *cv_urlpasswd_set(cg_var *cv, char *s0);
 
 int parse_uint8(char *str, uint8_t *val, char **reason);
 int parse_int64(char *str, int64_t *val, char **reason);
+int parse_int64_base(char *str, int base, int64_t *val, char **reason);
 int parse_uint64(char *str, uint64_t *val, char **reason);
 int str2urlproto(char *str);
 int str2uuid(char *in, uuid_t u);

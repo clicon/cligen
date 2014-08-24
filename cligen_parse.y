@@ -34,12 +34,14 @@
 %token DQP          /* ") */
 %token PDQ          /* (" */
 
-%token <string> NAME /* in variables: <NAME type:NAME> */
-%token <string> NUMBER /* In variables */
+%token <string> NAME    /* in variables: <NAME type:NAME> */
+%token <string> NUMBER  /* In variables */
+%token <string> DECIMAL /* In variables */
 %token <string> CHAR
 
 %type <string> charseq
 %type <string> choices
+%type <string> numdec
 
 %lex-param     {void *_ya} /* Add this argument to parse() and lex() function */
 %parse-param   {void *_ya}
@@ -339,8 +341,10 @@ cgy_var_post(struct cligen_parse_yacc_arg *ya)
     cg_obj *co;  /* new obj/sister */
     cg_obj *cv = ya->ya_var;
 
+#if 0
     if (cv->co_vtype == CGV_ERR) /* unassigned */
 	cv->co_vtype = cv_str2type(cv->co_command);
+#endif
     if (debug)
 	fprintf(stderr, "%s: cmd:%s vtype:%d\n", __FUNCTION__, 
 		cv->co_command,
@@ -720,22 +724,27 @@ cg_regexp(struct cligen_parse_yacc_arg *ya, char *rx)
     return 0;
 }
 
-/* <x:int length[min:max]> or <x:int length[max]> */
+/*! Given an optional min and a max, create low and high limits on cv values
+ * Supported for ints, decimal64 and strings.
+ *  <x:int length[min:max]> or <x:int length[max]> 
+ * NOTE: decimal64 fraction-digits must be given before range:
+ *   <x:decimal64 fraction-digits:4 range[20.0]>
+ * if you want any other fraction-digit than 2
+ */
 static int
-cg_range(struct cligen_parse_yacc_arg *ya, char *minstr, char *maxstr)
+cg_minmax(struct cligen_parse_yacc_arg *ya, 
+	  char                         *minstr, 
+	  char                         *maxstr,
+	  cg_obj                       *yv,
+	  enum cv_type                  cvtype)
 {
     int     retval = -1;
     char   *reason = NULL;
-    cg_obj *yv;
     cg_var *cv;
     int     cvret;
 
-    if ((yv = ya->ya_var) == NULL){
-	fprintf(stderr, "No var obj");
-	goto done;
-    }
     if (minstr != NULL){
-	if ((cv = cv_new(yv->co_vtype)) == NULL){
+	if ((cv = cv_new(cvtype)) == NULL){
 	    fprintf(stderr, "cv_new %s\n", strerror(errno));
 	    goto done;
 	}
@@ -743,6 +752,8 @@ cg_range(struct cligen_parse_yacc_arg *ya, char *minstr, char *maxstr)
 	    fprintf(stderr, "cv_name_set %s\n", strerror(errno));
 	    goto done;
 	}
+	if (yv->co_vtype == CGV_DEC64) /* XXX: Seems misplaced? / too specific */
+	    cv_dec64_n_set(cv, yv->co_dec64_n);
 	if ((cvret = cv_parse1(minstr, cv, &reason)) < 0){
 	    fprintf(stderr, "cv_parse1 %s\n", strerror(errno));
 	    goto done;
@@ -754,7 +765,7 @@ cg_range(struct cligen_parse_yacc_arg *ya, char *minstr, char *maxstr)
 	}
 	yv->co_rangecv_low = cv;
     }
-    if ((cv = cv_new(yv->co_vtype)) == NULL){
+    if ((cv = cv_new(cvtype)) == NULL){
 	fprintf(stderr, "cv_new %s\n", strerror(errno));
 	goto done;
     }
@@ -762,6 +773,8 @@ cg_range(struct cligen_parse_yacc_arg *ya, char *minstr, char *maxstr)
 	fprintf(stderr, "cv_name_set %s\n", strerror(errno));
 	goto done;
     }
+    if (yv->co_vtype == CGV_DEC64) /* XXX: Seems misplaced? / too specific */
+	cv_dec64_n_set(cv, yv->co_dec64_n);
     if ((cvret = cv_parse1(maxstr, cv, &reason)) < 0){
 	fprintf(stderr, "cv_parse1 %s\n", strerror(errno));
 	goto done;
@@ -781,12 +794,30 @@ cg_range(struct cligen_parse_yacc_arg *ya, char *minstr, char *maxstr)
 
 /* <x:string length[min:max]> 
    Note that the co_range structure fields are re-used for string length restrictions.
-   XXX: do same as cg_range
+   but the range type is uint64, not depending on cv type as int:s
  */
 static int
 cg_length(struct cligen_parse_yacc_arg *ya, char *minstr, char *maxstr)
 {
-    return cg_range(ya, minstr, maxstr);
+    cg_obj *yv;
+
+    if ((yv = ya->ya_var) == NULL){
+	fprintf(stderr, "No var obj");
+	return -1;
+    }
+    return cg_minmax(ya, minstr, maxstr, yv, CGV_UINT64);
+}
+
+static int
+cg_range(struct cligen_parse_yacc_arg *ya, char *minstr, char *maxstr)
+{
+    cg_obj *yv;
+
+    if ((yv = ya->ya_var) == NULL){
+	fprintf(stderr, "No var obj");
+	return -1;
+    }
+    return cg_minmax(ya, minstr, maxstr, yv, yv->co_vtype);
 }
 
 
@@ -939,21 +970,30 @@ cmd         : NAME { if (debug)fprintf(stderr, "cmd->NAME(%s)\n", $1);if (cgy_cm
                variable '>'  { if (cgy_var_post(_ya) < 0) YYERROR; }
             ;
 
-variable    : NAME { _YA->ya_var->co_command = $1;}
+variable    : NAME { 
+                _YA->ya_var->co_command = $1; 
+		_YA->ya_var->co_vtype = cv_str2type($1); }
             | NAME ':' NAME{ 
 		_YA->ya_var->co_command = $1; 
 		_YA->ya_var->co_vtype = cv_str2type($3); free($3);
 	       }
-            | NAME ' ' keypairs { _YA->ya_var->co_command = $1; }
+            | NAME ' ' { 
+		_YA->ya_var->co_command = $1; 
+		_YA->ya_var->co_vtype = cv_str2type($1); } 
+              keypairs
             | NAME ':' NAME ' ' { 
 		 _YA->ya_var->co_command = $1; 
-		 _YA->ya_var->co_vtype = cv_str2type($3); free($3); 
-               } keypairs
+		 _YA->ya_var->co_vtype = cv_str2type($3); free($3); } 
+              keypairs
             ;
 
 keypairs    : keypair 
             | keypairs ' ' keypair
             ;
+
+numdec     : NUMBER { $$ = $1; }
+           | DECIMAL 
+           ;
 
 keypair     : NAME '(' ')' { _YA->ya_var->co_expand_fn_str = $1; }
             | NAME '(' DQ DQ ')' {_YA->ya_var->co_expand_fn_str = $1; }
@@ -962,14 +1002,11 @@ keypair     : NAME '(' ')' { _YA->ya_var->co_expand_fn_str = $1; }
 		expand_arg(_ya, "string", $4);
 		free($4); 
 	      }
-            | V_RANGE '[' NUMBER ':' NUMBER ']' { 
+            | V_RANGE '[' numdec ':' numdec ']' { 
 		if (cg_range(_ya, $3, $5) < 0) YYERROR; free($3); free($5); 
 	      }
-            | V_RANGE '[' NUMBER ']' { 
+            | V_RANGE '[' numdec ']' { 
 		if (cg_range(_ya, NULL, $3) < 0) YYERROR; free($3); 
-	      }
-            | V_RANGE ':' NUMBER '-' NUMBER { 
-		if (cg_range(_ya, $3, $5) < 0) YYERROR; free($3); free($5); 
 	      }
             | V_LENGTH '[' NUMBER ':' NUMBER ']' { 
 		if (cg_length(_ya, $3, $5) < 0) YYERROR; free($3); free($5); 
