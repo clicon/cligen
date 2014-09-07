@@ -45,6 +45,7 @@
 struct cvec{
     cg_var         *vr_vec;  /* vector of CLIgen variables */
     int             vr_len;  /* length of vector */
+    char           *vr_name; /* name of cvec, can be NULL */
 };
 
 /*
@@ -82,7 +83,7 @@ cvec_new(int len)
  *
  * Reset and free a cligen vector as previously created by cvec_new(). this includes
  * freeing all cv:s that the cvec consists of.
- * @param  cvec    Number of cv elements. Can be zero and elements added incrementally.
+ * @param  cvec    The cligen variable vector
  */
 int
 cvec_free(cvec *cvec)
@@ -96,7 +97,7 @@ cvec_free(cvec *cvec)
  *
  * See also cvec_new()
  *
- * @param vr   the vector
+ * @param vr    The cligen variable vector
  * @param len  number of cv elements. Can be zero and elements added incrementally.
  */
 int
@@ -108,7 +109,9 @@ cvec_init(cvec *vr, int len)
     return 0;
 }
 
-/*! Like cvec_free but does not actually free the cvec.
+/*! Reset cligen variable vector resetting it to an initial state as returned by cvec_new
+ *
+ * See also cvec_free. But this function does not actually free the cvec.
  */
 int
 cvec_reset(cvec *vr)
@@ -119,6 +122,8 @@ cvec_reset(cvec *vr)
 	cv_reset(cv);
     if (vr->vr_vec)
 	free(vr->vr_vec);
+    if (vr->vr_name)
+	free(vr->vr_name);
     memset(vr, 0, sizeof(*vr));
     return 0;
 }
@@ -519,6 +524,38 @@ cvec_find_str(cvec *vr, char *name)
     return NULL;
 }
 
+/*! Get name of cligen variable vector
+ * @param  vr   A cligen variable vector
+ * @retval str  The name of the cvec as a string, can be NULL, no copy
+ */
+char *
+cvec_name_get(cvec *vr)
+{
+    return vr->vr_name;
+}
+
+/*! Allocate and set name of cligen variable vector, including NULL
+ * @param  vr     A cligen variable vector
+ * @param  name   A string that is copied and used as a cvec name, or NULL
+ * @retval str    The name of the cvec.
+ * The existing name, if any, is freed
+ */
+char *
+cvec_name_set(cvec *vr, char *name)
+{
+    char *s1 = NULL;
+
+    /* Duplicate name. Must be done before a free, in case name is part of the original */
+    if (name){
+	if ((s1 = strdup(name)) == NULL)
+	    return NULL; /* error in errno */
+    }
+    if (vr->vr_name != NULL)
+	free(vr->vr_name);
+    vr->vr_name = s1;
+    return s1; 
+}
+
 
 /*! Changes cvec find function behaviour, exclude keywords or include them.
  */
@@ -528,3 +565,4 @@ cv_exclude_keys(int status)
     excludekeys = status;
     return 0;
 }
+
