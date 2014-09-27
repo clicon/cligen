@@ -52,7 +52,7 @@ SRC		= cligen_gen.c cligen_handle.c cligen_var.c cligen_match.c \
 
 INCS		= cligen_var.h cligen_cvec.h cligen_gen.h cligen_handle.h \
 		  cligen_print.h cligen_read.h cligen_io.h cligen_expand.h \
-		  cligen_syntax.h cligen.h
+		  cligen_syntax.h cligen_buf.h cligen.h
 
 OBJS		= $(SRC:.c=@OBJ_SUFFIX@) 
 APPS		= cligen_hello cligen_file cligen_tutorial
