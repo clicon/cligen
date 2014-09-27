@@ -247,20 +247,15 @@ column_print(FILE *fout, int col, pt_vec pt, int min, int max, int level)
   return 0;
 }
 
-/*
- * show_multi
- * Show briefly the commands available (show no help)
+/*! Show briefly the commands available (show no help)
  * Typically called when TAB is pressed and there are multiple options.
- * IN:
- *   fout    This is where the output (help text) is shown.
- *   string  Input string to match
- *   pt      Vector of commands (array of cligen object pointers (cg_obj)
- *   pt_max  Length of the pt array
- * OUT:
- *   cvec      cligen variable vector containing vars/values pair for completion
- * RETURNS:
- *   0       OK
- *  -1       Error
+ * @param[in]  fout    This is where the output (help text) is shown.
+ * @param[in]  string  Input string to match
+ * @param[in]  pt      Vector of commands (array of cligen object pointers (cg_obj)
+ * @param[in]  pt_max  Length of the pt array
+ * @param[out] cvec    Cligen variable vector containing vars/values pair for completion
+ * @retval     0       OK
+ * @retval     -1      Error
  */
 static int
 show_multi(cligen_handle h, 
@@ -296,20 +291,15 @@ show_multi(cligen_handle h,
     return retval;
 }
 
-/*
- * show_multi_long
- * Show one row per command with help text for each command
+/*! Show one row per command with help text for each command
  * Typically called when a question mark is pressed
- * IN:
- *   h       cligen handle
- *   fout    This is where the output (help text) is shown.
- *   string  Input string to match
- *   pt      Parse tree
- * OUT:
- *   cvec      cligen variable vector containing vars/values pair for completion
- * RETURNS:
- *   0       OK
- *   -1      Error
+ * @param[in]   h       cligen handle
+ * @param[in]   fout    This is where the output (help text) is shown.
+ * @param[in]   string  Input string to match
+ * @param[in]   pt      Parse tree
+ * @param[out]  cvec    Cligen variable vector containing vars/values pair for completion
+ * @retval      0       OK
+ * @retval      -1      Error
  *
  * Example from JunOS
 # set interfaces ?

@@ -516,6 +516,11 @@ pt_expand_add(cg_obj *co, parse_tree ptn)
  *
  * This is wrapper for better type-checking of the mapper (str2fn) function. See 
  * cligen_str2fn for the underlying function (without type-checking).
+ * @param  pt      parse-tree. Recursively loop thru this
+ * @param  str2fn  Translator from strings to function pointers for expand variable
+ *         callbacks. 
+ * @param  fnarg   Function argument for expand callbacks (at evaluation time).
+ * See also cligen_str2fn
  */
 int
 cligen_expand_str2fn(parse_tree pt, expand_str2fn_t *str2fn, void *fnarg)

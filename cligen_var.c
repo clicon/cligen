@@ -988,7 +988,7 @@ parse_dec64(char *str, uint8_t n, int64_t *dec64_i, char **reason)
 }
 
 static int
-parse_bool(char *str, char *val, char **reason)
+parse_bool(char *str, uint8_t *val, char **reason)
 {
     int i;
     int retval = 1;

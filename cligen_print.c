@@ -35,6 +35,7 @@
 #include "cligen_cvec.h"
 #include "cligen_gen.h"
 #include "cligen_print.h"
+#include "cligen_buf.h"
 
 #define VARIABLE_PRE  '<'
 #define VARIABLE_POST '>'
@@ -51,6 +52,7 @@ static int pt_print(FILE *f, parse_tree pt, int level, int brief);
  * Example, a string variable with name foo is printed as \<foo>
  * Used as help during completion, syntax prints, etc.
  * XXX: And it does not honor len properly
+ * XXX: In transformation of using cbufs
  *
  * @param co   [in]    cligen object from where to print
  * @param cmd  [out]   string to print to
@@ -60,8 +62,13 @@ static int pt_print(FILE *f, parse_tree pt, int level, int brief);
 int 
 cov_print(cg_obj *co, char *cmd, int len, int brief)
 {
-    char          *cmd2, *cv;
+    int            retval = -1;
+    char          *cmd2;
+    char          *cv;
+    cbuf          *cb = NULL;
 
+    if ((cb = cbuf_new()) == NULL){
+    }
     if (co->co_choice){
 	if (strchr(co->co_choice, '|'))
 	    snprintf(cmd, len, "(%s)", co->co_choice);
@@ -111,8 +118,11 @@ cov_print(cg_obj *co, char *cmd, int len, int brief)
 	    free(cmd2);
 	}
     }
-
-    return 0;
+    retval = 0;
+//  done:
+    if (cb)
+	cbuf_free(cb);
+    return retval;
 }
 
 /* is a terminal command, and therefore should be printed with a ';' */

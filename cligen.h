@@ -43,6 +43,7 @@ typedef void *cligen_handle; /* API */
  */
 #define CLIGEN_COMPAT_INT 1
 
+#include <cligen/cligen_buf.h>
 #include <cligen/cligen_var.h>
 #include <cligen/cligen_cvec.h>
 #include <cligen/cligen_gen.h>

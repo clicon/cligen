@@ -34,7 +34,7 @@ struct cg_var {
     char         var_const; /* Set if the variable is a keyword */
     char         var_flag ; /* Application-specific flags, no semantics by cligen */
     union {
-	char	 varu_bool;
+	uint8_t	 varu_bool;
 	int8_t	 varu_int8;
 	int16_t	 varu_int16;
 	int32_t	 varu_int32;

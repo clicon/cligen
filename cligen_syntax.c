@@ -181,7 +181,7 @@ cligen_parse_file(cligen_handle h,
  * parse-tree nodes. Later, at evaluation time, the actual functions (f, g) can be
  * called when evaluating/interpreting the syntax.
  *
- * @param  pt      parse-tree. Loop thru this
+ * @param  pt      parse-tree. Recursively loop thru this
  * @param  str2fn1 Translator from strings to function pointers for command callbacks. 
  *         E.g. for g() above.
  * @param  fnarg1  Function argument for command callbacks (at evaluation time).
@@ -247,6 +247,11 @@ cligen_str2fn(parse_tree pt,
  *
  * This is wrapper for better type-checking of the mapper (str2fn) function. See 
  * cligen_str2fn for the underlying function (without type-checking).
+
+ * @param  pt      parse-tree. Recursively loop thru this
+ * @param  str2fn  Translator from strings to function pointers for command callbacks. 
+ * @param  fnarg   Function argument for command callbacks (at evaluation time).
+ * See also cligen_str2fn
  */
 int
 cligen_callback_str2fn(parse_tree pt, cg_str2fn_t *str2fn, void *fnarg)
