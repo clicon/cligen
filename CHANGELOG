@@ -50,10 +50,17 @@ Cligen variable vectors (cvec) extended with 'name'. New functions:
 	char *cvec_name_get(cvec *vr);
 	char *cvec_name_set(cvec *vr, char *name);
 
+A new module: cligen_buf.[ch] is added. This adds a simple variable buffer allocation
+(cbuf) functionality. Example:
+	cbuf *cb = cbuf_new();
+	cprintf(cb, "%d %s", 43, "go");
+        write(1, cbuf_get(cb), cbuf_len(cb)) < 0)
+        cbuf_free(cb);
+	
 The string type is extended with a length keyword. This adds the
-possibility to limit the length of a string. Example: 
-   <s:string length[2:10]>; # string length must bebetween 2 and 10
-   <s:string length[10]>;   # string length must be shorter than 10
+possibility to limit the length of a string. Example: <s:string
+length[2:10]>; # string length must bebetween 2 and 10 <s:string
+length[10]>; # string length must be shorter than 10
 
 Integer ranges can be defined with only an upper limit, lower limit can be 
 suppressed: 
