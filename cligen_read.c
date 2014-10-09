@@ -369,6 +369,19 @@ show_multi_long(cligen_handle h,
 	    fflush (fout);
 	}
 	free (tmp);
+	/* The following is a kludge to correct a memory error triggered by:
+	   a <rest>;
+	   a input a a ?
+	   Just repeast the same command as abobe,...
+	*/
+	if (matchv){
+	    free(matchv);
+	    matchv = NULL;
+	}
+	if ((nr = match_pattern(h, string, pt, 0, 1, &pt1, &matchv, &matchlen, cvec, NULL)) < 0)
+
+	    goto done;
+
     }
   
     if (!nr){
