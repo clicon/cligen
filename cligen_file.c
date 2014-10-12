@@ -296,14 +296,13 @@ main(int argc, char *argv[])
     cligen_tree_active_set(h, treename); 
     cligen_tree_add(h, treename, pt); 
     cvec_free(globals);
-    if (quit)
-	goto done;
+
     if (print_syntax){
-	printf("Syntax:\n");
 	cligen_print(stdout, pt, 0);
 	fflush(stdout);
     }
-
+    if (quit)
+	goto done;
     /* Run the CLI command interpreter */
     while (!cligen_exiting(h)){
 	switch (cliread_eval(h, &line, &callback_ret)){

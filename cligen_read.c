@@ -46,6 +46,7 @@
 #define isblank(c) (c==' ')
 #endif /* isblank */
 
+#include "cligen_buf.h"
 #include "cligen_var.h"
 #include "cligen_cvec.h"
 #include "cligen_gen.h"
@@ -209,7 +210,7 @@ column_print(FILE *fout, int col, pt_vec pt, int min, int max, int level)
   int    linesize = 0;
   char   *line;
   cg_obj *co;
-  char   varstr[128];
+  cbuf   *cb;
 
   d_lines = count/col + 1;
   linesize = col * COLUMN_WIDTH;
@@ -224,9 +225,14 @@ column_print(FILE *fout, int col, pt_vec pt, int min, int max, int level)
 	    if (co->co_command != NULL){
 		switch (co->co_type){
 		case CO_VARIABLE:
-		    cov_print(co, varstr, sizeof(varstr), 1);
-		    memcpy(&line[j*(COLUMN_WIDTH+1)], varstr, 
-			   (COLUMN_WIDTH < strlen(varstr)) ? COLUMN_WIDTH : strlen(varstr));
+		    if ((cb = cbuf_new()) == NULL){
+			fprintf(stderr, "cbuf_new: %s\n", strerror(errno));
+			return -1;
+		    }
+		    cov2cbuf(cb, co, 1);
+		    memcpy(&line[j*(COLUMN_WIDTH+1)], cbuf_get(cb), 
+			   (COLUMN_WIDTH < cbuf_len(cb)) ? COLUMN_WIDTH : cbuf_len(cb));
+		    cbuf_free(cb);
 		    break;
 		case CO_COMMAND:
 		    memcpy(&line[j*(COLUMN_WIDTH+1)], co->co_command, 
@@ -330,7 +336,7 @@ show_multi_long(cligen_handle h,
     int         *matchv = NULL;
     int          mv;
     int          res;
-    char         var[128];
+    cbuf        *cb;
     int          retval = -1;
     cg_obj      *co;
     int          skip;
@@ -397,8 +403,13 @@ show_multi_long(cligen_handle h,
 	    skip = 0;
 	    switch (co->co_type){
 	    case CO_VARIABLE:
-		cov_print(co, var, sizeof(var)-1, 1);
-		snprintf(cmd, COLUMN_WIDTH, "%s", var);
+		if ((cb = cbuf_new()) == NULL){
+		    fprintf(stderr, "cbuf_new: %s\n", strerror(errno));
+		    return -1;
+		}
+		cov2cbuf(cb, co, 1);
+		snprintf(cmd, COLUMN_WIDTH, "%s", cbuf_get(cb));
+		cbuf_free(cb);
 		break;
 	    case CO_COMMAND:
 		strncpy (cmd, co->co_command, COLUMN_WIDTH);

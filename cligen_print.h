@@ -23,7 +23,7 @@
 /*
  * Prototypes
  */
-int cov_print(cg_obj *co, char *cmd, int len, int brief);
+int cov2cbuf(cbuf *cb, cg_obj *co, int brief);
 int cligen_print(FILE *f, parse_tree pt, int brief);
 
 #endif /* _CLIGEN_PRINT_H_ */

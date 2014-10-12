@@ -31,99 +31,84 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
+#include "cligen_buf.h"
 #include "cligen_var.h"
 #include "cligen_cvec.h"
 #include "cligen_gen.h"
 #include "cligen_print.h"
-#include "cligen_buf.h"
 
 #define VARIABLE_PRE  '<'
 #define VARIABLE_POST '>'
 
 
 /* Static prototypes */
-static int pt_print(FILE *f, parse_tree pt, int level, int brief);
+static int pt2cbuf(cbuf *cb, parse_tree pt, int level, int brief);
 
-/*! Print the syntax specification of a variable syntax spec to string
+/*! Print the syntax specification of a variable syntax spec to a cligen buf
  *
- * That is, the inverse of parsing.
- * But it is not complete, it actually only prints the name within <>
- * and no comments.
- * Example, a string variable with name foo is printed as \<foo>
- * Used as help during completion, syntax prints, etc.
- * XXX: And it does not honor len properly
- * XXX: In transformation of using cbufs
+ * @param co    [in]   cligen object from where to print
+ * @param cmd   [out]  string to print to
+ * @param len   [in]   Length of string
+ * @param brief [in]   If set, just <varname>, otherwise clispec parsable format
+ * @retval      0      Everything OK
+ * @retval      -1     Error
+ * @code
+    cbuf *cb = cbuf_new();
+    cov2cbuf(cb, co, brief);
+    cbuf_free(cb);
+ * @endcode
  *
- * @param co   [in]    cligen object from where to print
- * @param cmd  [out]   string to print to
- * @param len  [in]    Length of string
- * @param brief [in]   If set, just \<varname>, otherwise clispec parsable format
+ * Brief output omits help-strings and variable options except names. Eg:
+ * brief=0:  a("help string") <x:int32>("variable"), cb();
+ * brief=1:  a <x>;
  */
 int 
-cov_print(cg_obj *co, char *cmd, int len, int brief)
+cov2cbuf(cbuf *cb, cg_obj *co, int brief)
 {
     int            retval = -1;
-    char          *cmd2;
-    char          *cv;
-    cbuf          *cb = NULL;
 
-    if ((cb = cbuf_new()) == NULL){
-    }
     if (co->co_choice){
 	if (strchr(co->co_choice, '|'))
-	    snprintf(cmd, len, "(%s)", co->co_choice);
+	    cprintf(cb, "(%s)", co->co_choice);
 	else
-	    snprintf(cmd, len, "%s", co->co_choice);
+	    cprintf(cb, "%s", co->co_choice);
     }
     else{
 	if (brief)
-	    snprintf(cmd, len, "%c%s%c", VARIABLE_PRE, co->co_command, VARIABLE_POST);   
+	    cprintf(cb, "%c%s%c", VARIABLE_PRE, co->co_command, VARIABLE_POST);   
 	else{
-	    snprintf(cmd, len, "%c%s:%s", VARIABLE_PRE, co->co_command, cv_type2str(co->co_vtype));
-
+	    cprintf(cb, "%c%s:%s", VARIABLE_PRE, co->co_command, cv_type2str(co->co_vtype));
 	    if (co->co_range){
 		if (cv_isint(co->co_vtype))
-		    strncat(cmd, " range[", len);
+		    cprintf(cb, " range[");
 		else
-		    strncat(cmd, " length[", len);
+		    cprintf(cb, " length[");
 		if (co->co_rangecv_low){
-		    cv2str(co->co_rangecv_low, cmd+strlen(cmd), len);
-		    strncat(cmd, ":", len);
+		    cv2cbuf(co->co_rangecv_low, cb);
+		    cprintf(cb, ":");
 		}
 		if (co->co_rangecv_high){
-		    cv2str(co->co_rangecv_high, cmd+strlen(cmd), len);
+		    cv2cbuf(co->co_rangecv_high, cb);
 		}
-		strncat(cmd, "]", len);
+		cprintf(cb, "]");
 	    }
-	    cmd2 = strdup(cmd);
 	    if (co->co_expand_fn_str){
+		cprintf(cb, " %s(\"", co->co_expand_fn_str);
 		if (co->co_expand_fn_arg)
-		    cv = cv2str_dup(co->co_expand_fn_arg);
-		else
-		    cv = NULL;
-		snprintf(cmd, len, "%s %s(\"%s\")",  /* XXX: cv2str() */
-			 cmd2, co->co_expand_fn_str, cv?cv:"");
-		if (cv)
-		    free(cv);
-		free(cmd2);
-		cmd2 = strdup(cmd);
+		    cv2cbuf(co->co_expand_fn_arg, cb);
+		cprintf(cb, "\")");
 	    }
-	    if (co->co_regex){
-		snprintf(cmd, len, "%s regexp:\"%s\"", 
-			 cmd2, co->co_regex);
-		free(cmd2);
-		cmd2 = strdup(cmd);
-	    }
-	    snprintf(cmd, len, "%s%c", cmd2, VARIABLE_POST);
-	    free(cmd2);
+	    if (co->co_regex)
+		cprintf(cb, " regexp:\"%s\"", co->co_regex);
+	    cprintf(cb, "%c", VARIABLE_POST);
 	}
     }
     retval = 0;
 //  done:
-    if (cb)
-	cbuf_free(cb);
+
     return retval;
 }
+
 
 /* is a terminal command, and therefore should be printed with a ';' */
 static int
@@ -133,68 +118,62 @@ terminal(cg_obj *co)
 	    co->co_pt.pt_len == 0);
 }
 
-
-/* 
- * co_print
- * print cg_objs 
- */
 static int 
-co_print(FILE *f, cg_obj *co, int marginal, int brief)
+co2cbuf(cbuf *cb, cg_obj *co, int marginal, int brief)
 {
-  char cmd[128];
-  struct cg_callback *cc;
+    int retval = -1;
+    struct cg_callback *cc;
 
-  assert(co->co_command!=NULL);
-  switch (co->co_type){
-  case CO_COMMAND:
-      fprintf(f, "%s", co->co_command);
-      break;
-  case CO_REFERENCE:
-      fprintf(f, "@%s", co->co_command);
-      break;
-  case CO_VARIABLE:
-      cov_print(co, cmd, sizeof(cmd), brief);
-      fprintf(f, "%s", cmd);
-      break;
-  }
-  if (!brief){
-      if (co->co_help)
-	  fprintf(f, "(\"%s\")", co->co_help);
-      for (cc = co->co_callbacks; cc; cc=cc->cc_next){
-	  if (cc->cc_fn_str){
-	      fprintf(f, ", %s(", cc->cc_fn_str);
-	      if (cc->cc_arg)
-		  cv_print(f, cc->cc_arg);
-	      fprintf(f, ")");
-
-	  }
-      }
-  }
-  if (terminal(co))
-      fprintf(f, ";");
-  if (co->co_pt.pt_len>1)
-      fprintf(f, "{\n");
-  else
-      if (co->co_pt.pt_len==1 && co->co_pt.pt_vec[0] != NULL)
-	  fprintf(f, " ");
-      else
-	  fprintf(f, "\n");
-  pt_print(f, co->co_pt, marginal+3, brief);
-  if (co->co_pt.pt_len>1){
-      fprintf(f, "%*s", marginal, ""); 
-      fprintf(f, "}\n");
-  }
-  return 0;
+    assert(co->co_command!=NULL);
+    switch (co->co_type){
+    case CO_COMMAND:
+	cprintf(cb, "%s", co->co_command);
+	break;
+    case CO_REFERENCE:
+	cprintf(cb, "@%s", co->co_command);
+	break;
+    case CO_VARIABLE:
+	cov2cbuf(cb, co, brief);
+	break;
+    }
+    if (brief == 0){
+	if (co->co_help)
+	    cprintf(cb, "(\"%s\")", co->co_help);
+	if (co->co_hide)
+	    cprintf(cb, ", hide");
+	for (cc = co->co_callbacks; cc; cc=cc->cc_next){
+	    if (cc->cc_fn_str){
+		cprintf(cb, ", %s(", cc->cc_fn_str);
+		if (cc->cc_arg)
+		    cprintf(cb, "%s", cc->cc_arg);
+		cprintf(cb, ")");
+	    }
+	}
+    }
+    if (terminal(co))
+	cprintf(cb, ";");
+    if (co->co_pt.pt_len>1)
+	cprintf(cb, "{\n");
+    else
+	if (co->co_pt.pt_len==1 && co->co_pt.pt_vec[0] != NULL)
+	    cprintf(cb, " ");
+	else
+	    cprintf(cb, "\n");
+    if (pt2cbuf(cb, co->co_pt, marginal+3, brief) < 0)
+	goto done;
+    if (co->co_pt.pt_len>1){
+	cprintf(cb, "%*s", marginal, ""); 
+	cprintf(cb, "}\n");
+    }
+    retval = 0;
+  done:
+    return retval;
 }
 
-/* 
- * pt_print
- * print pattern (vector of cg_objs) recursive 
- * But it is not complete, it strips info that is in the syntax.
- */
 static int 
-pt_print(FILE *f, parse_tree pt, int marginal, int brief)
+pt2cbuf(cbuf *cb, parse_tree pt, int marginal, int brief)
 {
+    int retval = -1;
     int i;
 
     for (i=0; i<pt.pt_len; i++){
@@ -202,20 +181,44 @@ pt_print(FILE *f, parse_tree pt, int marginal, int brief)
 	    continue;
 	}
 	if (pt.pt_len > 1)
-	    fprintf(f, "%*s", marginal, "");
-	co_print(f, pt.pt_vec[i], marginal, brief);
+	    cprintf(cb, "%*s", marginal, "");
+	if (co2cbuf(cb, pt.pt_vec[i], marginal, brief) < 0)
+	    goto done;
     }
-    return 0;
+    retval = 0;
+  done:
+    return retval;
 }
 
 /*! Print CLIgen parse-tree to file, brief or detailed.
  *
- * @param f   [in] File to print to
- * @param pt  [in] Cligen parse-tree consisting of cg objects and variables
- * @param brief [in] Print bried output, otherwise clispec parsable format
+ * @param f     [in] File to print to
+ * @param pt    [in] Cligen parse-tree consisting of cg objects and variables
+ * @param brief [in] Print brief output, otherwise clispec parsable format
+ *
+ * The output may not be identical to the input syntax. 
+ * For example [dd|ee] is printed as:
+ *   dd;
+ *   ee:
+ * Brief output omits help-strings and variable options except names. Eg:
+ * brief=0:  a("help string") <x:int32>("variable"), cb();
+ * brief=1:  a <x>;
  */
 int 
 cligen_print(FILE *f, parse_tree pt, int brief)
 {
-    return pt_print(f, pt, 0, brief);
+    int   retval = -1;
+    cbuf *cb = NULL;
+
+    if ((cb = cbuf_new()) == NULL){
+	fprintf(stderr, "cbuf_new: %s\n", strerror(errno));
+	goto done;
+    }
+    if (pt2cbuf(cb, pt, 0, brief) < 0)
+	goto done;
+    retval = 0;
+  done:
+    if (cb)
+	cbuf_free(cb);
+    return retval;
 }

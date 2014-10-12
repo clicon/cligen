@@ -24,8 +24,8 @@
   }
   # Nested command using callback arguments to differentiate
   ip("The IP protocol"){       
-    tcp("The TCP protocol") <int32>("Port number"), cb("tcp");
-    udp("The UDP protocol") <ipaddr>("IPv4 address"), cb("udp");
+    tcp("The TCP protocol") <port:int32>("Port number"), cb("tcp");
+    udp("The UDP protocol") <addr:ipaddr>("IPv4 address"), cb("udp");
   }
   # Example of commands on several levels
   aa bb,cb();{              

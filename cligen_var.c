@@ -43,6 +43,7 @@
 #include <regex.h>
 #endif
 
+#include "cligen_buf.h"
 #include "cligen_var.h"
 #include "cligen_cvec.h"
 #include "cligen_gen.h"
@@ -1710,6 +1711,117 @@ cv_dec64_print(cg_var *cv, char *s0, int *s0len)
     return 0;
 }
 
+int
+cv2cbuf(cg_var *cv, cbuf *cb)
+{
+    char straddr[INET6_ADDRSTRLEN];
+    char ss[64];
+    int  sslen = sizeof(ss);
+    char uuidstr[37];
+    char timestr[27];
+
+    switch (cv->var_type){
+    case CGV_INT8:
+	cprintf(cb, "%" PRId8, cv->var_int8);
+	break;
+    case CGV_INT16:
+	cprintf(cb, "%" PRId16, cv->var_int16);
+	break;
+    case CGV_INT32:
+	cprintf(cb, "%" PRId32, cv->var_int32);
+	break;
+    case CGV_INT64:
+	cprintf(cb, "%" PRId64, cv->var_int64);
+	break;
+    case CGV_UINT8:
+	cprintf(cb, "%" PRIu8, cv->var_uint8);
+	break;
+    case CGV_UINT16:
+	cprintf(cb, "%" PRIu16, cv->var_uint16);
+	break;
+    case CGV_UINT32:
+	cprintf(cb, "%" PRIu32, cv->var_uint32);
+	break;
+    case CGV_UINT64:
+	cprintf(cb, "%" PRIu64, cv->var_uint64);
+	break;
+    case CGV_DEC64:
+	cv_dec64_print(cv, ss, &sslen);
+	cprintf(cb, "%s", ss);
+	break;
+    case CGV_BOOL:
+	if (cv->var_bool)
+	    cprintf(cb, "true");
+	else
+	    cprintf(cb, "false");
+	break;
+    case CGV_REST:
+	cprintf(cb, "%s", cv->var_rest);
+	break;
+    case CGV_STRING: 
+	cprintf(cb, "%s", cv->var_string);
+	break;
+    case CGV_INTERFACE: 
+	cprintf(cb, "%s", cv->var_interface);
+	break;
+    case CGV_IPV4ADDR:
+	cprintf(cb, "%s", inet_ntoa(cv->var_ipv4addr));
+	break;
+    case CGV_IPV4PFX:
+	cprintf(cb, "%s/%u", 
+		inet_ntoa (cv->var_ipv4addr),
+		cv->var_ipv4masklen);
+	break;
+    case CGV_IPV6ADDR:
+	if (inet_ntop(AF_INET6, &cv->var_ipv6addr, straddr, sizeof(straddr)) < 0){
+	    fprintf(stderr, "inet_ntop: %s\n", strerror(errno));
+	    return -1;
+	}
+	cprintf(cb, "%s", straddr);
+	break;
+    case CGV_IPV6PFX:
+	if (inet_ntop(AF_INET6, &cv->var_ipv6addr, straddr, sizeof(straddr)) < 0){
+	    fprintf(stderr, "inet_ntop: %s\n", strerror(errno));
+	    return -1;
+	}
+	cprintf(cb, "%s/%u", straddr, cv->var_ipv6masklen);
+	break;
+    case CGV_MACADDR:
+	cprintf(cb, "%02x:%02x:%02x:%02x:%02x:%02x", 
+		(uint8_t)cv->var_macaddr[0],
+		(uint8_t)cv->var_macaddr[1],
+		(uint8_t)cv->var_macaddr[2],
+		(uint8_t)cv->var_macaddr[3],
+		(uint8_t)cv->var_macaddr[4],
+		(uint8_t)cv->var_macaddr[5]);
+	break;
+    case CGV_URL: /* <proto>://[<user>[:<passwd>]@]<addr>[/<path>] */
+	cprintf(cb, "%s://%s%s%s%s%s/%s", 	
+		cv->var_urlproto,
+		cv->var_urluser,
+		strlen(cv->var_urlpasswd)?":":"",
+		cv->var_urlpasswd,
+		strlen(cv->var_urluser)||strlen(cv->var_urlpasswd)?"@":"",
+		cv->var_urladdr,
+		cv->var_urlpath
+	    );
+	break;
+    case CGV_UUID:
+	uuid2str(cv->var_uuid, uuidstr, sizeof(uuidstr));
+	cprintf(cb, "%s", uuidstr);
+	break;
+    case CGV_TIME:
+	time2str(cv->var_time, timestr, sizeof(timestr));
+	cprintf(cb, "%s", timestr);
+	break;
+    case CGV_VOID: /* N/A */
+	break;
+    default:
+	break;
+    }
+    return 0;
+}
+
 
 /*! Print value of CLIgen variable using printf style formats.
  *
@@ -1721,13 +1833,19 @@ cv_dec64_print(cg_var *cv, char *s0, int *s0len)
  * Typically used by external code when transforming cgv:s.
  * Note, for strings, the length returned is _excluding_ the null byte, but the length
  * in supplied in the argument list is _including_ the null byte.
- * See cv_print  which also prints a CV but to a file
+ * @retval len  How many bytes printed
+ * @see  cv2cbuf   which also prints a CV but to cbuf
+ * @see  cv_print  which also prints a CV but to a file
  */
 int
 cv2str(cg_var *cv, char *str, size_t size)
 {
-    int len = 0;
+    int  len = 0;
     char straddr[INET6_ADDRSTRLEN];
+    char ss[64];
+    int  sslen = sizeof(ss);
+    char uuidstr[37];
+    char timestr[27];
 
     switch (cv->var_type){
     case CGV_INT8:
@@ -1754,14 +1872,10 @@ cv2str(cg_var *cv, char *str, size_t size)
     case CGV_UINT64:
 	len = snprintf(str, size, "%" PRIu64, cv->var_uint64);
 	break;
-    case CGV_DEC64:{
-	char ss[64];
-	int  sslen = sizeof(ss);
-
+    case CGV_DEC64:
 	cv_dec64_print(cv, ss, &sslen);
 	len = snprintf(str, size, "%s", ss);
 	break;
-    }
     case CGV_BOOL:
 	if (cv->var_bool)
 	    len = snprintf(str, size, "true");
@@ -1820,18 +1934,14 @@ cv2str(cg_var *cv, char *str, size_t size)
 		       cv->var_urlpath
 	    );
 	break;
-    case CGV_UUID:{  /* 37 */
-	char uuidstr[37];
+    case CGV_UUID:
 	uuid2str(cv->var_uuid, uuidstr, sizeof(uuidstr));
 	len = snprintf(str, size, "%s", uuidstr);
 	break;
-    }
-    case CGV_TIME:{  /* 27 */
-	char timestr[27];
+    case CGV_TIME:
 	time2str(cv->var_time, timestr, sizeof(timestr));
 	len = snprintf(str, size, "%s", timestr);
 	break;
-    }
     case CGV_VOID: /* N/A */
 	break;
     default:
@@ -1843,7 +1953,7 @@ cv2str(cg_var *cv, char *str, size_t size)
 /*! Print value of CLIgen variable using printf style formats into a new string
  *
  * The string should be freed after use.
- * See also cv2str
+ * @see cv2str
  */
 char *
 cv2str_dup(cg_var *cv)
@@ -1865,13 +1975,17 @@ cv2str_dup(cg_var *cv)
 
 /*! Pretty print cligen variable value to a file
  *
- * See also cv2str which also prints a CV but to a string
+ * @see cv2str which also prints a CV but to a string
  */
 int
 cv_print(FILE *f, cg_var *cv)
 {
-    int len = 0;
+    int  len = 0;
     char straddr[INET6_ADDRSTRLEN];
+    char ss[64];
+    int  sslen = sizeof(ss);
+    char uuidstr[37];
+    char timestr[27];
 
     switch (cv->var_type){
     case CGV_INT8:
@@ -1898,14 +2012,10 @@ cv_print(FILE *f, cg_var *cv)
     case CGV_UINT64:
 	fprintf(f, "%" PRIu64, cv->var_uint64);
 	break;
-    case CGV_DEC64:{
-	char ss[64];
-	int  sslen = sizeof(ss);
-
+    case CGV_DEC64:
 	cv_dec64_print(cv, ss, &sslen);
 	fprintf(f, "%s", ss);
 	break;
-    }
     case CGV_BOOL:
 	if (cv->var_bool)
 	    fprintf(f, "true");
@@ -1962,18 +2072,14 @@ cv_print(FILE *f, cg_var *cv)
 		cv->var_urlpath
 	    );
 	break;
-    case CGV_UUID:{
-	char uuidstr[37];
+    case CGV_UUID:
 	uuid2str(cv->var_uuid, uuidstr, sizeof(uuidstr));
 	fprintf(f, "%s", uuidstr);
 	break;
-    }
-    case CGV_TIME:{
-	char timestr[27];
+    case CGV_TIME:
 	time2str(cv->var_time, timestr, sizeof(timestr));
 	fprintf(f, "%s", timestr);
 	break;
-    }
     case CGV_VOID: /* N/A */
 	break;
     default:

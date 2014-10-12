@@ -30,6 +30,7 @@
 
 #include "cligen_parse.tab.h" /* generated */
 
+#include "cligen_buf.h"
 #include "cligen_var.h"
 #include "cligen_cvec.h"
 #include "cligen_gen.h"

@@ -31,12 +31,14 @@
 #ifndef WIN32
 #include <unistd.h>
 #endif
+#include <errno.h>
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <net/if.h>
 
+#include "cligen_buf.h"
 #include "cligen_var.h"
 #include "cligen_cvec.h"
 #include "cligen_gen.h"
@@ -203,17 +205,22 @@ int
 cligen_help(FILE *f, parse_tree pt)
 {
     cg_obj *co;
-    char	cmd[COLUMN_WIDTH+1];
-    int i;
-    char var[128];
+    char    cmd[COLUMN_WIDTH+1];
+    int     i;
+    cbuf   *cb;
 
     for (i=0; i<pt.pt_len; i++){
 	co = pt.pt_vec[i];
 	if (co->co_command != NULL){
 	    switch(co->co_type){
 	    case CO_VARIABLE:
-		cov_print(co, var, sizeof(var)-1, 1);
-		snprintf(cmd, COLUMN_WIDTH, "%s", var);
+		if ((cb = cbuf_new()) == NULL){
+		    fprintf(stderr, "cbuf_new: %s\n", strerror(errno));
+		    return -1;
+		}
+		cov2cbuf(cb, co, 1);
+		snprintf(cmd, COLUMN_WIDTH, "%s", cbuf_get(cb));
+		cbuf_free(cb);
 		break;
 	    case CO_COMMAND:
 		strncpy (cmd, co->co_command, COLUMN_WIDTH);
