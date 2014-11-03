@@ -52,16 +52,15 @@
 #endif
 
 
-/*
- * match_variable
- * INPUT:
- *   string    Input string to match
- *   pvt       variable type (from definition)
- *   cmd       variable string (from definition) - can contain range
- * RETURNS:
- *   -1        Error (print msg on stderr)
- *   0         Not match and reason returned as malloced string.
- *   1         Match
+/*! Match variable against input string
+ * 
+ * @param[in]  string  Input string to match
+ * @param[in]  pvt     variable type (from definition)
+ * @param[in]  cmd     variable string (from definition) - can contain range
+ * 
+ * @retval     -1      Error (print msg on stderr)
+ * @retval     0       Not match and reason returned as malloced string.
+ * @retval     1       Match
  * Who prints errors?
  */
 static int
@@ -763,26 +762,25 @@ match_pattern_node(cligen_handle h,
 /*
  * match_pattern
  * Complex function with several input and output parameters
- * INPUT:
- *   h         CLIgen handle
- *   string    Input string to match
- *   pt        Vector of commands (array of cligen object pointers (cg_obj)
- *   pt_max    Length of the pt array
- *   use_pref  Set this flag value if you want to use the preferences between
- *             matches. It is only when you want a final exact match (not 
- *             completion or show options) that you should set this.
- *   hide
- * RETURNS:
- *   The number of matches (0-n) in pt or -1 on error. See matchlen below.
-
- * OUTPUT
- *   ptp       Returns the vector at the place of matching
- *   matchv    A vector of integers containing which 
- *   matchlen  Length of matchv. That is, # of matches and same as return 
- *              value (if 0-n)
- *   cvec      cligen variable vector containing vars/values pair for completion
- *   reason0   If retval = 0, this may be malloced to indicate reason for not
- *             matching variables, if given. Neeed to be free:d
+ * @retval[in]  h         CLIgen handle
+ * @retval[in]  string    Input string to match
+ * @retval[in]  pt        Vector of commands (array of cligen object pointers (cg_obj)
+ * @retval[in]  pt_max    Length of the pt array
+ * @retval[in]  use_pref  Set this flag value if you want to use the preferences 
+ *                        between matches. It is only when you want a final exact 
+ *                        match (not completion or show options) that you should set 
+ *                        this.
+ * @retval[in]  hide
+ * @retval[out] ptp       Returns the vector at the place of matching
+ * @retval[out] matchv    A vector of integers containing which 
+ * @retval[out] matchlen  Length of matchv. That is, # of matches and same as return 
+ *                        value (if 0-n)
+ * @retval[out] cvec      cligen variable vector containing vars/values pair for completion
+ * @retval[out] reason0   If retval = 0, this may be malloced to indicate reason for 
+ *                        not matching variables, if given. Neeed to be free:d
+ *
+ * @retval -1   error.
+ * @retval nr   The number of matches (0-n) in pt or -1 on error. See matchlen below.
  *
  * All options are ordered by PREFERENCE, where 
  *       command > ipv4,mac > string > rest
@@ -874,6 +872,7 @@ match_pattern_exact(cligen_handle h,
 	  extract_substring(string, command_levels(string), &string1);
 	  for (j=0; j<ret; j++){
 	      co = res_pt[matchv[j]];
+	      /* XXX If variable dont compare co_command */
 	      if (co->co_type == CO_COMMAND && string1 && 
 		  strcmp(string1, co->co_command)==0){
 		  ret = 1;

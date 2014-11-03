@@ -557,10 +557,14 @@ co_eq(cg_obj *co1, cg_obj *co2)
 	eq = str_cmp(co1->co_command, co2->co_command);
 	break;
     case CO_VARIABLE:
+#if 0
+	/* 
+         * Does not work with eg: <a:int>;<b:int>;
+         */
 	eq = str_cmp(co1->co_command, co2->co_command); /* XXX: 2012-10-17: Really a bug if I didnt detect this until now,... */
-	/* Same variable type */
 	if (eq != 0)
 	    goto done;
+#endif
 	eq = (co1->co_vtype == co2->co_vtype)?0:(co1->co_vtype < co2->co_vtype)?-1:1;
 	/* Same variable type */
 	if (eq != 0)
