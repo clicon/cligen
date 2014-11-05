@@ -59,6 +59,7 @@ cli_output_reset(void)
     d_lines = 0;
     return 0;
 }
+
 /*! CLIgen output function. All printf-style output should be made via this function.
  * 
  * It deals with formatting, page breaks, etc. 
@@ -68,22 +69,29 @@ cli_output_reset(void)
 int
 cligen_output(FILE *f, char *template, ... )
 {
-    va_list
-	args;
-    char
-	buf[65536];
-    char
-	*start,
-	*end,
-	*bufend,
-	c;
-    int 
-	term_rows;
+    int     retval = -1;
+    va_list args;
+    char   *buf = NULL;
+    char   *start;
+    char   *end;
+    char   *bufend;
+    char    c;
+    int     term_rows;
+    int     len;
 
     term_rows = cligen_terminalrows(NULL);
     /* form a string in buf from all args */
+
     va_start(args, template);
-    vsnprintf(buf, sizeof(buf)-1, template, args);
+    len = vsnprintf(NULL, 0, template, args);
+    len++;
+    va_end(args);
+    if ((buf = malloc(len)) == NULL){
+	fprintf(stderr, "%s: malloc: %s\n", __FUNCTION__, strerror(errno));
+	goto done;
+    }
+    va_start(args, template);
+    vsnprintf(buf, len, template, args);
     va_end(args);
 
     /* if writing to stdout, format output
@@ -135,7 +143,11 @@ cligen_output(FILE *f, char *template, ... )
 	fprintf(f, "%s", buf);
     }  
     fflush(f);
-    return 0;
+    retval = 0;
+ done:
+    if (buf)
+	free(buf);
+    return retval;
 }
 
 #ifdef notyet
