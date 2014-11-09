@@ -220,6 +220,7 @@ cligen_print(FILE *f, parse_tree pt, int brief)
     }
     if (pt2cbuf(cb, pt, 0, brief) < 0)
 	goto done;
+    fprintf(f, "%s", cbuf_get(cb));
     retval = 0;
   done:
     if (cb)

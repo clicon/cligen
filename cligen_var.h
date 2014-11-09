@@ -85,11 +85,11 @@ enum cv_type{
 
 /* No pointers to value */
 #define cv_inline(t)((t)==CGV_ERR      || cv_isint(t)|| \
-                      (t)==CGV_DEC64   || (t)==CGV_BOOL|| \
-                      (t)==CGV_IPV4ADDR|| (t)==CGV_IPV4PFX|| \
-                      (t)==CGV_IPV6ADDR|| (t)==CGV_IPV6PFX|| \
-		      (t)==CGV_MACADDR || (t)==CGV_UUID|| \
-                      (t)==CGV_TIME )  || (t)==CGV_EMPTY )
+                     (t)==CGV_DEC64    || (t)==CGV_BOOL|| \
+                     (t)==CGV_IPV4ADDR || (t)==CGV_IPV4PFX|| \
+                     (t)==CGV_IPV6ADDR || (t)==CGV_IPV6PFX|| \
+		     (t)==CGV_MACADDR  || (t)==CGV_UUID||    \
+		     (t)==CGV_TIME     || (t)==CGV_EMPTY)
 
 /* var_string is set to something meaningful */
 #define cv_isstring(t)((t)==CGV_STRING||(t)==CGV_REST|| \
