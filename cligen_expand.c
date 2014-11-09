@@ -96,6 +96,11 @@ co_expand_sub(cg_obj *co, cg_obj *parent, cg_obj **conp)
 		fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
 		return -1;
 	    }
+	if (co->co_show)
+	    if ((con->co_show = strdup(co->co_show)) == NULL){
+		fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
+		return -1;
+	    }
 	if (co->co_expand_fn_arg)
 	    if ((con->co_expand_fn_arg = cv_dup(co->co_expand_fn_arg)) == NULL)
 		return -1;
@@ -142,6 +147,10 @@ transform_var_to_cmd(cg_obj *co, char *cmd, char *comment)
     if (co->co_expand_fn_str){
 	free(co->co_expand_fn_str);
 	co->co_expand_fn_str = NULL;
+    }
+    if (co->co_show){
+	free(co->co_show);
+	co->co_show = NULL;
     }
     if (co->co_expand_fn_arg){
 	cv_free(co->co_expand_fn_arg);

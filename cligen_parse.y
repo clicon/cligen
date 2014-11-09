@@ -28,7 +28,7 @@
 }
 
 %token MY_EOF
-%token V_TYPE V_RANGE V_LENGTH V_CHOICE V_KEYWORD V_REGEXP V_FRACTION_DIGITS
+%token V_RANGE V_LENGTH V_CHOICE V_KEYWORD V_REGEXP V_FRACTION_DIGITS V_SHOW
 %token DOUBLEPARENT /* (( */
 %token DQ           /* " */
 %token DQP          /* ") */
@@ -1002,6 +1002,9 @@ keypair     : NAME '(' ')' { _YA->ya_var->co_expand_fn_str = $1; }
 		_YA->ya_var->co_expand_fn_str = $1; 
 		expand_arg(_ya, "string", $4);
 		free($4); 
+	      }
+            | V_SHOW ':' NAME { 
+		 _YA->ya_var->co_show = $3; 
 	      }
             | V_RANGE '[' numdec ':' numdec ']' { 
 		if (cg_range(_ya, $3, $5) < 0) YYERROR; free($3); free($5); 

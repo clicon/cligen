@@ -29,8 +29,9 @@
  * Note that a cv holds a value. The specification of a cv is a cg_varspec
  */
 struct cg_var {
-    enum cv_type var_type;   /* Type according to enum cv_type */
-    char        *var_name; /* Name of variable as appears in <name ...> in the syntax */
+    enum cv_type var_type; /* Type of variable appears in <name:type ...> */
+    char        *var_name; /* Name of variable appears in <name:type ...> */
+    char        *var_show; /* Show help-text, same as name or <name..show:<show>> */
     char         var_const; /* Set if the variable is a keyword */
     char         var_flag ; /* Application-specific flags, no semantics by cligen */
     union {

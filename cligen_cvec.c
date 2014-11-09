@@ -59,6 +59,7 @@ static int excludekeys = 0;
 /*! Create and initialize a new cligen variable vector (cvec)
  * 
  * See also cvec_init()
+ * Each individual cv initialized with CGV_ERR and no value.
  * Returned cvec needs to be freed with cvec_free().
  *
  * @param  len    Number of cv elements. Can be zero and elements added incrementally.
@@ -97,6 +98,7 @@ cvec_free(cvec *cvec)
 /*! Initialize a cligen variable vector (cvec) with 'len' numbers of variables.
  *
  * See also cvec_new()
+ * Each individual cv initialized with CGV_ERR and no value.
  *
  * @param vr    The cligen variable vector
  * @param len  number of cv elements. Can be zero and elements added incrementally.
@@ -379,6 +381,8 @@ cvec_match(cg_obj *co_match,
 		    extract_substring(cmd, level, &val);
 	    cv->var_type = co->co_vtype;
 	    cv->var_name = strdup(co->co_command);
+	    if (co->co_show)
+		cv->var_show = strdup(co->co_show);
 	    cv->var_const = iskeyword(co);
 	    if (co->co_vtype == CGV_DEC64) /* XXX: Seems misplaced? / too specific */
 		cv_dec64_n_set(cv, co->co_dec64_n);

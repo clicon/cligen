@@ -2584,6 +2584,9 @@ cv_cp(cg_var *new, cg_var *old)
     if (old->var_name)
 	if ((new->var_name = strdup(old->var_name)) == NULL)
 	    goto done;
+    if (old->var_show)
+	if ((new->var_show = strdup(old->var_show)) == NULL)
+	    goto done;
     switch (new->var_type) {
     case CGV_ERR:
 	break;
@@ -2693,6 +2696,8 @@ cv_reset(cg_var *cgv)
 
     if (cgv->var_name)
 	free(cgv->var_name);
+    if (cgv->var_show)
+	free(cgv->var_show);
     switch (cgv->var_type) {
     case CGV_REST:
     case CGV_STRING:

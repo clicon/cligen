@@ -75,7 +75,9 @@ cov2cbuf(cbuf *cb, cg_obj *co, int brief)
     }
     else{
 	if (brief)
-	    cprintf(cb, "%c%s%c", VARIABLE_PRE, co->co_command, VARIABLE_POST);   
+	    cprintf(cb, "%c%s%c", VARIABLE_PRE, 
+		    co->co_show ? co->co_show : co->co_command, 
+		    VARIABLE_POST);   
 	else{
 	    cprintf(cb, "%c%s:%s", VARIABLE_PRE, co->co_command, cv_type2str(co->co_vtype));
 	    if (co->co_range){
@@ -92,6 +94,8 @@ cov2cbuf(cbuf *cb, cg_obj *co, int brief)
 		}
 		cprintf(cb, "]");
 	    }
+	    if (co->co_show)
+		cprintf(cb, " show:\"%s\"", co->co_show);
 	    if (co->co_expand_fn_str){
 		cprintf(cb, " %s(\"", co->co_expand_fn_str);
 		if (co->co_expand_fn_arg)

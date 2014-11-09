@@ -108,6 +108,7 @@ struct cg_callback  { /* Linked list of command callbacks */
  */
 struct cg_varspec{
     enum cv_type    cgs_vtype;         /* its type */
+    char           *cgs_show;          /* help text of variable */
     char           *cgs_expand_fn_str; /* expand callback string */
     expand_cb      *cgs_expand_fn;     /* expand callback */
     cg_var         *cgs_expand_fn_arg; /* expand callback arg */
@@ -197,6 +198,7 @@ typedef int (cg_applyfn_t)(cg_obj *co, void *arg);
 #define co_next          co_pt.pt_vec
 #define co_max           co_pt.pt_len
 #define co_vtype         u.cou_var.cgs_vtype
+#define co_show          u.cou_var.cgs_show
 #define co_expand_fn  	 u.cou_var.cgs_expand_fn
 #define co_expand_fn_str u.cou_var.cgs_expand_fn_str
 #define co_expand_fn_arg u.cou_var.cgs_expand_fn_arg

@@ -395,6 +395,11 @@ co_copy(cg_obj *co, cg_obj *parent, cg_obj **conp)
 		fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
 		return -1;
 	    }
+	if (co->co_show)
+	    if ((con->co_show = strdup(co->co_show)) == NULL){
+		fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
+		return -1;
+	    }
 	if (co->co_rangecv_low)
 	    if ((con->co_rangecv_low = cv_dup(co->co_rangecv_low)) == NULL)
 		return -1;
@@ -742,6 +747,8 @@ co_free(cg_obj *co, int recursive)
     if (co->co_type == CO_VARIABLE){
 	if (co->co_expand_fn_str)
 	    free(co->co_expand_fn_str);
+	if (co->co_show)
+	    free(co->co_show);
 	if (co->co_expand_fn_arg){
 	    cv_free(co->co_expand_fn_arg);
 	}
