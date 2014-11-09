@@ -118,6 +118,8 @@ Added a userdata field for cligen_objects (co) to add app-specific
 fields. The default field is removed and can be implemented by
 userdata.
 
+Added an empty variable type that has no values (thanks Benny)
+	
 Added pt_apply that applies a function call recursively on all cg_obj:s in a parse-tree
 
 Added cligen_logsyntax[_set]() as a debug-function to track dynamic

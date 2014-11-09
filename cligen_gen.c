@@ -167,6 +167,8 @@ cov_pref(cg_obj *co)
 	break;
     case CGV_VOID: /* N/A */
 	break;
+    case CGV_EMPTY: 
+	break;
     }
     return pref;
 }

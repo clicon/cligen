@@ -150,7 +150,7 @@ stripdup(char *s0)
 <OPTION>#                 { _YA->ya_lex_state =INITIAL; BEGIN(COMMENT); }
 <OPTION>\n                { _YA->ya_linenum++; }
 <OPTION>=                 { return *yytext; }
-<OPTION>;                { BEGIN(INITIAL); return *yytext;}
+<OPTION>;                 { BEGIN(INITIAL); return *yytext;}
 <OPTION><<EOF>>           { return MY_EOF; }
 <OPTION>\(                { return *yytext; }
 <OPTION>\)                { return *yytext; }

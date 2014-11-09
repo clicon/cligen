@@ -60,6 +60,7 @@ enum cv_type{
   CGV_UUID,      /* Universally Unique Identifier: 550e8400-e29b-41d4-a716-446655440000 */
   CGV_TIME,      /* ISO 8601 date+timestamp: 2008-09-21T18:57:21.003 (extended format) */
   CGV_VOID,      /* Pointer to external data */
+  CGV_EMPTY,     /* A type without a value */
 };
 
 /* Backward compatible int and long */
@@ -87,7 +88,8 @@ enum cv_type{
                       (t)==CGV_DEC64   || (t)==CGV_BOOL|| \
                       (t)==CGV_IPV4ADDR|| (t)==CGV_IPV4PFX|| \
                       (t)==CGV_IPV6ADDR|| (t)==CGV_IPV6PFX|| \
-		      (t)==CGV_MACADDR || (t)==CGV_UUID||(t)==CGV_TIME )
+		      (t)==CGV_MACADDR || (t)==CGV_UUID|| \
+                      (t)==CGV_TIME )  || (t)==CGV_EMPTY )
 
 /* var_string is set to something meaningful */
 #define cv_isstring(t)((t)==CGV_STRING||(t)==CGV_REST|| \

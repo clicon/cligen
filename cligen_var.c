@@ -1495,6 +1495,8 @@ cv_str2type(char *str)
       return CGV_TIME;
   if (strcmp(str,"void") == 0)
       return CGV_VOID; /* N/A */
+  if (strcmp(str,"empty") == 0)
+      return CGV_EMPTY;
   return CGV_ERR;
 }
 
@@ -1573,6 +1575,9 @@ cv_type2str(enum cv_type type)
 	break;
     case CGV_VOID:
 	str="void";
+	break;
+    case CGV_EMPTY:
+	str="empty";
 	break;
     default:
 	fprintf(stderr, "%s: invalid type: %d\n", __FUNCTION__, type);
@@ -1662,6 +1667,9 @@ cv_len(cg_var *cv)
 	break;
     case CGV_VOID:
 	len = sizeof(void*); /* N/A */
+	break;
+    case CGV_EMPTY:
+	len = 0;
 	break;
     default:
 	break;
@@ -1815,6 +1823,7 @@ cv2cbuf(cg_var *cv, cbuf *cb)
 	cprintf(cb, "%s", timestr);
 	break;
     case CGV_VOID: /* N/A */
+    case CGV_EMPTY: 
 	break;
     default:
 	break;
@@ -1943,6 +1952,7 @@ cv2str(cg_var *cv, char *str, size_t size)
 	len = snprintf(str, size, "%s", timestr);
 	break;
     case CGV_VOID: /* N/A */
+    case CGV_EMPTY:
 	break;
     default:
 	break;
@@ -2081,6 +2091,7 @@ cv_print(FILE *f, cg_var *cv)
 	fprintf(f, "%s", timestr);
 	break;
     case CGV_VOID: /* N/A */
+    case CGV_EMPTY: /* N/A */
 	break;
     default:
 	break;
@@ -2249,6 +2260,7 @@ cv_parse1(char *str0, cg_var *cv, char **reason)
 	retval = 1;
 	break;
     case CGV_VOID: /* N/A */
+    case CGV_EMPTY:
     case CGV_ERR:
 	retval = 0;
 	if (reason) 
@@ -2476,6 +2488,7 @@ cv_validate(cg_var *cv, cg_varspec *cs, char **reason)
     case CGV_URL: 
     case CGV_UUID: 
     case CGV_TIME: 
+    case CGV_EMPTY: 
 	break;
     }
     if (reason && *reason)
@@ -2561,6 +2574,8 @@ cv_cmp(cg_var *cgv1, cg_var *cgv2)
 	return memcmp(&cgv1->var_time, &cgv2->var_time, sizeof(struct timeval));
     case CGV_VOID: /* compare pointers */
 	return (cgv1->var_void == cgv2->var_void);
+    case CGV_EMPTY: /* Always equal */
+	return 0;
     }
 
     return -1;
@@ -2637,6 +2652,9 @@ cv_cp(cg_var *new, cg_var *old)
 	break;
     case CGV_VOID: /* cp pointer */
 	new->var_void = old->var_void;
+	break;
+    case CGV_EMPTY:
+	break;
     }
     retval = 0;
   done:
@@ -2712,6 +2730,7 @@ cv_reset(cg_var *cgv)
 	free(cgv->var_urlpasswd);
 	break;
     case CGV_VOID: /* XXX: freeit ? */
+    case CGV_EMPTY: 
 	break;
     default:
 	break;
