@@ -31,6 +31,7 @@
 #include "cligen_cvec.h"
 #include "cligen_gen.h"
 #include "cligen_parse.h"
+#include "cligen_handle.h"
 #include "cligen_read.h"
 #include "cligen_syntax.h"
 
@@ -56,10 +57,10 @@
  */
 int
 cligen_parse_str(cligen_handle h,
-		 char *str,
-		 char *name, /* just for errs */
-		 parse_tree *pt,
-		 cvec *vr
+		 char         *str,
+		 char         *name, /* just for errs */
+		 parse_tree   *pt,
+		 cvec         *vr
     )
 {
     int                retval = -1;
@@ -72,10 +73,12 @@ cligen_parse_str(cligen_handle h,
     memset(&co0, 0, sizeof(co0));
     ya.ya_handle       = h; /* cligen_handle */
     ya.ya_name         = name;
+    ya.ya_treename     = strdup(name); /* Use name as default tree name */
     ya.ya_linenum      = 1;
     ya.ya_parse_string = str;
     ya.ya_stack        = NULL;
-    co_top->co_pt      = *pt;
+    if (pt)
+	co_top->co_pt      = *pt;
     if (vr)
 	ya.ya_globals       = vr; 
     else
@@ -83,10 +86,7 @@ cligen_parse_str(cligen_handle h,
 	    fprintf(stderr, "%s: malloc: %s\n", __FUNCTION__, strerror(errno)); 
 	    goto done;
 	}
-
-
     if (strlen(str)){ /* Not empty */
-	
 	if (cgl_init(&ya) < 0)
 	    goto done;
 	if (cgy_init(&ya, co_top) < 0)
@@ -95,6 +95,16 @@ cligen_parse_str(cligen_handle h,
 	    cgy_exit(&ya);
 	    cgl_exit(&ya);
 	    goto done;
+	}
+	/* Add final tree (but only with new API) */
+	if (pt == NULL){
+	    for (i=0; i<co_top->co_max; i++){
+		if ((co=co_top->co_next[i]) != NULL)
+		    co_up_set(co, NULL);
+	    }
+	    if (cligen_tree_add(ya.ya_handle, ya.ya_treename, co_top->co_pt) < 0)
+		goto done;
+	    memset(&co_top->co_pt, 0, sizeof(parse_tree));
 	}
 	if (cgy_exit(&ya) < 0)
 	    goto done;		
@@ -108,7 +118,8 @@ cligen_parse_str(cligen_handle h,
     /*
      * Remove the fake top level object and remove references to it.
      */
-    *pt = co_top->co_pt;
+    if (pt)
+	*pt = co_top->co_pt;
     for (i=0; i<co_top->co_max; i++){
 	co=co_top->co_next[i];
 	if (co)
@@ -116,6 +127,8 @@ cligen_parse_str(cligen_handle h,
     }
     retval = 0;
   done:
+    if (ya.ya_treename)
+	free (ya.ya_treename);
     return retval;
 
 }
@@ -126,10 +139,10 @@ cligen_parse_str(cligen_handle h,
  */
 int
 cligen_parse_file(cligen_handle h,
-		  FILE *f,
-		  char *name, /* just for errs */
-		  parse_tree *pt,
-		  cvec *globals)
+		  FILE         *f,
+		  char         *name, /* just for errs */
+		  parse_tree   *pt,   /* obsolete */
+		  cvec         *globals)
 {
     char         *buf;
     int           i;

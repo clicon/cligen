@@ -41,14 +41,18 @@ int cligen_comment_set(cligen_handle h, char c);
 char* cligen_prompt(cligen_handle h);
 int cligen_prompt_set(cligen_handle h, char *prompt);
 
-parse_tree *cligen_tree(cligen_handle h, char *name);
-parse_tree *cligen_treetop(cligen_handle h, char *name);
+parse_tree *cligen_tree_find(cligen_handle h, char *name);
 int cligen_tree_add(cligen_handle h, char *name, parse_tree pt);
 int cligen_tree_del(cligen_handle h, char *name);
 
-/* A mode is really a parse-tree */
-char *cligen_tree_active(cligen_handle h);
-int cligen_tree_active_set(cligen_handle h, char *mode);
+parse_tree *cligen_tree_each(cligen_handle h, parse_tree *pt);
+parse_tree *cligen_tree_i(cligen_handle h, int i);
+
+parse_tree *cligen_tree_active_get(cligen_handle h);
+int         cligen_tree_active_set(cligen_handle h, char *name);
+
+char *cligen_treename_keyword(cligen_handle h);
+int cligen_treename_keyword_set(cligen_handle h, char *name);
 
 /* After an evaluation (callback), which node in the parse-tree? */
 cg_obj *cligen_co_match(cligen_handle h);
@@ -56,11 +60,6 @@ int cligen_co_match_set(cligen_handle h, cg_obj *co);
 
 char *cligen_fn_str_get(cligen_handle h);
 int cligen_fn_str_set(cligen_handle h, char *fn_str);
-
-//#ifdef CLIGEN_SUBMODE
-parse_tree *cligen_submode(cligen_handle h, char *name);
-int cligen_submode_set(cligen_handle h, char *name, parse_tree *pt);
-//#endif
 
 int cligen_completion(cligen_handle h);
 int cligen_completion_set(cligen_handle h, int mode);
@@ -98,5 +97,24 @@ int cligen_logsyntax_set(cligen_handle h, int n);
 
 void *cligen_userhandle(cligen_handle h);
 int cligen_userhandle_set(cligen_handle h, void *userhandle);
+
+/*
+ * backward compatibabilty functions, consider remove
+ */
+#if 1
+static inline parse_tree *cligen_tree(cligen_handle h, char *name){
+    return cligen_tree_find(h, name);
+}
+
+/* Get name of active tree back. cligen_tree_active_get() gets parse-tree which is 
+   usually what you want. */
+static inline char *cligen_tree_active(cligen_handle h){
+    parse_tree *pt;
+    if ((pt = cligen_tree_active_get(h)) != NULL)
+	return pt->pt_name;
+    return NULL;
+}
+
+#endif
 
 #endif /* _CLIGEN_HANDLE_H_ */

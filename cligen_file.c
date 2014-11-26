@@ -180,8 +180,8 @@ callback(cligen_handle handle, cvec *vars, cg_var *arg)
     cg_var *cv;
     char buf[64];
 
+    fprintf(stderr, "function: %s\n", cligen_fn_str_get(handle));
     fprintf(stderr, "variables:\n");
-
     cv = NULL;
     while ((cv = cvec_each1(vars, cv)) != NULL) {
 	cv2str(cv, buf, sizeof(buf)-1);
@@ -229,16 +229,13 @@ int
 main(int argc, char *argv[])
 {
     int         retval = -1;
-    parse_tree  pt = {0,};
-    int         callback_ret = 0;
+    parse_tree *pt;
     FILE       *f = stdin;
     char       *argv0 = argv[0];
-    char       *line;
     char       *filename=NULL;
     cvec       *globals;   /* global variables from syntax */
     cligen_handle  h;
     char       *str;
-    char       *treename;
     int         quit = 0;
     int         print_syntax = 0;
 
@@ -279,11 +276,12 @@ main(int argc, char *argv[])
 //    cligen_parse_debug(1);
     if ((globals = cvec_new(0)) == NULL)
 	goto done;
-    if (cligen_parse_file(h, f, filename?filename:"stdin", &pt, globals) < 0)
+    if (cligen_parse_file(h, f, filename?filename:"stdin", NULL, globals) < 0)
 	goto done;
+    pt = cligen_tree_i(h, 0); 
 
     /* map functions */
-    if (cligen_callback_str2fn(pt, str2fn, NULL) < 0)     
+    if (cligen_callback_str2fn(*pt, str2fn, NULL) < 0)     
 	goto done;
     if ((str = cvec_find_str(globals, "prompt")) != NULL)
 	cligen_prompt_set(h, str);
@@ -291,39 +289,16 @@ main(int argc, char *argv[])
 	cligen_tabmode_set(h, strcmp(str,"long") == 0);
     if ((str = cvec_find_str(globals, "comment")) != NULL)
 	cligen_comment_set(h, *str);
-    if ((treename = cvec_find_str(globals, "name")) == NULL)
-	treename = "tree0";
-    cligen_tree_active_set(h, treename); 
-    cligen_tree_add(h, treename, pt); 
     cvec_free(globals);
 
     if (print_syntax){
-	cligen_print(stdout, pt, 0);
+	cligen_print(stdout, *pt, 0);
 	fflush(stdout);
     }
     if (quit)
 	goto done;
-    /* Run the CLI command interpreter */
-    while (!cligen_exiting(h)){
-	switch (cliread_eval(h, &line, &callback_ret)){
-	case CG_EOF: /* eof */
-	    goto done;
-	    break;
-	case CG_ERROR: /* cligen match errors */
-	    printf("CLI read error\n");
-	    goto done;
-	case CG_NOMATCH: /* no match */
-	    printf("CLI syntax error in: \"%s\": %s\n", line, cligen_nomatch(h));
-	    break;
-	case CG_MATCH: /* unique match */
-	    if (callback_ret < 0)
-		printf("CLI callback error\n");
-	    break;
-	default: /* multiple matches */
-	    printf("Ambigous command\n");
-	    break;
-	}
-    }
+    if (cligen_loop(h) < 0)
+	goto done;
     retval = 0;
   done:
     fclose(f);

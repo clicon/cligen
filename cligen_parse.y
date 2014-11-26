@@ -28,7 +28,7 @@
 }
 
 %token MY_EOF
-%token V_RANGE V_LENGTH V_CHOICE V_KEYWORD V_REGEXP V_FRACTION_DIGITS V_SHOW
+%token V_RANGE V_LENGTH V_CHOICE V_KEYWORD V_REGEXP V_FRACTION_DIGITS V_SHOW V_TREENAME
 %token DOUBLEPARENT /* (( */
 %token DQ           /* " */
 %token DQP          /* ") */
@@ -167,6 +167,53 @@ cgy_flag(struct cligen_parse_yacc_arg *ya, char *var)
     return retval;
 }
 
+/*! Set a new treename. This is fact registers the previous tree and creates a new 
+ * Note that one could have used an assignment: treename = <name>; for this but
+ * I decided to create special syntax for this so that assignments can use any
+ * variable names.
+ */
+static int
+cgy_treename(struct cligen_parse_yacc_arg *ya, char *name)
+{
+    cg_obj            *co = NULL;
+    cg_obj            *cot;
+    struct cgy_list   *cl; 
+    int                retval = -1;
+    int                i;
+    parse_tree        *pt;
+
+    /* 1. Get the top object (cache it?) */
+    for (cl=ya->ya_list; cl; cl = cl->cl_next){
+	co = cl->cl_obj;
+	break;
+    }
+    cot = co_top(co);
+    pt = &cot->co_pt;
+    /* If anything anything parsed */
+    if (pt->pt_len){ 
+	/* 2. Add the old parse-tree with old name*/
+	for (i=0; i<pt->pt_len; i++){
+	    if ((co=pt->pt_vec[i]) != NULL)
+		co_up_set(co, NULL);
+	}
+	if (cligen_tree_add(ya->ya_handle, ya->ya_treename, *pt) < 0)
+	    goto done;
+	/* 3. Create new parse-tree XXX */
+	memset(pt, 0, sizeof(*pt));
+    }
+
+    /* 4. Set the new name */
+    if (ya->ya_treename)
+	free(ya->ya_treename);
+    if ((ya->ya_treename = strdup(name)) == NULL){
+	fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
+	goto done;
+    }
+    retval = 0;
+ done:
+    return retval;
+}
+
 /*
  * Only string type supported for now
  */
@@ -176,6 +223,8 @@ cgy_assignment(struct cligen_parse_yacc_arg *ya, char *var, char *val)
     struct cgy_stack *cs = ya->ya_stack;
     int              retval = -1;
     cg_var          *cv;
+    char            *treename_keyword;
+    cligen_handle    h = ya->ya_handle;
 
     if (debug)
 	fprintf(stderr, "%s: %s=%s\n", __FUNCTION__, var, val);
@@ -197,13 +246,20 @@ cgy_assignment(struct cligen_parse_yacc_arg *ya, char *var, char *val)
 	    goto done;
     }
     else{ /* global */
-	if ((cv = cvec_add(ya->ya_globals, CGV_STRING)) == NULL){
-	    fprintf(stderr, "%s: realloc:%s\n", __FUNCTION__, strerror(errno));
-	    goto done;
+	treename_keyword = cligen_treename_keyword(h);
+	if (strcmp(var, treename_keyword) == 0){
+	    if (cgy_treename(ya, val) < 0)
+		goto done;
 	}
-	cv_name_set(cv, var);
-	if (cv_parse(val, cv) < 0)  /* May be wrong type */
-	    goto done;
+	else {
+	    if ((cv = cvec_add(ya->ya_globals, CGV_STRING)) == NULL){
+		fprintf(stderr, "%s: realloc:%s\n", __FUNCTION__, strerror(errno));
+		goto done;
+	    }
+	    cv_name_set(cv, var);
+	    if (cv_parse(val, cv) < 0)  /* May be wrong type */
+		goto done;
+	}
     }
     retval = 0;
   done:
@@ -876,8 +932,6 @@ cgy_exit(struct cligen_parse_yacc_arg *ya)
     return 0;
 }
 
-
-
 %} 
  
 %%
@@ -893,6 +947,7 @@ lines        : lines line {
 
 line          : decltop line1	{ if (debug) printf("line->decltop line1\n"); }	
               | assignment ';'  { if (debug) fprintf(stderr, "line->assignment ;\n"); }
+
               ;
 
 line1        :  line2  { if (debug) printf("line1->line2\n"); }
@@ -916,6 +971,7 @@ option        : callback    {if (debug)printf("option->callback\n");}
               | flag        {if (debug)printf("option->flag\n");} 
               | assignment  {if (debug)printf("option->assignment\n");} 
               ;
+
 
 assignment    : NAME '=' DQ charseq DQ {cgy_assignment(_ya, $1,$4);free($1); free($4);}
               ; 

@@ -51,6 +51,7 @@ struct cgy_stack{
 struct cligen_parse_yacc_arg{
     cligen_handle         ya_handle;       /* cligen_handle */
     char                 *ya_name;         /* Name of syntax (for error string) */
+    char                 *ya_treename;     /* Name of syntax (for error string) */
     int                   ya_linenum;      /* Number of \n in parsed buffer */
     char                 *ya_parse_string; /* original (copy of) parse string */
     void                 *ya_lexbuf;       /* internal parse buffer from lex */

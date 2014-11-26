@@ -211,45 +211,47 @@ cvec_del(cvec *vr, cg_var *del)
 /*! Return allocated length of a cvec.
  */
 int     
-cvec_len(cvec *vr)
+cvec_len(cvec *cvv)
 {
-    return vr->vr_len;
+    return cvv->vr_len;
 }
 
 /*! Return i:th element of cligen variable vector cvec.
+ * @param  cvv	  	Cligen variable list
+ * @param  i	  	Order of element to get
  */
 cg_var *
-cvec_i(cvec *vr, int i)
+cvec_i(cvec *cvv, int i)
 {
-    if (i < vr->vr_len)
-	return &vr->vr_vec[i];
+    if (i < cvv->vr_len)
+	return &cvv->vr_vec[i];
     return NULL;
 }
 
 /*! Iterate through all cligen variables in a cvec list
  *
- * @code
- *	   cg_var *cv = NULL;
- *	   while ((cv = cvec_each(vr, cv)) != NULL) {
- *	     ...
- *	   }
- * @endcode
- *
- * @param  vr	  	Cligen variable list
+ * @param  cvv	  	Cligen variable list
  * @param  prev		Last cgv (or NULL)
  * @retval cv           Next variable structure.
  * @retval NULL         When end of list reached.
+ * @code
+ *	   cg_var *cv = NULL;
+ *	   while ((cv = cvec_each(cvv, cv)) != NULL) {
+ *	     ...
+ *	   }
+ * @endcode
+
  */
 cg_var *
-cvec_each(cvec *vr, cg_var *prev)
+cvec_each(cvec *cvv, cg_var *prev)
 {
   if (prev == NULL){   /* Initialization */
-      if (vr->vr_len > 0)
-	  return &vr->vr_vec[0];
+      if (cvv->vr_len > 0)
+	  return &cvv->vr_vec[0];
       else
 	  return NULL;
   }
-  return cvec_next(vr, prev);
+  return cvec_next(cvv, prev);
 }
 
 /*! Like cvec_each but skip element 0. 
@@ -258,15 +260,15 @@ cvec_each(cvec *vr, cg_var *prev)
  * others are arguments.
  */
 cg_var *
-cvec_each1(cvec *vr, cg_var *prev)
+cvec_each1(cvec *cvv, cg_var *prev)
 {
   if (prev == NULL){   /* Initialization */
-      if (vr->vr_len > 1)
-	  return &vr->vr_vec[1];
+      if (cvv->vr_len > 1)
+	  return &cvv->vr_vec[1];
       else
 	  return NULL;
   }
-  return cvec_next(vr, prev);
+  return cvec_next(cvv, prev);
 }
 
 /*! Create a new cvec by copying from an original
@@ -313,7 +315,7 @@ cvec_dup(cvec *old)
 int
 cvec_match(cg_obj *co_match, 
 	   char   *cmd, 
-	   cvec   *vr)
+	   cvec   *cvv)
 {
     cg_obj    *co;
     cg_var    *cv;
@@ -327,7 +329,7 @@ cvec_match(cg_obj *co_match,
 
     nrlevels   = -1;
     nrargs   = 0;
-    memset(vr, 0, sizeof(*vr));
+    memset(cvv, 0, sizeof(*cvv));
 
     /* Count nr of keys and variables by going upwards from leaf to top */
     for (co=co_match; co; co=co_up(co)){
@@ -352,12 +354,12 @@ cvec_match(cg_obj *co_match,
     }
 
     /* cvec for each arg + command itself */
-    if (cvec_init(vr, nrargs + 1) < 0){
+    if (cvec_init(cvv, nrargs + 1) < 0){
 	fprintf(stderr, "%s: calloc: %s\n", __FUNCTION__, strerror(errno));
 	goto done;
     }
     /* Historically we put command line here, maybe more logical in keyword? */
-    cv = cvec_i(vr, 0);
+    cv = cvec_i(cvv, 0);
     cv->var_type = CGV_REST;
     cv_string_set(cv, cmd); /* the whole command string */
 
@@ -367,7 +369,7 @@ cvec_match(cg_obj *co_match,
 	for (j=nrlevels, co=co_match; j>level; j--)
 	    co = co_up(co);
 	/* Check if this is a variable */
-	cv = cvec_i(vr, v);
+	cv = cvec_i(cvv, v);
 	switch (co->co_type){
 	case CO_VARIABLE: /* Get the value of the variable */
 	    if (co->co_value){
@@ -440,12 +442,12 @@ cvec_start(char *cmd)
 /*! Pretty print cligen variable list to a file
  */
 int
-cvec_print(FILE *f, cvec *vr)
+cvec_print(FILE *f, cvec *cvv)
 {
     cg_var *cv = NULL;
     int     i = 0;
 
-    while ((cv = cvec_each(vr, cv)) != NULL) {
+    while ((cv = cvec_each(cvv, cv)) != NULL) {
 	fprintf(f, "%d : %s = ", i++, cv_name_get(cv));
 	cv_print(f, cv);
 	fprintf(f, "\n");
@@ -459,11 +461,11 @@ cvec_print(FILE *f, cvec *vr)
  * matching entry. 
  */
 cg_var *
-cvec_find(cvec *vr, char *name)
+cvec_find(cvec *cvv, char *name)
 {
     cg_var *cv = NULL;
 
-    while ((cv = cvec_each(vr, cv)) != NULL) 
+    while ((cv = cvec_each(cvv, cv)) != NULL) 
 	if (cv->var_name && strcmp(cv->var_name, name) == 0)
 	    return cv;
     return NULL;
@@ -472,11 +474,11 @@ cvec_find(cvec *vr, char *name)
 /*! Like cvec_find, but only search non-keywords
  */
 cg_var *
-cvec_find_var(cvec *vr, char *name)
+cvec_find_var(cvec *cvv, char *name)
 {
     cg_var *cv = NULL;
 
-    while ((cv = cvec_each(vr, cv)) != NULL) 
+    while ((cv = cvec_each(cvv, cv)) != NULL) 
 	if (cv->var_name && strcmp(cv->var_name, name) == 0 && !cv->var_const)
 	    return cv;
     return NULL;
@@ -488,11 +490,11 @@ cvec_find_var(cvec *vr, char *name)
  * Like cvec_i but only works with variables.
  */
 cg_var *
-cvec_var_i(cvec *vr, char *name)
+cvec_var_i(cvec *cvv, char *name)
 {
     cg_var *cv = NULL;
 
-    while ((cv = cvec_each(vr, cv)) != NULL) 
+    while ((cv = cvec_each(cvv, cv)) != NULL) 
 	if (cv->var_name && strcmp(cv->var_name, name) == 0 && !cv->var_const)
 	    return cv;
     return NULL;
@@ -503,11 +505,11 @@ cvec_var_i(cvec *vr, char *name)
 /*! Like cvec_find, but only search keywords
  */
 cg_var *
-cvec_find_keyword(cvec *vr, char *name)
+cvec_find_keyword(cvec *cvv, char *name)
 {
     cg_var *cv = NULL;
 
-    while ((cv = cvec_each(vr, cv)) != NULL) 
+    while ((cv = cvec_each(cvv, cv)) != NULL) 
 	if (cv->var_name && strcmp(cv->var_name, name) == 0 && cv->var_const)
 	    return cv;
     return NULL;
@@ -520,33 +522,33 @@ cvec_find_keyword(cvec *vr, char *name)
  *       (2) the returned string must be copied since it points directly into the cv.
  */
 char *
-cvec_find_str(cvec *vr, char *name)
+cvec_find_str(cvec *cvv, char *name)
 {
     cg_var *cv;
 
-    if ((cv = cvec_find(vr, name)) != NULL && cv_isstring(cv->var_type))
+    if ((cv = cvec_find(cvv, name)) != NULL && cv_isstring(cv->var_type))
 	return cv_string_get(cv);
     return NULL;
 }
 
 /*! Get name of cligen variable vector
- * @param  vr   A cligen variable vector
+ * @param  cvv   A cligen variable vector
  * @retval str  The name of the cvec as a string, can be NULL, no copy
  */
 char *
-cvec_name_get(cvec *vr)
+cvec_name_get(cvec *cvv)
 {
-    return vr->vr_name;
+    return cvv->vr_name;
 }
 
 /*! Allocate and set name of cligen variable vector, including NULL
- * @param  vr     A cligen variable vector
+ * @param  cvv     A cligen variable vector
  * @param  name   A string that is copied and used as a cvec name, or NULL
  * @retval str    The name of the cvec.
  * The existing name, if any, is freed
  */
 char *
-cvec_name_set(cvec *vr, char *name)
+cvec_name_set(cvec *cvv, char *name)
 {
     char *s1 = NULL;
 
@@ -555,9 +557,9 @@ cvec_name_set(cvec *vr, char *name)
 	if ((s1 = strdup(name)) == NULL)
 	    return NULL; /* error in errno */
     }
-    if (vr->vr_name != NULL)
-	free(vr->vr_name);
-    vr->vr_name = s1;
+    if (cvv->vr_name != NULL)
+	free(cvv->vr_name);
+    cvv->vr_name = s1;
     return s1; 
 }
 

@@ -16,9 +16,10 @@
 #  You should have received a copy of the GNU General Public License
 #  along with CLIgen; see the file COPYING.  
 
-  prompt="hello> ";            # Assignment of prompt
+  prompt="cli> ";              # Assignment of prompt
   comment="#";                 # Same comment as in syntax
-  name="tutorial";             # Name of syntax (used when referencing)
+  treename="tutorial";         # Name of syntax (used when referencing)
+
   hello("Greet the world"){    # 'hello' command with help text
     world, hello("Hello World!"); # 'world' command with callback
   }
@@ -27,6 +28,8 @@
     tcp("The TCP protocol") <port:int32>("Port number"), cb("tcp");
     udp("The UDP protocol") <addr:ipaddr>("IPv4 address"), cb("udp");
   }
+access-list("ACL") permit("permit") <src:ipv4addr show:A.B.C.D>("Source address") <dst:ipv4addr show:A.B.C.D>("Destination address");
+ex <a:int32 show:number>("A number");
   # Example of commands on several levels
   aa bb,cb();{              
     ff,cb();
@@ -49,3 +52,24 @@
 
    # Quit CLI
   quit("quit the CLI"),quit(); 
+
+  change tree, changetree("tree1");
+
+  add @sub, add();         # Reference of sub-tree with 'add' callback
+  del @sub, del();         # Reference of sub-tree with 'del' callback
+
+  treename="sub";           # Small sub-tree refernced in the main tutorial tree
+  x{
+    y, fn("a");
+  }
+
+  treename="tree1";
+  z{
+      x;
+  }
+  change tree, changetree("tutorial");
+
+
+
+
+

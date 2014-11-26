@@ -1001,7 +1001,7 @@ parse_bool(char *str, uint8_t *val, char **reason)
 	    i = 0;
 	else{
 	    if (reason)
-		if ((*reason = cligen_reason("%s is not a boolean value", str)) == NULL){
+		if ((*reason = cligen_reason("'%s' is not a boolean value", str)) == NULL){
 		    retval = -1;
 		    goto done;
 		}

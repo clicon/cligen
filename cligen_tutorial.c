@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include <netinet/in.h>
 
 #include <cligen/cligen.h>
@@ -123,6 +124,16 @@ quit(cligen_handle h, cvec *vars, cg_var *arg)
     return 0;
 }
 
+/*! Change cligen tree
+ */
+int
+changetree(cligen_handle h, cvec *vars, cg_var *arg)
+{
+    char *treename = cv_string_get(arg);
+
+    return cligen_tree_active_set(h, treename);
+}
+
 /*
  * Command without assigned callback
  */
@@ -150,6 +161,10 @@ str2fn(char *name, void *arg, char **error)
         return hello;
     if (strcmp(name, "cb") == 0)
         return cb;
+    if (strcmp(name, "add") == 0)
+        return cb;
+    if (strcmp(name, "del") == 0)
+        return cb;
     if (strcmp(name, "letters") == 0)
         return letters;
     if (strcmp(name, "secret") == 0)
@@ -158,6 +173,8 @@ str2fn(char *name, void *arg, char **error)
         return setprompt;
     if (strcmp(name, "quit") == 0)
         return quit;
+    if (strcmp(name, "changetree") == 0)
+        return changetree;
 
     return unknown; /* allow any function (for testing) */
 }
@@ -211,15 +228,12 @@ main(int argc, char *argv[])
 {
     cligen_handle   h;
     int             retval = -1;
-    parse_tree      pt = {0,};
-    int             ret = 0;
+    parse_tree     *pt;
     FILE           *f = stdin;
     char           *argv0 = argv[0];
-    char           *line;
     char           *filename=NULL;
     cvec           *globals;   /* global variables from syntax */
     char           *str;
-    char           *treename;
 
     argv++;argc--;
     for (;(argc>0)&& *argv; argc--, argv++){
@@ -236,7 +250,7 @@ main(int argc, char *argv[])
             argc--;argv++;
             filename = *argv;
             if ((f = fopen(filename, "r")) == NULL){
-                perror("fopen config_file");
+		fprintf(stderr, "fopen %s: %s\n", filename, strerror(errno));
                 exit(1);
             }
             break;
@@ -249,50 +263,31 @@ main(int argc, char *argv[])
         goto done;    
     if ((globals = cvec_new(0)) == NULL)
 	goto done;
-    if (cligen_parse_file(h, f, filename, &pt, globals) < 0)
+    if (cligen_parse_file(h, f, filename, NULL, globals) < 0)
         goto done;
-    /* map functions */
-    if (cligen_callback_str2fn(pt, str2fn, NULL) < 0)     
-        goto done;
+    pt = NULL;
+    while ((pt = cligen_tree_each(h, pt)) != NULL) {
+	if (cligen_callback_str2fn(*pt, str2fn, NULL) < 0) /* map functions */
+	    goto done;
+	if (cligen_expand_str2fn(*pt, str2fn_exp, NULL) < 0)
+	    goto done;
+    }
     if ((str = cvec_find_str(globals, "prompt")) != NULL)
         cligen_prompt_set(h, str);
     if ((str = cvec_find_str(globals, "comment")) != NULL)
         cligen_comment_set(h, *str);
     if ((str = cvec_find_str(globals, "tabmode")) != NULL)
 	cligen_tabmode_set(h, strcmp(str,"long") == 0);
-    treename = cvec_find_str(globals, "name");
-    cligen_tree_active_set(h, treename?treename:"tutorial");
-    cligen_tree_add(h, cligen_tree_active(h), pt); 
     cvec_free(globals);
-    printf("Syntax:\n");
-    cligen_print(stdout, pt, 0);
+    pt = NULL;
+    while ((pt = cligen_tree_each(h, pt)) != NULL) {
+	printf("Syntax:\n");
+	cligen_print(stdout, *pt, 0);
+    }
     fflush(stdout);
 
-    if (cligen_expand_str2fn(pt, str2fn_exp, NULL) < 0)
-        return -1;
-
-    /* Run the CLI command interpreter */
-    while (!cligen_exiting(h)){
-        switch (cliread_eval(h, &line, &ret)){
-        case -2: /* eof */
-            goto done;
-            break;
-        case -1: /* cligen match errors */
-            printf("CLI read error\n");
-            goto done;
-        case 0: /* no match */
-            printf("CLI syntax error in: \"%s\": %s\n", 
-		   line, cligen_nomatch(h));
-            break;
-        case 1: /* unique match */
-            if (ret < 0)
-                printf("CLI callback error\n");
-            break;
-        default: /* multiple matches */
-            printf("Ambigous command\n");
-            break;
-        }
-    }
+    if (cligen_loop(h) < 0)
+	goto done;
     retval = 0;
   done:
     fclose(f);

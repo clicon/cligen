@@ -90,14 +90,12 @@ cli_qmark_hook (void *arg, char *string, int cursor_loc)
     cligen_handle h = (cligen_handle)arg;
     parse_tree   *pt;     /* Orig parse-tree */
     int           retval = -1;
-    char         *mode;
     parse_tree    ptn={0,};     /* Expanded */
     cvec         *cvec = NULL;
 
     fputs ("\n", stdout);
-    mode = cligen_tree_active(h);
-    if ((pt = cligen_tree(h, mode)) == NULL){
-	fprintf(stderr, "No such parse-tree registered: %s\n", mode);
+    if ((pt = cligen_tree_active_get(h)) == NULL){
+	fprintf(stderr, "No active parse-tree found\n");
 	return -1;
     }
     if (pt_expand_1(h, NULL, pt) < 0) /* sub-tree expansion */
@@ -144,14 +142,12 @@ cli_tab_hook(void *arg, char *string, int prompt_width, int *cursorp)
     int	          old_cursor;
     parse_tree   *pt;     /* Orig */
     int           retval = -1;
-    char         *treename;
     parse_tree    ptn={0,};     /* Expanded */
     cvec         *cvec = NULL;
 
     old_cursor = *cursorp;  /* Save old location of cursor */
-    treename = cligen_tree_active(h);
-    if ((pt = cligen_tree(h, treename)) == NULL){
-	fprintf(stderr, "No such parse-tree registered: %s\n", treename);
+    if ((pt = cligen_tree_active_get(h)) == NULL){
+	fprintf(stderr, "No active parse-tree found\n");
 	return -1;
     }
     if (pt_expand_1(h, NULL, pt) < 0) /* sub-tree expansion */
@@ -554,7 +550,7 @@ cliread_parse (cligen_handle h,
 	       char         *string,
 	       parse_tree   *pt,     /* Orig */
 	       cg_obj      **co_orig,
-	       cvec         *vr)
+	       cvec         *cvv)
 {
     int           retval = -1;
     cg_obj       *match_obj;
@@ -578,7 +574,7 @@ cliread_parse (cligen_handle h,
 	    *co_orig = match_obj->co_ref;
 	else
 	    *co_orig = match_obj;
-	if (cvec_match(*co_orig, string, vr) < 0){
+	if (cvec_match(*co_orig, string, cvv) < 0){
 	    retval = CG_ERROR;
 	    goto done;
 	}
@@ -598,13 +594,8 @@ cliread_parse (cligen_handle h,
  * Read line interactively from terminal using getline (completion, etc), given
  * a parse-tree.
  *
- * INPUT:
- *   prompt    Prompt string to show at beginning of line
- *   pt        Parse-tree 
- * OUTPUT:
- *   line      Pointer to new string input from terminal
- * RETURNS:
- *  Pointer to command buffer or NULL if EOF.
+ * @param[in] h       cligen handle
+ * @retval    string  Pointer to command buffer or NULL if EOF.
  */
 char *
 cliread(cligen_handle h)
@@ -685,8 +676,7 @@ cliread_eval(cligen_handle     h,
 {
     cg_obj     *match;    /* matching syntax node */
     int         retval = CG_ERROR;
-    cvec       *vr;
-    char       *treename;
+    cvec       *cvv;
     parse_tree *pt = NULL;     /* Orig */
 
     if (h == NULL){
@@ -697,18 +687,17 @@ cliread_eval(cligen_handle     h,
 	retval = CG_EOF; 
 	goto done;
     }
-    treename = cligen_tree_active(h);
-    if ((pt = cligen_tree(h, treename)) == NULL){
-	fprintf(stderr, "No such parse-tree registered: %s\n", treename);
+    if ((pt = cligen_tree_active_get(h)) == NULL){
+	fprintf(stderr, "No active parse-tree found\n");
 	goto done;;
     }
-    if ((vr = cvec_new(0)) == NULL){
+    if ((cvv = cvec_new(0)) == NULL){
 	fprintf(stderr, "%s: cvec_new: %s\n", __FUNCTION__, strerror(errno));
 	goto done;;
     }
-    if ((retval = cliread_parse(h, *line, pt, &match, vr)) == CG_MATCH)
-	*cb_retval = cligen_eval(h, match, vr);
-    cvec_free(vr);	
+    if ((retval = cliread_parse(h, *line, pt, &match, cvv)) == CG_MATCH)
+	*cb_retval = cligen_eval(h, match, cvv);
+    cvec_free(cvv);	
   done:
     /* XXX: Get parse-tree */
     if (pt && pt_expand_cleanup_1(pt) < 0) 
@@ -731,7 +720,7 @@ cliread_eval(cligen_handle     h,
  * This is the only place where cligen callbacks are invoked
  */
 int
-cligen_eval(cligen_handle h, cg_obj *co, cvec *vr)
+cligen_eval(cligen_handle h, cg_obj *co, cvec *cvv)
 {
     struct cg_callback *cc;
     int                 retval = 0;
@@ -750,7 +739,7 @@ cligen_eval(cligen_handle h, cg_obj *co, cvec *vr)
 	    cligen_fn_str_set(h, cc->cc_fn_str);
 	    if ((retval = (*cc->cc_fn)(
 		     cligen_userhandle(h)?cligen_userhandle(h):h, 
-		     vr, 
+		     cvv, 
 		     cv)) < 0){
 		if (cv != NULL){
 		    cv_free(cv);

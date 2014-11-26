@@ -786,7 +786,11 @@ pt_free1(parse_tree pt, int recursive)
     for (i=0; i<pt.pt_len; i++)
 	if (pt.pt_vec[i])
 	    co_free(pt.pt_vec[i], recursive);
-    free(pt.pt_vec);
+    if (pt.pt_name)
+	free(pt.pt_name);
+    pt.pt_name = NULL;
+    if (pt.pt_vec)
+	free(pt.pt_vec);
     pt.pt_vec = NULL;
     pt.pt_len = 0;
     return 0;

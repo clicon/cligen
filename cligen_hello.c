@@ -51,51 +51,25 @@ int
 main(int argc, char *argv[])
 {
     int                retval = -1;
-    int                cb_ret;
-    char              *line;          /* line read from input */
-    parse_tree         pt = {0,};     /* parse tree */
-    cvec              *globals;       /* global variables from syntax */
-    cg_var            *cv;
+    parse_tree        *pt;            /* cligen parse tree */
     cligen_handle      h;
 
     if ((h = cligen_init()) == NULL)
 	goto done;
-    if ((globals = cvec_new(0)) == NULL)
-	goto done;
-    if (cligen_parse_str(h, hello_syntax, "hello world", &pt, globals) < 0)
-	goto done;
-    if (cligen_callback_str2fn(pt, str2fn, NULL) < 0)     
+    if (cligen_parse_str(h, hello_syntax, "hello world", NULL, NULL) < 0)
 	goto done;
     /* find global assignments: prompt and comment sign */
-    if ((cv = cvec_find(globals, "prompt")) != NULL)
-	cligen_prompt_set(h, cv_string_get(cv));
-    else
-	fprintf(stderr, "prompt not found\n");
-    cvec_free(globals);
+    cligen_prompt_set(h, "hello> ");
     cligen_comment_set(h, '#');
-    cligen_tree_add(h, "hello", pt);
-    cligen_tree_active_set(h, "hello");
+    /* Get the default (first) parse-tree */
+    if ((pt = cligen_tree_i(h, 0)) == NULL)
+	goto done;
+    /* Bind callback (hello_cb) to all commands */
+    if (cligen_callback_str2fn(*pt, str2fn, NULL) < 0)     
+	goto done;
     /* Run the CLI command interpreter */
-    while (!cligen_exiting(h)){
-	switch (cliread_eval(h, &line, &cb_ret)){
-	case CG_EOF: /* eof */
-	    goto done;
-	    break;
-	case CG_ERROR: /* cligen match errors */
-	    printf("CLI read error\n");
-	    goto done;
-	case CG_NOMATCH: /* no match */
-	    printf("CLI syntax error in: \"%s\": %s\n", line, cligen_nomatch(h));
-	    break;
-	case CG_MATCH: /* unique match */
-	    if (cb_ret < 0)
-		printf("CLI callback error\n");
-	    break;
-	default: /* multiple matches */
-	    printf("Ambigous command\n");
-	    break;
-	}
-    }
+    if (cligen_loop(h) < 0)
+	goto done;
     retval = 0;
   done:
     cligen_exit(h);

@@ -87,8 +87,11 @@ struct parse_tree{
     struct cg_obj     **pt_vec;    /**< vector of pointers to parse-tree nodes */
     int                 pt_len;    /**< length of vector */
     struct parse_tree  *pt_up;     /**< parent cligen object, if any */
+    char               *pt_name;
+#if 0
     int                 pt_obj;    /**< if this parse-tree is a part of a cg_obj (can be 
 				      typecast to (cg_obj*). See co_up() below */
+#endif
 };
 typedef struct parse_tree parse_tree;
 
@@ -266,6 +269,19 @@ co_up_set(cg_obj *co, cg_obj *cop)
 }
 #endif
 
+/*! return top-of-tree (ancestor) */
+static inline cg_obj* 
+co_top(cg_obj *co0) 
+{
+    cg_obj *co = co0;
+    cg_obj *co1;
+
+    while ((co1 = co_up(co)) != NULL)
+	co = co1;
+    return co;
+}
+
+
 /*
  * A function that maps from string to functions. Used when parsing a file that needs
  * to map function names (string) to actual function pointers.
@@ -276,25 +292,22 @@ typedef cg_fnstype_t *(cg_str2fn_t)(char *str, void *arg, char **err);
 /*
  * Prototypes
  */
-void cligen_parsetree_sort(parse_tree pt, int recursive);
+void    cligen_parsetree_sort(parse_tree pt, int recursive);
 cg_obj *co_new(char *cmd, cg_obj *prev);
 cg_obj *cov_new(enum cv_type cvtype, cg_obj *prev);
-int co_pref(cg_obj *co, int exact);
-int pt_realloc(parse_tree *);
-
-int co_callback_copy(struct cg_callback *cc0, struct cg_callback **ccn, cg_var *arg);
-int co_copy(cg_obj *co, cg_obj *parent, cg_obj **conp);
-int pt_copy(parse_tree pt, cg_obj *parent, parse_tree *ptn);
-int cligen_parsetree_merge(parse_tree *pt0, cg_obj *parent0, parse_tree pt1);
-int cligen_parsetree_free(parse_tree pt, int recurse);
-
-int co_free(cg_obj *co, int recursive);
-
+int     co_pref(cg_obj *co, int exact);
+int     pt_realloc(parse_tree *);
+int     co_callback_copy(struct cg_callback *cc0, struct cg_callback **ccn, cg_var *arg);
+int     co_copy(cg_obj *co, cg_obj *parent, cg_obj **conp);
+int     pt_copy(parse_tree pt, cg_obj *parent, parse_tree *ptn);
+int     cligen_parsetree_merge(parse_tree *pt0, cg_obj *parent0, parse_tree pt1);
+int     cligen_parsetree_free(parse_tree pt, int recurse);
+int     co_free(cg_obj *co, int recursive);
 cg_obj *co_insert(parse_tree *pt, cg_obj *co);
 cg_obj *co_find_one(parse_tree pt, char *name);
-int co_value_set(cg_obj *co, char *str);
-char *cligen_reason(const char *fmt, ...);
-int pt_apply(parse_tree pt, cg_applyfn_t fn, void *arg);
+int     co_value_set(cg_obj *co, char *str);
+char   *cligen_reason(const char *fmt, ...);
+int     pt_apply(parse_tree pt, cg_applyfn_t fn, void *arg);
 
 #endif /* _CLIGEN_GEN_H_ */
 

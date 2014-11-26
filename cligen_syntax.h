@@ -29,17 +29,17 @@ typedef void *(str2fn_mapper)(char *str, void *arg, char **err);
  * Prototypes
  */
 int
-cligen_parse_str(cligen_handle h,
-		 char       *str,
-		 char       *name, 
-		 parse_tree *pt,
-		 cvec     *globals);
+cligen_parse_str(cligen_handle  h,
+		 char          *str,
+		 char          *name, 
+		 parse_tree    *pt,
+		 cvec          *globals);
 int
 cligen_parse_file(cligen_handle h,
-		  FILE *f,
-		  char *name, 
-		  parse_tree *pt,
-		  cvec *globals);
+		  FILE         *f,
+		  char         *name, 
+		  parse_tree   *obsolete,
+		  cvec         *globals);
 
 int cligen_parse_line(cligen_handle h,
                int           linenum,
