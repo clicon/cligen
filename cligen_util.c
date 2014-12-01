@@ -43,6 +43,38 @@
 #include "cligen_read.h"
 #include "cligen_util.h"
 
+/*! Utility function to append string cv to a cligen vector
+ * It is a utility function since it can be made using existing cv and cvec functions
+ * but common since string type is the most commo
+ * @param[in]   cvv  cligen variable vector
+ * @param[in]   name Name to set (or NULL)
+ * @param[val]  val  String value
+ * @retval  0  OK
+ * @retval -1  Error
+ * See also 
+ */
+int
+cvec_add_string(cvec *cvv, char *name, char *val)
+{
+    cg_var *cv;
+    int     retval = -1;
+
+    if ((cv = cvec_add(cvv, CGV_STRING)) == NULL)
+	goto done;
+    if (name)
+	cv_name_set(cv, name);
+    cv_string_set(cv, val);
+    retval = 0;
+ done:
+    return retval;
+}
+
+/*! Utility function for main cligen event loop.
+ * You probably should copy this function and make your own main event loop
+ * @param   h  cligen handle
+ * @retval  0  OK
+ * @retval -1  Error
+ */
 int 
 cligen_loop(cligen_handle h)
 {
@@ -71,7 +103,7 @@ cligen_loop(cligen_handle h)
 	    break;
 	}
     }
-retval = 0;
-  done:
-return retval;
+    retval = 0;
+ done:
+    return retval;
 }

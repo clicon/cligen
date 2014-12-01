@@ -27,6 +27,8 @@
 /*
  * Prototypes
  */
+int cvec_add_string(cvec *cvv, char *name, char *val);
+
 int cligen_loop(cligen_handle h);
 
 #endif /* _CLIGEN_UTIL_H_ */

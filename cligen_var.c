@@ -358,8 +358,7 @@ cv_string_get(cg_var *cv)
     return ((cv)->u.varu_string);
 }
 
-/*! Allocate new string from original. Free previous string if existing.
- */
+/*! Allocate new string from original. Malloc new string and free previous */
 char *
 cv_string_set(cg_var *cv, char *s0)
 {

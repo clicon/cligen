@@ -102,9 +102,7 @@ int cligen_userhandle_set(cligen_handle h, void *userhandle);
  * backward compatibabilty functions, consider remove
  */
 #if 1
-static inline parse_tree *cligen_tree(cligen_handle h, char *name){
-    return cligen_tree_find(h, name);
-}
+parse_tree *cligen_tree(cligen_handle h, char *name);
 
 /* Get name of active tree back. cligen_tree_active_get() gets parse-tree which is 
    usually what you want. */

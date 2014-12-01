@@ -70,6 +70,12 @@ Added a 'show' field in the variable syntax to distinguish between a name of a v
 	<x:int32 show:number>;
 Here, 'x' is used to reference the variable in callbacks, but 'number' is used when displaying the variable.
 
+Added support for multiple CLIgen trees in a single file. Example:
+  treename="tree1";
+  x {y;z;}
+  treename="tree2";
+  a {b;c;}
+
 Added a function to get the calling callback function:
 cligen_fn_str_get(). This may be useful in case the callback is not
 known and is primarily used in the ongoing python port.

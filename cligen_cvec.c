@@ -100,14 +100,14 @@ cvec_free(cvec *cvec)
  * See also cvec_new()
  * Each individual cv initialized with CGV_ERR and no value.
  *
- * @param vr    The cligen variable vector
+ * @param cvv    The cligen variable vector
  * @param len  number of cv elements. Can be zero and elements added incrementally.
  */
 int
-cvec_init(cvec *vr, int len)
+cvec_init(cvec *cvv, int len)
 {
-    vr->vr_len = len; 
-    if (len && (vr->vr_vec = calloc(vr->vr_len, sizeof(cg_var))) == NULL)
+    cvv->vr_len = len; 
+    if (len && (cvv->vr_vec = calloc(cvv->vr_len, sizeof(cg_var))) == NULL)
 	return -1;
     return 0;
 }
@@ -117,17 +117,17 @@ cvec_init(cvec *vr, int len)
  * See also cvec_free. But this function does not actually free the cvec.
  */
 int
-cvec_reset(cvec *vr)
+cvec_reset(cvec *cvv)
 {
     cg_var *cv = NULL;
     
-    while ((cv = cvec_each(vr, cv)) != NULL)  
+    while ((cv = cvec_each(cvv, cv)) != NULL)  
 	cv_reset(cv);
-    if (vr->vr_vec)
-	free(vr->vr_vec);
-    if (vr->vr_name)
-	free(vr->vr_name);
-    memset(vr, 0, sizeof(*vr));
+    if (cvv->vr_vec)
+	free(cvv->vr_vec);
+    if (cvv->vr_name)
+	free(cvv->vr_name);
+    memset(cvv, 0, sizeof(*cvv));
     return 0;
 }
 
@@ -137,16 +137,16 @@ cvec_reset(cvec *vr)
  * if cv0 is NULL, return first element.
  */
 cg_var *
-cvec_next(cvec *vr, cg_var *cv0)
+cvec_next(cvec *cvv, cg_var *cv0)
 {
     cg_var *cv = NULL;
     int i;
 
     if (cv0 == NULL)
-	cv = vr->vr_vec;
+	cv = cvv->vr_vec;
     else {
-	i = cv0 - vr->vr_vec;
-	if (i < vr->vr_len-1)
+	i = cv0 - cvv->vr_vec;
+	if (i < cvv->vr_len-1)
 	    cv = cv0 + 1;
     }
     return cv;
@@ -157,15 +157,15 @@ cvec_next(cvec *vr, cg_var *cv0)
  * See also cv_new, but this is allocated contiguosly as a part of a cvec.
  */
 cg_var *
-cvec_add(cvec *vr, enum cv_type type)
+cvec_add(cvec *cvv, enum cv_type type)
 {
-    int     len = vr->vr_len + 1;
+    int     len = cvv->vr_len + 1;
     cg_var *cv;
 
-    if ((vr->vr_vec = realloc(vr->vr_vec, len*sizeof(cg_var))) == NULL)
+    if ((cvv->vr_vec = realloc(cvv->vr_vec, len*sizeof(cg_var))) == NULL)
 	return NULL;
-    vr->vr_len = len;
-    cv = cvec_i(vr, len-1);
+    cvv->vr_len = len;
+    cv = cvec_i(cvv, len-1);
     memset(cv, 0, sizeof(*cv));
     cv->var_type = type;
     return cv;
@@ -180,32 +180,32 @@ cvec_add(cvec *vr, enum cv_type type)
  * then to immediately remove it. 
  */
 int
-cvec_del(cvec *vr, cg_var *del)
+cvec_del(cvec *cvv, cg_var *del)
 {
     int i;
     cg_var *cv;
 
-    if (cvec_len(vr) == 0)
+    if (cvec_len(cvv) == 0)
 	return 0;
     
     i = 0;
     cv = NULL;
-    while ((cv = cvec_each(vr, cv)) != NULL) {
+    while ((cv = cvec_each(cvv, cv)) != NULL) {
 	if (cv == del)
 	    break;
 	i++;
     }
-    if (i >= cvec_len(vr)) /* Not found !?! */
-	return cvec_len(vr);
+    if (i >= cvec_len(cvv)) /* Not found !?! */
+	return cvec_len(cvv);
 
-    if (i != cvec_len(vr)-1) /* If not last entry, move the remaining cv's */
-	memmove(&vr->vr_vec[i], &vr->vr_vec[i+1],
-		(vr->vr_len-i-1) * sizeof(vr->vr_vec[0]));
+    if (i != cvec_len(cvv)-1) /* If not last entry, move the remaining cv's */
+	memmove(&cvv->vr_vec[i], &cvv->vr_vec[i+1],
+		(cvv->vr_len-i-1) * sizeof(cvv->vr_vec[0]));
     
-    vr->vr_len--;
-    vr->vr_vec = realloc(vr->vr_vec, vr->vr_len*sizeof(vr->vr_vec[0])); /* Shrink should not fail? */
+    cvv->vr_len--;
+    cvv->vr_vec = realloc(cvv->vr_vec, cvv->vr_len*sizeof(cvv->vr_vec[0])); /* Shrink should not fail? */
 
-    return cvec_len(vr);
+    return cvec_len(cvv);
 }
 
 /*! Return allocated length of a cvec.

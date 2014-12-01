@@ -41,9 +41,7 @@ int     cvec_len(cvec *vr);
 cg_var *cvec_i(cvec *vr, int i);
 cg_var *cvec_next(cvec *vr, cg_var *cv0);
 cg_var *cvec_add(cvec *vr, enum cv_type type);
-int cvec_del(cvec *vr, cg_var *del);
-/* XXX: need cvec_var_each() and cvec_var_i() to support
-   full keyword list */
+int     cvec_del(cvec *vr, cg_var *del);
 cg_var *cvec_each(cvec *vr, cg_var *prev);
 cg_var *cvec_each1(cvec *vr, cg_var *prev);
 cvec   *cvec_dup(cvec *old);

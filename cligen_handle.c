@@ -861,3 +861,14 @@ gl_buf_cleanup(cligen_handle h)
     }
     return 0;
 }
+
+/*
+ * backward compatibabilty functions, consider remove
+ */
+#if 1 
+/* note cant inline since it may be used in plugins */
+parse_tree *cligen_tree(cligen_handle h, char *name)
+{
+    return cligen_tree_find(h, name);
+}
+#endif
