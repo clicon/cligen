@@ -176,11 +176,19 @@ transform_var_to_cmd(cg_obj *co, char *cmd, char *comment)
     return 0;
 }
 
-/*
- * pt_callback_reference
- * Recursively copy callback structure to all terminal nodes in the parse-tree.
+/*! Recursively copy callback structure to all terminal nodes in the parse-tree.
  * XXX: Actually copies to every node, even if not terminal
  * Problem is that the argument is modified according to reference rule
+ * @param[in]  cc0  This is the parameter (calling) callback. eg fn in @sub,fn().
+ *
+ * The function installs the calling callback in all executable non-terminal nodes.
+ * That is, it only install callbacks in non-terminal with NULL child which is 
+ * where a ';' is in the syntax, eg:
+ *	   a ;{} # Here a is executable
+ *	   b {}  # But b is not
+ * Somewhat strange semantics though:
+ * - Always replace (or add if empty) original callback in co0
+ * - Use local argument-list _unless_ there is none, then use callback list from cc0
  */
 static int
 pt_callback_reference(parse_tree pt, struct cg_callback *cc0)
@@ -195,7 +203,7 @@ pt_callback_reference(parse_tree pt, struct cg_callback *cc0)
 	if ((co = pt.pt_vec[i]) == NULL)
 	    continue;
 	ptc = &co->co_pt;
-	/* Filter out non-executable non-terminals */
+	/* Filter out non-executable non-terminals. */
 	if (ptc->pt_len && ptc->pt_vec[0] == NULL){
 	    /* Copy the callback from top */
 	    if ((cc = co->co_callbacks) == NULL){
