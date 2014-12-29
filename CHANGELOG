@@ -14,18 +14,18 @@
 #  GNU General Public License for more details.
 #
 #  You should have received a copy of the GNU General Public License
-#  along with CLIgen; see the file COPYING.  
+#  along with CLIgen; see the file COPYING.
 
-R3.5.0 Sometime in autumn 2014
-==============================
+R3.5.0 December 2014
+====================
 
 Extended type system with signed and unsigned ints: int8, int16,
-int32, int64, uint8, uint16, uint32, uint64. 
+int32, int64, uint8, uint16, uint32, uint64.
 You need to to the following in your code:
 Rename all cligen syntax types.
         int      -> int32
         number   -> int32
-For example in cli syntax files: <x:int> -> <x:int32>. 
+For example in cli syntax files: <x:int> -> <x:int32>.
 'int' will remain as an alias for int32.
 
 Rename types :
