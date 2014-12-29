@@ -87,7 +87,6 @@ commands and variables on the same level could not have the same name.
 
 Made cligen compilable with g++.
 
-
 R3.4.0 September 2013
 =====================
 Changed 'range' variable syntax, the old did not allow negative numbers.
