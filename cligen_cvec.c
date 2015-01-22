@@ -39,6 +39,7 @@
 #include "cligen_var.h"
 #include "cligen_cvec.h"
 #include "cligen_gen.h"
+#include "cligen_io.h"
 #include "cligen_match.h"
 #include "cligen_cv.h"
 #include "getline.h"
@@ -100,8 +101,8 @@ cvec_free(cvec *cvec)
  * See also cvec_new()
  * Each individual cv initialized with CGV_ERR and no value.
  *
- * @param cvv    The cligen variable vector
- * @param len  number of cv elements. Can be zero and elements added incrementally.
+ * @param cvv  The cligen variable vector
+ * @param len  Number of cv elements. Can be zero and elements added incrementally.
  */
 int
 cvec_init(cvec *cvv, int len)

@@ -175,7 +175,7 @@ cli_yesno (const char *fmt, ...)
 /* The following three callback functions are just wrappers in order to
    not expose getline to external interface */
 int 
-cligen_regfd(int fd, int (*cb)(int, void*), void *arg)
+cligen_regfd(int fd, cligen_fd_cb_t *cb, void *arg)
 {
     return gl_regfd(fd, cb, arg);
 }

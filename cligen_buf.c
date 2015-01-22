@@ -19,10 +19,13 @@
  *
  * CLIgen dynamic buffers 
  * @code
- * cbuf *xf;
- * xf = cbuf_new();
- * write(f, cbuf_get(xf), cbuf_len(xf));
- * cbuf_free(xf);
+ *   cbuf *cb;
+ *   if ((cb = cbuf_new()) == NULL)
+ *      err();
+ *   cprintf(cb, "content %d", 42);
+ *   if (write(f, cbuf_get(cb), cbuf_len(cb)) < 0)
+ *      err();
+ *   cbuf_free(cb);
  * @endcode
  */
 

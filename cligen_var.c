@@ -47,6 +47,7 @@
 #include "cligen_var.h"
 #include "cligen_cvec.h"
 #include "cligen_gen.h"
+#include "cligen_io.h"
 #include "cligen_match.h"
 #include "cligen_cv.h"
 #include "getline.h"
@@ -846,7 +847,7 @@ parse_uint32(char *str, uint32_t *val, char **reason)
 /*! Parse an uint64 number and check for errors
  * @param[in]  str     String containing number to parse
  * @param[out] val     Value on success
- * @param[out] reason  Error string on failure
+ * @param[out] reason  Error string on failure (if given)
  * @retval -1 : Error (fatal), with errno set to indicate error
  * @retval  0 : Validation not OK, malloced reason is returned
  * @retval  1 : Validation OK, value returned in val parameter
@@ -2619,7 +2620,7 @@ cv_cp(cg_var *new, cg_var *old)
     case CGV_STRING:	
     case CGV_INTERFACE:  /* All strings have the same address */
 	if (old->var_string)
-	    if ((new->var_string = strdup(old->var_string)) == NULL)
+	    if ((new->var_string = strdup(old->var_string)) == NULL) /* XXX leaked */
 		goto done;
 	break;
     case CGV_IPV4ADDR:

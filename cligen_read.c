@@ -660,7 +660,7 @@ cliread_getline(cligen_handle h,
  * Use this function if you want the whole enchilada without special operation
  *
  * @param [in]  h       CLIgen handle
-  * @param [out] line   Pointer to new string input from terminal
+ * @param [out] line   Pointer to new string input from terminal
  * @param [out] cb_retval  Retval of callback (only if functions return value is 1)
  *
  * @retval  -2      eof  CG_EOF

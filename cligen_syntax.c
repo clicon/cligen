@@ -231,8 +231,8 @@ cligen_str2fn(parse_tree pt,
 		    if (cc->cc_fn_str != NULL && cc->cc_fn == NULL){
 			cc->cc_fn = str2fn1(cc->cc_fn_str, fnarg1, &callback_err);
 			if (callback_err != NULL){
-			    fprintf(stderr, "%s: error: No such function: %s\n",
-				    __FUNCTION__, cc->cc_fn_str);
+			    fprintf(stderr, "%s: error: No such function: %s (%s)\n",
+				    __FUNCTION__, cc->cc_fn_str, callback_err);
 			    goto done;
 			}
 		    }

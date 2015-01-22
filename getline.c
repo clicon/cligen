@@ -24,6 +24,7 @@
 #include "cligen_var.h"
 #include "cligen_cvec.h"
 #include "cligen_gen.h"
+#include "cligen_io.h"
 #include "cligen_handle.h"
 
 #include       "getline.h"
@@ -297,8 +298,9 @@ struct regfd {
 static int nextfds = 0;
 static struct regfd *extfds = NULL;
 
+/* XXX: If arg is malloced, the treatment of arg creates leaks */
 int
-gl_regfd(int fd, int (*cb)(int, void*), void *arg)
+gl_regfd(int fd, cligen_fd_cb_t *cb, void *arg)
 {
     int i;
     struct regfd *tmp;
@@ -569,6 +571,7 @@ gl_getline(cligen_handle h)
     int             c, loc, tmp;
     char           *gl_buf;
     char           *gl_prompt;
+    int             escape = 0;
 #ifdef __unix__
     int	            sig;
 #endif
@@ -583,15 +586,24 @@ gl_getline(cligen_handle h)
     while ((c = gl_getc(h)) >= 0) {
 	gl_extent = 0;  	/* reset to full extent */
 	if (isprint(c)) {
-	    if (c == '?' && gl_qmark_hook) {
+	    if (escape == 0 && c == '\\')
+               escape++;
+            else{
+	    if (escape ==0 && c == '?' && gl_qmark_hook) {
+		escape = 0;
 		if (gl_qmark_hook(h, gl_buf, gl_pos))
 		    gl_fixup(h, gl_prompt, -2, gl_pos);
 	    }
-	    else if (gl_search_mode)
+	    else{ 
+		escape = 0;
+		if (gl_search_mode)
 		search_addchar(h, c);
 	    else
 		gl_addchar(h, c);
+	    }
+	    }
 	} else {
+	    escape = 0;
 	    if (gl_search_mode) { /* after ^S or ^R */
 	        if (c == '\033' || c == '\016' || c == '\020') { /* ESC, ^N, ^P */
 	            search_term(h);

@@ -22,7 +22,7 @@ void            gl_histadd(char *);		/* adds entries to hist */
 void            gl_histclear();			/* clears entries to hist */
 void		gl_strwidth(gl_strwidth_proc);	/* to bind gl_strlen */
 void		gl_redraw(cligen_handle h);	/* issue \n and redraw all */
-int             gl_regfd(int, int (*)(int, void*), void *);
+int             gl_regfd(int, cligen_fd_cb_t *, void *);
 int             gl_unregfd(int);
 
 int 	(*gl_in_hook)(void *, char *);

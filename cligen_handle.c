@@ -39,6 +39,7 @@
 #include "cligen_var.h"
 #include "cligen_cvec.h"
 #include "cligen_gen.h"
+#include "cligen_io.h"
 #include "cligen_handle.h"
 #include "cligen_read.h"
 #include "cligen_parse.h"
