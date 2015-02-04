@@ -287,6 +287,9 @@ cvec_dup(cvec *old)
 
     if ((new = cvec_new(old->vr_len)) == NULL)
 	return NULL;
+    if (old->vr_name)
+	if ((new->vr_name = strdup(old->vr_name)) == NULL)
+	    return NULL;
     i = 0;
     while ((cv0 = cvec_each(old, cv0)) != NULL) {
 	cv1 = cvec_i(new, i++);
