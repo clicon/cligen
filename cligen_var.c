@@ -2113,7 +2113,7 @@ cv_print(FILE *f, cg_var *cv)
  * @param  str0    Input string. Example, number variable, str can be "7834" or "0x7634"
  * @param  cv      cligen variable, as prepared by cv_reset()/cv_new()
  * @param  reason  If given, and if return value is 0, contains a malloced string
- *                 describing the reason why the validation failed.
+ *                 describing the reason why the validation failed. If given must be NULL.
  *
  * @retval -1  Error (fatal), with errno set to indicate error
  * @retval 0   Validation not OK, malloced reason is returned
@@ -2135,6 +2135,10 @@ cv_parse1(char *str0, cg_var *cv, char **reason)
     char  *mask;
     int    masklen;
 
+    if (reason && (*reason != NULL)){
+	fprintf(stderr, "reason must be NULL on calling");
+	return -1;
+    }
     if ((str = strdup(str0)) == NULL)
 	goto done;
     switch (cv->var_type) {
@@ -2271,7 +2275,7 @@ cv_parse1(char *str0, cg_var *cv, char **reason)
     if (str)
 	free (str);
     if (reason && *reason)
-	assert(retval == 0);
+	assert(retval == 0); /* validation error only on reason */
     return retval;
 }
 
