@@ -16,6 +16,8 @@
 #  You should have received a copy of the GNU General Public License
 #  along with CLIgen; see the file COPYING.
 
+Allow CR/LF in help-texts
+	
 R3.5.0 December 2014
 ====================
 
