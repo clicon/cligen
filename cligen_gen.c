@@ -555,6 +555,11 @@ co_eq(cg_obj *co1, cg_obj *co2)
 	    eq = strcmp(co2->co_command, co1->co_keyword);
 	    goto done;
 	}
+	/* Let References be last (more than) everything else */
+	if (co1->co_type == CO_REFERENCE)
+	    eq = 1;
+	if (co2->co_type == CO_REFERENCE)
+	    eq = -1;
 	goto done;
     }
     switch (co1->co_type){
@@ -868,17 +873,16 @@ co_insert_pos(parse_tree pt, cg_obj *co1, int low, int high)
 	return mid;
 }
 
-/*
- * co_insert
- * Add a cligen object (co1) to a parsetree(pt) alphabetically.
+/*! Add a cligen object (co1) to a parsetree(pt) alphabetically.
  * This involves searching in the parsetree for the position where it should be added,
  * Then checking whether an equivalent version already exists.
  * Then modifying the parsetree by shifting it down, and adding the new object.
  * There is som complexity if co == NULL.
-
- * Return value:
- *   co object if found (old _or_ new). NOTE: you must replace calling cg_obj with return.
- *   NULL error
+ *
+ * @retval  co   object if found (old _or_ new). NOTE: you must replace calling 
+ *               cg_obj with return.
+ * @retval  NULL error
+ * XXX: pt=[a b] + co1=[b] -> [a b] but children of one b is lost,..
  */
 cg_obj*
 co_insert(parse_tree *pt, cg_obj *co1)
@@ -899,12 +903,8 @@ co_insert(parse_tree *pt, cg_obj *co1)
 	   equality in str_cmp, so maybe we should use str_cmp instead? 
 	   At least, equality should be the same as in co_insert_pos()
 	*/
-#if 1
-	if (co1 && co2 && co_eq(co1, co2)==0)
-#else
-	if (co1 && co2 && !str_cmp(co1->co_command, co2->co_command))
-#endif
-{
+	if (co1 && co2 && co_eq(co1, co2)==0){
+	    cligen_parsetree_merge(&co2->co_pt, co2, co1->co_pt);
 	    co_free(co1, 1);
 	    return co2;
 	}

@@ -50,6 +50,21 @@ struct cvec{
     char           *vr_name; /* name of cvec, can be NULL */
 };
 
+/*! A malloc version that aligns on 4 bytes. To avoid warning from valgrind */
+#define align4(s) (((s)/4)*4 + 4)
+
+/*! A strdup version that aligns on 4 bytes. To avoid warning from valgrind */
+static inline char * strdup4(char *str) 
+{
+    char *dup;
+    int len;
+    len = align4(strlen(str)+1);
+    if ((dup = malloc(len)) == NULL)
+	return NULL;
+    strncpy(dup, str, len);
+    return dup;
+}
+
 /*
  * cv_exclude_keys
  * set if you want to backward compliant: dont include keys in cgv vec to callback
@@ -274,6 +289,9 @@ cvec_each1(cvec *cvv, cg_var *prev)
 
 /*! Create a new cvec by copying from an original
  *
+ * @param[in]   old   The cvec to copy from
+ * @retval      new   The cvec copy. Free this with cvec_free
+ * @retval      NULL  Error
  * The new cvec needs to be freed by cvec_free().
  * One can make a cvec_cp() as well but it is a little trickier to match vr_vec.
  */
@@ -288,7 +306,7 @@ cvec_dup(cvec *old)
     if ((new = cvec_new(old->vr_len)) == NULL)
 	return NULL;
     if (old->vr_name)
-	if ((new->vr_name = strdup(old->vr_name)) == NULL)
+	if ((new->vr_name = strdup4(old->vr_name)) == NULL)
 	    return NULL;
     i = 0;
     while ((cv0 = cvec_each(old, cv0)) != NULL) {
@@ -386,9 +404,9 @@ cvec_match(cg_obj *co_match,
 		else
 		    extract_substring(cmd, level, &val);
 	    cv->var_type = co->co_vtype;
-	    cv->var_name = strdup(co->co_command);
+	    cv->var_name = strdup4(co->co_command);
 	    if (co->co_show)
-		cv->var_show = strdup(co->co_show);
+		cv->var_show = strdup4(co->co_show);
 	    cv->var_const = iskeyword(co);
 	    if (co->co_vtype == CGV_DEC64) /* XXX: Seems misplaced? / too specific */
 		cv_dec64_n_set(cv, co->co_dec64_n);
@@ -405,7 +423,7 @@ cvec_match(cg_obj *co_match,
 	    break;
 	case CO_COMMAND:
 	    if (!excludekeys){
-		cv->var_name = strdup(co->co_command);
+		cv->var_name = strdup4(co->co_command);
 		cv->var_type = CGV_STRING;
 		cv_string_set(cv, co->co_command);
 		cv->var_const = 1;
@@ -558,7 +576,7 @@ cvec_name_set(cvec *cvv, char *name)
 
     /* Duplicate name. Must be done before a free, in case name is part of the original */
     if (name){
-	if ((s1 = strdup(name)) == NULL)
+	if ((s1 = strdup4(name)) == NULL)
 	    return NULL; /* error in errno */
     }
     if (cvv->vr_name != NULL)
