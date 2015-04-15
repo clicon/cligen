@@ -81,6 +81,7 @@ stripdup(char *s0)
 %s COMMENT
 %s NAMEORTYPE
 %s VARIABLE
+%s CHOICE
 %s ESCAPE
 %s STRING
 
@@ -138,12 +139,23 @@ stripdup(char *s0)
 <VARIABLE>range           { return V_RANGE; }
 <VARIABLE>length          { return V_LENGTH; }
 <VARIABLE>fraction-digits { return V_FRACTION_DIGITS; }
-<VARIABLE>choice          { return V_CHOICE; }
+<VARIABLE>choice          { BEGIN(CHOICE);return V_CHOICE; }
 <VARIABLE>keyword         { return V_KEYWORD; }
 <VARIABLE>regexp          { return V_REGEXP; }
 <VARIABLE>[-+]?[0-9]+\.[0-9]+ { cligen_parselval.string = strdup(yytext); return DECIMAL;}
 <VARIABLE>[-+]?[0-9]+     { cligen_parselval.string = strdup(yytext); return NUMBER;}
 <VARIABLE>([^ \t\n>:\|\"\(\)\[\]]|\\.)+ { 
+                                 cligen_parselval.string = strdup(yytext);
+                                 return NAME; }
+
+<CHOICE>[ \t]+          { return ' '; }
+<CHOICE>\n              { _YA->ya_linenum++; }
+<CHOICE>\|              { return *yytext; }
+<CHOICE>\>              { BEGIN(INITIAL); return *yytext; }
+<CHOICE>\:              { return *yytext; }
+<CHOICE>[-+]?[0-9]+\.[0-9]+ { cligen_parselval.string = strdup(yytext); return DECIMAL;}
+<CHOICE>[-+]?[0-9]+     { cligen_parselval.string = strdup(yytext); return NUMBER;}
+<CHOICE>([^ \t\n>:\|\"\(\)\[\]]|\\.)+ { 
                                  cligen_parselval.string = strdup(yytext);
                                  return NAME; }
 

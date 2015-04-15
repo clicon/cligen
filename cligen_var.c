@@ -708,7 +708,7 @@ parse_int64_base(char *str, int base, int64_t *val, char **reason)
     i = strtoll(str, &ep, base);
     if (str[0] == '\0' || *ep != '\0'){
 	if (reason != NULL)
-	    if ((*reason = cligen_reason("%s is not a number", str)) == NULL){
+	    if ((*reason = cligen_reason("'%s' is not a number", str)) == NULL){
 		retval = -1;
 		goto done;
 	    }
@@ -864,7 +864,7 @@ parse_uint64(char *str, uint64_t *val, char **reason)
     i = strtoull(str, &ep, 0);
     if (str[0] == '\0' || *ep != '\0'){
 	if (reason != NULL)
-	    if ((*reason = cligen_reason("%s is not a number", str)) == NULL){
+	    if ((*reason = cligen_reason("'%s' is not a number", str)) == NULL){
 		retval = -1; /* malloc */
 		goto done;
 	    }

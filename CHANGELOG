@@ -16,8 +16,14 @@
 #  You should have received a copy of the GNU General Public License
 #  along with CLIgen; see the file COPYING.
 
-Allow CR/LF in help-texts
-	
+- Fixed parse bugs for some choices syntax, eg <a choice:1.0|length> did not work.
+
+- Merge sub-trees with original trees containing same symbols. Eg a cligen-spec:
+	"a @TREE; a b;"
+  if TREE contains the symbol 'b', the two 'b:s' were not merged properly.
+
+- Allow CR/LF in help-texts
+
 R3.5.0 December 2014
 ====================
 
