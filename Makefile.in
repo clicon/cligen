@@ -69,7 +69,8 @@ TAGS:
 
 distclean: clean
 	rm -f Makefile config.log config.status config.h TAGS .depend
-	rm -rf autom4te.cache build.c cligen_config.h 
+	rm -rf autom4te.cache build.c cligen_config.h
+	rm -rf doc
 
 # Default rule  .c.o:	
 %@OBJ_SUFFIX@ : @srcdir@/%.c
@@ -157,6 +158,11 @@ $(MYLIBLINK) : $(MYLIB)
 # .h files in $(includefile)
 cligen : 
 	ln -sf . $@
+
+
+.PHONY: doc
+doc : 
+	doxygen Doxyfile
 
 .PHONY: depend
 depend:
