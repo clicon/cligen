@@ -1,7 +1,7 @@
 /*
   CLI generator. Take idl as input and generate a tree for use in cli.
 
-  Copyright (C) 2001-2014 Olof Hagsand
+  Copyright (C) 2001-2016 Olof Hagsand
 
   This file is part of CLIgen.
 
@@ -256,12 +256,14 @@ pt_reference_trunc(parse_tree pt)
  * One level only. Parse-tree is expanded itself (not copy).
  * XXX: CIRCULAR COPY. You copy from S already expanded tree! Gaah
  *
- * @param h       Handle needed to resolve tree-references (\@tree)
- * @param coprev  Parent, if any
- * @param pt      parse-tree to expand
+ * @param[in]     h       Handle needed to resolve tree-references (\@tree)
+ * @param[in]     coprev  Parent, if any
+ * @param[in,out] pt      parse-tree to expand
  */
 int
-pt_expand_1(cligen_handle h, cg_obj *coprev, parse_tree *pt)
+pt_expand_1(cligen_handle h, 
+	    cg_obj       *coprev, 
+	    parse_tree   *pt)
 {
     int              i, k;
     cg_obj          *co;
@@ -334,18 +336,17 @@ pt_expand_1(cligen_handle h, cg_obj *coprev, parse_tree *pt)
  * to: those objects that are expand or choice variables
  * (eg <string expand:foo>) are transformed into a set of new commands
  * with a reference point back to the original.
- * Arguments:
- *   h:       cligen handle
- *   ptr:     original parse-tree consisting of a vector of cligen objects
- *   parent:  parent of original co object
- *   ptn:     shadow parse-tree initially an empty pointer, its value is returned.
+ * @param[in]  h       cligen handle
+ * @param[in]  ptr     original parse-tree consisting of a vector of cligen objects
+ * @param[in]  parent  parent of original co object
+ * @param[out] ptn     shadow parse-tree initially an empty pointer, its value is returned.
  */
 int
 pt_expand_2(cligen_handle h, 
 	    parse_tree   *ptr, 
 	    cvec         *cvec,
 	    parse_tree   *ptn, 
-	    int hide) 
+	    int           hide) 
 {
     int          i, k, nr;
     cg_obj      *co;

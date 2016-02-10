@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2001-2014 Olof Hagsand
+  Copyright (C) 2001-2016 Olof Hagsand
 
   This file is part of CLIgen.
 
@@ -149,7 +149,7 @@ co2cbuf(cbuf *cb, cg_obj *co, int marginal, int brief)
 	    if (cc->cc_fn_str){
 		cprintf(cb, ", %s(", cc->cc_fn_str);
 		if (cc->cc_arg)
-		    cprintf(cb, "%s", cc->cc_arg);
+		    cv2cbuf(cc->cc_arg, cb);
 		cprintf(cb, ")");
 	    }
 	}

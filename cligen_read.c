@@ -1,7 +1,7 @@
 /*
   CLI generator readline. Do input processing and matching.
 
-  Copyright (C) 2001-2014 Olof Hagsand
+  Copyright (C) 2001-2016 Olof Hagsand
 
   This file is part of CLIgen.
 
@@ -234,6 +234,7 @@ column_print(FILE *fout, int col, pt_vec pt, int min, int max, int level)
 		    memcpy(&line[j*(COLUMN_WIDTH+1)], co->co_command, 
 			   (COLUMN_WIDTH < strlen(co->co_command)) ? COLUMN_WIDTH : strlen(co->co_command));
 		    break;
+		case CO_REFERENCE:
 		default:
 		    break;
 		}
@@ -557,6 +558,10 @@ cliread_parse (cligen_handle h,
     parse_tree    ptn={0,};     /* Expanded */
     cvec         *cvec = NULL;
 
+    if (cligen_logsyntax(h) > 0){
+	fprintf(stderr, "%s:\n", __FUNCTION__);
+	cligen_print(stderr, *pt, 0);
+    }
     cli_trim (&string, cligen_comment(h));
     if (pt_expand_1(h, NULL, pt) < 0) /* sub-tree expansion, ie @ */
 	goto done; 
@@ -564,10 +569,8 @@ cliread_parse (cligen_handle h,
 	goto done;
     if (pt_expand_2(h, pt, cvec, &ptn, 0) < 0)      /* expansion */
 	goto done;
-
     if ((retval = match_pattern_exact(h, string, ptn, 1, cvec, &match_obj)) < 0)
 	goto done;
-
     /* Map from ghost object match_obj to real object */
     if (retval == CG_MATCH){
 	if (match_obj && match_obj->co_ref)

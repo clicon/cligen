@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2001-2014 Olof Hagsand
+  Copyright (C) 2001-2016 Olof Hagsand
 
   This file is part of CLIgen.
 
@@ -25,6 +25,7 @@
 /*
  * CLIgen variable record that encapsulates parsed variable vectors, etc.
  * Never use these fields directly.
+ * Defined internally in cligen_cvec.c
  */
 typedef struct cvec cvec;
 

@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2001-2014 Olof Hagsand
+  Copyright (C) 2001-2016 Olof Hagsand
 
   This file is part of CLIgen.
 
@@ -94,6 +94,8 @@ enum cv_type{
 /* var_string is set to something meaningful */
 #define cv_isstring(t)((t)==CGV_STRING||(t)==CGV_REST|| \
 			(t)==CGV_INTERFACE)
+
+#define cv_typemax(t) 
 
 /*
  * Cligen Variable structure
@@ -191,7 +193,9 @@ int     cv2str(cg_var *cv, char *str, size_t size);
 char   *cv2str_dup(cg_var *cv);
 
 int     cv_print(FILE *f, cg_var *cgv);
-
+int     cvtype_max2str(enum cv_type type, char *str, size_t size);
+#define HAVE_CLIGEN_MAX2STR 1 /* XXX Backward compatibility */
+char   *cvtype_max2str_dup(enum cv_type type);
 int     cv_cmp(cg_var *cgv1, cg_var *cgv2);
 int     cv_cp(cg_var *n, cg_var *old);
 cg_var *cv_dup(cg_var *old);

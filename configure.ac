@@ -1,5 +1,5 @@
 #
-#  Copyright (C) 2001-2014 Olof Hagsand
+#  Copyright (C) 2001-2016 Olof Hagsand
 #
 #  This file is part of CLIgen.
 #

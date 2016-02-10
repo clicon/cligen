@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2001-2014 Olof Hagsand
+  Copyright (C) 2001-2016 Olof Hagsand
 
   This file is part of CLIgen.
 
@@ -716,7 +716,7 @@ parse_int64_base(char *str, int base, int64_t *val, char **reason)
 	goto done;
     }
     if (errno != 0){
-	if ((i == LLONG_MIN || i == LLONG_MAX) && errno == ERANGE){ 
+	if ((i == INT64_MIN || i == INT64_MAX) && errno == ERANGE){ 
 	    if (reason != NULL)
 		if ((*reason = cligen_reason("%s is out of range (type is int64)", str)) == NULL){
 		    retval = -1; /* malloc */
@@ -872,7 +872,7 @@ parse_uint64(char *str, uint64_t *val, char **reason)
 	goto done;
     }
     if (errno != 0){
-	if (i == ULLONG_MAX && errno == ERANGE){ 
+	if (i == UINT64_MAX && errno == ERANGE){ 
 	    if (reason != NULL)
 		if ((*reason = cligen_reason("%s is out of range (type is uint64)", str)) == NULL){
 		    retval = -1; /* malloc */
@@ -1831,10 +1831,8 @@ cv2cbuf(cg_var *cv, cbuf *cb)
     return 0;
 }
 
-
 /*! Print value of CLIgen variable using printf style formats.
  *
- * The value is printed in the string 'str' which has length 'size'.
  * You can use str=NULL to get the expected length.
  * The number of (potentially if str=NULL) written bytes is returned.
  * The value is printed as it would have been input, ie the reverse of
@@ -1842,6 +1840,9 @@ cv2cbuf(cg_var *cv, cbuf *cb)
  * Typically used by external code when transforming cgv:s.
  * Note, for strings, the length returned is _excluding_ the null byte, but the length
  * in supplied in the argument list is _including_ the null byte.
+ * @param[in]   cv  CLIgen variable
+ * @param[out]  str   Value printed in this string
+ * @param[in]   size  Length of 'str'
  * @retval len  How many bytes printed
  * @see  cv2cbuf   which also prints a CV but to cbuf
  * @see  cv_print  which also prints a CV but to a file
@@ -1962,7 +1963,8 @@ cv2str(cg_var *cv, char *str, size_t size)
 
 /*! Print value of CLIgen variable using printf style formats into a new string
  *
- * The string should be freed after use.
+ * @param[in]   cv  CLIgen variable
+ * @retval      str Malloced string containing value. Should be freed after use.
  * @see cv2str
  */
 char *
@@ -2097,6 +2099,82 @@ cv_print(FILE *f, cg_var *cv)
 	break;
     }
     return len;
+}
+
+/*! Print max value of a CLIgen variable type as string
+ * @param[in]   type  CLIgen variable type
+ * @param[out]  str   Max value printed in this string
+ * @param[in]   size  Length of 'str'
+ * @retval len  How many bytes printed
+ * @see cvtype_max2str_dup
+ * You can use str=NULL to get the expected length.
+ * The number of (potentially if str=NULL) written bytes is returned.
+ */
+int
+cvtype_max2str(enum cv_type type, char *str, size_t size)
+{
+    int  len = 0;
+
+    switch (type){
+    case CGV_INT8:
+	len = snprintf(str, size, "%" PRId8, INT8_MAX);
+	break;
+    case CGV_INT16:
+	len = snprintf(str, size, "%" PRId16, INT16_MAX);
+	break;
+    case CGV_INT32:
+	len = snprintf(str, size, "%" PRId32, INT32_MAX);
+	break;
+    case CGV_INT64:
+	len = snprintf(str, size, "%" PRId64, INT64_MAX);
+	break;
+    case CGV_UINT8:
+	len = snprintf(str, size, "%" PRIu8, UINT8_MAX);
+	break;
+    case CGV_UINT16:
+	len = snprintf(str, size, "%" PRIu16, UINT16_MAX);
+	break;
+    case CGV_UINT32:
+	len = snprintf(str, size, "%" PRIu32, UINT32_MAX);
+	break;
+    case CGV_UINT64:
+        len = snprintf(str, size, "%" PRIu64, UINT64_MAX);
+        break;
+    case CGV_DEC64:
+	len = snprintf(str, size, "%" PRId64 ".0", INT64_MAX);
+	break;
+    case CGV_BOOL:
+	len = snprintf(str, size, "true");
+	break;
+    default:
+	break;
+    }
+    return len;
+}
+
+/*! Print max value of a CLIgen variable type as string
+ *
+ * The string should be freed after use.
+ * @param[in]   type  CLIgen variable type
+ * @retval      str   Malloced string containing value. Should be freed after use.
+ * @see cvtype_max2str
+ */
+char *
+cvtype_max2str_dup(enum cv_type type)
+{
+    int   len;
+    char *str;
+
+    if ((len = cvtype_max2str(type, NULL, 0)) < 0)
+	return NULL;
+    if ((str = (char *)malloc (len+1)) == NULL)
+	return NULL;
+    memset (str, '\0', len+1);
+    if ((cvtype_max2str(type, str, len+1)) < 0){
+	free(str);
+	return NULL;
+    }
+    return str;
 }
 
 /*! Parse cv from string. 

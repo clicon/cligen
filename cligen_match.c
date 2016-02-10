@@ -1,7 +1,7 @@
 /*
   CLI generator match functions, used in runtime checks.
 
-  Copyright (C) 2001-2014 Olof Hagsand
+  Copyright (C) 2001-2016 Olof Hagsand
 
   This file is part of CLIgen.
 
@@ -86,18 +86,16 @@ match_variable(cg_obj *co, char *str, char **reason)
 
 /*
  * match_object
- * INPUT:
- *   string    Input string to match
- *   co        cligen object
- * OUTPUT
- *   exact:    1 if match is exact (CO_COMMANDS). VARS is 0.
- *   reason:   if not match and co type is 0, reason points to a (malloced) string 
- *             containing an error explanation string. If reason is NULL no such
- *             string will be malloced. This string needs to be freed.
- * RETURNS:
- *   -1        Error
- *   0         Not match
- *   1         Match
+ * param[in]  string   Input string to match
+ * param[in]  co       cligen object
+ * param[out] exact    1 if match is exact (CO_COMMANDS). VARS is 0.
+ * param[out] reason   if not match and co type is 0, reason points to a (malloced) 
+ *                     string containing an error explanation string. If reason is
+ *                     NULL no such string will be malloced. This string needs to
+ *                     be freed.
+ * @retval  -1         Error
+ * @retval   0         Not match
+ * @retval   1         Match
  * Given a string and one cligen object, return if the string matches
  * the object. Note, if string = NULL it is a match. 
  */
@@ -106,19 +104,24 @@ match_object(char *string, cg_obj *co, int *exact, char **reason)
 {
   int match = 0;
 
-  if (string==NULL)
-      return 1;
+  *exact = 0;
   if (co==NULL)
       return 0;
   switch (co->co_type){
   case CO_COMMAND:
-    match = (strncmp(co->co_command, string, strlen(string)) == 0);
-    *exact = strlen(co->co_command) == strlen(string);
+      if (string == NULL)
+	  match++;
+      else{
+	  match = (strncmp(co->co_command, string, strlen(string)) == 0);
+	  *exact = strlen(co->co_command) == strlen(string);
+      }
     break;
   case CO_VARIABLE:
-      if ((match = match_variable(co, string, reason)) < 0)
-	  return -1;
-      *exact = 0; /* N/A */ 
+      if (string == NULL)
+	  match++;
+      else
+	  if ((match = match_variable(co, string, reason)) < 0)
+	      return -1;
     break;
   case CO_REFERENCE:
       break;
