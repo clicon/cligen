@@ -105,7 +105,7 @@ cbuf_reset(cbuf *cb)
     cb->cb_buffer[0] = '\0'; 
 }
 
-/*! Create cligen buf by printf like semantics
+/*! Append a cligen buf by printf like semantics
  * 
  * @param [in]  cb      cligen buffer allocated by cbuf_new(), may be reallocated.
  * @param [in]  format  arguments uses printf syntax.

@@ -1711,7 +1711,7 @@ cv_dec64_print(cg_var *cv, char *s0, int *s0len)
     s0[len-n] = '.';
     /* prepend a '-' if the number is negative*/    
     if (cv_dec64_i_get(cv)<0){ 
-	for (i=len; i>=0; i--)
+	for (i=len+1; i>=0; i--)
 	    s0[i+1] = s0[i];
 	s0[0] = '-';
 	(*s0len)--;
