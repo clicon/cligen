@@ -49,7 +49,7 @@ cvec   *cvec_dup(cvec *old);
 int     cvec_match(struct cg_obj *co_match, char *cmd, cvec *vr);
 cvec   *cvec_start(char *cmd);
 int     cvec_print(FILE *f, cvec *vr);
-
+int     cvec2cbuf(cbuf *cb, cvec *cvv);
 cg_var *cvec_find(cvec *vr, char *name);
 cg_var *cvec_find_var(cvec *vr, char *name);
 cg_var *cvec_find_keyword(cvec *vr, char *name);

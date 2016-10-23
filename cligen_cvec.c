@@ -462,9 +462,13 @@ cvec_start(char *cmd)
 }
 
 /*! Pretty print cligen variable list to a file
+ * @param[in]  f   File to print to
+ * @param[in]  cvv CLIGEN vector variable to be printed
+ * @see cvec2cbuf
  */
 int
-cvec_print(FILE *f, cvec *cvv)
+cvec_print(FILE *f, 
+	   cvec *cvv)
 {
     cg_var *cv = NULL;
     int     i = 0;
@@ -473,6 +477,28 @@ cvec_print(FILE *f, cvec *cvv)
 	fprintf(f, "%d : %s = ", i++, cv_name_get(cv));
 	cv_print(f, cv);
 	fprintf(f, "\n");
+    }
+    return 0;
+}
+
+/*! Pretty print cligen variable list to a cligen buffer
+ * @param[out] cb  CLIGEN buffer (should already be initialized w cbuf_new)
+ * @param[in]  cvv CLIGEN vector variable to be printed
+ * @see cvec_print
+ */
+int
+cvec2cbuf(cbuf *cb, 
+	  cvec *cvv)
+{
+    cg_var *cv = NULL;
+    int     i = 0;
+    char   *s;
+
+    while ((cv = cvec_each(cvv, cv)) != NULL) {
+	if ((s = cv2str_dup(cv)) == NULL)
+	    return -1;
+	cprintf(cb, "%d : %s = %s\n", i++, cv_name_get(cv), s);
+	free(s);
     }
     return 0;
 }
