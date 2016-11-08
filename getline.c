@@ -387,7 +387,7 @@ gl_exitchar_add(char c)
 
 /* check if c is an exit char */
 static int
-gl_exitchar(c)
+gl_exitchar(char c)
 {
     int i;
 
