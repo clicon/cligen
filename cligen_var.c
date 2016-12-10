@@ -2251,16 +2251,22 @@ cv_parse1(char *str0, cg_var *cv, char **reason)
 	retval = parse_bool(str, &cv->var_bool, reason);
 	break;
     case CGV_REST:
+	if (cv->var_rest)
+	    free(cv->var_rest);
 	if ((cv->var_rest = strdup(str)) == NULL)
 	    goto done;
 	retval = 1;
 	break;
     case CGV_STRING:
+	if (cv->var_string)
+	    free(cv->var_string);
 	if ((cv->var_string = strdup(str)) == NULL)
 	    goto done;
 	retval = 1;
 	break;
     case CGV_INTERFACE:
+	if (cv->var_interface)
+	    free(cv->var_interface);
 	if ((cv->var_interface = strdup(str)) == NULL)
 	    goto done;
 	retval = 1;
@@ -2702,7 +2708,7 @@ cv_cp(cg_var *new, cg_var *old)
     case CGV_STRING:	
     case CGV_INTERFACE:  /* All strings have the same address */
 	if (old->var_string)
-	    if ((new->var_string = strdup(old->var_string)) == NULL) /* XXX leaked */
+	    if ((new->var_string = strdup(old->var_string)) == NULL) 
 		goto done;
 	break;
     case CGV_IPV4ADDR:
@@ -2790,26 +2796,32 @@ cv_new(enum cv_type type)
  * the type is maintained after reset.
  */
 int
-cv_reset(cg_var *cgv)
+cv_reset(cg_var *cv)
 {
-    enum cv_type type = cgv->var_type;
+    enum cv_type type = cv->var_type;
 
-    if (cgv->var_name)
-	free(cgv->var_name);
-    if (cgv->var_show)
-	free(cgv->var_show);
-    switch (cgv->var_type) {
+    if (cv->var_name)
+	free(cv->var_name);
+    if (cv->var_show)
+	free(cv->var_show);
+    switch (cv->var_type) {
     case CGV_REST:
     case CGV_STRING:
     case CGV_INTERFACE:
-	free(cgv->var_string);	/* All strings have the same address */
+	if (cv->var_string)
+	    free(cv->var_string);	/* All strings have the same address */
 	break;
     case CGV_URL:
-	free(cgv->var_urlproto);
-	free(cgv->var_urladdr);
-	free(cgv->var_urlpath);
-	free(cgv->var_urluser);
-	free(cgv->var_urlpasswd);
+	if (cv->var_urlproto)
+	    free(cv->var_urlproto);
+	if (cv->var_urladdr)
+	    free(cv->var_urladdr);
+	if (cv->var_urlpath)
+	    free(cv->var_urlpath);
+	if (cv->var_urluser)
+	    free(cv->var_urluser);
+	if (cv->var_urlpasswd)
+	    free(cv->var_urlpasswd);
 	break;
     case CGV_VOID: /* XXX: freeit ? */
     case CGV_EMPTY: 
@@ -2817,8 +2829,8 @@ cv_reset(cg_var *cgv)
     default:
 	break;
     }
-    memset(cgv, 0, sizeof(*cgv));
-    cgv->var_type = type;
+    memset(cv, 0, sizeof(*cv));
+    cv->var_type = type;
     return 0;
 }
 
