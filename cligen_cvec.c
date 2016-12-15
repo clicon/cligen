@@ -97,6 +97,28 @@ cvec_new(int len)
     return vr;
 }
 
+/*! Create a new vector, initialize the first element to the contents of 'var'
+ *
+ * @param  var      cg_var to clone and add to vector
+ * @retval cvec     allocated cvec
+ */
+cvec *
+cvec_from_var(cg_var *var)
+{
+    cvec *newvec = NULL;
+    cg_var *tail = NULL;
+
+    if (var && (newvec = cvec_new(0))) {
+        if ((tail = cvec_append_var(newvec, var)) == NULL) {
+            cvec_free(newvec);
+            newvec = NULL;
+        }
+    }
+
+    return newvec;
+}
+
+
 /*! Free a cligen  variable vector (cvec)
  *
  * Reset and free a cligen vector as previously created by cvec_new(). this includes
@@ -185,6 +207,24 @@ cvec_add(cvec *cvv, enum cv_type type)
     memset(cv, 0, sizeof(*cv));
     cv->var_type = type;
     return cv;
+}
+
+/*! Append a new var that is a clone of data in 'var' to the vector, return it
+ *
+ */
+cg_var *
+cvec_append_var(cvec *vr, cg_var *var)
+{
+    cg_var *tail = NULL;
+
+    if (vr && var && (tail = cvec_add(vr, cv_type_get(var)))) {
+        if (cv_cp(tail, var) < 0) {
+            cvec_del(vr, tail);
+            tail = NULL;
+        }
+    }
+
+    return tail;
 }
 
 
