@@ -1,4 +1,4 @@
-cligen
+CLIgen
 ======
 
 CLIgen is a Command-Line Interface generator written by Olof Hagsand.
@@ -32,7 +32,8 @@ applications:
 * cligen_file Read a syntax specification from file. You must supply the file.
 * cligen_tutorial Samples of techniques used in cligen_tutorial.pdf.
 
-CLIgen is covered by GPLv2, but can be obtained with a commercial license.
+CLIgen is dual license. Either Apache License, Version 2.0 or GNU
+General Public License Version 2. You choose.
 
 I can be found at olof@hagsand.se.
 
