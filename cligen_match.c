@@ -66,7 +66,6 @@
 #define MIN(x,y) ((x)<(y)?(x):(y))
 #endif
 
-
 /*! Match variable against input string
  * 
  * @param[in]  string  Input string to match
@@ -79,7 +78,9 @@
  * Who prints errors?
  */
 static int
-match_variable(cg_obj *co, char *str, char **reason)
+match_variable(cg_obj *co, 
+	       char   *str, 
+	       char  **reason)
 {
     int         retval = -1;
     cg_var     *cv;
@@ -99,23 +100,23 @@ match_variable(cg_obj *co, char *str, char **reason)
     return retval; 
 }
 
-/*
- * match_object
- * param[in]  string   Input string to match
- * param[in]  co       cligen object
- * param[out] exact    1 if match is exact (CO_COMMANDS). VARS is 0.
- * param[out] reason   if not match and co type is 0, reason points to a (malloced) 
+/*! Given a string and one cligen object, return if the string matches
+ * @param[in]  string  Input string to match (NULL is match)
+ * @param[in]  co      cligen object
+ * @param[out] exact   1 if match is exact (CO_COMMANDS). VARS is 0.
+ * @param[out] reason  if not match and co type is 0, reason points to a (malloced) 
  *                     string containing an error explanation string. If reason is
  *                     NULL no such string will be malloced. This string needs to
  *                     be freed.
  * @retval  -1         Error
  * @retval   0         Not match
  * @retval   1         Match
- * Given a string and one cligen object, return if the string matches
- * the object. Note, if string = NULL it is a match. 
  */
 static int 
-match_object(char *string, cg_obj *co, int *exact, char **reason)
+match_object(char   *string, 
+	     cg_obj *co, 
+	     int    *exact,
+	     char  **reason)
 {
   int match = 0;
 
@@ -144,44 +145,43 @@ match_object(char *string, cg_obj *co, int *exact, char **reason)
   return match!=0 ? 1 : 0;
 }
 
-/*
- * match_perfect
+/*! Check if perfect match
  */
 static int
-match_perfect(char *string, cg_obj *co)
+match_perfect(char   *string, 
+	      cg_obj *co)
 {
   return  ((co->co_type==CO_COMMAND) &&
 	   (strcmp(string, co->co_command)==0));
 }
 
-/*
- * next_token
- * Given a string (s0), return the next token. The string is modified to return
+/*! Given a string (s0), return the next token. 
+ * The string is modified to return
  * the remainder of the string after the identified token.
  * A token is found either as characters delimited by one or many delimiters.
  * Or as a pair of double-quotes(") with any characters in between.
  * if there are trailing spaces after the token, trail is set to one.
  * If string is NULL or "", NULL is returned.
  * If empty token found, s0 is NULL
+ * @param[in]  s0       String, the string is modified like strtok
+ * @param[out] token0   A malloced token.  NOTE: token must be freed after use.
+ * @param[out] leading0 If leading delimiters eg " thisisatoken"
  * Example:
  *   s0 = "  foo bar"
  * results in token="foo", leading=1
- * INOUT
- *   s0     - string, the string is modified like strtok
- * OUT:
- *  token0  - A malloced token.  NOTE: token must be freed after use.
- *  leading0  - if leading delimiters eg " thisisatoken"
- * 
+
  */
 static int
-next_token(char **s0, char **token0, int *leading0)
+next_token(char **s0, 
+	   char **token0, 
+	   int   *leading0)
 {
-  char *s;
-  char *st;
-  char *token = NULL;
+  char  *s;
+  char  *st;
+  char  *token = NULL;
   size_t len;
-  int quote=0;
-  int leading=0;
+  int    quote=0;
+  int    leading=0;
 
   s = *s0;
   if (s==NULL){
@@ -239,25 +239,24 @@ next_token(char **s0, char **token0, int *leading0)
   return 0;
 }
 
-/*
- * command_levels
- * Returns the number of "levels" of a command.
+/*! Returns the number of "levels" of a command.
  * A level is an atomic command delimetered by space or tab.
  * Eg: "", "a", "abcd" has level 0
  *     "abcd ", "vb fg" has level 1
  *     "abcd gh ", "vb fg hjsa" has level 2
- * RETURNS:
- *  -1      Error (XXX: not checked)
+ * @param[in] string  The command to test
+ * @retval    0-n     Number of levels
+ * @retval    -1      Error (XXX: not checked)
  * XXX: Use " and escape characters to group strings with space.
  */
 int
 command_levels(char *string)
 {
-    int i = 0;
+    int   i = 0;
     char *ss = strdup(string);
     char *ss0;
     char *t;
-    int trail;
+    int   trail;
 
     ss0=ss;
     if (next_token(&ss, &t, &trail) < 0)
@@ -313,34 +312,32 @@ command_levels(char *string)
     return i;
 }
 
-/*
- * extract_substring
- * INPUT:
- *   string0    Input string to match
- *   level      Which substring to extract
- * RETURNS:
- *   0          OK
- *   -1         Error
- * OUTPUT:
- *   sp         malloc:d extracted sub-string
+/*! Returns a substring of a command at a specific level
+ * @param[in]  string0  Input string to match
+ * @param[in]  level    Which substring to extract
+ * @param[out] sp       malloc:d extracted sub-string. Must be freed after use
+ * @retval     0        OK
+ * @retval     -1       Error
  * Returns a substring of a command at a specific "level".
- * Eg:     extract_substring("abcd gh foo", 1, &s)
- * returns a pointer to the (malloc:d) string "gh".
- * NOTE: the caller must free the pointer after use.
+ * @code
+ *     extract_substring("abcd gh foo", 1, &s)
+ *     # returns a pointer to the (malloc:d) string "gh".
+ * @endcode
  * XXX: Use " and escape characters to group strings with space.
  */
 int
-extract_substring(char *string0, int level, char **sp)
+extract_substring(char  *string0,
+		  int    level, 
+		  char **sp)
 {
     char *ss;  
-    int i = 0;
-    int trail;
+    int   i = 0;
+    int   trail;
     char *ss0;
     char *t;
 
     assert(sp && string0);
     *sp = NULL;
-
     if ((ss = strdup(string0)) == NULL){
 	fprintf(stderr, "extract_substring: strdup: %s\n", strerror(errno));
 	return -1;
@@ -371,21 +368,24 @@ extract_substring(char *string0, int level, char **sp)
     return 0;
 }
 
-/*
+/*! Returns a substring of a command at a specific level
  * Similar to extract_substring, but return the rest of the string
  * at the given level.
  * Eg:     extract_substring_rest("abcd gh foo", 1, &s)
  * returns a pointer to the (malloc:d) string "gh foo".
  * NOTE: the caller must free the pointer after use.
+ * @see  extract_substring
  */
 int
-extract_substring_rest(char *string0, int level, char **sp)
+extract_substring_rest(char  *string0, 
+		       int    level, 
+		       char **sp)
 {
     char *string;  
-    int len = strlen(string0);
-    int i = 0;
+    int   len = strlen(string0);
+    int   i = 0;
     char *s;
-    int trail;
+    int   trail;
 
     assert(sp && string0);
     *sp = NULL;
@@ -410,11 +410,7 @@ extract_substring_rest(char *string0, int level, char **sp)
     return 0;
 }
 
-
-/*
- * match_pattern_terminal
- * This is the last level. Multiple matches may be OK and is used
- * for completion.
+/*! Match terminal/leaf cligen objects. Multiple matches is used for completion.
  * We must have a preference when matching when it matches a command
  * and some variables.
  * The preference is:
@@ -423,33 +419,34 @@ extract_substring_rest(char *string0, int level, char **sp)
  * and how many that match.
  * return value is the number of matches on return (also returned in matchlen)
  * index is the index of the first such match.
- * INPUT:
- *   h         CLIgen handle
- *   string0   Input string to match
- *   pt        Vector of commands (array of cligen object pointers (cg_obj)
- *   pt_max    Length of the pt array
- *   level     How many levels (words) into string0
- *   use_pref  Set this flag value if you want to use the preferences between
- *             matches. It is only when you want a final exact match (not 
- *             completion or show options) that you should set this.
- * RETURNS:
- *   The number of matches (0-n) in pt or -1 on error. See matchlen below.
- *
- * OUTPUT:
- *   ptp       Returns the vector at the place of matching
- *   matchv    A vector of integers containing which 
- *   matchlen  Length of matchv. That is, # of matches and same as return 
- *              value (if 0-n)
- *   reason0   If retval = 0, this may be malloced to indicate reason for not
- *             matching variables, if given. Neeed to be free:d
+ * @param[in]  h        CLIgen handle
+ * @param[in]  string0  Input string to match
+ * @param[in]  pt       Vector of commands (array of cligen object pointers (cg_obj)
+ * @param[in]  pt_max   Length of the pt array
+ * @param[in]  level    How many levels (words) into string0
+ * @param[in]  use_pref Set this flag value if you want to use the preferences
+ *                      between matches. It is only when you want a final exact 
+ *                      match (not completion or show options) that you should set 
+ *                      this.
+ * @param[out] ptp      Returns the vector at the place of matching
+ * @param[out] matchv   A vector of integers containing which 
+ * @param[out] matchlen Length of matchv. That is, # of matches and same as return 
+ *                      value (if 0-n)
+ * @param[out] reason0  If retval = 0, this may be malloced to indicate reason for 
+ *                      notmatching variables, if given. Neeed to be free:d
+ * @retval     0-n      The number of matches in pt . See param matchlen.
+ * @retval     -1       Error
  */
 static int 
 match_pattern_terminal(cligen_handle h, 
-		       char *string0, parse_tree pt,
-		       int level, int use_pref,
-		       pt_vec *ptp, 
-		       int *matchv[], int *matchlen,
-		       char **reason0
+		       char         *string0, 
+		       parse_tree    pt,
+		       int           level, 
+		       int           use_pref,
+		       pt_vec       *ptp, 
+		       int          *matchv[], 
+		       int          *matchlen,
+		       char        **reason0
 		       )
 {
     char   *string;
@@ -458,7 +455,8 @@ match_pattern_terminal(cligen_handle h,
     int     matches = 0;
     int     preference = 0;
     int     p;
-    cg_obj *co, *co_match;
+    cg_obj *co;
+    cg_obj *co_match;
     cg_obj *co_orig;
     int     exact;
     char   *reason;
@@ -546,16 +544,18 @@ match_pattern_terminal(cligen_handle h,
     return -1;
 }
 
-/*
- * Help function to append a cv to a cvec. For expansion cvec passed to pt_expand_2
- * IN:
- *  co     A cligen variable that has a matching value
- *  cmd    Value in string of the variable
- * OUT:
- *  cvec   The cligen variable vector to push a cv with name of co and value in cmd
+/*! Help function to append a cv to a cvec. For expansion cvec passed to pt_expand_2
+ * @param[in]  co     A cligen variable that has a matching value
+ * @param[in]  cmd    Value in string of the variable
+ * @param[out] cvec   The cligen variable vector to push a cv with name of co and
+ *                    value in cmd
+ * @retval     cv     Cligen variable
+ * @retval     NULL   Error
  */
 static cg_var *
-add_cov_to_cvec(cg_obj *co, char *cmd, cvec *cvec)
+add_cov_to_cvec(cg_obj *co, 
+		char   *cmd, 
+		cvec   *cvec)
 {
     cg_var *cv = NULL;
 
@@ -571,60 +571,60 @@ add_cov_to_cvec(cg_obj *co, char *cmd, cvec *cvec)
     return cv;
 }
 
-/*
- * match_pattern_node
- * Non-terminal. Need to match exact.
- * INPUT:
- *   h         CLIgen handle
- *   string0   Input string to match
- *   pt        Vector of commands (array of cligen object pointers (cg_obj)
- *   pt_max    Length of the pt array
- *   level     How many levels (words) into string0
- *   use_pref  Set this flag value if you want to use the preferences between
- *             matches. It is only when you want a final exact match (not 
- *             completion or show options) that you should set this.
- * RETURNS:
- *   The number of matches (0-n) in pt or -1 on error. See matchlen below.
- * OUTPUT:
- *   ptp       Returns the vector at the place of matching
- *   matchv    A vector of integers containing which 
- *   matchlen  Length of matchv. That is, # of matches and same as return 
- *              value (if 0-n)
- *   cvec      cligen variable vector containing vars/values pair for completion
- *   reason0   If retval = 0, this may be malloced to indicate reason for not
- *             matching variables, if given. Need to be free:d
+/*! Match non-terminal cligen object. Need to match exact.
+ *
+ * @param[in]  h         CLIgen handle
+ * @param[in]  string0   Input string to match
+ * @param[in]  pt        Vector of commands. Array of cligen object pointers
+ * @param[in]  pt_max    Length of the pt array
+ * @param[in]  level     How many levels (words) into string0
+ * @param[in]  use_pref  Set this flag value if you want to use the preferences 
+ *                       between matches. It is only when you want a final exact 
+ *                       match (not completion or show options) that you should set
+ *                       this.
+ * @param[out] ptp       Returns the vector at the place of matching
+ * @param[out] matchv    A vector of integers containing which 
+ * @param[out] matchlen  Length of matchv. That is, # of matches and same as return 
+ *                       value (if 0-n)
+ * @param[out] cvec      cligen variable vector containing vars/values pair for 
+ *                       completion
+ * @param[out] reason0   If retval = 0, this may be malloced to indicate reason for
+ *                       not matching variables, if given. Need to be free:d
+ * @retval     0-n       The number of matches in pt . See param matchlen.
+ * @retval     -1        Error
  */
 static int 
 match_pattern_node(cligen_handle h, 
-		   char *string0, 
-		   parse_tree pt,
-		   int level, 
-		   int use_pref, 
-		   int hide,
-		   pt_vec *ptp, 
-		   int *matchv[], 
-		   int *matchlen,
-		   cvec  *cvec,
-		   char **reason0
+		   char         *string0, 
+		   parse_tree    pt,
+		   int           level, 
+		   int           use_pref, 
+		   int           hide,
+		   pt_vec       *ptp, 
+		   int          *matchv[], 
+		   int          *matchlen,
+		   cvec         *cvec,
+		   char        **reason0
 		   )
 {
-    char *string = NULL;
-    int i;
-    int match;
-    int matches = 0;
-    int perfect = 0;
-    int retval = -1;
-    cg_obj *co, *co_match;
-    cg_obj *co_orig;
-    int rest_match = -1;
-    int cmd_levels;
-    int p;
-    int preference = 0;
-    int exact;
-    char *reason;
-    int findreason;
+    char      *string = NULL;
+    int        i;
+    int        match;
+    int        matches = 0;
+    int        perfect = 0;
+    int        retval = -1;
+    cg_obj    *co;
+    cg_obj    *co_match;
+    cg_obj    *co_orig;
+    int        rest_match = -1;
+    int        cmd_levels;
+    int        p;
+    int        preference = 0;
+    int        exact;
+    char      *reason;
+    int        findreason;
     parse_tree ptn={0,};     /* Expanded */
-    cg_var *cv = NULL;
+    cg_var    *cv = NULL;
 
     co_match = NULL;
     if (level > command_levels(string0)){
@@ -741,7 +741,6 @@ match_pattern_node(cligen_handle h,
 	if (co_value_set(co_orig, co_match->co_command) < 0)
 	    goto error;
 
-
     /* Cleanup made on top-level */
     
     /* 
@@ -777,25 +776,23 @@ match_pattern_node(cligen_handle h,
     goto quit;
 }
 
-/*
- * match_pattern
- * Complex function with several input and output parameters
- * @retval[in]  h         CLIgen handle
- * @retval[in]  string    Input string to match
- * @retval[in]  pt        Vector of commands (array of cligen object pointers (cg_obj)
- * @retval[in]  pt_max    Length of the pt array
- * @retval[in]  use_pref  Set this flag value if you want to use the preferences 
- *                        between matches. It is only when you want a final exact 
- *                        match (not completion or show options) that you should set 
- *                        this.
- * @retval[in]  hide
- * @retval[out] ptp       Returns the vector at the place of matching
- * @retval[out] matchv    A vector of integers containing which 
- * @retval[out] matchlen  Length of matchv. That is, # of matches and same as return 
- *                        value (if 0-n)
- * @retval[out] cvec      cligen variable vector containing vars/values pair for completion
- * @retval[out] reason0   If retval = 0, this may be malloced to indicate reason for 
- *                        not matching variables, if given. Neeed to be free:d
+/*! CLiIgen object matching function
+ * @param[in]  h         CLIgen handle
+ * @param[in]  string    Input string to match
+ * @param[in]  pt        Vector of commands (array of cligen object pointers (cg_obj)
+ * @param[in]  pt_max    Length of the pt array
+ * @param[in]  use_pref  Set this flag value if you want to use the preferences 
+ *                       between matches. It is only when you want a final exact 
+ *                       match (not completion or show options) that you should set 
+ *                       this.
+ * @param[in]  hide
+ * @param[out] ptp       Returns the vector at the place of matching
+ * @param[out] matchv    A vector of integers containing which 
+ * @param[out] matchlen  Length of matchv. That is, # of matches and same as 
+ *                       return value (if 0-n)
+ * @param[out] cvec      cligen variable vector containing vars/values pair for completion
+ * @param[out] reason0   If retval = 0, this may be malloced to indicate reason for 
+ *                       not matching variables, if given. Neeed to be free:d
  *
  * @retval -1   error.
  * @retval nr   The number of matches (0-n) in pt or -1 on error. See matchlen below.
@@ -805,11 +802,15 @@ match_pattern_node(cligen_handle h,
  */
 int 
 match_pattern(cligen_handle h,
-	      char *string, parse_tree pt, int use_pref, int hide,
-	      pt_vec *ptp, 
-	      int *matchv[], int *matchlen, 
-	      cvec *cvec,
-	      char **reason0)
+	      char         *string, 
+	      parse_tree    pt, 
+	      int           use_pref,
+	      int           hide,
+	      pt_vec       *ptp, 
+	      int          *matchv[],
+	      int          *matchlen, 
+	      cvec         *cvec,
+	      char        **reason0)
 {
     int retval;
     int levels;
@@ -831,23 +832,20 @@ match_pattern(cligen_handle h,
     return retval;
 }
 
-/*
- * match_pattern_exact
- * INPUT:
- *   h          CLIgen handle
- *   string     Input string to match
- *   pt         CLIgen parse tree, vector of cligen objects.
- *   exact      Try to find an exact match. if 0 dont bother about errors.
- * OUTPUT:
- *   cvec      cligen variable vector containing vars/values pair for completion
- *   match_obj  Exact object to return
- * RETURNS:
- *  -1       Error
- *   0       No match
- *   1       Exactly one match
- *   2+      Multiple matches
+/*! CLIgen object matching function for perfect match
+ * @param[in]  h         CLIgen handle
+ * @param[in]  string    Input string to match
+ * @param[in]  pt        CLIgen parse tree, vector of cligen objects.
+ * @param[in]  exact     Try to find an exact match. if 0 dont bother about errors.
+ * @param[out] cvec      cligen variable vector containing vars/values pair for completion
+ * @param[out] match_obj Exact object to return
+ * @retval  -1           Error
+ * @retval   0           No match
+ * @retval   1           Exactly one match
+ * @retval   2+          Multiple matches
  * 
  * Only if retval == 0 _AND> exact == 1 then cligen_nomatch() is set, otherwise not.
+ * @see match_pattern
  */
 int 
 match_pattern_exact(cligen_handle h, 
@@ -947,23 +945,18 @@ match_pattern_exact(cligen_handle h,
   return 1;
 }
 
-/*
- * match_complete
- * Try to complete a string as far as possible using the syntax.
+/*! Try to complete a string as far as possible using the syntax.
  * 
- * Parameters
- * IN
- *   h       cligen handle
- *   string  Input string to match
- *   pt      Vector of commands (array of cligen object pointers (cg_obj)
- *   pt_max  Length of the pt array
- *   maxlen  Max length of string
- * OUT
- *   cvec      cligen variable vector containing vars/values pair for completion
- * RETURNS:
- *   -1 - Error 
- *   0  - No matches, no completions made
- *   1  - We have completed by adding characters at the end of "string"
+ * @param[in]  h       cligen handle
+ * @param[in]  string  Input string to match
+ * @param[in]  pt      Vector of commands (array of cligen object pointers (cg_obj)
+ * @param[in]  pt_max  Length of the pt array
+ * @param[in]  maxlen  Max length of string
+ * @param[out] cvec    cligen variable vector containing vars/values pair for 
+ *                     completion
+ * @retval    -1   Error 
+ * @retval     0   No matches, no completions made
+ * @retval     1   Function completed by adding characters at the end of "string"
  */
 int 
 match_complete(cligen_handle h, 
@@ -972,20 +965,23 @@ match_complete(cligen_handle h,
 	       int           maxlen, 
 	       cvec         *cvec)
 {
-    int level;
-    int slen;
-    int equal;
-    int i, j, minmatch;
-    cg_obj *co, *co1 = NULL;
-    char *s;
-    char *ss;
-    pt_vec pt1;
-    int nr;
-    int matchlen = 0;
-    int *matchv = NULL;
-    int mv;
-    int append = 0; /* Has appended characters */
-    int retval = -1;
+    int     level;
+    int     slen;
+    int     equal;
+    int     i;
+    int     j;
+    int     minmatch;
+    cg_obj *co;
+    cg_obj *co1 = NULL;
+    char   *s;
+    char   *ss;
+    pt_vec  pt1;
+    int     nr;
+    int     matchlen = 0;
+    int    *matchv = NULL;
+    int     mv;
+    int     append = 0; /* Has appended characters */
+    int     retval = -1;
 
     /* ignore any leading whitespace */
     s = string;

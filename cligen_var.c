@@ -83,6 +83,8 @@ static char *cg_urlprotostr[] = {
 };
 
 /*! Get name of cligen variable cv
+ * @param[in] cv     CLIgen variable
+ * @retval    name   Name of cv
  */
 char *
 cv_name_get(cg_var *cv)
@@ -90,10 +92,16 @@ cv_name_get(cg_var *cv)
     return cv->var_name;
 }
 
-/*! Allocate new string from original. Free previous string if existing.
+/*! Set new CLIgen varable name. 
+ * Free previous string if existing.
+ * @param[in] cv     CLIgen variable
+ * @param[in] s0     New name
+ * @retval    s0     Return the new name
+ * @retval    NULL   Error
  */
 char *
-cv_name_set(cg_var *cv, char *s0)
+cv_name_set(cg_var *cv, 
+	    char   *s0)
 {
     char *s1 = NULL;
 
@@ -109,6 +117,8 @@ cv_name_set(cg_var *cv, char *s0)
 }
 
 /*! Get cv type
+ * @param[in] cv     CLIgen variable
+ * @retval    type   Type of cv
  */
 enum cv_type
 cv_type_get(cg_var *cv)
@@ -116,20 +126,37 @@ cv_type_get(cg_var *cv)
     return cv->var_type;
 }
 
+/*! Set new CLIgen type. 
+ * @param[in] cv     CLIgen variable
+ * @param[in] t      New type
+ * @retval    t      New type
+ */
 enum cv_type
-cv_type_set(cg_var *cv, enum cv_type x)
+cv_type_set(cg_var      *cv, 
+	    enum cv_type x)
 {
     return (cv->var_type = x);
 }
 
+/*! Get cv const flag
+ * @param[in] cv     CLIgen variable
+ * @retval    type   Type of cv
+ */
 char
 cv_const_get(cg_var *cv)
 {
     return cv->var_const;
 }
 
+
+/*! Set CLIgen const flag. 
+ * @param[in] cv     CLIgen variable
+ * @param[in] t      New type
+ * @retval    t      New type
+ */
 char
-cv_const_set(cg_var *cv, int c)
+cv_const_set(cg_var *cv, 
+	     int     c)
 {
     return (cv->var_const = c);
 }
@@ -137,7 +164,8 @@ cv_const_set(cg_var *cv, int c)
 /*! Get application-specific cv flag
  */
 char
-cv_flag(cg_var *cv, char mask)
+cv_flag(cg_var *cv, 
+	char    mask)
 {
     return cv->var_flag & mask;
 }
@@ -145,7 +173,8 @@ cv_flag(cg_var *cv, char mask)
 /*! Clear application-specific cv flag 
  */
 char
-cv_flag_clr(cg_var *cv, char mask)
+cv_flag_clr(cg_var *cv, 
+	    char    mask)
 {
     return cv->var_flag ^= mask;
 }
@@ -153,7 +182,8 @@ cv_flag_clr(cg_var *cv, char mask)
 /*! Set application-specific cv flag 
  */
 char
-cv_flag_set(cg_var *cv, char mask)
+cv_flag_set(cg_var *cv, 
+	    char    mask)
 {
     return cv->var_flag |= mask;
 }
@@ -175,7 +205,8 @@ cv_bool_get(cg_var *cv)
 }
 
 char
-cv_bool_set(cg_var *cv, char x)
+cv_bool_set(cg_var *cv, 
+	    char    x)
 {
     return (cv->u.varu_bool = x);
 }
@@ -191,7 +222,8 @@ cv_int8_get(cg_var *cv)
 /*! Set 8-bit integer value of cv
  */
 int8_t
-cv_int8_set(cg_var *cv, int8_t x)
+cv_int8_set(cg_var *cv, 
+	    int8_t  x)
 {
     return (cv->u.varu_int8 = x);
 }
@@ -207,7 +239,8 @@ cv_int16_get(cg_var *cv)
 /*! Set 16-bit integer value of cv
  */
 int16_t
-cv_int16_set(cg_var *cv, int16_t x)
+cv_int16_set(cg_var *cv, 
+	     int16_t x)
 {
     return (cv->u.varu_int16 = x);
 }
@@ -223,7 +256,8 @@ cv_int32_get(cg_var *cv)
 /*! Set 32-bit integer value of cv
  */
 int32_t
-cv_int32_set(cg_var *cv, int32_t x)
+cv_int32_set(cg_var *cv, 
+	     int32_t x)
 {
     return (cv->u.varu_int32 = x);
 }
@@ -239,41 +273,11 @@ cv_int64_get(cg_var *cv)
 /*! Set 64-bit integer value of cv
  */
 int64_t
-cv_int64_set(cg_var *cv, int64_t x)
+cv_int64_set(cg_var *cv, 
+             int64_t x)
 {
     return (cv->u.varu_int64 = x);
 }
-
-#ifdef CLIGEN_COMPAT_INT
-#undef cv_int_get
-#undef cv_int_set
-#undef cv_long_get
-#undef cv_long_set
-/*
- * This necessary for binary (linkage) backward compatibility, for recompiling
- * this is not necessary.
- */
-int32_t
-cv_int_get(cg_var *cv)
-{
-    return cv_int32_get(cv);
-}
-int32_t
-cv_int_set(cg_var *cv, int32_t x)
-{
-    return cv_int32_set(cv, x);
-}
-int64_t
-cv_long_get(cg_var *cv)
-{
-    return cv_int64_get(cv);
-}
-int64_t
-cv_long_set(cg_var *cv, int64_t x)
-{
-    return cv_int64_set(cv, x);
-}
-#endif /* CLIGEN_COMPAT_INT */
 
 /*! Get 8-bit unsigned integer value of cv
  */
@@ -286,7 +290,8 @@ cv_uint8_get(cg_var *cv)
 /*! Set 8-bit unsigned integer value of cv
  */
 uint8_t
-cv_uint8_set(cg_var *cv, uint8_t x)
+cv_uint8_set(cg_var *cv,
+	     uint8_t x)
 {
     return (cv->u.varu_uint8 = x);
 }
@@ -302,7 +307,8 @@ cv_uint16_get(cg_var *cv)
 /*! Set 16-bit unsigned integer value of cv
  */
 uint16_t
-cv_uint16_set(cg_var *cv, uint16_t x)
+cv_uint16_set(cg_var  *cv, 
+	      uint16_t x)
 {
     return (cv->u.varu_uint16 = x);
 }
@@ -318,7 +324,8 @@ cv_uint32_get(cg_var *cv)
 /*! Set 32-bit unsigned integer value of cv
  */
 uint32_t
-cv_uint32_set(cg_var *cv, uint32_t x)
+cv_uint32_set(cg_var  *cv, 
+	      uint32_t x)
 {
     return (cv->u.varu_uint32 = x);
 }
@@ -334,32 +341,42 @@ cv_uint64_get(cg_var *cv)
 /*! Set 64-bit unsigned integer value of cv
  */
 uint64_t
-cv_uint64_set(cg_var *cv, uint64_t x)
+cv_uint64_set(cg_var  *cv, 
+	      uint64_t x)
 {
     return (cv->u.varu_uint64 = x);
 }
 
+/*! Get n-value of decimal-64 of cv (eg exponent)
+ */
 uint8_t 
 cv_dec64_n_get(cg_var *cv)
 {
     return ((cv)->var_dec64_n);
 }
 
-/* XXX range check? 1..18 */
+/*! Set n-value of decimal-64 of cv (eg exponent)
+* XXX range check? 1..18 */
 uint8_t 
-cv_dec64_n_set(cg_var *cv, uint8_t x)
+cv_dec64_n_set(cg_var *cv, 
+	       uint8_t x)
 {
     return (cv->var_dec64_n = x);
 }
 
+/*! Get i-value of decimal-64 of cv (eg base)
+ */
 int64_t 
 cv_dec64_i_get(cg_var *cv)
 {
     return ((cv)->var_dec64_i);
 }
 
+/*! Set i-value of decimal-64 of cv (eg base)
+ */
 int64_t 
-cv_dec64_i_set(cg_var *cv, int64_t x)
+cv_dec64_i_set(cg_var *cv, 
+	       int64_t x)
 {
     return (cv->var_dec64_i = x);
 }
@@ -376,7 +393,8 @@ cv_string_get(cg_var *cv)
 
 /*! Allocate new string from original. Malloc new string and free previous */
 char *
-cv_string_set(cg_var *cv, char *s0)
+cv_string_set(cg_var *cv, 
+	      char   *s0)
 {
     char *s1 = NULL;
 
@@ -443,8 +461,11 @@ cv_uuid_get(cg_var *cv)
     return cv->u.varu_uuid;
 }
 
+/*! Set uuid value
+ */
 unsigned char *
-cv_uuid_set(cg_var *cv, unsigned char *u)
+cv_uuid_set(cg_var        *cv, 
+	    unsigned char *u)
 {
     memcpy((char*)&cv->u.varu_uuid, u, 16);
     return cv->u.varu_uuid;
@@ -458,12 +479,12 @@ cv_time_get(cg_var *cv)
     return cv->u.varu_time;
 }
 
-/*
- * cv_time_set
+/*! Set timeval struct
  * Returns a struct timeval by value.
  */
 struct timeval
-cv_time_set(cg_var *cv, struct timeval t)
+cv_time_set(cg_var        *cv, 
+	    struct timeval t)
 {
     cv->u.varu_time = t;
     return t;
@@ -479,8 +500,12 @@ cv_urlproto_get(cg_var *cv)
     return (cv)->u.varu_url.varurl_proto;
 }
 
+/*! Set URL protocol
+ * malloc new string from original. Free previous string if existing.
+ */
 char *
-cv_urlproto_set(cg_var *cv, char *s0)
+cv_urlproto_set(cg_var *cv, 
+		char   *s0)
 {
     char *s1 = NULL;
 
@@ -505,12 +530,12 @@ cv_urladdr_get(cg_var *cv)
     return (cv)->u.varu_url.varurl_addr;
 }
 
-/*
- * cv_urladdr_set  
+/*! Set URL address
  * malloc new string from original. Free previous string if existing.
  */
 char *
-cv_urladdr_set(cg_var *cv, char *s0)
+cv_urladdr_set(cg_var *cv, 
+	       char   *s0)
 {
     char *s1 = NULL;
 
@@ -535,12 +560,12 @@ cv_urlpath_get(cg_var *cv)
     return (cv)->u.varu_url.varurl_path;
 }
 
-/*
- * cv_urlpath_set  
+/*! Set URL path
  * malloc new string from original. Free previous string if existing.
  */
 char *
-cv_urlpath_set(cg_var *cv, char *s0)
+cv_urlpath_set(cg_var *cv, 
+	       char   *s0)
 {
     char *s1 = NULL;
 
@@ -565,12 +590,12 @@ cv_urluser_get(cg_var *cv)
     return (cv)->u.varu_url.varurl_user;
 }
 
-/*
- * cv_urluser_set  
+/*! Set URL user
  * malloc new string from original. Free previous string if existing.
  */
 char *
-cv_urluser_set(cg_var *cv, char *s0)
+cv_urluser_set(cg_var *cv, 
+	       char   *s0)
 {
     char *s1 = NULL;
 
@@ -595,12 +620,12 @@ cv_urlpasswd_get(cg_var *cv)
     return (cv)->u.varu_url.varurl_passwd;
 }
 
-/*
- * cv_urlpasswd_set  
+/*! Set URL password
  * malloc new string from original. Free previous string if existing.
  */
 char *
-cv_urlpasswd_set(cg_var *cv, char *s0)
+cv_urlpasswd_set(cg_var *cv, 
+		 char   *s0)
 {
     char *s1 = NULL;
 
@@ -615,9 +640,6 @@ cv_urlpasswd_set(cg_var *cv, char *s0)
     return s1; 
 }
 
-/*
- * cv Access methods end
- */
 
 /*! Parse an int8 number and check for errors
  * @param[in]  str     String containing number to parse
@@ -628,7 +650,9 @@ cv_urlpasswd_set(cg_var *cv, char *s0)
  * @retval  1 : Validation OK, value returned in val parameter
  */
 static int
-parse_int8(char *str, int8_t *val, char **reason)
+parse_int8(char   *str, 
+	   int8_t *val,
+	   char  **reason)
 {
     int64_t  i;
     int      retval;
@@ -658,7 +682,9 @@ parse_int8(char *str, int8_t *val, char **reason)
  * @retval  1 : Validation OK, value returned in val parameter
  */
 static int
-parse_int16(char *str, int16_t *val, char **reason)
+parse_int16(char    *str, 
+	    int16_t *val, 
+	    char   **reason)
 {
     int64_t i;
     int      retval;
@@ -688,7 +714,9 @@ parse_int16(char *str, int16_t *val, char **reason)
  * @retval  1 : Validation OK, value returned in val parameter
  */
 static int
-parse_int32(char *str, int32_t *val, char **reason)
+parse_int32(char    *str, 
+	    int32_t *val, 
+	    char   **reason)
 {
     int64_t  i;
     int      retval;
@@ -710,10 +738,12 @@ parse_int32(char *str, int32_t *val, char **reason)
 
 }
 
-
 /*! Like parse_int64 with specified base */
 int
-parse_int64_base(char *str, int base, int64_t *val, char **reason)
+parse_int64_base(char    *str, 
+		 int      base,
+		 int64_t *val, 
+		 char   **reason)
 {
     int64_t i;
     char    *ep;
@@ -762,7 +792,9 @@ parse_int64_base(char *str, int base, int64_t *val, char **reason)
  * @retval  1 : Validation OK, value returned in val parameter
  */
 int
-parse_int64(char *str, int64_t *val, char **reason)
+parse_int64(char    *str, 
+	    int64_t *val,
+	    char   **reason)
 {
     return parse_int64_base(str, 0, val, reason);
 }
@@ -777,7 +809,9 @@ parse_int64(char *str, int64_t *val, char **reason)
  * @retval  1 : Validation OK, value returned in val parameter
  */
 int
-parse_uint8(char *str, uint8_t *val, char **reason)
+parse_uint8(char    *str, 
+	    uint8_t *val, 
+	    char   **reason)
 {
     uint64_t i;
     int      retval;
@@ -807,7 +841,9 @@ parse_uint8(char *str, uint8_t *val, char **reason)
  * @retval  1 : Validation OK, value returned in val parameter
  */
 static int
-parse_uint16(char *str, uint16_t *val, char **reason)
+parse_uint16(char     *str, 
+	     uint16_t *val, 
+	     char    **reason)
 {
     uint64_t i;
     int      retval;
@@ -837,7 +873,9 @@ parse_uint16(char *str, uint16_t *val, char **reason)
  * @retval  1 : Validation OK, value returned in val parameter
  */
 static int
-parse_uint32(char *str, uint32_t *val, char **reason)
+parse_uint32(char     *str, 
+	     uint32_t *val, 
+	     char    **reason)
 {
     uint64_t i;
     int      retval;
@@ -869,7 +907,9 @@ parse_uint32(char *str, uint32_t *val, char **reason)
  * NOTE: we have to detect a minus sign ourselves,....
  */
 int
-parse_uint64(char *str, uint64_t *val, char **reason)
+parse_uint64(char     *str, 
+	     uint64_t *val, 
+	     char    **reason)
 {
     uint64_t i;
     char    *ep;
@@ -931,7 +971,10 @@ parse_uint64(char *str, uint64_t *val, char **reason)
  * @retval 1              OK
  */
 static int
-parse_dec64(char *str, uint8_t n, int64_t *dec64_i, char **reason)
+parse_dec64(char    *str, 
+	    uint8_t  n, 
+	    int64_t *dec64_i, 
+	    char   **reason)
 {
     int      retval = 1;
     char    *s0 = NULL; /* the whole string, eg aaa.bbb*/
@@ -1003,8 +1046,18 @@ parse_dec64(char *str, uint8_t n, int64_t *dec64_i, char **reason)
     return retval;
 }
 
+/*! Parse boolean values, eg true or false, on or off
+ * @param[in]  str        String to parse
+ * @param[in]  val        integer 0 or 1
+ * @param[out] reason     if given, malloced err string (retval=0), needs freeing
+ * @retval -1             fatal error
+ * @retval 0              parse error, reason in reason
+ * @retval 1              OK
+ */
 static int
-parse_bool(char *str, uint8_t *val, char **reason)
+parse_bool(char    *str, 
+	   uint8_t *val, 
+	   char   **reason)
 {
     int i;
     int retval = 1;
@@ -1028,8 +1081,18 @@ parse_bool(char *str, uint8_t *val, char **reason)
     return retval;
 }
 
+/*! Parse an IPv4 address struct
+ * @param[in]  str        String to parse
+ * @param[in]  val        IPv4 binary address
+ * @param[out] reason     if given, malloced err string (retval=0), needs freeing
+ * @retval -1             fatal error
+ * @retval 0              parse error, reason in reason
+ * @retval 1              OK
+ */
 int
-parse_ipv4addr(char *str, struct in_addr *val, char **reason)
+parse_ipv4addr(char           *str, 
+	       struct in_addr *val, 
+	       char          **reason)
 {
     int retval = -1;
 
@@ -1042,8 +1105,18 @@ parse_ipv4addr(char *str, struct in_addr *val, char **reason)
     return retval;
 }
 
+/*! Parse an IPv6 address struct
+ * @param[in]  str        String to parse
+ * @param[in]  val        IPv6 binary address
+ * @param[out] reason     if given, malloced err string (retval=0), needs freeing
+ * @retval -1             fatal error
+ * @retval 0              parse error, reason in reason
+ * @retval 1              OK
+ */
 int
-parse_ipv6addr(char *str, struct in6_addr *val, char **reason)
+parse_ipv6addr(char            *str, 
+	       struct in6_addr *val, 
+	       char           **reason)
 {
     int retval = -1;
 
@@ -1057,8 +1130,7 @@ parse_ipv6addr(char *str, struct in6_addr *val, char **reason)
 }
 
 
-/*
- * Own version of ether_aton(): 
+/*! Own version of ether_aton(): 
  * parse string in colon hex notation and return a vector of chars.
  */
 #define MACADDR_STRLEN 17 /* 6*sizeof("xx:")-1 */
@@ -1108,13 +1180,15 @@ parse_macaddr(char *str, char addr[6], char **reason)
     return retval;
 }
 
-/* 
+/*! Parse URL
  * url may be changed destructively
  * URL syntax:
  * <proto>://[<user>[:<passwd>]@]<addr>[/<path>]
  */
 static int
-parse_url(char *url, cg_var *cv, char **reason)
+parse_url(char   *url, 
+	  cg_var *cv, 
+	  char  **reason)
 {
     char    *str0;
     char    *str;
@@ -1171,6 +1245,8 @@ parse_url(char *url, cg_var *cv, char **reason)
     return 0;
 }
 
+/*! Translate url protocol string to enum
+ */
 int
 str2urlproto(char *str)
 {
@@ -1185,9 +1261,17 @@ str2urlproto(char *str)
     return 0;
 }
 
-/* fmt needs to be char[37] */
+/*! Translate uuid binary data structure to uuid ascii string
+ * @param[in]  u     UUID as binary data structure
+ * @param[out] fmt   Format string. 
+ * @param[in]  len   Length of fmt needs to be at 37.
+ * @retval    0  OK
+ * @retval   -1  Error
+ */
 int
-uuid2str(uuid_t u, char *fmt, int len)
+uuid2str(uuid_t u, 
+	 char  *fmt, 
+	 int    len)
 {
     snprintf(fmt, len, 
 	    "%02x%02x%02x%02x-"	"%02x%02x-"	"%02x%02x-"	"%02x%02x-"  
@@ -1199,6 +1283,8 @@ uuid2str(uuid_t u, char *fmt, int len)
     return 0;
 }
 
+/*! Given a single hex character, return its number as int
+ */
 static int 
 toint(char c)
 {
@@ -1211,15 +1297,16 @@ toint(char c)
   return -1;
 }
 
-/* 
- * str2uuid
- * Translate uuid string on form f47ac10b-58cc-4372-a567-0e02b2c3d479 to uuid data structure.
- * in-string is 36 bytes + null termination (37 bytes in total).
- * out uuid is a 16 byte unsigned character array.
- * returns 0 if OK parses. -1 if not correct.
+/*! Translate uuid ascii string to uuid binary data structure.
+ * uuid string on form f47ac10b-58cc-4372-a567-0e02b2c3d479 to uuid data structure.
+ * @param[in]  in    in-string is 36 bytes + null termination (37 bytes in total).
+ * @param[out] u     uuid is a 16 byte unsigned character array.
+ * @retval     0     OK
+ * @retval    -1     Error
  */
 int
-str2uuid(char *in, uuid_t u)
+str2uuid(char  *in, 
+	 uuid_t u)
 {
     int i = 0, j = 0, k;
     int a, b;
@@ -1273,6 +1360,8 @@ done:
     return retval;
 }
 
+/*! Given a single digit character, return its number as int
+ */
 static int 
 todig(char c)
 {
@@ -1281,17 +1370,22 @@ todig(char c)
   return -1;
 }
 
-/* 
- * tonum
- * n is nr of digits to read from s.
+/*! Given a string with digits, return a number
+ * @param[in] n  Number of digits to read from s.
+ * @param[in] s  String containing digits
+ * @retval    0  OK
+ * @retval   -1  Error
  * eg if s is "23456" and nr is 3, then return 234.
  * note: only positive 32-bit integers 
- * return -1 on error.
  */
 static int
-tonum(int n, char *s)
+tonum(int   n, 
+      char *s)
 {
-    int i, a, sum = 0, retval = -1;
+    int i;
+    int a;
+    int sum = 0;
+    int retval = -1;
 
     for (i=0; i<n; i++){
 	if ((a = todig(s[i])) < 0)
@@ -1304,9 +1398,12 @@ tonum(int n, char *s)
     return retval;
 }
 
-/* 
- * str2time
+/*! Translate (ascii) ISO 8601 time string to (binary) timeval
  * Translate ISO 8601 date+time on the form 2008-09-21T18:57:21.003456 to a timeval structure.
+ * @param[in]  in   Input ISO 8601 string
+ * @param[out] tv   Timeval
+ * @retval     0     OK
+ * @retval    -1     Error
  * T can be space.
  * in-string is upto 26 bytes + null termination (27 bytes in total).
  * out timestamp is a 4+4 integer struct timeval  
@@ -1320,19 +1417,20 @@ tonum(int n, char *s)
  * a time. But now you can only leave out usec.
  */
 int
-str2time(char *in, struct timeval *tv)
+str2time(char           *in, 
+	 struct timeval *tv)
 {
     int        retval = -1;
     int        i = 0;
     int        j;
     int        len;
-    int        year, 
-	month, 
-	day, 
-	hour, 
-	min, 
-	sec, 
-	usec = 0;
+    int        year;
+    int        month;
+    int        day;
+    int        hour;
+    int        min;
+    int        sec;
+    int        usec = 0;
     struct tm *tm; 
     time_t     t;
 
@@ -1434,14 +1532,20 @@ done:
     return retval;
 }
 
-/* 
- * time2str
- * fmt needs to be 27 bytes.
+/*! Translate (binary) timeval to (ascii) ISO 8601 time string
+ * from timeval to  ISO 8601 date+time on the form 2008-09-21T18:57:21.003456
+ * @param[in]  tv   Timeval
+ * @param[out] fmt   Format string. 
+ * @param[in]  len   Length of format string. Must be at least 27 bytes.
+ * @retval     0     OK
+ * @retval    -1     Error
  */
 int
-time2str(struct timeval tv, char *fmt, int len)
+time2str(struct timeval tv, 
+	 char          *fmt,
+	 int            len)
 {
-    int retval = -1;
+    int        retval = -1;
     struct tm *tm;
 
     tm = gmtime((time_t*)&tv.tv_sec);
@@ -1456,6 +1560,8 @@ done:
 
 
 /*! Translate (parse) a string to a CV type.
+ * @param[in] str    Name of type
+ * @retval    type   CLIgen variable type
  */
 enum cv_type
 cv_str2type(char *str)
@@ -1516,6 +1622,9 @@ cv_str2type(char *str)
 }
 
 /*! Translate (print) a cv type to a static string.
+ * @param[in] tpe    CLIgen variable type
+ * @retval    NULL   Error
+ * @retval    str    Static string containing name of type as ASCII string
  */
 char *
 cv_type2str(enum cv_type type)
@@ -1601,8 +1710,10 @@ cv_type2str(enum cv_type type)
     return str;
 }
 
-/*! Return length of cligen variable value (as encoded in binary)
+/*! Return length of cligen variable value (as stored in binary)
  *
+ * @param[in] cv     CLIgen variable
+ * @retval    len    Length of variable
  * Special with strings that are only pointed to by the variable.
  * In that case the lengths of the strings pointed to are added, trailing
  * null included.
@@ -1702,7 +1813,9 @@ cv_len(cg_var *cv)
  * @retval        -1   Error with error msg on stderr. 
  */
 static int
-cv_dec64_print(cg_var *cv, char *s0, int *s0len)
+cv_dec64_print(cg_var *cv, 
+	       char   *s0, 
+	       int    *s0len)
 {
     int      i;
     uint8_t  n = cv->var_dec64_n;;
@@ -1734,8 +1847,13 @@ cv_dec64_print(cg_var *cv, char *s0, int *s0len)
     return 0;
 }
 
+/*! Print value of CLIgen variable to CLIgen buf using printf style formats.
+ * @param[in]   cv   CLIgen variable
+ * @param[out]  cb   Value printed 
+*/
 int
-cv2cbuf(cg_var *cv, cbuf *cb)
+cv2cbuf(cg_var *cv, 
+	cbuf   *cb)
 {
     char straddr[INET6_ADDRSTRLEN];
     char ss[64];
@@ -1855,15 +1973,17 @@ cv2cbuf(cg_var *cv, cbuf *cb)
  * Typically used by external code when transforming cgv:s.
  * Note, for strings, the length returned is _excluding_ the null byte, but the length
  * in supplied in the argument list is _including_ the null byte.
- * @param[in]   cv  CLIgen variable
- * @param[out]  str   Value printed in this string
- * @param[in]   size  Length of 'str'
+ * @param[in]   cv   CLIgen variable
+ * @param[out]  str  Value printed in this string
+ * @param[in]   size Length of 'str'
  * @retval len  How many bytes printed
  * @see  cv2cbuf   which also prints a CV but to cbuf
  * @see  cv_print  which also prints a CV but to a file
  */
 int
-cv2str(cg_var *cv, char *str, size_t size)
+cv2str(cg_var *cv, 
+       char   *str, 
+       size_t  size)
 {
     int  len = 0;
     char straddr[INET6_ADDRSTRLEN];
@@ -2005,7 +2125,8 @@ cv2str_dup(cg_var *cv)
  * @see cv2str which also prints a CV but to a string
  */
 int
-cv_print(FILE *f, cg_var *cv)
+cv_print(FILE   *f, 
+	 cg_var *cv)
 {
     int  len = 0;
     char straddr[INET6_ADDRSTRLEN];
@@ -2126,7 +2247,9 @@ cv_print(FILE *f, cg_var *cv)
  * The number of (potentially if str=NULL) written bytes is returned.
  */
 int
-cvtype_max2str(enum cv_type type, char *str, size_t size)
+cvtype_max2str(enum cv_type type, 
+	       char        *str, 
+	       size_t       size)
 {
     int  len = 0;
 
@@ -2221,7 +2344,9 @@ cvtype_max2str_dup(enum cv_type type)
  * @endcode
  */
 int
-cv_parse1(char *str0, cg_var *cv, char **reason)
+cv_parse1(char   *str0,
+	  cg_var *cv, 
+	  char  **reason)
 {
     int    retval = -1;
     char  *str;
@@ -2402,7 +2527,8 @@ cv_parse1(char *str0, cg_var *cv, char **reason)
  * @endcode
  */
 int
-cv_parse(char *str, cg_var *cv)
+cv_parse(char   *str, 
+	 cg_var *cv)
 {
     int retval;
     char *reason = NULL;
@@ -2434,7 +2560,9 @@ cv_parse(char *str, cg_var *cv)
  * @retval 1   Validation OK
  */
 int
-cv_validate(cg_var *cv, cg_varspec *cs, char **reason)
+cv_validate(cg_var     *cv, 
+	    cg_varspec *cs, 
+	    char      **reason)
 {
     int      retval = 1; /* OK */
     int64_t  i = 0;
@@ -2605,78 +2733,79 @@ cv_validate(cg_var *cv, cg_varspec *cs, char **reason)
  * @retval !0  not equal, as trcmp return values
  */
 int 
-cv_cmp(cg_var *cgv1, cg_var *cgv2)
+cv_cmp(cg_var *cv1, 
+       cg_var *cv2)
 {
     int n;
 
     /* Same type? */
-    if(cgv1->var_type != cgv2->var_type)
-	return cgv1->var_type - cgv2->var_type;
+    if(cv1->var_type != cv2->var_type)
+	return cv1->var_type - cv2->var_type;
 
-    switch (cgv1->var_type) {
+    switch (cv1->var_type) {
     case CGV_ERR:
 	return 0;
     case CGV_INT8:
-	return (cgv1->var_int8 - cgv2->var_int8);
+	return (cv1->var_int8 - cv2->var_int8);
     case CGV_INT16:
-	return (cgv1->var_int16 - cgv2->var_int16);
+	return (cv1->var_int16 - cv2->var_int16);
     case CGV_INT32:
-	return (cgv1->var_int32 - cgv2->var_int32);
+	return (cv1->var_int32 - cv2->var_int32);
     case CGV_INT64:
-	return (cgv1->var_int64 - cgv2->var_int64);
+	return (cv1->var_int64 - cv2->var_int64);
     case CGV_UINT8:
-	return (cgv1->var_uint8 - cgv2->var_uint8);
+	return (cv1->var_uint8 - cv2->var_uint8);
     case CGV_UINT16:
-	return (cgv1->var_uint16 - cgv2->var_uint16);
+	return (cv1->var_uint16 - cv2->var_uint16);
     case CGV_UINT32:
-	return (cgv1->var_uint32 - cgv2->var_uint32);
+	return (cv1->var_uint32 - cv2->var_uint32);
     case CGV_UINT64:
-	return (cgv1->var_uint64 - cgv2->var_uint64);
+	return (cv1->var_uint64 - cv2->var_uint64);
     case CGV_DEC64:
-	return (cv_dec64_i_get(cgv1) - cv_dec64_i_get(cgv2) && 
-		cv_dec64_n_get(cgv1) - cv_dec64_n_get(cgv2));
+	return (cv_dec64_i_get(cv1) - cv_dec64_i_get(cv2) && 
+		cv_dec64_n_get(cv1) - cv_dec64_n_get(cv2));
     case CGV_BOOL:
-	return (cgv1->var_bool - cgv2->var_bool);
+	return (cv1->var_bool - cv2->var_bool);
     case CGV_REST:
     case CGV_STRING:	
     case CGV_INTERFACE:  /* All strings have the same address */
-	return strcmp(cgv1->var_string, cgv2->var_string);
+	return strcmp(cv1->var_string, cv2->var_string);
     case CGV_IPV4ADDR:
-	return memcmp(&cgv1->var_ipv4addr, &cgv2->var_ipv4addr,
-		      sizeof(cgv1->var_ipv4addr));
+	return memcmp(&cv1->var_ipv4addr, &cv2->var_ipv4addr,
+		      sizeof(cv1->var_ipv4addr));
     case CGV_IPV4PFX:
-	if ((n =  memcmp(&cgv1->var_ipv4addr, &cgv2->var_ipv4addr,
-			 sizeof(cgv1->var_ipv4addr))))
+	if ((n =  memcmp(&cv1->var_ipv4addr, &cv2->var_ipv4addr,
+			 sizeof(cv1->var_ipv4addr))))
 	    return n;
-	return cgv1->var_ipv4masklen - cgv2->var_ipv4masklen;
+	return cv1->var_ipv4masklen - cv2->var_ipv4masklen;
     case CGV_IPV6ADDR:
-	return memcmp(&cgv1->var_ipv6addr, &cgv2->var_ipv6addr,
-		      sizeof (cgv1->var_ipv6addr));
+	return memcmp(&cv1->var_ipv6addr, &cv2->var_ipv6addr,
+		      sizeof (cv1->var_ipv6addr));
     case CGV_IPV6PFX:
-	if ((n =  memcmp(&cgv1->var_ipv6addr, &cgv2->var_ipv6addr,
-			 sizeof(cgv1->var_ipv6addr))))
+	if ((n =  memcmp(&cv1->var_ipv6addr, &cv2->var_ipv6addr,
+			 sizeof(cv1->var_ipv6addr))))
 	    return n;
-	return cgv1->var_ipv6masklen - cgv2->var_ipv6masklen;
+	return cv1->var_ipv6masklen - cv2->var_ipv6masklen;
     case CGV_MACADDR:
-	return memcmp(&cgv1->var_macaddr, &cgv2->var_macaddr,
-		      sizeof (cgv1->var_macaddr));
+	return memcmp(&cv1->var_macaddr, &cv2->var_macaddr,
+		      sizeof (cv1->var_macaddr));
 	
     case CGV_URL:
-	if ((n = strcmp(cgv1->var_urlproto, cgv2->var_urlproto)))
+	if ((n = strcmp(cv1->var_urlproto, cv2->var_urlproto)))
 	    return n;
-	if ((n = strcmp(cgv1->var_urladdr, cgv2->var_urladdr)))
+	if ((n = strcmp(cv1->var_urladdr, cv2->var_urladdr)))
 	    return n;
-	if ((n = strcmp(cgv1->var_urlpath, cgv2->var_urlpath)))
+	if ((n = strcmp(cv1->var_urlpath, cv2->var_urlpath)))
 	    return n;
-	if ((n = strcmp(cgv1->var_urluser, cgv2->var_urluser)))
+	if ((n = strcmp(cv1->var_urluser, cv2->var_urluser)))
 	    return n;
-	return  strcmp(cgv1->var_urlpasswd, cgv2->var_urlpasswd);
+	return  strcmp(cv1->var_urlpasswd, cv2->var_urlpasswd);
     case CGV_UUID:
-	return memcmp(cgv1->var_uuid, cgv2->var_uuid, 16);
+	return memcmp(cv1->var_uuid, cv2->var_uuid, 16);
     case CGV_TIME:
-	return memcmp(&cgv1->var_time, &cgv2->var_time, sizeof(struct timeval));
+	return memcmp(&cv1->var_time, &cv2->var_time, sizeof(struct timeval));
     case CGV_VOID: /* compare pointers */
-	return (cgv1->var_void == cgv2->var_void);
+	return (cv1->var_void == cv2->var_void);
     case CGV_EMPTY: /* Always equal */
 	return 0;
     }
@@ -2694,7 +2823,8 @@ cv_cmp(cg_var *cgv1, cg_var *cgv2)
  * @retval -1  On error with errno set (strdup errors)
  */
 int
-cv_cp(cg_var *new, cg_var *old)
+cv_cp(cg_var *new, 
+      cg_var *old)
 {
     int retval = -1;
 
@@ -2861,8 +2991,7 @@ cv_free(cg_var *cv)
     return 0;
 }
 
-/*
- * Makes a regexp check of <string> with <pattern>.
+/*! Makes a regexp check of <string> with <pattern>.
  * It is implicitly assumed that the match should be done at the beginning and
  * the end,
  * therefore, the pattern is prefixed with a ^, and postfixed with a $.
@@ -2873,7 +3002,8 @@ cv_free(cg_var *cv)
  * XXX: alternative if REGEX is not present on system??
  */
 int 
-match_regexp(char *string, char *pattern0)
+match_regexp(char *string, 
+	     char *pattern0)
 {
 #ifdef HAVE_REGEX_H
     char pattern[1024];
