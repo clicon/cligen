@@ -189,12 +189,9 @@ cov_pref(cg_obj *co)
     return pref;
 }
 
-/*
- * co_pref
- * Prefer more specific commands/variables 
- * INPUT:
- *   co    cligen_object
- *   exact if match was exact (only applies to CO_COMMAND)
+/* Prefer more specific commands/variables 
+ * @param[in]  co    cligen_object
+ * @param[in]  exact if match was exact (only applies to CO_COMMAND)
  *
  * The higher the better
  * if you have to choose from several.
@@ -614,7 +611,7 @@ co_eq(cg_obj *co1, cg_obj *co2)
 	    goto done;
 	}
 	/* Examine int and range */
-	if (cv_isint(co1->co_vtype)) {
+	if (cv_isint(co1->co_vtype) || cv_isstring(co1->co_vtype)) {
 	    if ((eq = co1->co_range - co2->co_range) != 0)
 		goto done;
 	    /* either both 0 or both 1 */
@@ -640,6 +637,7 @@ co_eq(cg_obj *co1, cg_obj *co2)
 		goto done;
 	    }
 	}
+
 	break;
     }
   done:
