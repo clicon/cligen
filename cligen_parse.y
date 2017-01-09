@@ -305,26 +305,33 @@ cgy_callback(struct cligen_parse_yacc_arg *ya, char *cb_str)
     return 0;
 }
 
-/* 
- * cgy_callback_arg
- * Create a CLIgen variable (cv) and store it in the YA struct.
- * Note that only one such cv can be stored.
+/*! Create a callback argument  and store it in the current callback
  */
 static int
-cgy_callback_arg(struct cligen_parse_yacc_arg *ya, char *type, char *arg)
+cgy_callback_arg(struct cligen_parse_yacc_arg *ya, 
+		 char                         *type, 
+		 char                         *arg)
 {
     int                 retval = -1;
     struct cg_callback *cc;
     struct cg_callback *cclast;
+    cg_var             *cv = NULL;
 
     cclast = NULL;
     for (cc=ya->ya_callbacks; cc; cc=cc->cc_next)
 	cclast = cc;
-    if (cclast)
-	if ((cclast->cc_arg = create_cv(ya, type, arg)) == NULL)
+    if (cclast){
+	if ((cv = create_cv(ya, type, arg)) == NULL)
 	    goto done;
+	if (cclast->cc_argv)
+	    cvec_append_var(cclast->cc_argv, cv);
+	else
+	    cclast->cc_argv = cvec_from_var(cv);
+    }
     retval = 0;
   done:
+    if (cv)
+	cv_free(cv);
     return retval;
 }
 
@@ -576,7 +583,7 @@ cgy_terminal(struct cligen_parse_yacc_arg *ya)
 	    ccp = &co->co_callbacks;
 	    while (*ccp != NULL)
 		ccp = &((*ccp)->cc_next);
-	    if (co_callback_copy(ya->ya_callbacks, ccp, NULL) < 0)
+	    if (co_callback_copy(ya->ya_callbacks, ccp) < 0)
 		goto done;
 	}
 	/* variables: special case hide, auth */
@@ -602,8 +609,8 @@ cgy_terminal(struct cligen_parse_yacc_arg *ya)
     }
     /* cleanup */
     while ((cc = ya->ya_callbacks) != NULL){
-	if (cc->cc_arg)	
-	    cv_free(cc->cc_arg);
+	if (cc->cc_argv)	
+	    cvec_free(cc->cc_argv);
 	if (cc->cc_fn_str)	
 	    free(cc->cc_fn_str);
 	ya->ya_callbacks = cc->cc_next;

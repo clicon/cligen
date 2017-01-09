@@ -51,6 +51,7 @@ int command_levels(char *string);
 int extract_substring(char *string0, int level, char **sp);
 int extract_substring_rest(char *string0, int level, char **sp);
 int match_complete(cligen_handle h, char *string0, parse_tree pt, int maxlen, cvec *cvec);
+int cligen_match_cgvar_same(int flag);
 
 #endif /* _CLIGEN_MATCH_H */
 

@@ -333,8 +333,7 @@ pt_realloc(parse_tree *pt)
  */
 int
 co_callback_copy(struct cg_callback  *cc0, 
-		 struct cg_callback **ccn, 
-		 cg_var              *cgv)
+		 struct cg_callback **ccn)
 {
     struct cg_callback  *cc;
     struct cg_callback  *cc1;
@@ -353,13 +352,8 @@ co_callback_copy(struct cg_callback  *cc0,
 		fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
 		return -1;
 	    }
-	if (cgv){
-	    if ((cc1->cc_arg = cv_dup(cgv)) == NULL)
-		return -1;
-	}
-	else
-	    if (cc->cc_arg && ((cc1->cc_arg = cv_dup(cc->cc_arg)) == NULL))
-		return -1;
+	if (cc->cc_argv && ((cc1->cc_argv = cvec_dup(cc->cc_argv)) == NULL))
+	    return -1;
 	*ccp = cc1;
 	ccp = &cc1->cc_next;
     }
@@ -399,7 +393,7 @@ co_copy(cg_obj  *co,
 	    fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
 	    return -1;
 	}
-    if (co_callback_copy(co->co_callbacks, &con->co_callbacks, NULL) < 0)
+    if (co_callback_copy(co->co_callbacks, &con->co_callbacks) < 0)
 	return -1;
     if (co->co_cvec)
 	con->co_cvec = cvec_dup(co->co_cvec);
@@ -814,8 +808,8 @@ co_free(cg_obj *co,
     if (co->co_cvec)
 	cvec_free(co->co_cvec);
     while ((cc = co->co_callbacks) != NULL){
-	if (cc->cc_arg)	
-	    cv_free(cc->cc_arg);
+	if (cc->cc_argv)	
+	    cvec_free(cc->cc_argv);
 	if (cc->cc_fn_str)     
 	    free(cc->cc_fn_str);
 	co->co_callbacks = cc->cc_next;

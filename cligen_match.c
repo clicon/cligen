@@ -66,6 +66,9 @@
 #define MIN(x,y) ((x)<(y)?(x):(y))
 #endif
 
+/* if several cligen object variables match with same preference, select first */
+static int _match_cgvar_same = 0;
+
 /*! Match variable against input string
  * 
  * @param[in]  string  Input string to match
@@ -884,6 +887,7 @@ match_pattern_exact(cligen_handle h,
 	  /* Special case: command and exact-> use that */
 	  int j;
 	  char *string1;
+	  char allvars=1;
 
 	  extract_substring(string, command_levels(string), &string1);
 	  for (j=0; j<ret; j++){
@@ -894,8 +898,13 @@ match_pattern_exact(cligen_handle h,
 		  ret = 1;
 		  matchv[0] = matchv[j];
 		  break;
-	      }
-	  }
+              }
+	      if (co->co_type != CO_VARIABLE)
+		  allvars = 0;
+          }
+	  /* If set, if multiple cligen variables match use the first one */
+	  if (_match_cgvar_same && allvars)
+	      ret = 1; /* choose matchv[0] */
 	  if (string1)
 	      free(string1);
       }
@@ -1056,4 +1065,18 @@ match_complete(cligen_handle h,
     return retval;
 }
 
+/*! Set relaxed handling of cligen variable matching 
+ * More specifically, if several cligen object variables match with same preference,
+ * select the first, do not match all.
+ * Example:
+ * key (<a:string length[4]> | <a:string length[40]>);
+ */
+int 
+cligen_match_cgvar_same(int flag)
+{
+    int oldval = _match_cgvar_same;
+
+    _match_cgvar_same = flag;
+    return oldval;
+}
 

@@ -116,7 +116,7 @@ struct cg_callback  { /* Linked list of command callbacks */
     struct  cg_callback *cc_next;    /**< Next callback in list.  */
     cg_fnstype_t        *cc_fn;      /**< callback/function pointer.  */
     char                *cc_fn_str;  /**< callback/function name. malloced */
-    cg_var              *cc_arg;     /**< callback/function argument */
+    cvec                *cc_argv;    /**< callback/function arguments */
 };
 
 /*
@@ -312,7 +312,7 @@ cg_obj *co_new(char *cmd, cg_obj *prev);
 cg_obj *cov_new(enum cv_type cvtype, cg_obj *prev);
 int     co_pref(cg_obj *co, int exact);
 int     pt_realloc(parse_tree *);
-int     co_callback_copy(struct cg_callback *cc0, struct cg_callback **ccn, cg_var *arg);
+int     co_callback_copy(struct cg_callback *cc0, struct cg_callback **ccn);
 int     co_copy(cg_obj *co, cg_obj *parent, cg_obj **conp);
 int     pt_copy(parse_tree pt, cg_obj *parent, parse_tree *ptn);
 int     cligen_parsetree_merge(parse_tree *pt0, cg_obj *parent0, parse_tree pt1);

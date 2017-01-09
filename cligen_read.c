@@ -738,35 +738,33 @@ cliread_eval(cligen_handle     h,
  * This is the only place where cligen callbacks are invoked
  */
 int
-cligen_eval(cligen_handle h, cg_obj *co, cvec *cvv)
+cligen_eval(cligen_handle h, 
+	    cg_obj       *co, 
+	    cvec         *cvv)
 {
     struct cg_callback *cc;
     int                 retval = 0;
     cg_var             *cv;
+    cvec               *argv;
 
-#if 0 /* debug */
-    printf("argc: %d\n", argc);
-    for (i=0;i<argc;i++)
-      printf("%d: %d\n", i, (int)&argv[i]); 
-#endif
     if (h)
 	cligen_co_match_set(h, co);
     for (cc = co->co_callbacks; cc; cc=cc->cc_next){
 	if (cc->cc_fn){
-	    cv = cc->cc_arg ? cv_dup(cc->cc_arg) : NULL;
+	    argv = cc->cc_argv ? cvec_dup(cc->cc_argv) : NULL;
+	    cv = argv?cvec_i(argv,0):NULL;
 	    cligen_fn_str_set(h, cc->cc_fn_str);
 	    if ((retval = (*cc->cc_fn)(
 		     cligen_userhandle(h)?cligen_userhandle(h):h, 
 		     cvv, 
 		     cv)) < 0){
-		if (cv != NULL){
-		    cv_free(cv);
-		}
+		if (argv != NULL)
+		    cvec_free(argv);
 		cligen_fn_str_set(h, NULL);
 		break;
 	    }
-	    if (cv != NULL)
-		cv_free(cv);
+	    if (argv != NULL)
+		cvec_free(argv);
 	    cligen_fn_str_set(h, NULL);
 	}
     }

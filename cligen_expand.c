@@ -92,7 +92,7 @@ co_expand_sub(cg_obj *co, cg_obj *parent, cg_obj **conp)
 	}
 	memcpy(con->co_userdata, co->co_userdata, co->co_userlen);
     }
-    if (co_callback_copy(co->co_callbacks, &con->co_callbacks, NULL) < 0)
+    if (co_callback_copy(co->co_callbacks, &con->co_callbacks) < 0)
 	return -1;
     if (co->co_help)
 	if ((con->co_help = strdup(co->co_help)) == NULL){
@@ -222,7 +222,7 @@ pt_callback_reference(parse_tree pt, struct cg_callback *cc0)
 	if (ptc->pt_len && ptc->pt_vec[0] == NULL){
 	    /* Copy the callback from top */
 	    if ((cc = co->co_callbacks) == NULL){
-		if (co_callback_copy(cc0, &co->co_callbacks, NULL) < 0)
+		if (co_callback_copy(cc0, &co->co_callbacks) < 0)
 		    return -1;
 	    }
 	    else {
