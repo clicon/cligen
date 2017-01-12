@@ -41,27 +41,32 @@
 
 #include <cligen/cligen.h>
 
-/* Callbacks */
+/*! CLI callback that just prints the function argument
+ */
 static int
-hello_cb(cligen_handle h, cvec *vars, cg_var *arg)
+hello_cb(cligen_handle h, cvec *cvv, cvec *argv)
 {
-    printf("%s\n", cv_string_get(arg));
+    cg_var *cv;
+
+    cv = cvec_i(argv, 0);
+    printf("%s\n", cv_string_get(cv));
     return 0;
 }
 
-cg_fnstype_t *
+/*! Trivial function translator/mapping function that just assigns same callback
+ */
+cg_fnstypev_t *
 str2fn(char *name, void *arg, char **error)
 {
     return hello_cb;
 }
 
 
-/* This is the command syntax specification */
+/*! The command syntax specification */
 static char *hello_syntax = "prompt=\"hello> \";\n" 
     "hello(\"Greet the world\") world, cb(\"Hello World!\");"
     ;
 
-/* Main */
 int
 main(int argc, char *argv[])
 {
@@ -80,7 +85,7 @@ main(int argc, char *argv[])
     if ((pt = cligen_tree_i(h, 0)) == NULL)
 	goto done;
     /* Bind callback (hello_cb) to all commands */
-    if (cligen_callback_str2fn(*pt, str2fn, NULL) < 0)     
+    if (cligen_callback_str2fnv(*pt, str2fn, NULL) < 0)     
 	goto done;
     /* Run the CLI command interpreter */
     if (cligen_loop(h) < 0)

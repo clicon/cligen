@@ -42,26 +42,26 @@
 
 #include <cligen/cligen.h>
 
-/*
- * This callback just prints the function argument
+/*! CLI callback that just prints the function argument
  */
 int
-hello(cligen_handle h, cvec *vars, cg_var *arg)
+hello(cligen_handle h, cvec *cvv, cvec *argv)
 {
-    printf("%s\n", cv_string_get(arg));
+    cg_var *cv;
+
+    cv = cvec_i(argv, 0);
+    printf("%s\n", cv_string_get(cv));
     return 0;
 }
 
-
-/*
- * This is a generic callback printing the variable vector and argument
+/*! CLI generic callback printing the variable vector and argument
  */
 int
-cb(cligen_handle h, cvec *vars, cg_var *arg)
+cb(cligen_handle h, cvec *vars, cvec *argv)
 {
-    int i=1;
+    int     i=1;
     cg_var *cv;
-    char buf[64];
+    char    buf[64];
 
     fprintf(stderr, "variables:\n");
     cv = NULL;
@@ -75,65 +75,66 @@ cb(cligen_handle h, cvec *vars, cg_var *arg)
             );
 
     }
-    if (arg){
-        cv2str(arg, buf, sizeof(buf)-1);
-        fprintf(stderr, "argument: %s\n", buf);
+    cv = NULL;
+    i=0;
+    while ((cv = cvec_each(argv, cv)) != NULL) {
+	cv2str(cv, buf, sizeof(buf)-1);
+	fprintf(stderr, "arg %d: %s\n", i++, buf);
     }
     return 0;
 }
 
-/*
- * An example of a callback handling a complex syntax
+/*! CLI example callback handling a complex syntax
  */
 int
-letters(cligen_handle h, cvec *vars, cg_var *arg)
+letters(cligen_handle h, cvec *cvv, cvec *argv)
 {
-    char *str;
+    char   *str;
     cg_var *cv;
 
-    if ((str = cvec_find_str(vars, "ca")) != NULL)
+    if ((str = cvec_find_str(cvv, "ca")) != NULL)
         printf("%s\n", str);
-    if ((cv = cvec_find(vars, "int")) != NULL)
+    if ((cv = cvec_find(cvv, "int")) != NULL)
         printf("%d\n", cv_int32_get(cv));
-    if ((str = cvec_find_str(vars, "cb")) != NULL)
+    if ((str = cvec_find_str(cvv, "cb")) != NULL)
         printf("%s\n", str);
-    if ((str = cvec_find_str(vars, "dd")) != NULL)
+    if ((str = cvec_find_str(cvv, "dd")) != NULL)
         printf("%s\n", str);
-    if ((str = cvec_find_str(vars, "ee")) != NULL)
+    if ((str = cvec_find_str(cvv, "ee")) != NULL)
         printf("%s\n", str);
     return 0;
 }
 
 
-/*
- * This callback changes the prompt to the variable setting
+/*! This callback is for hidden commands
  */
 int
-secret(cligen_handle h, cvec *vars, cg_var *arg)
+secret(cligen_handle h, cvec *cvv, cvec *argv)
 {
-    printf("This is a hidden command: %s\n", cv_string_get(arg));
+    cg_var *cv;
+
+    cv = cvec_i(argv, 0);
+    printf("This is a hidden command: %s\n", cv_string_get(cv));
     return 0;
 }
 
 
-/*
- * This callback changes the prompt to the variable setting
+/*! This callback changes the prompt to the variable setting
  */
 int
-setprompt(cligen_handle h, cvec *vars, cg_var *arg)
+setprompt(cligen_handle h, cvec *cvv, cvec *argv)
 {
     char *str;
 
-    if ((str = cvec_find_str(vars, "new")) != NULL)
+    if ((str = cvec_find_str(cvv, "new")) != NULL)
         cligen_prompt_set(h, str);
     return 0;
 }
 
-/*
- * request quitting the CLI
+/*! Request quitting the CLI
  */
 int
-quit(cligen_handle h, cvec *vars, cg_var *arg)
+quit(cligen_handle h, cvec *cvv, cvec *argv)
 {
     cligen_exiting_set(h, 1);
     return 0;
@@ -142,33 +143,32 @@ quit(cligen_handle h, cvec *vars, cg_var *arg)
 /*! Change cligen tree
  */
 int
-changetree(cligen_handle h, cvec *vars, cg_var *arg)
+changetree(cligen_handle h, cvec *cvv, cvec *argv)
 {
-    char *treename = cv_string_get(arg);
+    cg_var *cv;
+    char *treename;
 
+    cv = cvec_i(argv, 0);
+    treename = cv_string_get(cv);
     return cligen_tree_active_set(h, treename);
 }
 
-/*
- * Command without assigned callback
+/*! Command without assigned callback
  */
 int
-unknown(cligen_handle h, cvec *vars, cg_var *arg)
+unknown(cligen_handle h, cvec *cvv, cvec *argv)
 {
-    cg_var *cv = cvec_i(vars, 0);
+    cg_var *cv = cvec_i(cvv, 0);
 
     printf("The command has no assigned callback: %s\n", cv_string_get(cv));
     return 0;
 }
 
 
-/*
- * str2fn
- * Example of static string to function mapper for the callback
- * functions above.
+/*! Example of static string to function mapper for the callback functions above.
  * Better to use dlopen, mmap or some other more flexible scheme.
  */
-cg_fnstype_t *
+cg_fnstypev_t *
 str2fn(char *name, void *arg, char **error)
 {
     *error = NULL;
@@ -194,16 +194,15 @@ str2fn(char *name, void *arg, char **error)
     return unknown; /* allow any function (for testing) */
 }
 
-/*
- * This is an example of an expansion function. It is called every time
- * a variable of the form <expand> needs to be evaluated.
+/*! Example of expansion(completion) function. 
+ * It is called every time a variable of the form <expand> needs to be evaluated.
  * Note the mallocing of vectors which could probably be done in a
  * friendlier way.
  * Note also that the expansion is not very dynamic, a script or reading a file
  * would have introduced som more dynamics.
  */
 int
-cli_expand_cb(cligen_handle h, char *fn_str, cvec *vars, cg_var *cv, 
+cli_expand_cb(cligen_handle h, char *fn_str, cvec *cvv, cg_var *cv, 
 	      int  *nr,
 	      char ***commands,     /* vector of function strings */
 	      char ***helptexts)   /* vector of help-texts */
@@ -220,6 +219,8 @@ cli_expand_cb(cligen_handle h, char *fn_str, cvec *vars, cg_var *cv,
     return 0;
 }
 
+/*! Trivial function translator/mapping function that just assigns same callback
+ */
 static expand_cb *
 str2fn_exp(char *name, void *arg, char **error)
 {
@@ -282,7 +283,7 @@ main(int argc, char *argv[])
         goto done;
     pt = NULL;
     while ((pt = cligen_tree_each(h, pt)) != NULL) {
-	if (cligen_callback_str2fn(*pt, str2fn, NULL) < 0) /* map functions */
+	if (cligen_callback_str2fnv(*pt, str2fn, NULL) < 0) /* map functions */
 	    goto done;
 	if (cligen_expand_str2fn(*pt, str2fn_exp, NULL) < 0)
 	    goto done;

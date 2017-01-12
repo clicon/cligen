@@ -56,19 +56,20 @@ enum cg_objtype{
  *   argv[] is a vector of variables. The first is always the whole syntax string as entered.
  */
 typedef int (cg_fnstype_t)(cligen_handle h, cvec *vars, cg_var *arg);
+typedef int (cg_fnstypev_t)(cligen_handle h, cvec *vars, cvec *argv);
 
 /* Expand callback function (should be in cligen_expand.h) 
    Returns 0 if handled expand, that is, it returned commands for 'name'
            1 if did not handle expand 
           -1 on error.
 */
-typedef int (expand_cb)(cligen_handle h,      /* handler: cligen or userhandle */
-			char *name,           /* name of this function (in text) */
-			cvec *cvec,           /* vars vector of values in command */
-			cg_var *arg,          /* argument given to callback */
-			int *len,             /* len of return commands & helptxt */
-			char ***commands,     /* vector of function strings */
-			char ***helptexts);   /* vector of help-texts */
+typedef int (expand_cb)(cligen_handle h,       /* handler: cligen or userhandle */
+			char         *name,    /* name of this function (in text) */
+			cvec         *cvec,    /* vars vector of values in command */
+			cg_var       *arg,     /* argument given to callback */
+			int          *len,     /* len of return commands & helptxt */
+			char       ***commands,/* vector of function strings */
+			char       ***helptexts);/* vector of help-texts */
 
 /* expand_cb2 is an update of expand_cb where entries are added using
  * cvec_add rather than by realloc(). Just a better interface.
@@ -114,9 +115,10 @@ typedef struct parse_tree parse_tree;
  */
 struct cg_callback  { /* Linked list of command callbacks */
     struct  cg_callback *cc_next;    /**< Next callback in list.  */
-    cg_fnstype_t        *cc_fn;      /**< callback/function pointer.  */
+    cg_fnstype_t        *cc_fn;      /**< callback/function pointer using cv.  */
+    cg_fnstypev_t       *cc_fnv;     /**< callback/function pointer using cvec.  */
     char                *cc_fn_str;  /**< callback/function name. malloced */
-    cvec                *cc_argv;    /**< callback/function arguments */
+    cvec                *cc_cvec;    /**< callback/function arguments */
 };
 
 /*
@@ -295,14 +297,6 @@ co_top(cg_obj *co0)
 	co = co1;
     return co;
 }
-
-
-/*
- * A function that maps from string to functions. Used when parsing a file that needs
- * to map function names (string) to actual function pointers.
- * (We may be stretching the power of C here,...)
- */
-typedef cg_fnstype_t *(cg_str2fn_t)(char *str, void *arg, char **err);
 
 /*
  * Prototypes

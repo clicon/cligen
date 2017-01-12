@@ -196,76 +196,56 @@ cligen_parse_file(cligen_handle h,
 
 /*! Assign functions for callbacks in a parse-tree using a translate function
  *
- * Assume a CLIgen syntax:
- *   a <b:string f()>, g();
- * where f and g are functions:
- *    f is called when "a <TAB>" is entered
- *    g is called when "a 42 <CR>" is entered.
- * In the syntax, "f" and "g" are strings and need to be translated to actual function
- * (pointers).
+ * Example: Assume a CLIgen syntax:
+ *   a <b:string>, fn();
+ * where
+ *    fn() is called when "a 42 <CR>" is entered.
+ * In the CLIgen spec syntax, "fn" is a string and needs to be translated to actual 
+ * function (pointer).
  * This function goes through a complete parse-tree (pt) and applies the translator
- * functions str2fn1 and str2fn2, if existring, to callback strings (eg "f" and "g") 
- * in the parse-tree to produce function pointers (eg f, g) which are stored in the
- * parse-tree nodes. Later, at evaluation time, the actual functions (f, g) can be
+ * functions str2fn, if existring, to callback strings (eg "fn") 
+ * in the parse-tree to produce function pointers (eg fn) which is stored in the
+ * parse-tree nodes. Later, at evaluation time, the actual function (fn) is
  * called when evaluating/interpreting the syntax.
  *
- * @param  pt      parse-tree. Recursively loop thru this
- * @param  str2fn1 Translator from strings to function pointers for command callbacks. 
- *         E.g. for g() above.
- * @param  fnarg1  Function argument for command callbacks (at evaluation time).
- * @param  str2fn2 Translator from strings to function pointers for expand variable
- *         callbacks. E.g. for f() above.
- * @param  fnarg2  Function argument for expand callbacks (at evaluation time).
- *
- * @retval   0   OK
- * @retval  -1   error and statement written on stderr
- *
- * NOTE: str2fn may return NULL on error and should then supply a (static) error string 
- * NOTE: str2fn does not use type-checking for its return value (the actual function)
- *       for a simpler implementation.
- *       If you need full type-checking, see the wrapper functions:
- *               cligen_callback_str2fn() and cligen_expand_str2fn()
+ * @param[in]  pt      Parse-tree. Recursively loop through and call str2fn
+ * @param[in]  str2fn  Translator function from strings to function pointers for command 
+ *                     callbacks. Call this function to translate callback functions
+ *                     for all nodes in the parse-tree.
+ * @param[in]  arg     Argument to call str2fn with
+ * @retval     0       OK
+ * @retval    -1       Error and statement written on stderr
+ * @see cligen_expand_str2fn    For expansion/completion callbacks
+ * @see cligen_callback_str2fnv Same but for callback vector argument
+ * @note str2fn may return NULL on error and should then supply a (static) error string 
  */
 int
-cligen_str2fn(parse_tree pt, 
-	      str2fn_mapper *str2fn1, void *fnarg1, 
-	      str2fn_mapper *str2fn2, void *fnarg2)
+cligen_callback_str2fn(parse_tree pt, cg_str2fn_t *str2fn, void *arg)
 {
     int                 retval = -1;
     cg_obj             *co;
     char               *callback_err = NULL;   /* Error from str2fn callback */
     struct cg_callback *cc;
-    int     i;
+    int                 i;
 
-    for (i=0; i<pt.pt_len; i++){    
+    assert(str2fn);
+    for (i=0; i<pt.pt_len; i++)
 	if ((co = pt.pt_vec[i]) != NULL){
-	    /* first map command callbacks */
-	    if (str2fn1 != NULL)
-		for (cc = co->co_callbacks; cc; cc=cc->cc_next){
-		    if (cc->cc_fn_str != NULL && cc->cc_fn == NULL){
-			cc->cc_fn = str2fn1(cc->cc_fn_str, fnarg1, &callback_err);
-			if (callback_err != NULL){
-			    fprintf(stderr, "%s: error: No such function: %s (%s)\n",
-				    __FUNCTION__, cc->cc_fn_str, callback_err);
-			    goto done;
-			}
-		    }
-		}
-	    /* then variable expand callbacks */
-	    if (str2fn2 != NULL)
-		if (co->co_expand_fn_str != NULL && co->co_expand_fn == NULL){
-		    co->co_expand_fn = str2fn2(co->co_expand_fn_str, fnarg2, &callback_err);
+	    for (cc = co->co_callbacks; cc; cc=cc->cc_next){
+		if (cc->cc_fn_str != NULL && cc->cc_fn == NULL){
+		    /* Note str2fn is a function pointer */
+		    cc->cc_fn = str2fn(cc->cc_fn_str, arg, &callback_err);
 		    if (callback_err != NULL){
-			fprintf(stderr, "%s: error: No such function: %s\n",
-				__FUNCTION__, co->co_expand_fn_str);
+			fprintf(stderr, "%s: error: No such function: %s (%s)\n",
+				__FUNCTION__, cc->cc_fn_str, callback_err);
 			goto done;
 		    }
 		}
+	    }
 	    /* recursive call to next level */
-	    if (cligen_str2fn(co->co_pt, str2fn1, fnarg1, str2fn2, fnarg2) < 0)
+	    if (cligen_callback_str2fn(co->co_pt, str2fn, arg) < 0)
 		goto done;
 	}
-    }
     retval = 0;
   done:
     return retval;
@@ -273,16 +253,109 @@ cligen_str2fn(parse_tree pt,
 
 /*! Assign functions for callbacks in a parse-tree using a translate function
  *
- * This is wrapper for better type-checking of the mapper (str2fn) function. See 
- * cligen_str2fn for the underlying function (without type-checking).
-
- * @param  pt      parse-tree. Recursively loop thru this
- * @param  str2fn  Translator from strings to function pointers for command callbacks. 
- * @param  fnarg   Function argument for command callbacks (at evaluation time).
- * See also cligen_str2fn
+ * Example: Assume a CLIgen syntax:
+ *   a <b:string>, fn();
+ * where
+ *    fn() is called when "a 42 <CR>" is entered.
+ * In the CLIgen spec syntax, "fn" is a string and needs to be translated to actual 
+ * function (pointer).
+ * This function goes through a complete parse-tree (pt) and applies the translator
+ * functions str2fn, if existring, to callback strings (eg "fn") 
+ * in the parse-tree to produce function pointers (eg fn) which is stored in the
+ * parse-tree nodes. Later, at evaluation time, the actual function (fn) is
+ * called when evaluating/interpreting the syntax.
+ *
+ * @param[in]  pt      Parse-tree. Recursively loop through and call str2fn
+ * @param[in]  str2fn  Translator function from strings to function pointers for command 
+ *                     callbacks. Call this function to translate callback functions
+ *                     for all nodes in the parse-tree.
+ * @param[in]  arg     Argument to call str2fn with
+ * @retval     0       OK
+ * @retval    -1       Error and statement written on stderr
+ *
+ * @see cligen_expand_str2fn    For expansion/completion callbacks
+ * @see cligen_callback_str2fn Same but for callback single argument
+ * @note str2fn may return NULL on error and should then supply a (static) error string 
  */
 int
-cligen_callback_str2fn(parse_tree pt, cg_str2fn_t *str2fn, void *fnarg)
+cligen_callback_str2fnv(parse_tree pt, cg_str2fnv_t *str2fn, void *arg)
 {
-    return cligen_str2fn(pt, (str2fn_mapper*)str2fn, fnarg, NULL, NULL);
+    int                 retval = -1;
+    cg_obj             *co;
+    char               *callback_err = NULL;   /* Error from str2fn callback */
+    struct cg_callback *cc;
+    int                 i;
+
+    assert(str2fn);
+    for (i=0; i<pt.pt_len; i++)
+	if ((co = pt.pt_vec[i]) != NULL){
+	    for (cc = co->co_callbacks; cc; cc=cc->cc_next){
+		if (cc->cc_fn_str != NULL && cc->cc_fnv == NULL){
+		    /* Note str2fn is a function pointer */
+		    cc->cc_fnv = str2fn(cc->cc_fn_str, arg, &callback_err);
+		    if (callback_err != NULL){
+			fprintf(stderr, "%s: error: No such function: %s (%s)\n",
+				__FUNCTION__, cc->cc_fn_str, callback_err);
+			goto done;
+		    }
+		}
+	    }
+	    /* recursive call to next level */
+	    if (cligen_callback_str2fnv(co->co_pt, str2fn, arg) < 0)
+		goto done;
+	}
+    retval = 0;
+  done:
+    return retval;
+}
+
+/*! Assign functions for variable completion in a parse-tree using a translate function
+ *
+ * Example: Assume a CLIgen syntax:
+ *   a <b:string fn()>;
+ * where
+ *    fn() is called when "a <TAB>" is entered
+ * In the CLIgen spec syntax, "fn" is a string and needs to be translated to actual 
+ * function (pointer).
+ * This function goes through a complete parse-tree (pt) and applies the translator
+ * functions str2fn, if existing, to callback strings (eg "fn") 
+ * in the parse-tree to produce function pointers (eg fn) which is stored in the
+ * parse-tree nodes. Later, at evaluation time, the actual function (fn) is
+ * called when evaluating/interpreting the syntax.
+ *
+ * @param[in]  pt      parse-tree. Recursively loop thru this
+ * @param[in]  str2fn  Translator from strings to function pointers for expand variable
+ *                     callbacks. 
+ * @param[in]  arg     Function argument for expand callbacks (at evaluation time).
+ * @see cligen_callback_str2fnv for translating callback functions
+ * @note OBSOLETE: try using cligen_callback_str2fnv instead
+ */
+int
+cligen_expand_str2fn(parse_tree pt, expand_str2fn_t *str2fn, void *arg)
+{
+    int                 retval = -1;
+    cg_obj             *co;
+    char               *callback_err = NULL;   /* Error from str2fn callback */
+    int                 i;
+
+    assert(str2fn);
+    for (i=0; i<pt.pt_len; i++){    
+	if ((co = pt.pt_vec[i]) != NULL){
+	    if (co->co_expand_fn_str != NULL && co->co_expand_fn == NULL){
+		/* Note str2fn is a function pointer */
+		co->co_expand_fn = str2fn(co->co_expand_fn_str, arg, &callback_err);
+		if (callback_err != NULL){
+		    fprintf(stderr, "%s: error: No such function: %s\n",
+			    __FUNCTION__, co->co_expand_fn_str);
+		    goto done;
+		}
+	    }
+	    /* recursive call to next level */
+	    if (cligen_expand_str2fn(co->co_pt, str2fn, arg) < 0)
+		goto done;
+	}
+    }
+    retval = 0;
+  done:
+    return retval;
 }

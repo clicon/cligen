@@ -352,7 +352,7 @@ co_callback_copy(struct cg_callback  *cc0,
 		fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
 		return -1;
 	    }
-	if (cc->cc_argv && ((cc1->cc_argv = cvec_dup(cc->cc_argv)) == NULL))
+	if (cc->cc_cvec && ((cc1->cc_cvec = cvec_dup(cc->cc_cvec)) == NULL))
 	    return -1;
 	*ccp = cc1;
 	ccp = &cc1->cc_next;
@@ -808,8 +808,8 @@ co_free(cg_obj *co,
     if (co->co_cvec)
 	cvec_free(co->co_cvec);
     while ((cc = co->co_callbacks) != NULL){
-	if (cc->cc_argv)	
-	    cvec_free(cc->cc_argv);
+	if (cc->cc_cvec)	
+	    cvec_free(cc->cc_cvec);
 	if (cc->cc_fn_str)     
 	    free(cc->cc_fn_str);
 	co->co_callbacks = cc->cc_next;

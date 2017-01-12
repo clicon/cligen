@@ -16,6 +16,13 @@
 #  You should have received a copy of the GNU General Public License
 #  along with CLIgen; see the file COPYING.
 
+- Added support for multi-argument callback CLI functions. E.g
+    int callback(cligen_handle handle, cvec *cvv, cvec *argv);
+  where the third argument is a vector instead of a single argument.
+  To use this, all CLI callback functions need to be rewritten.
+  The old style remains.
+  See cligen_callback_str2fnv
+	
 - Added option for "relaxed" handling of variable matching. So that 
 eg <a:string length[4]> | <a:string length[40]> is allowed. 
 See cligen_match_cgvar_same().

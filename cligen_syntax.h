@@ -38,7 +38,21 @@
 /*
  * Types
  */
-typedef void *(str2fn_mapper)(char *str, void *arg, char **err);
+
+/* The following function types map from strings (function names) to actual
+ * functions.  
+ * These are used when parsing a file (eg CLI specification) that needs
+ * to map function names (string) to actual function pointers.
+ * (We may be stretching the power of C here,...)
+ */
+/* Map function names as strings to CLIgen expand callback */
+typedef expand_cb *(expand_str2fn_t)(char *str, void *arg, char **err);
+
+/* Map function names as strings to cligen function callback */
+typedef cg_fnstype_t *(cg_str2fn_t)(char *str, void *arg, char **err);
+
+/* Map function names as strings to cligen vector function callback */
+typedef cg_fnstypev_t *(cg_str2fnv_t)(char *str, void *arg, char **err);
 
 /*
  * Prototypes
@@ -66,10 +80,9 @@ int cligen_parse_line(cligen_handle h,
 	       cg_var       *arg,
 	       int           hide);
 
-int cligen_str2fn(parse_tree pt, 
-		  str2fn_mapper *str2fn1, void *fnarg1, 
-		  str2fn_mapper *str2fn2, void *fnarg2);
 int cligen_callback_str2fn(parse_tree, cg_str2fn_t *str2fn, void *fnarg);
+int cligen_callback_str2fnv(parse_tree pt, cg_str2fnv_t *str2fn, void *arg);
+int cligen_expand_str2fn(parse_tree pt, expand_str2fn_t *str2fn, void *fnarg);
 int cligen_parse_debug(int d); 
 
 #endif /* _CLIGEN_SYNTAX_H_ */

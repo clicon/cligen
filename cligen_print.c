@@ -162,8 +162,8 @@ co2cbuf(cbuf *cb, cg_obj *co, int marginal, int brief)
 	for (cc = co->co_callbacks; cc; cc=cc->cc_next){
 	    if (cc->cc_fn_str){
 		cprintf(cb, ", %s(", cc->cc_fn_str);
-		if (cc->cc_argv)
-		    cvec2cbuf(cb, cc->cc_argv);
+		if (cc->cc_cvec)
+		    cvec2cbuf(cb, cc->cc_cvec);
 		cprintf(cb, ")");
 	    }
 	}

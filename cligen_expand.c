@@ -227,6 +227,7 @@ pt_callback_reference(parse_tree pt, struct cg_callback *cc0)
 	    }
 	    else {
 		cc->cc_fn = cc0->cc_fn; /* iterate */
+		cc->cc_fnv = cc0->cc_fnv; /* iterate */
 		if (cc0->cc_fn_str){
 		    if (cc->cc_fn_str)
 			free (cc->cc_fn_str);
@@ -546,29 +547,6 @@ pt_expand_add(cg_obj *co, parse_tree ptn)
     return 0;
 }
 
-/*! Register functions for variable completion in parse-tree using translator
- *
- * This is wrapper for better type-checking of the mapper (str2fn) function. See 
- * cligen_str2fn for the underlying function (without type-checking).
- * @param  pt      parse-tree. Recursively loop thru this
- * @param  str2fn  Translator from strings to function pointers for expand variable
- *         callbacks. 
- * @param  fnarg   Function argument for expand callbacks (at evaluation time).
- * See also cligen_str2fn
- */
-int
-cligen_expand_str2fn(parse_tree pt, expand_str2fn_t *str2fn, void *fnarg)
-{
-    return cligen_str2fn(pt, NULL, NULL, (str2fn_mapper*)str2fn, fnarg);
-}
-
-#ifdef notyet
-int
-cligen_expand_str2fn2(parse_tree pt, expand_str2fn_t2 *str2fn, void *fnarg)
-{
-    return cligen_str2fn(pt, NULL, NULL, (str2fn_mapper*)str2fn, fnarg);
-}
-#endif
 
 /*
  * reference_path_match

@@ -41,17 +41,6 @@
  * Types
  */
 /* Here we should have expand_cb but it is in cligen_gen.h */
-/*
- * Expand mapping function type.
- * A function that maps from string to functions. Used when parsing a file that needs
- * to map function names (string) to actual function pointers.
- * (We may be stretching the power of C here,...)
- * cf cg_fnstype_t
- */
-typedef expand_cb *(expand_str2fn_t)(char *str, void *arg, char **err);
-#ifdef notyet
-typedef expand_cb2 *(expand_str2fn_t2)(char *str, void *arg, char **err);
-#endif
 
 /*
  * Prototypes
@@ -60,10 +49,6 @@ int pt_expand_1(cligen_handle h, cg_obj *coprev, parse_tree *pt);
 int pt_expand_2(cligen_handle h, parse_tree *pt, cvec *cvec, parse_tree *ptn, int hide);
 int pt_expand_cleanup_1(parse_tree *pt);
 int pt_expand_cleanup_2(parse_tree pt);
-int cligen_expand_str2fn(parse_tree pt, expand_str2fn_t *str2fn, void *fnarg);
-#ifdef notyet
-int cligen_expand_str2fn2(parse_tree pt, expand_str2fn_t2 *str2fn, void *fnarg);
-#endif
 int pt_expand_add(cg_obj *co, parse_tree ptn);
 int reference_path_match(cg_obj *co1, parse_tree pt0, cg_obj **co0p);
 int transform_var_to_cmd(cg_obj *co, char *cmd, char *comment);

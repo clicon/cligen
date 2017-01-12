@@ -57,6 +57,8 @@
 %type <string> charseq
 %type <string> choices
 %type <string> numdec
+%type <string> arg1
+%type <string> typecast
 
 %lex-param     {void *_ya} /* Add this argument to parse() and lex() function */
 %parse-param   {void *_ya}
@@ -323,10 +325,10 @@ cgy_callback_arg(struct cligen_parse_yacc_arg *ya,
     if (cclast){
 	if ((cv = create_cv(ya, type, arg)) == NULL)
 	    goto done;
-	if (cclast->cc_argv)
-	    cvec_append_var(cclast->cc_argv, cv);
+	if (cclast->cc_cvec)
+	    cvec_append_var(cclast->cc_cvec, cv);
 	else
-	    cclast->cc_argv = cvec_from_var(cv);
+	    cclast->cc_cvec = cvec_from_var(cv);
     }
     retval = 0;
   done:
@@ -609,8 +611,8 @@ cgy_terminal(struct cligen_parse_yacc_arg *ya)
     }
     /* cleanup */
     while ((cc = ya->ya_callbacks) != NULL){
-	if (cc->cc_argv)	
-	    cvec_free(cc->cc_argv);
+	if (cc->cc_cvec)	
+	    cvec_free(cc->cc_cvec);
 	if (cc->cc_fn_str)	
 	    free(cc->cc_fn_str);
 	ya->ya_callbacks = cc->cc_next;
@@ -986,8 +988,8 @@ line2        : ';' { if (debug) printf("line2->';'\n"); if (cgy_terminal(_ya) < 
                 '}' { if (debug) printf("line2->';' '{' lines '}'\n");if (ctx_pop(_ya) < 0) YYERROR;if (ctx_peek_swap2(_ya) < 0) YYERROR; }
               ;
 
-options       : options ',' option {if (debug)printf("terminal->callback\n");} 
-              | option
+options       : options ',' option {if (debug)printf("options->options , option\n");} 
+              | option             {if (debug)printf("options->option\n");} 
               ;
 option        : callback    {if (debug)printf("option->callback\n");} 
               | flag        {if (debug)printf("option->flag\n");} 
@@ -1001,26 +1003,29 @@ assignment    : NAME '=' DQ charseq DQ {cgy_assignment(_ya, $1,$4);free($1); fre
 flag          : NAME {cgy_flag(_ya, $1);free($1);}
               ; 
 
-callback   : NAME  {if (cgy_callback(_ya, $1) < 0) YYERROR;} arg  
+callback   : NAME  {if (cgy_callback(_ya, $1) < 0) YYERROR;} '(' arglist ')'
            ;
 
-arg        : '(' ')' 
-           | '(' DQ DQ ')' 
-           | '(' DQ charseq DQ ')' 
-              { if (cgy_callback_arg(_ya, NULL, $3) < 0) YYERROR;
-                free($3);
+arglist    : arglist1
+           | 
+           ;
+
+arglist1   : arglist1 ',' arg
+           | arg
+           ;
+
+arg        : typecast arg1 { if ($2 && cgy_callback_arg(_ya, $1, $2) < 0) YYERROR;
+		    if ($1) free($1); if ($2) free($2);
               }
-           | '(' '(' NAME ')'')'          { free($3); }  
-           | '(' '(' NAME ')' NAME ')' 
-	      { if (cgy_callback_arg(_ya, $3, $5) < 0) YYERROR;
-		  free($3);free($5);
-              }
-           | '(' '(' NAME ')' DQ DQ ')'   { free($3); }  
-           | '(' '(' NAME ')' DQ charseq DQ ')' 
-	   {   if (strcmp("string", $3)) YYERROR; 
-                if (cgy_callback_arg(_ya, $3, $6) < 0) YYERROR;
-                free($3);free($6);
-              }
+           ;
+
+arg1       : DQ DQ { $$=NULL; }
+           | DQ charseq DQ { $$=$2; }
+           | NAME  { $$=$1; }
+           ;
+
+typecast   : '(' NAME ')' { $$ = $2; }
+           | { $$ = NULL; }
            ;
 
 decltop        : decllist  {if (debug)fprintf(stderr, "decltop->decllist\n");}

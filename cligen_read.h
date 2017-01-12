@@ -63,5 +63,6 @@ int cliread_eval(cligen_handle h, char **line, int *cb_ret);
 int cligen_eval(cligen_handle h, cg_obj *co_match, cvec *vr);
 void cligen_echo_on(void);
 void cligen_echo_off(void);
+int cligen_match_cgvar_same(int flag);
 
 #endif /* _CLIGEN_READ_H_ */

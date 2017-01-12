@@ -67,7 +67,7 @@
 #endif
 
 /* if several cligen object variables match with same preference, select first */
-static int _match_cgvar_same = 0;
+int _match_cgvar_same = 0;
 
 /*! Match variable against input string
  * 
@@ -1063,20 +1063,5 @@ match_complete(cligen_handle h,
     if (matchv)
 	free(matchv);
     return retval;
-}
-
-/*! Set relaxed handling of cligen variable matching 
- * More specifically, if several cligen object variables match with same preference,
- * select the first, do not match all.
- * Example:
- * key (<a:string length[4]> | <a:string length[40]>);
- */
-int 
-cligen_match_cgvar_same(int flag)
-{
-    int oldval = _match_cgvar_same;
-
-    _match_cgvar_same = flag;
-    return oldval;
 }
 

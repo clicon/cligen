@@ -74,22 +74,13 @@
 #include "getline.h"
 
 /*
- * Constants and Macros
- */
-#define FALSE 0
-#define TRUE 1
-
-/*
  * Local prototypes
  */
 static int show_multi(cligen_handle h, FILE *fout, char *s, parse_tree pt, cvec *cvec);
 static int show_multi_long(cligen_handle h, FILE *fout, char *s, parse_tree pt, cvec *);
 static int complete(cligen_handle h, char *s0, int *lenp, parse_tree pt, cvec *cvec);
 
-
-/*
- * cli_qmark_hook
- * Callback from getline: '?' has been pressed. 
+/*! Callback from getline: '?' has been typed on command line
  * Just show help by calling long help show function. 
  * INPUT:
  *   string - Input string to match
@@ -134,9 +125,7 @@ cli_qmark_hook (void *arg, char *string, int cursor_loc)
     return retval;
 }
 
-/*
- * cli_tab_hook
- * Callback from getline: TAB has been pressed. 
+/*! Callback from getline: TAB has been typed on keyboard
  * First try to complete the string if the possibilities
  * allow that (at least one unique common character). 
  * If no completion was made, then show the command alternatives.
@@ -198,8 +187,7 @@ cli_tab_hook(void *arg, char *string, int prompt_width, int *cursorp)
     return retval;	
 }
 
-/*
- * cliread_init
+/*! Initialize this module
  */
 void
 cliread_init(cligen_handle h)
@@ -208,8 +196,7 @@ cliread_init(cligen_handle h)
     gl_tab_hook = cli_tab_hook; /* XXX globals */
 }
 
-/*
- * column_print
+/*! Print columns
  */
 static int
 column_print(FILE *fout, int col, pt_vec pt, int min, int max, int level)
@@ -447,9 +434,7 @@ show_multi_long(cligen_handle h,
     return retval;
 }
 
-/*
- * complete
- * Try to complete a command as much as possible.
+/*! Try to complete a command as much as possible.
  * INPUT:
  *   string  Input string to match
  *   cursorp Pointer to the current cursor in string.
@@ -490,9 +475,7 @@ complete(cligen_handle h, char *string, int *cursorp, parse_tree pt, cvec *cvec)
     return 0;
 }
 
-/*
- * cli_trim
- * Trim command line. Remove any leading, trailing and multiple whitespace
+/*! Trim command line. Remove any leading, trailing and multiple whitespace
  * comment is a character (eg '#')
  */
 void
@@ -549,11 +532,11 @@ cli_trim (char **line, char comment)
  * Use this function if you already have a string but you want it syntax-checked 
  * and parsed.
  *
- * @param  [in]  h         Cligen handle
- * @param  [in]  string    Input string to match
- * @param  [in]  pt        Parse-tree
- * @param  [out] co_orig   Object that matches (if retval == 1).
- * @param  [out] vr        Variable vector (if retval == 1).
+ * @param[in]  h         Cligen handle
+ * @param[in]  string    Input string to match
+ * @param[in]  pt        Parse-tree
+ * @param[out] co_orig   Object that matches (if retval == 1).
+ * @param[out] vr        Variable vector (if retval == 1).
  *
  * @retval  -2             Eof
  * @retval -1              Error
@@ -607,10 +590,7 @@ cliread_parse (cligen_handle h,
     return retval;
 }
 
-/*
- * cliread
- * Read line interactively from terminal using getline (completion, etc), given
- * a parse-tree.
+/*! Read line interactively from terminal using getline (completion, etc)
  *
  * @param[in] h       cligen handle
  * @retval    string  Pointer to command buffer or NULL if EOF.
@@ -639,25 +619,21 @@ cliread(cligen_handle h)
  * Return the matching object and a CLIgen variable record.
  * Use this function if you want an interactive CLI
  *
- * INPUT:
- *   prompt    Prompt string to show at beginning of line
- *   pt        Parse-tree 
- * OUTPUT:
- *   line      Pointer to new string input from terminal
- *   match_obj Matching object  (if retval = 1)
- *   vr        Variable vector  (if retval = 1)
- * RETURNS:
- *  -2      eof
- *  -1      Error
- *   0      No match
- *   1      Exactly one match
- *   2+     Multiple matches
+ * @param[in]  h         CLIgen handle
+ * @param[out] line      Pointer to new string input from terminal
+ * @param[out] match_obj Matching object  (if retval = 1)
+ * @param[out] cvv       Variable vector  (if retval = 1)
+ * @retval    -2         EOF
+ * @retval    -1         Error
+ * @retval     0         No match
+ * @retval     1         Exactly one match
+ * @retval     2+        Multiple matches
  */
 int 
 cliread_getline(cligen_handle h, 
-		char **line, 
-		cg_obj **match_obj,
-		cvec *vr)
+		char        **line, 
+		cg_obj      **match_obj,
+		cvec         *cvv)
 {
     char	*string;
 
@@ -666,7 +642,7 @@ cliread_getline(cligen_handle h,
 	return CG_EOF; 
 
     *line = string;
-    return cliread_parse(h, string, match_obj, vr);
+    return cliread_parse(h, string, match_obj, cvv);
 }
 #endif /* notused */
 
@@ -677,11 +653,11 @@ cliread_getline(cligen_handle h,
  * from callback (if function return =1).
  * Use this function if you want the whole enchilada without special operation
  *
- * @param [in]  h       CLIgen handle
- * @param [out] line   Pointer to new string input from terminal
- * @param [out] cb_retval  Retval of callback (only if functions return value is 1)
+ * @param[in]  h       CLIgen handle
+ * @param[out] line     Pointer to new string input from terminal
+ * @param[out] cb_retval  Retval of callback (only if functions return value is 1)
  *
- * @retval  -2      eof  CG_EOF
+ * @retval  -2      EOF
  * @retval  -1      Error
  * @retval   0      No match
  * @retval   1      Exactly one match
@@ -725,11 +701,11 @@ cliread_eval(cligen_handle     h,
 	       
 /*! Evaluate a matched CV and a cv variable list
  *
- * @param  h      Application-specific pointer to a struct
- * @param  co     Object that has been matched. This is the object furthest down 
- *                in the syntax tree. By backtracking to the top the complete path
- *                can be retreived.
- * @param  vr     A vector of cligen variables present in the string.
+ * @param[in]  h    Application-specific pointer to a struct
+ * @param[in]  co   Object that has been matched. This is the object furthest down 
+ *                  in the syntax tree. By backtracking to the top the complete path
+ *                  can be retreived.
+ * @param[in]  cvv  A vector of cligen variables present in the string.
  *
  * RETURNS:
  * @retval   int If there is a callback, the return value of the callback is returned,
@@ -744,20 +720,38 @@ cligen_eval(cligen_handle h,
 {
     struct cg_callback *cc;
     int                 retval = 0;
-    cg_var             *cv;
     cvec               *argv;
 
     if (h)
 	cligen_co_match_set(h, co);
     for (cc = co->co_callbacks; cc; cc=cc->cc_next){
-	if (cc->cc_fn){
-	    argv = cc->cc_argv ? cvec_dup(cc->cc_argv) : NULL;
-	    cv = argv?cvec_i(argv,0):NULL;
+	/* Vector cvec argument to callback */
+    	if (cc->cc_fnv){
+	    argv = cc->cc_cvec ? cvec_dup(cc->cc_cvec) : NULL;
 	    cligen_fn_str_set(h, cc->cc_fn_str);
+	    if ((retval = (*cc->cc_fnv)(
+					cligen_userhandle(h)?cligen_userhandle(h):h, 
+					cvv, 
+					argv)) < 0){
+		if (argv != NULL)
+		    cvec_free(argv);
+		cligen_fn_str_set(h, NULL);
+		break;
+	    }
+	    if (argv != NULL)
+		cvec_free(argv);
+	    cligen_fn_str_set(h, NULL);
+	}
+	/* Single cv argument to callback (old) */
+    	if (cc->cc_fn){
+	    cg_var             *cv;
+	    argv = cc->cc_cvec ? cvec_dup(cc->cc_cvec) : NULL;
+	    cligen_fn_str_set(h, cc->cc_fn_str);
+	    cv = argv?cvec_i(argv,0):NULL;
 	    if ((retval = (*cc->cc_fn)(
-		     cligen_userhandle(h)?cligen_userhandle(h):h, 
-		     cvv, 
-		     cv)) < 0){
+				       cligen_userhandle(h)?cligen_userhandle(h):h, 
+				       cvv, 
+				       cv)) < 0){
 		if (argv != NULL)
 		    cvec_free(argv);
 		cligen_fn_str_set(h, NULL);
@@ -771,7 +765,7 @@ cligen_eval(cligen_handle h,
     return retval;
 }
 
-
+/*! Turn echo off */
 void 
 cligen_echo_off()
 {
@@ -783,6 +777,7 @@ cligen_echo_off()
     return;
 }
 
+/*! Turn echo on */
 void 
 cligen_echo_on()
 {
@@ -792,5 +787,22 @@ cligen_echo_on()
     settings.c_lflag |= ECHO;
     tcsetattr(0,TCSANOW,&settings);
     return;
+}
+
+/*! Set relaxed handling of cligen variable matching 
+ * More specifically, if several cligen object variables match with same preference,
+ * select the first, do not match all.
+ * Example:
+ * key (<a:string length[4]> | <a:string length[40]>);
+ * @param[in] flag   Set to 1 to enable relaxed handling, 0 if not
+ * @retval    flag   Previous value
+ */
+int 
+cligen_match_cgvar_same(int flag)
+{
+    int oldval = _match_cgvar_same;
+
+    _match_cgvar_same = flag;
+    return oldval;
 }
 
