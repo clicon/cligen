@@ -49,7 +49,7 @@ typedef struct cvec cvec;
  * Prototypes
  */
 cvec   *cvec_new(int len);
-cvec   *cvec_from_var(cg_var *var);
+cvec   *cvec_from_var(cg_var *cv);
 int     cvec_free(cvec *vr);
 int     cvec_init(cvec *vr, int len);
 int     cvec_reset(cvec *vr); 
@@ -58,7 +58,7 @@ int     cvec_len(cvec *vr);
 cg_var *cvec_i(cvec *vr, int i);
 cg_var *cvec_next(cvec *vr, cg_var *cv0);
 cg_var *cvec_add(cvec *vr, enum cv_type type);
-cg_var *cvec_append_var(cvec *vr, cg_var *var);
+cg_var *cvec_append_var(cvec *cvv, cg_var *var);
 int     cvec_del(cvec *vr, cg_var *del);
 cg_var *cvec_each(cvec *vr, cg_var *prev);
 cg_var *cvec_each1(cvec *vr, cg_var *prev);

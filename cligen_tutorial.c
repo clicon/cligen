@@ -168,7 +168,7 @@ unknown(cligen_handle h, cvec *cvv, cvec *argv)
 /*! Example of static string to function mapper for the callback functions above.
  * Better to use dlopen, mmap or some other more flexible scheme.
  */
-cg_fnstypev_t *
+cgv_fnstype_t *
 str2fn(char *name, void *arg, char **error)
 {
     *error = NULL;
@@ -202,31 +202,27 @@ str2fn(char *name, void *arg, char **error)
  * would have introduced som more dynamics.
  */
 int
-cli_expand_cb(cligen_handle h, char *fn_str, cvec *cvv, cg_var *cv, 
-	      int  *nr,
-	      char ***commands,     /* vector of function strings */
-	      char ***helptexts)   /* vector of help-texts */
+cli_expand_cb(cligen_handle h, 
+	      char         *fn_str, 
+	      cvec         *cvv, 
+	      cvec         *argv, 
+	      cvec         *commands,     /* vector of function strings */
+	      cvec         *helptexts)   /* vector of help-texts */
 {
-    int n = 2;
-     /* Interface name expansion. */
-    *commands = calloc(n, sizeof(char*));
-    (*commands)[0] = strdup("eth0");
-    (*commands)[1] = strdup("eth1");
-    *nr = n;
-    *helptexts = calloc(n, sizeof(char*));
-    (*helptexts)[0] = strdup("Interface A");
-    (*helptexts)[1] = strdup("Interface B");
+    cvec_add_string(commands, NULL, "eth0");
+    cvec_add_string(commands, NULL, "eth1");
+    cvec_add_string(helptexts, NULL, "Interface A");
+    cvec_add_string(helptexts, NULL, "Interface B");
     return 0;
 }
 
 /*! Trivial function translator/mapping function that just assigns same callback
  */
-static expand_cb *
+static expandv_cb *
 str2fn_exp(char *name, void *arg, char **error)
 {
     return cli_expand_cb;
 }
-
 
 /*
  * Global variables.
@@ -283,9 +279,9 @@ main(int argc, char *argv[])
         goto done;
     pt = NULL;
     while ((pt = cligen_tree_each(h, pt)) != NULL) {
-	if (cligen_callback_str2fnv(*pt, str2fn, NULL) < 0) /* map functions */
+	if (cligen_callbackv_str2fn(*pt, str2fn, NULL) < 0) /* map functions */
 	    goto done;
-	if (cligen_expand_str2fn(*pt, str2fn_exp, NULL) < 0)
+	if (cligen_expandv_str2fn(*pt, str2fn_exp, NULL) < 0)
 	    goto done;
     }
     if ((str = cvec_find_str(globals, "prompt")) != NULL)

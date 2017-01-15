@@ -112,8 +112,8 @@ cov2cbuf(cbuf *cb, cg_obj *co, int brief)
 		cprintf(cb, " show:\"%s\"", co->co_show);
 	    if (co->co_expand_fn_str){
 		cprintf(cb, " %s(\"", co->co_expand_fn_str);
-		if (co->co_expand_fn_arg)
-		    cv2cbuf(co->co_expand_fn_arg, cb);
+		if (co->co_expand_fn_vec)
+		    cvec2cbuf(cb, co->co_expand_fn_vec);
 		cprintf(cb, "\")");
 	    }
 	    if (co->co_regex)

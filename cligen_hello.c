@@ -55,7 +55,7 @@ hello_cb(cligen_handle h, cvec *cvv, cvec *argv)
 
 /*! Trivial function translator/mapping function that just assigns same callback
  */
-cg_fnstypev_t *
+cgv_fnstype_t *
 str2fn(char *name, void *arg, char **error)
 {
     return hello_cb;
@@ -85,7 +85,7 @@ main(int argc, char *argv[])
     if ((pt = cligen_tree_i(h, 0)) == NULL)
 	goto done;
     /* Bind callback (hello_cb) to all commands */
-    if (cligen_callback_str2fnv(*pt, str2fn, NULL) < 0)     
+    if (cligen_callbackv_str2fn(*pt, str2fn, NULL) < 0)     
 	goto done;
     /* Run the CLI command interpreter */
     if (cligen_loop(h) < 0)

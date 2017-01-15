@@ -56,7 +56,7 @@ enum cg_objtype{
  *   argv[] is a vector of variables. The first is always the whole syntax string as entered.
  */
 typedef int (cg_fnstype_t)(cligen_handle h, cvec *vars, cg_var *arg);
-typedef int (cg_fnstypev_t)(cligen_handle h, cvec *vars, cvec *argv);
+typedef int (cgv_fnstype_t)(cligen_handle h, cvec *vars, cvec *argv);
 
 /* Expand callback function (should be in cligen_expand.h) 
    Returns 0 if handled expand, that is, it returned commands for 'name'
@@ -65,11 +65,30 @@ typedef int (cg_fnstypev_t)(cligen_handle h, cvec *vars, cvec *argv);
 */
 typedef int (expand_cb)(cligen_handle h,       /* handler: cligen or userhandle */
 			char         *name,    /* name of this function (in text) */
-			cvec         *cvec,    /* vars vector of values in command */
+			cvec         *cvv,     /* vars vector of values in command */
 			cg_var       *arg,     /* argument given to callback */
 			int          *len,     /* len of return commands & helptxt */
 			char       ***commands,/* vector of function strings */
 			char       ***helptexts);/* vector of help-texts */
+
+/* Expand callback function for vector arguments (should be in cligen_expand.h) 
+   Returns 0 if handled expand, that is, it returned commands for 'name'
+           1 if did not handle expand 
+          -1 on error.
+*/
+typedef int (expandv_cb)(cligen_handle h,       /* handler: cligen or userhandle */
+			 char         *name,    /* name of this function (in text) */
+			 cvec         *cvv,     /* vars vector of values in command */
+			 cvec         *argv,    /* argument vector given to callback */
+#if 1
+			 struct cvec  *commands,/* vector of commands */
+			 struct cvec  *helptexts /* vector of help-texts */
+#else
+			 int          *len,     /* len of return commands & helptxt */
+			 char       ***commands,/* vector of function strings */
+			 char       ***helptexts /* vector of help-texts */
+#endif
+			     );
 
 /* expand_cb2 is an update of expand_cb where entries are added using
  * cvec_add rather than by realloc(). Just a better interface.
@@ -116,7 +135,7 @@ typedef struct parse_tree parse_tree;
 struct cg_callback  { /* Linked list of command callbacks */
     struct  cg_callback *cc_next;    /**< Next callback in list.  */
     cg_fnstype_t        *cc_fn;      /**< callback/function pointer using cv.  */
-    cg_fnstypev_t       *cc_fnv;     /**< callback/function pointer using cvec.  */
+    cgv_fnstype_t       *cc_fn_vec;  /**< callback/function pointer using cvec.  */
     char                *cc_fn_str;  /**< callback/function name. malloced */
     cvec                *cc_cvec;    /**< callback/function arguments */
 };
@@ -130,8 +149,11 @@ struct cg_varspec{
     enum cv_type    cgs_vtype;         /* its type */
     char           *cgs_show;          /* help text of variable */
     char           *cgs_expand_fn_str; /* expand callback string */
-    expand_cb      *cgs_expand_fn;     /* expand callback */
-    cg_var         *cgs_expand_fn_arg; /* expand callback arg */
+#if 1 /* try to use cgs_expandv_fn instead */
+    expand_cb      *cgs_expand_fn;     /* expand callback see pt_expand_2 */
+#endif
+    expandv_cb     *cgs_expandv_fn;    /* expand callback see pt_expand_2 */
+    cvec           *cgs_expand_fn_vec; /* expand callback argument vector */
     char           *cgs_choice;        /* list of choices */
     int             cgs_range;         /* int range / str length interval valid */
     cg_var         *cgs_rangecv_low;   /* range/length interval lower limit */
@@ -144,7 +166,7 @@ typedef struct cg_varspec cg_varspec;
 /* Default number of fraction digits if type is DEC64 */
 #define CGV_DEC64_N_DEFAULT 2
 
-/*! cligen object is a parse-tree node. A cg_obj is either a command or a variable
+/*! cligen gen object is a parse-tree node. A cg_obj is either a command or a variable
  * A cg_obj 
  * @code
  *      o <--- cg_obj
@@ -219,9 +241,12 @@ typedef int (cg_applyfn_t)(cg_obj *co, void *arg);
 #define co_max           co_pt.pt_len
 #define co_vtype         u.cou_var.cgs_vtype
 #define co_show          u.cou_var.cgs_show
-#define co_expand_fn  	 u.cou_var.cgs_expand_fn
 #define co_expand_fn_str u.cou_var.cgs_expand_fn_str
-#define co_expand_fn_arg u.cou_var.cgs_expand_fn_arg
+#if 1 /* try to use co_expandv_fn instead */
+#define co_expand_fn  	 u.cou_var.cgs_expand_fn
+#endif
+#define co_expandv_fn  	 u.cou_var.cgs_expandv_fn
+#define co_expand_fn_vec u.cou_var.cgs_expand_fn_vec
 #define co_choice	 u.cou_var.cgs_choice
 #define co_keyword	 u.cou_var.cgs_choice
 #define co_range	 u.cou_var.cgs_range

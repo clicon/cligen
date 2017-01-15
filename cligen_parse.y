@@ -142,6 +142,10 @@ create_cv(struct cligen_parse_yacc_arg *ya, char *type, char *str)
 	if (cv_type_set(cv, cv_str2type(type)) == CGV_ERR){
 	    fprintf(stderr, "%s:%d: error: No such type: %s\n",
 		    ya->ya_name, ya->ya_linenum, type);
+#if 1 /* Backward compatible warning */
+	    if (strcmp(type,"int")==0)
+		fprintf(stderr, "NOTE: type \"int\" no longer supported in CLIgen, please replace with int8, int16, int32 or int64\n");
+#endif
 	    cv_free(cv); cv = NULL;
 	    goto done;
 	}
@@ -340,15 +344,27 @@ cgy_callback_arg(struct cligen_parse_yacc_arg *ya,
 static int
 expand_arg(struct cligen_parse_yacc_arg *ya, char *type, char *arg)
 {
-    int                 retval = -1;
-    cg_var             *cgv;
+   int      retval = -1;
+    cg_var *cv = NULL;
 
-    if ((cgv = create_cv(ya, type, arg)) == NULL)
+    if ((cv = create_cv(ya, type, arg)) == NULL)
 	goto done;
-    ya->ya_var->co_expand_fn_arg = cgv;
+    if (ya->ya_var->co_expand_fn_vec)
+	cvec_append_var(ya->ya_var->co_expand_fn_vec, cv);
+    else
+	ya->ya_var->co_expand_fn_vec = cvec_from_var(cv);
     retval = 0;
   done:
+    if (cv)
+	cv_free(cv);
     return retval;
+}
+
+static int
+expand_fn(struct cligen_parse_yacc_arg *ya, char *fn)
+{
+    ya->ya_var->co_expand_fn_str = fn;
+    return 0;
 }
 
 static int
@@ -403,6 +419,20 @@ cgy_var_pre(struct cligen_parse_yacc_arg *ya)
     if (debug)
 	fprintf(stderr, "%s: pre\n", __FUNCTION__);
     return co;
+}
+
+static int
+cgy_var_new(struct cligen_parse_yacc_arg *ya, char *name, char *type)
+{
+    ya->ya_var->co_command = name; 
+    if ((ya->ya_var->co_vtype = cv_str2type(type)) == CGV_ERR){
+	cligen_parseerror1(ya, "Invalid type"); 
+	fprintf(stderr, "%s: Invalid type: %s\n", __FUNCTION__, type);
+	if (strcmp(type, "int")==0)
+	    fprintf(stderr, "NOTE: type \"int\" no longer supported in CLIgen, please replace with int8, int16, int32 or int64\n");
+	return -1;
+    }
+    return 0;
 }
 
 /* 
@@ -1054,20 +1084,11 @@ cmd         : NAME { if (debug)fprintf(stderr, "cmd->NAME(%s)\n", $1);if (cgy_cm
                variable '>'  { if (cgy_var_post(_ya) < 0) YYERROR; }
             ;
 
-variable    : NAME { 
-                _YA->ya_var->co_command = $1; 
-		_YA->ya_var->co_vtype = cv_str2type($1); }
-            | NAME ':' NAME{ 
-		_YA->ya_var->co_command = $1; 
-		_YA->ya_var->co_vtype = cv_str2type($3); free($3);
-	       }
-            | NAME ' ' { 
-		_YA->ya_var->co_command = $1; 
-		_YA->ya_var->co_vtype = cv_str2type($1); } 
+variable    : NAME          { if (cgy_var_new(_ya, $1, $1)<0) YYERROR; }
+            | NAME ':' NAME { if (cgy_var_new(_ya, $1, $3)<0) YYERROR; free($3); }
+            | NAME ' ' { if (cgy_var_new(_ya, $1, $1) < 0) YYERROR; }
               keypairs
-            | NAME ':' NAME ' ' { 
-		 _YA->ya_var->co_command = $1; 
-		 _YA->ya_var->co_vtype = cv_str2type($3); free($3); } 
+	    | NAME ':' NAME ' ' { if (cgy_var_new(_ya, $1, $3) < 0) YYERROR; free($3); }
               keypairs
             ;
 
@@ -1079,13 +1100,8 @@ numdec     : NUMBER { $$ = $1; }
            | DECIMAL 
            ;
 
-keypair     : NAME '(' ')' { _YA->ya_var->co_expand_fn_str = $1; }
-            | NAME '(' DQ DQ ')' {_YA->ya_var->co_expand_fn_str = $1; }
-            | NAME '(' DQ charseq DQ ')' {
-		_YA->ya_var->co_expand_fn_str = $1; 
-		expand_arg(_ya, "string", $4);
-		free($4); 
-	      }
+keypair     : NAME '(' ')' { expand_fn(_ya, $1); }
+            | NAME '(' exparglist ')' { expand_fn(_ya, $1); }
             | V_SHOW ':' NAME { 
 		 _YA->ya_var->co_show = $3; 
 	      }
@@ -1111,6 +1127,19 @@ keypair     : NAME '(' ')' { _YA->ya_var->co_expand_fn_str = $1; }
 	      }
             | V_REGEXP  ':' DQ charseq DQ { cg_regexp(_ya, $4); }
             ;
+
+exparglist : exparglist ',' exparg
+           | exparg
+           ;
+
+exparg     : DQ DQ
+           | DQ charseq DQ { expand_arg(_ya, "string", $2); free($2); }
+           ;
+
+exparg     : typecast arg1 { if ($2 && cgy_callback_arg(_ya, $1, $2) < 0) YYERROR;
+		    if ($1) free($1); if ($2) free($2);
+              }
+           ;
 
 choices     : NUMBER { $$ = $1;}
             | NAME { $$ = $1;}

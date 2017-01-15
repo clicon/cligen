@@ -45,14 +45,18 @@
  * to map function names (string) to actual function pointers.
  * (We may be stretching the power of C here,...)
  */
-/* Map function names as strings to CLIgen expand callback */
-typedef expand_cb *(expand_str2fn_t)(char *str, void *arg, char **err);
 
 /* Map function names as strings to cligen function callback */
 typedef cg_fnstype_t *(cg_str2fn_t)(char *str, void *arg, char **err);
 
 /* Map function names as strings to cligen vector function callback */
-typedef cg_fnstypev_t *(cg_str2fnv_t)(char *str, void *arg, char **err);
+typedef cgv_fnstype_t *(cgv_str2fn_t)(char *str, void *arg, char **err);
+
+/* Map function names as strings to CLIgen expand callback */
+typedef expand_cb *(expand_str2fn_t)(char *str, void *arg, char **err);
+
+/* Map function names as strings to CLIgen expand callback */
+typedef expandv_cb *(expandv_str2fn_t)(char *str, void *arg, char **err);
 
 /*
  * Prototypes
@@ -80,9 +84,10 @@ int cligen_parse_line(cligen_handle h,
 	       cg_var       *arg,
 	       int           hide);
 
-int cligen_callback_str2fn(parse_tree, cg_str2fn_t *str2fn, void *fnarg);
-int cligen_callback_str2fnv(parse_tree pt, cg_str2fnv_t *str2fn, void *arg);
-int cligen_expand_str2fn(parse_tree pt, expand_str2fn_t *str2fn, void *fnarg);
+int cligen_callback_str2fn(parse_tree, cg_str2fn_t *str2fn, void *arg);
+int cligen_callbackv_str2fn(parse_tree pt, cgv_str2fn_t *str2fn, void *arg);
+int cligen_expand_str2fn(parse_tree pt, expand_str2fn_t *str2fn, void *arg);
+int cligen_expandv_str2fn(parse_tree pt, expandv_str2fn_t *str2fn, void *arg);
 int cligen_parse_debug(int d); 
 
 #endif /* _CLIGEN_SYNTAX_H_ */

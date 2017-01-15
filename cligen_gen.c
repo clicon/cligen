@@ -439,8 +439,8 @@ co_copy(cg_obj  *co,
 	if (co->co_rangecv_high)
 	    if ((con->co_rangecv_high = cv_dup(co->co_rangecv_high)) == NULL)
 		return -1;
-	if (co->co_expand_fn_arg)
-	    if ((con->co_expand_fn_arg = cv_dup(co->co_expand_fn_arg)) == NULL)
+	if (co->co_expand_fn_vec)
+	    if ((con->co_expand_fn_vec = cvec_dup(co->co_expand_fn_vec)) == NULL)
 		return -1;
 
 	if (co->co_choice){
@@ -820,9 +820,8 @@ co_free(cg_obj *co,
 	    free(co->co_expand_fn_str);
 	if (co->co_show)
 	    free(co->co_show);
-	if (co->co_expand_fn_arg){
-	    cv_free(co->co_expand_fn_arg);
-	}
+	if (co->co_expand_fn_vec)
+	    cvec_free(co->co_expand_fn_vec);
 	if (co->co_choice)
 	    free(co->co_choice);
 	if (co->co_regex)

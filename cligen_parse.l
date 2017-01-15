@@ -144,6 +144,7 @@ stripdup(char *s0)
 <VARIABLE>\n              { _YA->ya_linenum++; }
 <VARIABLE>\>              { BEGIN(INITIAL); return *yytext; }
 <VARIABLE>\:              { return *yytext; }
+<VARIABLE>\,              { return *yytext; }
 <VARIABLE>\|              { return *yytext; }
 <VARIABLE>\(              { return *yytext; }
 <VARIABLE>\)              { return *yytext; }

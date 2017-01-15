@@ -122,7 +122,7 @@ callback(cligen_handle handle, cvec *cvv, cvec *argv)
 /*! Example of static string to function mapper
  * Note, the syntax need to something like: "a{help}, callback, 42"
  */
-cg_fnstypev_t *
+cgv_fnstype_t *
 str2fn(char *name, void *arg, char **error)
 {
     *error = NULL;
@@ -200,7 +200,7 @@ main(int argc, char *argv[])
     pt = cligen_tree_i(h, 0); 
 
     /* map functions */
-    if (cligen_callback_str2fnv(*pt, str2fn, NULL) < 0)     
+    if (cligen_callbackv_str2fn(*pt, str2fn, NULL) < 0)     
 	goto done;
     if ((str = cvec_find_str(globals, "prompt")) != NULL)
 	cligen_prompt_set(h, str);

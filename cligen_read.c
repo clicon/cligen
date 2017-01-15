@@ -726,10 +726,10 @@ cligen_eval(cligen_handle h,
 	cligen_co_match_set(h, co);
     for (cc = co->co_callbacks; cc; cc=cc->cc_next){
 	/* Vector cvec argument to callback */
-    	if (cc->cc_fnv){
+    	if (cc->cc_fn_vec){
 	    argv = cc->cc_cvec ? cvec_dup(cc->cc_cvec) : NULL;
 	    cligen_fn_str_set(h, cc->cc_fn_str);
-	    if ((retval = (*cc->cc_fnv)(
+	    if ((retval = (*cc->cc_fn_vec)(
 					cligen_userhandle(h)?cligen_userhandle(h):h, 
 					cvv, 
 					argv)) < 0){

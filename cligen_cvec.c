@@ -118,18 +118,17 @@ cvec_new(int len)
  * @retval cvec     allocated cvec
  */
 cvec *
-cvec_from_var(cg_var *var)
+cvec_from_var(cg_var *cv)
 {
-    cvec *newvec = NULL;
+    cvec   *newvec = NULL;
     cg_var *tail = NULL;
 
-    if (var && (newvec = cvec_new(0))) {
-        if ((tail = cvec_append_var(newvec, var)) == NULL) {
+    if (cv && (newvec = cvec_new(0))) {
+        if ((tail = cvec_append_var(newvec, cv)) == NULL) {
             cvec_free(newvec);
             newvec = NULL;
         }
     }
-
     return newvec;
 }
 
@@ -225,16 +224,19 @@ cvec_add(cvec *cvv, enum cv_type type)
 }
 
 /*! Append a new var that is a clone of data in 'var' to the vector, return it
- *
+ * @param[in] cvv  Cligen variable vector
+ * @param[in] cv   Append this cligen variable to vector. Note that it is copied.
+ * @retval    NULL Error
+ * @retval    tail Return the new last tail variable (copy of cv)
  */
 cg_var *
-cvec_append_var(cvec *vr, cg_var *var)
+cvec_append_var(cvec *cvv, cg_var *cv)
 {
     cg_var *tail = NULL;
 
-    if (vr && var && (tail = cvec_add(vr, cv_type_get(var)))) {
-        if (cv_cp(tail, var) < 0) {
-            cvec_del(vr, tail);
+    if (cvv && cv && (tail = cvec_add(cvv, cv_type_get(cv)))) {
+        if (cv_cp(tail, cv) < 0) {
+            cvec_del(cvv, tail);
             tail = NULL;
         }
     }
@@ -526,10 +528,15 @@ cvec_print(FILE *f,
 	   cvec *cvv)
 {
     cg_var *cv = NULL;
+    char   *name;
     int     i = 0;
 
     while ((cv = cvec_each(cvv, cv)) != NULL) {
-	fprintf(f, "%d : %s = ", i++, cv_name_get(cv));
+	name = cv_name_get(cv);
+	if (name)
+	    fprintf(f, "%d : %s = ", i++, name);
+	else
+	    fprintf(f, "%d : ", i++);
 	cv_print(f, cv);
 	fprintf(f, "\n");
     }
