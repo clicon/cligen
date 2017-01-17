@@ -117,6 +117,7 @@ AH_TEMPLATE([CLIGEN_COMPAT_INT],
  replaced with int32 and int64 respectively. 
  Both in C-code (eg cv_int_get(), cv_long_get()) and CLIGEN parser (eg <x:int>, <x:long>)
 ])
+AC_DEFINE(CLIGEN_COMPAT_INT)
 
 AC_CHECK_LIB(socket, socket)
 AC_CHECK_FUNCS(strsep strverscmp)

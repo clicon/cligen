@@ -142,12 +142,14 @@ create_cv(struct cligen_parse_yacc_arg *ya, char *type, char *str)
 	if (cv_type_set(cv, cv_str2type(type)) == CGV_ERR){
 	    fprintf(stderr, "%s:%d: error: No such type: %s\n",
 		    ya->ya_name, ya->ya_linenum, type);
-#if 1 /* Backward compatible warning */
-	    if (strcmp(type,"int")==0)
-		fprintf(stderr, "NOTE: type \"int\" no longer supported in CLIgen, please replace with int8, int16, int32 or int64\n");
-#endif
 	    cv_free(cv); cv = NULL;
 	    goto done;
+	}
+	else{
+#if 1 /* Backward compatible warning */
+	    if (strcmp(type,"int")==0)
+		fprintf(stderr, "NOTE: type \"int\" obsolete in CLIgen, please replace with int8, int16, int32 or int64\n");
+#endif
 	}
     }
     if (cv_parse(str, cv) < 0){ /* parse str into cgv */
@@ -428,10 +430,13 @@ cgy_var_new(struct cligen_parse_yacc_arg *ya, char *name, char *type)
     if ((ya->ya_var->co_vtype = cv_str2type(type)) == CGV_ERR){
 	cligen_parseerror1(ya, "Invalid type"); 
 	fprintf(stderr, "%s: Invalid type: %s\n", __FUNCTION__, type);
-	if (strcmp(type, "int")==0)
-	    fprintf(stderr, "NOTE: type \"int\" no longer supported in CLIgen, please replace with int8, int16, int32 or int64\n");
 	return -1;
     }
+#if 1
+    if (strcmp(type, "int")==0)
+	fprintf(stderr, "NOTE: type \"int\" no longer supported in CLIgen, please replace with int8, int16, int32 or int64\n");
+#endif
+
     return 0;
 }
 
