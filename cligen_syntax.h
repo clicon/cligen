@@ -1,20 +1,35 @@
 /*
-  Copyright (C) 2001-2016 Olof Hagsand
+  ***** BEGIN LICENSE BLOCK *****
+ 
+  Copyright (C) 2001-2017 Olof Hagsand
 
   This file is part of CLIgen.
 
-  CLIgen is free software; you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation; either version 2 of the License, or
-  (at your option) any later version.
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
 
-  CLIgen is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details.
+    http://www.apache.org/licenses/LICENSE-2.0
 
-  You should have received a copy of the GNU General Public License
-  along with CLIgen; see the file COPYING.
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+
+  Alternatively, the contents of this file may be used under the terms of
+  the GNU General Public License Version 2 or later (the "GPL"),
+  in which case the provisions of the GPL are applicable instead
+  of those above. If you wish to allow use of your version of this file only
+  under the terms of the GPL, and not to allow others to
+  use your version of this file under the terms of Apache License version 2, indicate
+  your decision by deleting the provisions above and replace them with the 
+  notice and other provisions required by the GPL. If you do not delete
+  the provisions above, a recipient may use your version of this file under
+  the terms of any one of the Apache License version 2 or the GPL.
+
+  ***** END LICENSE BLOCK *****
+
 */
 
 #ifndef _CLIGEN_SYNTAX_H_
@@ -23,7 +38,25 @@
 /*
  * Types
  */
-typedef void *(str2fn_mapper)(char *str, void *arg, char **err);
+
+/* The following function types map from strings (function names) to actual
+ * functions.  
+ * These are used when parsing a file (eg CLI specification) that needs
+ * to map function names (string) to actual function pointers.
+ * (We may be stretching the power of C here,...)
+ */
+
+/* Map function names as strings to cligen function callback */
+typedef cg_fnstype_t *(cg_str2fn_t)(char *str, void *arg, char **err);
+
+/* Map function names as strings to cligen vector function callback */
+typedef cgv_fnstype_t *(cgv_str2fn_t)(char *str, void *arg, char **err);
+
+/* Map function names as strings to CLIgen expand callback */
+typedef expand_cb *(expand_str2fn_t)(char *str, void *arg, char **err);
+
+/* Map function names as strings to CLIgen expand callback */
+typedef expandv_cb *(expandv_str2fn_t)(char *str, void *arg, char **err);
 
 /*
  * Prototypes
@@ -51,10 +84,10 @@ int cligen_parse_line(cligen_handle h,
 	       cg_var       *arg,
 	       int           hide);
 
-int cligen_str2fn(parse_tree pt, 
-		  str2fn_mapper *str2fn1, void *fnarg1, 
-		  str2fn_mapper *str2fn2, void *fnarg2);
-int cligen_callback_str2fn(parse_tree, cg_str2fn_t *str2fn, void *fnarg);
+int cligen_callback_str2fn(parse_tree, cg_str2fn_t *str2fn, void *arg);
+int cligen_callbackv_str2fn(parse_tree pt, cgv_str2fn_t *str2fn, void *arg);
+int cligen_expand_str2fn(parse_tree pt, expand_str2fn_t *str2fn, void *arg);
+int cligen_expandv_str2fn(parse_tree pt, expandv_str2fn_t *str2fn, void *arg);
 int cligen_parse_debug(int d); 
 
 #endif /* _CLIGEN_SYNTAX_H_ */

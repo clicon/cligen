@@ -1,22 +1,37 @@
 /*
   CLI generator. Take idl as input and generate a tree for use in cli.
 
-  Copyright (C) 2001-2016 Olof Hagsand
+  ***** BEGIN LICENSE BLOCK *****
+ 
+  Copyright (C) 2001-2017 Olof Hagsand
 
   This file is part of CLIgen.
 
-  CLIgen is free software; you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation; either version 2 of the License, or
-  (at your option) any later version.
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
 
-  CLIgen is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details.
+    http://www.apache.org/licenses/LICENSE-2.0
 
-  You should have received a copy of the GNU General Public License
-  along with CLIgen; see the file COPYING.
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+
+  Alternatively, the contents of this file may be used under the terms of
+  the GNU General Public License Version 2 or later (the "GPL"),
+  in which case the provisions of the GPL are applicable instead
+  of those above. If you wish to allow use of your version of this file only
+  under the terms of the GPL, and not to allow others to
+  use your version of this file under the terms of Apache License version 2, indicate
+  your decision by deleting the provisions above and replace them with the 
+  notice and other provisions required by the GPL. If you do not delete
+  the provisions above, a recipient may use your version of this file under
+  the terms of any one of the Apache License version 2 or the GPL.
+
+  ***** END LICENSE BLOCK *****
+
 */
 #include "cligen_config.h"
 
@@ -39,17 +54,14 @@
 /* Callback function for expand variables */
 
 
-/*
- * co_expand_sub
- * copy and expand a cligen object.
+/*! Copy and expand a cligen object.
  * this object could actually give rise to several if it is a variable
  * with expand (co_exp) or choice (co_choice) set.
  * Set co_ref to point back to the original.
- * Arguments:
- *   co:     original cg_obj
- *   parent: parent of original co object
- *   conp:   new, shadow object
- * (see also co_copy XXX: maybe this could call co_copy?)
+ * @param[in]  co     Original cg_obj
+ * @param[in]  parent Parent of original co object
+ * @param[out] conp   New, shadow object
+ * @see co_copy XXX: maybe this could call co_copy?
  */
 static int
 co_expand_sub(cg_obj *co, cg_obj *parent, cg_obj **conp)
@@ -77,7 +89,7 @@ co_expand_sub(cg_obj *co, cg_obj *parent, cg_obj **conp)
 	}
 	memcpy(con->co_userdata, co->co_userdata, co->co_userlen);
     }
-    if (co_callback_copy(co->co_callbacks, &con->co_callbacks, NULL) < 0)
+    if (co_callback_copy(co->co_callbacks, &con->co_callbacks) < 0)
 	return -1;
     if (co->co_help)
 	if ((con->co_help = strdup(co->co_help)) == NULL){
@@ -101,8 +113,8 @@ co_expand_sub(cg_obj *co, cg_obj *parent, cg_obj **conp)
 		fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
 		return -1;
 	    }
-	if (co->co_expand_fn_arg)
-	    if ((con->co_expand_fn_arg = cv_dup(co->co_expand_fn_arg)) == NULL)
+	if (co->co_expand_fn_vec)
+	    if ((con->co_expand_fn_vec = cvec_dup(co->co_expand_fn_vec)) == NULL)
 		return -1;
 	if (co->co_rangecv_low)
 	    if ((con->co_rangecv_low = cv_dup(co->co_rangecv_low)) == NULL)
@@ -126,36 +138,39 @@ co_expand_sub(cg_obj *co, cg_obj *parent, cg_obj **conp)
     return 0;
 }
 
-/*
- * transform_var_to_cmd
- * expansion of choice or expand need to take a variable (<expand> <choice>)
+/*! Expansion of choice or expand need to take a variable (<expand> <choice>)
  * and transform them to a set of commands: <string>...<string>
  */
 int
-transform_var_to_cmd(cg_obj *co, char *cmd, char *comment)
+transform_var_to_cmd(cg_obj *co, 
+		     char   *cmd, 
+		     char   *helptext)
 {
     if (co->co_command)
 	free(co->co_command);
     co->co_command = cmd; 
-    if (comment){
+    if (helptext){
 	if (co->co_help)
 	    free(co->co_help);
-	co->co_help = comment; 
+	co->co_help = helptext; 
     }
     if (co->co_expand_fn)
 	co->co_expand_fn = NULL;
+    if (co->co_expandv_fn)
+	co->co_expandv_fn = NULL;
     if (co->co_expand_fn_str){
 	free(co->co_expand_fn_str);
 	co->co_expand_fn_str = NULL;
+    }
+    if (co->co_expand_fn_vec){
+	cvec_free(co->co_expand_fn_vec);
+	co->co_expand_fn_vec = NULL;
     }
     if (co->co_show){
 	free(co->co_show);
 	co->co_show = NULL;
     }
-    if (co->co_expand_fn_arg){
-	cv_free(co->co_expand_fn_arg);
-	co->co_expand_fn_arg = NULL;
-    }
+
     if (co->co_rangecv_low){
 	cv_free(co->co_rangecv_low);
 	co->co_rangecv_low = NULL;
@@ -207,11 +222,12 @@ pt_callback_reference(parse_tree pt, struct cg_callback *cc0)
 	if (ptc->pt_len && ptc->pt_vec[0] == NULL){
 	    /* Copy the callback from top */
 	    if ((cc = co->co_callbacks) == NULL){
-		if (co_callback_copy(cc0, &co->co_callbacks, NULL) < 0)
+		if (co_callback_copy(cc0, &co->co_callbacks) < 0)
 		    return -1;
 	    }
 	    else {
 		cc->cc_fn = cc0->cc_fn; /* iterate */
+		cc->cc_fn_vec = cc0->cc_fn_vec; /* iterate */
 		if (cc0->cc_fn_str){
 		    if (cc->cc_fn_str)
 			free (cc->cc_fn_str);
@@ -328,11 +344,132 @@ pt_expand_1(cligen_handle h,
      return 0;
 }
 
+static int
+pt_expand_fn(cligen_handle h, 
+	     cg_obj       *co,     
+	     cvec         *cvv,
+	     parse_tree   *ptn,
+	     cg_obj       *parent)
+{
+    int     retval = 0;
+    int     k;
+    int     nr = 0;
+    char  **commands = NULL;
+    char  **helptexts = NULL;
+    cg_obj *con;
 
-/*
- * pt_expand_2
- * Take a pattern and expand all <variables> with option 'choice' or
- * 'expand'. The pattern is expanded by examining the objects they point 
+    if ((*co->co_expand_fn)(
+			    cligen_userhandle(h)?cligen_userhandle(h):h, 
+			    co->co_expand_fn_str, 
+			    cvv,
+			    cvec_i(co->co_expand_fn_vec, 0),
+			    &nr, 
+			    &commands, 
+			    &helptexts) < 0)
+	goto done;
+    for (k=0; k<nr; k++){
+	pt_realloc(ptn);
+	if (co_expand_sub(co, parent, 
+			  &ptn->pt_vec[ptn->pt_len-1]) < 0)
+	    goto done;
+	con = ptn->pt_vec[ptn->pt_len-1];
+	if (transform_var_to_cmd(con, commands[k], 
+				 helptexts?helptexts[k]:NULL) < 0)
+	    goto done;
+    }
+
+    retval = 0;
+ done:
+    if (commands)
+	free(commands);
+    if (helptexts)
+	free(helptexts);
+    return retval;
+}
+
+static int
+pt_expand_fnv(cligen_handle h, 
+	      cg_obj       *co,     
+	      cvec         *cvv,
+	      parse_tree   *ptn,
+	      cg_obj       *parent)
+{
+    int     retval = -1;
+    cvec   *commands = cvec_new(0);
+    cvec   *helptexts = cvec_new(0);
+    cg_var *cv = NULL;
+    char   *helpstr;
+    cg_obj *con;
+    int     i;
+
+    if ((*co->co_expandv_fn)(
+			     cligen_userhandle(h)?cligen_userhandle(h):h, 
+			     co->co_expand_fn_str, 
+			     cvv,
+			     co->co_expand_fn_vec,
+			     commands, 
+			     helptexts) < 0)
+	goto done;
+    i = 0;
+    while ((cv = cvec_each(commands, cv)) != NULL) {
+	if (i < cvec_len(helptexts)){
+	    helpstr = strdup(cv_string_get(cvec_i(helptexts, i)));
+	}
+	else
+	    helpstr = NULL;
+	i++;
+	pt_realloc(ptn);
+	if (co_expand_sub(co, parent, 
+			  &ptn->pt_vec[ptn->pt_len-1]) < 0)
+	    goto done;
+	con = ptn->pt_vec[ptn->pt_len-1];
+	if (transform_var_to_cmd(con, 
+				 strdup(cv_string_get(cv)),
+				 helpstr) < 0)
+	    goto done;
+    }
+    if (commands)
+	cvec_free(commands);
+    if (helptexts)
+	cvec_free(helptexts);
+    retval = 0;
+ done:
+    return retval;
+
+}
+
+static int
+pt_expand_choice(cg_obj       *co,     
+		 parse_tree   *ptn,
+		 cg_obj       *parent)
+{
+    int     retval = -1;
+    char   *ccmd;
+    char   *cp = NULL;
+    char   *c;
+    cg_obj *con;
+
+    /* parse co_command and get alternatives <alt:hej,hopp> */
+    if (co->co_choice){
+	cp = ccmd = strdup(co->co_choice);
+	while ((c = strsep(&ccmd, ",|")) != NULL){
+	    pt_realloc(ptn);
+	    if (co_expand_sub(co, parent, 
+			      &ptn->pt_vec[ptn->pt_len-1]) < 0)
+		goto done;
+	    con = ptn->pt_vec[ptn->pt_len-1];
+	    if (transform_var_to_cmd(con, strdup(c), NULL) < 0) 
+		goto done;
+	}
+    }
+    retval = 0;
+ done:
+    if (cp)
+	free(cp);
+    return retval;
+}
+/*! Take a pattern and expand all <variables> with option 'choice' or 'expand'. 
+ * The pattern is expanded by examining the objects they point 
  * to: those objects that are expand or choice variables
  * (eg <string expand:foo>) are transformed into a set of new commands
  * with a reference point back to the original.
@@ -344,15 +481,12 @@ pt_expand_1(cligen_handle h,
 int
 pt_expand_2(cligen_handle h, 
 	    parse_tree   *ptr, 
-	    cvec         *cvec,
+	    cvec         *cvv,
 	    parse_tree   *ptn, 
 	    int           hide) 
 {
-    int          i, k, nr;
+    int          i;
     cg_obj      *co;
-    cg_obj      *con;
-    char       **commands;
-    char       **helptexts;
     cg_obj      *parent = NULL;
     int          retval = -1;
 
@@ -366,72 +500,39 @@ pt_expand_2(cligen_handle h,
 		goto done;
 	    if (hide && co->co_hide)
 		continue;
-
 	    /*
 	     * Choice variable - Insert the static choices as commands in place
 	     * of the variable
 	     */
 	    if (co->co_type == CO_VARIABLE && co->co_choice != NULL){
-	      char *ccmd, *cp, *c;
-	      /* parse co_command and get alternatives <alt:hej,hopp> */
-	      if (co->co_choice){
-		cp = ccmd = strdup(co->co_choice);
-		while ((c = strsep(&ccmd, ",|")) != NULL){
-		    pt_realloc(ptn);
-		    if (co_expand_sub(co, parent, 
-					    &ptn->pt_vec[ptn->pt_len-1]) < 0)
-			goto done;
-		    con = ptn->pt_vec[ptn->pt_len-1];
-		    if (transform_var_to_cmd(con, strdup(c), NULL) < 0) 
-			goto done;
-		}
-		if (cp)
-		  free(cp);
-	      }
+		if (pt_expand_choice(co, ptn, parent) < 0)
+		    goto done;
 	    }
 	    else
-		/*
-		 * expand variable - call expand callback and insert expanded
+		/* Expand variable - call expand callback and insert expanded
 		 * commands in place of the variable
 		 */
-	    if (co->co_type == CO_VARIABLE && co->co_expand_fn != NULL){
-	      commands = NULL;
-	      helptexts = NULL;
-	      nr = 0;
-	      if ((*co->co_expand_fn)(
-		     cligen_userhandle(h)?cligen_userhandle(h):h, 
-		     co->co_expand_fn_str, 
-		     cvec,
-		     co->co_expand_fn_arg, 
-		     &nr, 
-		     &commands, 
-		     &helptexts) < 0)
-		  goto done;
-	      for (k=0; k<nr; k++){
-		  pt_realloc(ptn);
-		  if (co_expand_sub(co, parent, 
+		if (co->co_type == CO_VARIABLE && 
+		    co->co_expand_fn != NULL){
+		    if (pt_expand_fn(h, co, cvv, ptn, parent) < 0)
+			goto done;
+		}
+		else
+		    if (co->co_type == CO_VARIABLE && 
+			co->co_expandv_fn != NULL){
+			if (pt_expand_fnv(h, co, cvv, ptn, parent) < 0)
+			    goto done;
+		    }
+		    else{
+			/* Copy vector element */
+			pt_realloc(ptn);
+			/* Copy cg_obj */
+			if (co_expand_sub(co, parent, 
 					  &ptn->pt_vec[ptn->pt_len-1]) < 0)
-		      goto done;
-		  con = ptn->pt_vec[ptn->pt_len-1];
-		  if (transform_var_to_cmd(con, commands[k], 
-					   helptexts?helptexts[k]:NULL) < 0)
-		      goto done;
-	      }
-	      if (commands)
-		  free(commands);
-	      if (helptexts)
-		  free(helptexts);
-	    }
-	    else{
-		/* Copy vector element */
-		  pt_realloc(ptn);
-		/* Copy cg_obj */
-		  if (co_expand_sub(co, parent, 
-					  &ptn->pt_vec[ptn->pt_len-1]) < 0)
-		      goto done;
-		/* Reference old cg_obj */
-//		  con = ptn->pt_vec[ptn->pt_len-1];
-	    }
+			    goto done;
+			/* Reference old cg_obj */
+			//		  con = ptn->pt_vec[ptn->pt_len-1];
+		    }
 	}
 	else{ 
 	    pt_realloc(ptn); /* empty child */
@@ -443,14 +544,13 @@ pt_expand_2(cligen_handle h,
 	cligen_print(stderr, *ptn, 0);
     }
     retval = 0;
-  done:
-     return retval;
+ done:
+    return retval;
 }
 
-/* 
- * pt_expand_cleanup_1
- * Go through tree and clean & delete all extra memory from pt_expand_1()
+/*! Go through tree and clean & delete all extra memory from pt_expand_1()
  * More specifically, delete all expanded subtrees co_ref
+ * @see pt_expand_1
  */
 int
 pt_expand_cleanup_1(parse_tree *pt)
@@ -484,10 +584,9 @@ pt_expand_cleanup_1(parse_tree *pt)
     return 0;
 }
 
-/* 
- * pt_expand_cleanup_2
- * Go through tree and clean & delete all extra memory from pt_expand_2()
+/*! Go through tree and clean & delete all extra memory from pt_expand_2()
  * More specifically, delete all co_values and co_pt_exp.
+ * @see pt_expand_2
  */
 int
 pt_expand_cleanup_2(parse_tree pt)
@@ -514,8 +613,7 @@ pt_expand_cleanup_2(parse_tree pt)
 }
 
 
-/*
- * help functions to delete hanging memory
+/*! Help functions to delete hanging memory
  * It is allocated in match_pattern_node, and deallocated 
  * after every call to pt_expand - because we do not now in
  * match_pattern_node when it will be used.
@@ -531,32 +629,8 @@ pt_expand_add(cg_obj *co, parse_tree ptn)
     return 0;
 }
 
-/*! Register functions for variable completion in parse-tree using translator
- *
- * This is wrapper for better type-checking of the mapper (str2fn) function. See 
- * cligen_str2fn for the underlying function (without type-checking).
- * @param  pt      parse-tree. Recursively loop thru this
- * @param  str2fn  Translator from strings to function pointers for expand variable
- *         callbacks. 
- * @param  fnarg   Function argument for expand callbacks (at evaluation time).
- * See also cligen_str2fn
- */
-int
-cligen_expand_str2fn(parse_tree pt, expand_str2fn_t *str2fn, void *fnarg)
-{
-    return cligen_str2fn(pt, NULL, NULL, (str2fn_mapper*)str2fn, fnarg);
-}
 
-#ifdef notyet
-int
-cligen_expand_str2fn2(parse_tree pt, expand_str2fn_t2 *str2fn, void *fnarg)
-{
-    return cligen_str2fn(pt, NULL, NULL, (str2fn_mapper*)str2fn, fnarg);
-}
-#endif
-
-/*
- * reference_path_match
+/*! Return object in original tree from  object in a referenced tree
  * Given an object in a referenced tree, and the top of the original tree,
  * return the corresponding object in the original tree.
  * The figure tries to show:

@@ -1,22 +1,37 @@
 /*
   CLIgen application reading CLI specification from file
 
-  Copyright (C) 2001-2016 Olof Hagsand
+  ***** BEGIN LICENSE BLOCK *****
+ 
+  Copyright (C) 2001-2017 Olof Hagsand
 
   This file is part of CLIgen.
 
-  CLIgen is free software; you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation; either version 2 of the License, or
-  (at your option) any later version.
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
 
-  CLIgen is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details.
+    http://www.apache.org/licenses/LICENSE-2.0
 
-  You should have received a copy of the GNU General Public License
-  along with CLIgen; see the file COPYING.
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+
+  Alternatively, the contents of this file may be used under the terms of
+  the GNU General Public License Version 2 or later (the "GPL"),
+  in which case the provisions of the GPL are applicable instead
+  of those above. If you wish to allow use of your version of this file only
+  under the terms of the GPL, and not to allow others to
+  use your version of this file under the terms of Apache License version 2, indicate
+  your decision by deleting the provisions above and replace them with the 
+  notice and other provisions required by the GPL. If you do not delete
+  the provisions above, a recipient may use your version of this file under
+  the terms of any one of the Apache License version 2 or the GPL.
+
+  ***** END LICENSE BLOCK *****
+
  */
 
 #include <stdio.h>
@@ -30,10 +45,8 @@
 
 #include <cligen/cligen.h>
 
-/*
- * cligen_exec_cb
- * General callback for executing shells. The argument is a command
- * followed by arguments as defined in the input syntax.
+/*! General callback for executing shells. 
+ * The argument is a command followed by arguments as defined in the input syntax.
  * Simple example:
  *   CLIgen input syntax:     <a type:int32>, cligen_exec_cb("ls ${a}");
  *   CLI input:               > 42
@@ -45,10 +58,9 @@
  *   Shell command:           foo.sh 22 1.2.3.4
  *   CLI input:               > 2.3.4.5
  *   Shell command:           foo.sh 99 1.2.3.4.
- *
  */
 int
-cligen_exec_cb(cligen_handle handle, cvec *vars, cg_var *arg)
+cligen_exec_cb(cligen_handle handle, cvec *cvv, cvec *argv)
 {
     cg_var *cv = NULL;
     char    buf[64];
@@ -56,16 +68,16 @@ cligen_exec_cb(cligen_handle handle, cvec *vars, cg_var *arg)
     int     ret;
     int     status;
 
-    if (arg == NULL)
+    if (argv == NULL)
 	return 0;
     if ((pid = fork()) == 0){ /* child */
-	while ((cv = cvec_each1(vars, cv)) != NULL) {
+	while ((cv = cvec_each1(cvv, cv)) != NULL) {
 	    if (cv_const_get(cv))
 		continue;
 	    cv2str(cv, buf, sizeof(buf)-1);
 	    setenv(cv_name_get(cv), buf, 1 );
 	}
-	cv2str(arg, buf, sizeof(buf)-1);
+	cv2str(cvec_i(argv, 0), buf, sizeof(buf)-1);
 	ret = system(buf);
 	exit(0);
     }
@@ -77,113 +89,19 @@ cligen_exec_cb(cligen_handle handle, cvec *vars, cg_var *arg)
     return ret;
 }
 
-#ifdef notused
-/*
- * This is an example of a generic expansion function which starts a program
- * and creates an expand list based on its output
- * That is, the program should be an executable script or program that produces
- * a list of output strings.
- * The name of the file is expand_<name>
+/*! CLI generic callback printing the variable vector and argument
  */
 int
-cli_expand_fn(cligen_handle h,
-	      char *name, 
-	      cvec *vars, 
-	      cg_var *cv,
-	      int *nr, 
-	      char ***commands)
+callback(cligen_handle handle, cvec *cvv, cvec *argv)
 {
-    int pid;
-    int p[2];
-    int retval = -1;
-    char *filename;
-    char buf[1024];
-    FILE *f;
-    struct stat st;
-    int status;
-    int n;
-    int len;
-
-    len = strlen(name) + strlen("expand_") + 1;
-    if ((filename = malloc(len)) == NULL){
-	fprintf(stderr, "%s: malloc: %s\n", __FUNCTION__, strerror(errno));
-	goto done;
-	}
-    snprintf(filename, len, "expand_%s", name);
-    if (stat(filename, &st) < 0){
-	fprintf(stderr, "%s: stat(%s): %s\n", __FUNCTION__, filename, strerror(errno));
-	goto done;
-    }
-    if (pipe(p) < 0){
-	fprintf(stderr, "%s: pipe: %s\n", __FUNCTION__, strerror(errno));
-	goto done;
-    }
-    if ((pid = fork()) < 0){ 
-	fprintf(stderr, "%s: pipe: %s\n", __FUNCTION__, strerror(errno));
-	goto done;
-    }
-    if (pid == 0){ /* child */
-	char *argv[3];
-	argv[0] = filename;
-	argv[1] = name;
-	argv[2] = NULL;
-	close(p[0]);
-	p[0] = -1;
-	dup2(p[1], STDOUT_FILENO);
-	if (execvp(filename, argv) < 0){
-	    fprintf(stderr, "%s: execvp(%s): %s\n", __FUNCTION__, 
-		    filename, strerror(errno));
-	    exit(-1);
-	}
-	exit(0);
-    }
-    /* parent */
-    close (p[1]);
-    p[1] = -1;	
-    if ((f = fdopen(p[0], "r")) == NULL){ 
-	fprintf(stderr, "%s: fdopen: %s\n", __FUNCTION__, strerror(errno));
-	goto done;
-    }
-    n = *nr;
-    while(fgets(buf, sizeof(buf), f)){
-	n++;
-	if ((*commands = realloc(*commands, n*sizeof(char*))) == NULL){
-	    fprintf(stderr, "%s: realloc: %s\n", __FUNCTION__, strerror(errno));
-	    goto done;
-	}
-	if (buf[strlen(buf)-1] == '\n')
-	    buf[strlen(buf)-1] = '\0';
-	(*commands)[n-1] = strdup(buf);
-    }
-    *nr = n;
-    close(p[0]);
-    fclose(f);
-    /* Wait for child to finish */
-    if(waitpid (pid, &status, 0) == pid)
-	retval = WEXITSTATUS(status);
-    else
-	retval = -1;
-  done:
-    if (filename)
-	free(filename);
-    return retval;
-}
-#endif /* notused */
-
-/*
- * This is the actual callback.
- */
-int
-callback(cligen_handle handle, cvec *vars, cg_var *arg)
-{
-    int i = 1;
+    int     i = 1;
     cg_var *cv;
-    char buf[64];
+    char    buf[64];
 
     fprintf(stderr, "function: %s\n", cligen_fn_str_get(handle));
     fprintf(stderr, "variables:\n");
     cv = NULL;
-    while ((cv = cvec_each1(vars, cv)) != NULL) {
+    while ((cv = cvec_each1(cvv, cv)) != NULL) {
 	cv2str(cv, buf, sizeof(buf)-1);
 	fprintf(stderr, "\t%d name:%s type:%s value:%s\n", 
 		i++, 
@@ -192,18 +110,19 @@ callback(cligen_handle handle, cvec *vars, cg_var *arg)
 		buf
 	    );
     }
-    if (arg){
-	cv2str(arg, buf, sizeof(buf)-1);
-	fprintf(stderr, "argument: %s\n", buf);
+    cv = NULL;
+    i=0;
+    while ((cv = cvec_each(argv, cv)) != NULL) {
+	cv2str(cv, buf, sizeof(buf)-1);
+	fprintf(stderr, "arg %d: %s\n", i++, buf);
     }
     return 0;
 }
 
-/*
- * Example of static string to function mapper
+/*! Example of static string to function mapper
  * Note, the syntax need to something like: "a{help}, callback, 42"
  */
-cg_fnstype_t *
+cgv_fnstype_t *
 str2fn(char *name, void *arg, char **error)
 {
     *error = NULL;
@@ -281,7 +200,7 @@ main(int argc, char *argv[])
     pt = cligen_tree_i(h, 0); 
 
     /* map functions */
-    if (cligen_callback_str2fn(*pt, str2fn, NULL) < 0)     
+    if (cligen_callbackv_str2fn(*pt, str2fn, NULL) < 0)     
 	goto done;
     if ((str = cvec_find_str(globals, "prompt")) != NULL)
 	cligen_prompt_set(h, str);

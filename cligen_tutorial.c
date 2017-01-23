@@ -1,22 +1,37 @@
 /*
   CLIgen tutorial application
 
-  Copyright (C) 2001-2016 Olof Hagsand
+  ***** BEGIN LICENSE BLOCK *****
+ 
+  Copyright (C) 2001-2017 Olof Hagsand
 
   This file is part of CLIgen.
 
-  CLIgen is free software; you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation; either version 2 of the License, or
-  (at your option) any later version.
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
 
-  CLIgen is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details.
+    http://www.apache.org/licenses/LICENSE-2.0
 
-  You should have received a copy of the GNU General Public License
-  along with CLIgen; see the file COPYING.
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+
+  Alternatively, the contents of this file may be used under the terms of
+  the GNU General Public License Version 2 or later (the "GPL"),
+  in which case the provisions of the GPL are applicable instead
+  of those above. If you wish to allow use of your version of this file only
+  under the terms of the GPL, and not to allow others to
+  use your version of this file under the terms of Apache License version 2, indicate
+  your decision by deleting the provisions above and replace them with the 
+  notice and other provisions required by the GPL. If you do not delete
+  the provisions above, a recipient may use your version of this file under
+  the terms of any one of the Apache License version 2 or the GPL.
+
+  ***** END LICENSE BLOCK *****
+
  */
 
 #include <stdio.h>
@@ -27,26 +42,26 @@
 
 #include <cligen/cligen.h>
 
-/*
- * This callback just prints the function argument
+/*! CLI callback that just prints the function argument
  */
 int
-hello(cligen_handle h, cvec *vars, cg_var *arg)
+hello(cligen_handle h, cvec *cvv, cvec *argv)
 {
-    printf("%s\n", cv_string_get(arg));
+    cg_var *cv;
+
+    cv = cvec_i(argv, 0);
+    printf("%s\n", cv_string_get(cv));
     return 0;
 }
 
-
-/*
- * This is a generic callback printing the variable vector and argument
+/*! CLI generic callback printing the variable vector and argument
  */
 int
-cb(cligen_handle h, cvec *vars, cg_var *arg)
+cb(cligen_handle h, cvec *vars, cvec *argv)
 {
-    int i=1;
+    int     i=1;
     cg_var *cv;
-    char buf[64];
+    char    buf[64];
 
     fprintf(stderr, "variables:\n");
     cv = NULL;
@@ -60,65 +75,66 @@ cb(cligen_handle h, cvec *vars, cg_var *arg)
             );
 
     }
-    if (arg){
-        cv2str(arg, buf, sizeof(buf)-1);
-        fprintf(stderr, "argument: %s\n", buf);
+    cv = NULL;
+    i=0;
+    while ((cv = cvec_each(argv, cv)) != NULL) {
+	cv2str(cv, buf, sizeof(buf)-1);
+	fprintf(stderr, "arg %d: %s\n", i++, buf);
     }
     return 0;
 }
 
-/*
- * An example of a callback handling a complex syntax
+/*! CLI example callback handling a complex syntax
  */
 int
-letters(cligen_handle h, cvec *vars, cg_var *arg)
+letters(cligen_handle h, cvec *cvv, cvec *argv)
 {
-    char *str;
+    char   *str;
     cg_var *cv;
 
-    if ((str = cvec_find_str(vars, "ca")) != NULL)
+    if ((str = cvec_find_str(cvv, "ca")) != NULL)
         printf("%s\n", str);
-    if ((cv = cvec_find(vars, "int")) != NULL)
+    if ((cv = cvec_find(cvv, "int")) != NULL)
         printf("%d\n", cv_int32_get(cv));
-    if ((str = cvec_find_str(vars, "cb")) != NULL)
+    if ((str = cvec_find_str(cvv, "cb")) != NULL)
         printf("%s\n", str);
-    if ((str = cvec_find_str(vars, "dd")) != NULL)
+    if ((str = cvec_find_str(cvv, "dd")) != NULL)
         printf("%s\n", str);
-    if ((str = cvec_find_str(vars, "ee")) != NULL)
+    if ((str = cvec_find_str(cvv, "ee")) != NULL)
         printf("%s\n", str);
     return 0;
 }
 
 
-/*
- * This callback changes the prompt to the variable setting
+/*! This callback is for hidden commands
  */
 int
-secret(cligen_handle h, cvec *vars, cg_var *arg)
+secret(cligen_handle h, cvec *cvv, cvec *argv)
 {
-    printf("This is a hidden command: %s\n", cv_string_get(arg));
+    cg_var *cv;
+
+    cv = cvec_i(argv, 0);
+    printf("This is a hidden command: %s\n", cv_string_get(cv));
     return 0;
 }
 
 
-/*
- * This callback changes the prompt to the variable setting
+/*! This callback changes the prompt to the variable setting
  */
 int
-setprompt(cligen_handle h, cvec *vars, cg_var *arg)
+setprompt(cligen_handle h, cvec *cvv, cvec *argv)
 {
     char *str;
 
-    if ((str = cvec_find_str(vars, "new")) != NULL)
+    if ((str = cvec_find_str(cvv, "new")) != NULL)
         cligen_prompt_set(h, str);
     return 0;
 }
 
-/*
- * request quitting the CLI
+/*! Request quitting the CLI
  */
 int
-quit(cligen_handle h, cvec *vars, cg_var *arg)
+quit(cligen_handle h, cvec *cvv, cvec *argv)
 {
     cligen_exiting_set(h, 1);
     return 0;
@@ -127,33 +143,32 @@ quit(cligen_handle h, cvec *vars, cg_var *arg)
 /*! Change cligen tree
  */
 int
-changetree(cligen_handle h, cvec *vars, cg_var *arg)
+changetree(cligen_handle h, cvec *cvv, cvec *argv)
 {
-    char *treename = cv_string_get(arg);
+    cg_var *cv;
+    char *treename;
 
+    cv = cvec_i(argv, 0);
+    treename = cv_string_get(cv);
     return cligen_tree_active_set(h, treename);
 }
 
-/*
- * Command without assigned callback
+/*! Command without assigned callback
  */
 int
-unknown(cligen_handle h, cvec *vars, cg_var *arg)
+unknown(cligen_handle h, cvec *cvv, cvec *argv)
 {
-    cg_var *cv = cvec_i(vars, 0);
+    cg_var *cv = cvec_i(cvv, 0);
 
     printf("The command has no assigned callback: %s\n", cv_string_get(cv));
     return 0;
 }
 
 
-/*
- * str2fn
- * Example of static string to function mapper for the callback
- * functions above.
+/*! Example of static string to function mapper for the callback functions above.
  * Better to use dlopen, mmap or some other more flexible scheme.
  */
-cg_fnstype_t *
+cgv_fnstype_t *
 str2fn(char *name, void *arg, char **error)
 {
     *error = NULL;
@@ -179,38 +194,35 @@ str2fn(char *name, void *arg, char **error)
     return unknown; /* allow any function (for testing) */
 }
 
-/*
- * This is an example of an expansion function. It is called every time
- * a variable of the form <expand> needs to be evaluated.
+/*! Example of expansion(completion) function. 
+ * It is called every time a variable of the form <expand> needs to be evaluated.
  * Note the mallocing of vectors which could probably be done in a
  * friendlier way.
  * Note also that the expansion is not very dynamic, a script or reading a file
  * would have introduced som more dynamics.
  */
 int
-cli_expand_cb(cligen_handle h, char *fn_str, cvec *vars, cg_var *cv, 
-	      int  *nr,
-	      char ***commands,     /* vector of function strings */
-	      char ***helptexts)   /* vector of help-texts */
+cli_expand_cb(cligen_handle h, 
+	      char         *fn_str, 
+	      cvec         *cvv, 
+	      cvec         *argv, 
+	      cvec         *commands,     /* vector of function strings */
+	      cvec         *helptexts)   /* vector of help-texts */
 {
-    int n = 2;
-     /* Interface name expansion. */
-    *commands = calloc(n, sizeof(char*));
-    (*commands)[0] = strdup("eth0");
-    (*commands)[1] = strdup("eth1");
-    *nr = n;
-    *helptexts = calloc(n, sizeof(char*));
-    (*helptexts)[0] = strdup("Interface A");
-    (*helptexts)[1] = strdup("Interface B");
+    cvec_add_string(commands, NULL, "eth0");
+    cvec_add_string(commands, NULL, "eth1");
+    cvec_add_string(helptexts, NULL, "Interface A");
+    cvec_add_string(helptexts, NULL, "Interface B");
     return 0;
 }
 
-static expand_cb *
+/*! Trivial function translator/mapping function that just assigns same callback
+ */
+static expandv_cb *
 str2fn_exp(char *name, void *arg, char **error)
 {
     return cli_expand_cb;
 }
-
 
 /*
  * Global variables.
@@ -267,9 +279,9 @@ main(int argc, char *argv[])
         goto done;
     pt = NULL;
     while ((pt = cligen_tree_each(h, pt)) != NULL) {
-	if (cligen_callback_str2fn(*pt, str2fn, NULL) < 0) /* map functions */
+	if (cligen_callbackv_str2fn(*pt, str2fn, NULL) < 0) /* map functions */
 	    goto done;
-	if (cligen_expand_str2fn(*pt, str2fn_exp, NULL) < 0)
+	if (cligen_expandv_str2fn(*pt, str2fn_exp, NULL) < 0)
 	    goto done;
     }
     if ((str = cvec_find_str(globals, "prompt")) != NULL)
