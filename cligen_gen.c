@@ -347,6 +347,7 @@ co_callback_copy(struct cg_callback  *cc0,
 	}
 	memset(cc1, 0, sizeof(*cc1));
 	cc1->cc_fn = cc->cc_fn;
+	cc1->cc_fn_vec = cc->cc_fn_vec;
 	if (cc->cc_fn_str)
 	    if ((cc1->cc_fn_str = strdup(cc->cc_fn_str)) == NULL){
 		fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
