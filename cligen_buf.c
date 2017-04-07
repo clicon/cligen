@@ -62,7 +62,7 @@ struct cbuf {
 /*! Allocate cligen buffer. The handle returned can be used in  successive sprintf calls
  * which dynamically print a string.
  * The handle should be freed by cbuf_free()
- * Return the allocated object handle on success.
+ * Return the allocated objecyt handle on success.
  * Returns NULL on error.
  */
 cbuf *

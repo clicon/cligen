@@ -162,6 +162,7 @@ cv_const_set(cg_var *cv,
 }
 
 /*! Get application-specific cv flag
+ * @param[in] cv     CLIgen variable
  */
 char
 cv_flag(cg_var *cv, 
@@ -171,6 +172,7 @@ cv_flag(cg_var *cv,
 }
 
 /*! Clear application-specific cv flag 
+ * @param[in] cv     CLIgen variable
  */
 char
 cv_flag_clr(cg_var *cv, 
@@ -180,6 +182,7 @@ cv_flag_clr(cg_var *cv,
 }
 
 /*! Set application-specific cv flag 
+ * @param[in] cv     CLIgen variable
  */
 char
 cv_flag_set(cg_var *cv, 
@@ -189,6 +192,7 @@ cv_flag_set(cg_var *cv,
 }
 
 /*! Get value of cv without specific type set
+ * @param[in] cv     CLIgen variable
  */
 void *
 cv_value_get(cg_var *cv)
@@ -197,6 +201,7 @@ cv_value_get(cg_var *cv)
 }
 
 /*! Get boolean value of cv
+ * @param[in] cv     CLIgen variable
  */
 char
 cv_bool_get(cg_var *cv)
@@ -204,6 +209,9 @@ cv_bool_get(cg_var *cv)
     return ((cv)->u.varu_bool);
 }
 
+/*! Set boolean value of cv
+ * @param[in] cv     CLIgen variable
+ */
 char
 cv_bool_set(cg_var *cv, 
 	    char    x)
@@ -212,6 +220,7 @@ cv_bool_set(cg_var *cv,
 }
 
 /*! Get 8-bit integer value of cv
+ * @param[in] cv     CLIgen variable
  */
 int8_t
 cv_int8_get(cg_var *cv)
@@ -220,6 +229,7 @@ cv_int8_get(cg_var *cv)
 }
 
 /*! Set 8-bit integer value of cv
+ * @param[in] cv     CLIgen variable
  */
 int8_t
 cv_int8_set(cg_var *cv, 
@@ -229,6 +239,7 @@ cv_int8_set(cg_var *cv,
 }
 
 /*! Get 16-bit integer value of cv
+ * @param[in] cv     CLIgen variable
  */
 int16_t
 cv_int16_get(cg_var *cv)
@@ -237,6 +248,7 @@ cv_int16_get(cg_var *cv)
 }
 
 /*! Set 16-bit integer value of cv
+ * @param[in] cv     CLIgen variable
  */
 int16_t
 cv_int16_set(cg_var *cv, 
@@ -246,6 +258,7 @@ cv_int16_set(cg_var *cv,
 }
 
 /*! Get 32-bit integer value of cv
+ * @param[in] cv     CLIgen variable
  */
 int32_t
 cv_int32_get(cg_var *cv)
@@ -254,6 +267,7 @@ cv_int32_get(cg_var *cv)
 }
 
 /*! Set 32-bit integer value of cv
+ * @param[in] cv     CLIgen variable
  */
 int32_t
 cv_int32_set(cg_var *cv, 
@@ -263,6 +277,7 @@ cv_int32_set(cg_var *cv,
 }
 
 /*! Get 64-bit integer value of cv
+ * @param[in] cv     CLIgen variable
  */
 int64_t
 cv_int64_get(cg_var *cv)
@@ -271,6 +286,7 @@ cv_int64_get(cg_var *cv)
 }
 
 /*! Set 64-bit integer value of cv
+ * @param[in] cv     CLIgen variable
  */
 int64_t
 cv_int64_set(cg_var *cv, 
@@ -280,6 +296,7 @@ cv_int64_set(cg_var *cv,
 }
 
 /*! Get 8-bit unsigned integer value of cv
+ * @param[in] cv     CLIgen variable
  */
 uint8_t
 cv_uint8_get(cg_var *cv)
@@ -288,6 +305,7 @@ cv_uint8_get(cg_var *cv)
 }
 
 /*! Set 8-bit unsigned integer value of cv
+ * @param[in] cv     CLIgen variable
  */
 uint8_t
 cv_uint8_set(cg_var *cv,
@@ -297,6 +315,7 @@ cv_uint8_set(cg_var *cv,
 }
 
 /*! Get 16-bit unsigned integer value of cv
+ * @param[in] cv     CLIgen variable
  */
 uint16_t
 cv_uint16_get(cg_var *cv)
@@ -305,6 +324,7 @@ cv_uint16_get(cg_var *cv)
 }
 
 /*! Set 16-bit unsigned integer value of cv
+ * @param[in] cv     CLIgen variable
  */
 uint16_t
 cv_uint16_set(cg_var  *cv, 
@@ -314,6 +334,7 @@ cv_uint16_set(cg_var  *cv,
 }
 
 /*! Get 32-bit unsigned integer value of cv
+ * @param[in] cv     CLIgen variable
  */
 uint32_t
 cv_uint32_get(cg_var *cv)
@@ -322,6 +343,7 @@ cv_uint32_get(cg_var *cv)
 }
 
 /*! Set 32-bit unsigned integer value of cv
+ * @param[in] cv     CLIgen variable
  */
 uint32_t
 cv_uint32_set(cg_var  *cv, 
@@ -331,6 +353,7 @@ cv_uint32_set(cg_var  *cv,
 }
 
 /*! Get 64-bit unsigned integer value of cv
+ * @param[in] cv     CLIgen variable
  */
 uint64_t
 cv_uint64_get(cg_var *cv)
@@ -339,6 +362,7 @@ cv_uint64_get(cg_var *cv)
 }
 
 /*! Set 64-bit unsigned integer value of cv
+ * @param[in] cv     CLIgen variable
  */
 uint64_t
 cv_uint64_set(cg_var  *cv, 
@@ -348,6 +372,7 @@ cv_uint64_set(cg_var  *cv,
 }
 
 /*! Get n-value of decimal-64 of cv (eg exponent)
+ * @param[in] cv     CLIgen variable
  */
 uint8_t 
 cv_dec64_n_get(cg_var *cv)
@@ -356,7 +381,9 @@ cv_dec64_n_get(cg_var *cv)
 }
 
 /*! Set n-value of decimal-64 of cv (eg exponent)
-* XXX range check? 1..18 */
+ * @param[in] cv     CLIgen variable
+ * XXX range check? 1..18 
+ */
 uint8_t 
 cv_dec64_n_set(cg_var *cv, 
 	       uint8_t x)
@@ -365,6 +392,7 @@ cv_dec64_n_set(cg_var *cv,
 }
 
 /*! Get i-value of decimal-64 of cv (eg base)
+ * @param[in] cv     CLIgen variable
  */
 int64_t 
 cv_dec64_i_get(cg_var *cv)
@@ -373,6 +401,7 @@ cv_dec64_i_get(cg_var *cv)
 }
 
 /*! Set i-value of decimal-64 of cv (eg base)
+ * @param[in] cv     CLIgen variable
  */
 int64_t 
 cv_dec64_i_set(cg_var *cv, 
@@ -383,6 +412,7 @@ cv_dec64_i_set(cg_var *cv,
 
 /*! Get pointer to cv string. 
  *
+ * @param[in] cv     CLIgen variable
  * String can be modified in-line but must call _set function to reallocate.
  */
 char *
@@ -391,7 +421,9 @@ cv_string_get(cg_var *cv)
     return ((cv)->u.varu_string);
 }
 
-/*! Allocate new string from original. Malloc new string and free previous */
+/*! Allocate new string from original. Malloc new string and free previous 
+ * @param[in] cv     CLIgen variable
+ */
 char *
 cv_string_set(cg_var *cv, 
 	      char   *s0)
@@ -410,6 +442,7 @@ cv_string_set(cg_var *cv,
 }
 
 /*! Get ipv4addr, pointer returned, can be used to set value.
+ * @param[in] cv     CLIgen variable
  */
 struct in_addr *
 cv_ipv4addr_get(cg_var *cv)
@@ -418,6 +451,7 @@ cv_ipv4addr_get(cg_var *cv)
 }
 
 /*! Get ipv4addr length of cv
+ * @param[in] cv     CLIgen variable
  */
 uint8_t
 cv_ipv4masklen_get(cg_var *cv)
@@ -426,6 +460,7 @@ cv_ipv4masklen_get(cg_var *cv)
 }
 
 /*! Get ipv6addr, pointer returned, can be used to set value.
+ * @param[in] cv     CLIgen variable
  */
 struct in6_addr *
 cv_ipv6addr_get(cg_var *cv)
@@ -434,6 +469,7 @@ cv_ipv6addr_get(cg_var *cv)
 }
 
 /*! Get ipv6addr length of cv
+ * @param[in] cv     CLIgen variable
  */
 uint8_t
 cv_ipv6masklen_get(cg_var *cv)
@@ -443,6 +479,7 @@ cv_ipv6masklen_get(cg_var *cv)
 
 /*! Returns a pointer to 6-byte mac-address array. 
  *
+ * @param[in] cv     CLIgen variable
  * This can be used to set the address too
  */
 char *
@@ -453,6 +490,7 @@ cv_mac_get(cg_var *cv)
 
 /*! Returns a pointer to uuid byte array. 
  * 
+ * @param[in] cv     CLIgen variable
  * This can be used to set the uuid too.
  */
 unsigned char *
@@ -462,6 +500,7 @@ cv_uuid_get(cg_var *cv)
 }
 
 /*! Set uuid value
+ * @param[in] cv     CLIgen variable
  */
 unsigned char *
 cv_uuid_set(cg_var        *cv, 
@@ -472,6 +511,7 @@ cv_uuid_set(cg_var        *cv,
 }
 
 /*! Returns a struct timeval by value.
+ * @param[in] cv     CLIgen variable
  */
 struct timeval
 cv_time_get(cg_var *cv)
@@ -480,6 +520,7 @@ cv_time_get(cg_var *cv)
 }
 
 /*! Set timeval struct
+ * @param[in] cv     CLIgen variable
  * Returns a struct timeval by value.
  */
 struct timeval
@@ -492,6 +533,7 @@ cv_time_set(cg_var        *cv,
 
 /*! Get pointer to URL proto string. 
  *
+ * @param[in] cv     CLIgen variable
  * String can be modified in-line but must call _set function to reallocate.
  */
 char *
@@ -502,6 +544,7 @@ cv_urlproto_get(cg_var *cv)
 
 /*! Set URL protocol
  * malloc new string from original. Free previous string if existing.
+ * @param[in] cv     CLIgen variable
  */
 char *
 cv_urlproto_set(cg_var *cv, 
@@ -522,6 +565,7 @@ cv_urlproto_set(cg_var *cv,
 
 /*! Get pointer to URL address string. 
  *
+ * @param[in] cv     CLIgen variable
  * String can be modified in-line but must call _set function to reallocate.
  */
 char *
@@ -531,6 +575,7 @@ cv_urladdr_get(cg_var *cv)
 }
 
 /*! Set URL address
+ * @param[in] cv     CLIgen variable
  * malloc new string from original. Free previous string if existing.
  */
 char *
@@ -552,6 +597,7 @@ cv_urladdr_set(cg_var *cv,
 
 /*! Get pointer to URL path string. 
  *
+ * @param[in] cv     CLIgen variable
  * String can be modified in-line but must call _set function to reallocate.
  */
 char *
@@ -561,6 +607,7 @@ cv_urlpath_get(cg_var *cv)
 }
 
 /*! Set URL path
+ * @param[in] cv     CLIgen variable
  * malloc new string from original. Free previous string if existing.
  */
 char *
@@ -582,6 +629,7 @@ cv_urlpath_set(cg_var *cv,
 
 /*! Get pointer to URL user string. 
  *
+ * @param[in] cv     CLIgen variable
  * String can be modified in-line but must call _set function to reallocate.
  */
 char *
@@ -591,6 +639,7 @@ cv_urluser_get(cg_var *cv)
 }
 
 /*! Set URL user
+ * @param[in] cv     CLIgen variable
  * malloc new string from original. Free previous string if existing.
  */
 char *
@@ -612,6 +661,7 @@ cv_urluser_set(cg_var *cv,
 
 /*! Get pointer to URL passwd string. 
  *
+ * @param[in] cv     CLIgen variable
  * String can be modified in-line but must call _set function to reallocate.
  */
 char *
@@ -621,6 +671,7 @@ cv_urlpasswd_get(cg_var *cv)
 }
 
 /*! Set URL password
+ * @param[in] cv     CLIgen variable
  * malloc new string from original. Free previous string if existing.
  */
 char *
@@ -735,10 +786,20 @@ parse_int32(char    *str,
     *val = (int32_t)i;
   done:
     return retval;
-
 }
 
-/*! Like parse_int64 with specified base */
+/*! Parse an int64 number with explicit base and check for errors
+ * @param[in]  str     String containing number to parse
+ * @parame[in] base    If base is zero or 16, the string may include a "0x" prefix,
+ *                     the number will be read in base 16; otherwise, a zero base
+ *                     is taken  as 10 (decimal) unless the next character is '0',
+ *                     in which case it is taken as 8 (octal).
+ * @param[out] val     Value on success
+ * @param[out] reason  Error string on failure
+ * @retval -1 : Error (fatal), with errno set to indicate error
+ * @retval  0 : Validation not OK, malloced reason is returned
+ * @retval  1 : Validation OK, value returned in val parameter
+ */
 int
 parse_int64_base(char    *str, 
 		 int      base,
@@ -1132,10 +1193,13 @@ parse_ipv6addr(char            *str,
 
 /*! Own version of ether_aton(): 
  * parse string in colon hex notation and return a vector of chars.
+ * @param[out] reason     if given, malloced err string (retval=0), needs freeing
  */
 #define MACADDR_STRLEN 17 /* 6*sizeof("xx:")-1 */
 static int
-parse_macaddr(char *str, char addr[6], char **reason)
+parse_macaddr(char  *str, 
+	      char   addr[6], 
+	      char **reason)
 {
     char s[MACADDR_STRLEN+1], *s1, *s2;
     int i=0;
@@ -1181,9 +1245,12 @@ parse_macaddr(char *str, char addr[6], char **reason)
 }
 
 /*! Parse URL
- * url may be changed destructively
+ * @param[in]  url    Syntax:  <proto>://[<user>[:<passwd>]@]<addr>[/<path>]. May 
+ *                    be changed destructively
+ * @param[in]  cv     CLIgen variable
+ * @param[out] reason if given, malloced err string (retval=0), needs freeing
  * URL syntax:
- * <proto>://[<user>[:<passwd>]@]<addr>[/<path>]
+
  */
 static int
 parse_url(char   *url, 
@@ -1246,6 +1313,7 @@ parse_url(char   *url,
 }
 
 /*! Translate url protocol string to enum
+ * @param[in]  str  
  */
 int
 str2urlproto(char *str)
@@ -1802,7 +1870,6 @@ cv_len(cg_var *cv)
     }
     return len;
 }
-
 
 /*! Print a dec64 cv to a string 
  *
@@ -2981,7 +3048,7 @@ cv_reset(cg_var *cv)
 
 /*! Free a single CLIgen variable (cv) AND frees the cv itself
  *
- * For new code
+ * @param[in] cv     CLIgen variable
  */
 int
 cv_free(cg_var *cv)

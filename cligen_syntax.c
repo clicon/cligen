@@ -278,7 +278,9 @@ cligen_callback_str2fn(parse_tree pt, cg_str2fn_t *str2fn, void *arg)
  * @note str2fn may return NULL on error and should then supply a (static) error string 
  */
 int
-cligen_callbackv_str2fn(parse_tree pt, cgv_str2fn_t *str2fn, void *arg)
+cligen_callbackv_str2fn(parse_tree    pt, 
+			cgv_str2fn_t *str2fn, 
+			void         *arg)
 {
     int                 retval = -1;
     cg_obj             *co;
