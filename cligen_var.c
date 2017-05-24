@@ -3002,8 +3002,10 @@ cv_reset(cg_var *cv)
 int
 cv_free(cg_var *cv)
 {
-    cv_reset(cv);
-    free(cv);
+    if (cv) {
+	cv_reset(cv);
+	free(cv);
+    }
     return 0;
 }
 
