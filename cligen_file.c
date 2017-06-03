@@ -110,12 +110,14 @@ callback(cligen_handle handle, cvec *cvv, cvec *argv)
 		buf
 	    );
     }
-    cv = NULL;
-    i=0;
-    while ((cv = cvec_each(argv, cv)) != NULL) {
-	cv2str(cv, buf, sizeof(buf)-1);
-	fprintf(stderr, "arg %d: %s\n", i++, buf);
-    }
+    if (argv){
+	    cv = NULL;
+	    i=0;
+	    while ((cv = cvec_each(argv, cv)) != NULL) {
+		cv2str(cv, buf, sizeof(buf)-1);
+		fprintf(stderr, "arg %d: %s\n", i++, buf);
+	    }
+	}
     return 0;
 }
 

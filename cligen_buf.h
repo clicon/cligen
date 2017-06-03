@@ -61,8 +61,8 @@ cbuf *cbuf_new(void);
 void  cbuf_free(cbuf *cb);
 char *cbuf_get(cbuf *cb);
 int   cbuf_len(cbuf *cb);
+int   cbuf_buflen(cbuf *cb);
 int   cprintf(cbuf *cb, const char *format, ...);
-/* XXX vcprintf */
 void  cbuf_reset(cbuf *cb);
 
 #endif /* _CLIGEN_BUF_H */
