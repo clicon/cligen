@@ -210,6 +210,8 @@ main(int argc, char *argv[])
 	cligen_tabmode_set(h, strcmp(str,"long") == 0);
     if ((str = cvec_find_str(globals, "comment")) != NULL)
 	cligen_comment_set(h, *str);
+    if ((str = cvec_find_str(globals, "mode")) != NULL)
+	cligen_tree_active_set(h, str);
     cvec_free(globals);
 
     if (print_syntax){

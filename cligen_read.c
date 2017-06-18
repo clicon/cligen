@@ -104,7 +104,7 @@ cli_qmark_hook (void *arg, char *string, int cursor_loc)
 	fprintf(stderr, "No active parse-tree found\n");
 	return -1;
     }
-    if (pt_expand_1(h, NULL, pt) < 0) /* sub-tree expansion */
+    if (pt_expand_treeref(h, NULL, pt) < 0) /* sub-tree expansion */
 	goto quit; 
     if ((cvec = cvec_start(string)) == NULL)
 	goto quit;
@@ -120,7 +120,7 @@ cli_qmark_hook (void *arg, char *string, int cursor_loc)
 	return -1;
     if (pt_expand_cleanup_2(*pt) < 0) 
 	return -1;
-    if (pt_expand_cleanup_1(pt) < 0) 
+    if (pt_expand_treeref_cleanup(pt) < 0) 
 	goto quit;
     return retval;
 }
@@ -154,7 +154,7 @@ cli_tab_hook(void *arg, char *string, int prompt_width, int *cursorp)
 	fprintf(stderr, "No active parse-tree found\n");
 	return -1;
     }
-    if (pt_expand_1(h, NULL, pt) < 0) /* sub-tree expansion */
+    if (pt_expand_treeref(h, NULL, pt) < 0) /* sub-tree expansion */
 	goto quit;
     if ((cvec = cvec_start(string)) == NULL)
 	goto quit; 
@@ -182,7 +182,7 @@ cli_tab_hook(void *arg, char *string, int prompt_width, int *cursorp)
 	return -1;
     if (pt_expand_cleanup_2(*pt) < 0)
 	return -1;
-    if (pt_expand_cleanup_1(pt) < 0)
+    if (pt_expand_treeref_cleanup(pt) < 0)
 	return -1;
     return retval;	
 }
@@ -561,7 +561,7 @@ cliread_parse (cligen_handle h,
 	cligen_print(stderr, *pt, 0);
     }
     cli_trim (&string, cligen_comment(h));
-    if (pt_expand_1(h, NULL, pt) < 0) /* sub-tree expansion, ie @ */
+    if (pt_expand_treeref(h, NULL, pt) < 0) /* sub-tree expansion, ie @ */
 	goto done; 
     if ((cvec = cvec_start(string)) == NULL)
 	goto done;
@@ -694,7 +694,7 @@ cliread_eval(cligen_handle     h,
     cvec_free(cvv);	
   done:
     /* XXX: Get parse-tree */
-    if (pt && pt_expand_cleanup_1(pt) < 0) 
+    if (pt && pt_expand_treeref_cleanup(pt) < 0) 
 	retval = -1;
     return retval;
 }

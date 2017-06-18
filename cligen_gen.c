@@ -582,9 +582,14 @@ co_eq(cg_obj *co1,
 
     /* eq == 0 means equal */
     eq = !(co1->co_type == co2->co_type);
-    if (eq){ 
-	/* One is command and one variable, but need to check special case, 
-	   if the variable is a KEYWORD, then it can be eq to a command. */
+    if (eq){ /* Unequal type of command, variable and reference.
+		but need to check special case, 
+		if the variable is a KEYWORD, then it can be eq to a command. */
+	/* Let References be last (more than) everything else */
+	if (co1->co_type == CO_REFERENCE)
+	    eq = 1;
+	if (co2->co_type == CO_REFERENCE)
+	    eq = -1;
 	if (co1->co_type == CO_COMMAND && 
 	    co2->co_vtype == CGV_STRING && 
 	    iskeyword(co2)){
@@ -598,29 +603,15 @@ co_eq(cg_obj *co1,
 	    eq = strcmp(co2->co_command, co1->co_keyword);
 	    goto done;
 	}
-	/* Let References be last (more than) everything else */
-	if (co1->co_type == CO_REFERENCE)
-	    eq = 1;
-	if (co2->co_type == CO_REFERENCE)
-	    eq = -1;
+
 	goto done;
     }
     switch (co1->co_type){
     case CO_COMMAND:
-	eq = str_cmp(co1->co_command, co2->co_command);
-	break;
     case CO_REFERENCE:
 	eq = str_cmp(co1->co_command, co2->co_command);
 	break;
     case CO_VARIABLE:
-#if 0
-	/* 
-         * Does not work with eg: <a:int>;<b:int>;
-         */
-	eq = str_cmp(co1->co_command, co2->co_command); /* XXX: 2012-10-17: Really a bug if I didnt detect this until now,... */
-	if (eq != 0)
-	    goto done;
-#endif
 	eq = (co1->co_vtype == co2->co_vtype)?0:(co1->co_vtype < co2->co_vtype)?-1:1;
 	/* Same variable type */
 	if (eq != 0)
@@ -749,7 +740,16 @@ co_cmp(const void* arg1,
     cg_obj* co1 = *(cg_obj**)arg1;
     cg_obj* co2 = *(cg_obj**)arg2;
 
-    return str_cmp(co1 ? co1->co_command : NULL, co2 ? co2->co_command : NULL);
+    if (co1 == NULL){
+	if (co2 == NULL)
+	    return 0;
+	else
+	    return -1;
+    }
+    else if (co2 == NULL)
+	return 1;
+    else
+	return co_eq(co1, co2);
 }
 
 /*! Sort CLIgen parse-tree, optionally recursive
@@ -766,14 +766,13 @@ cligen_parsetree_sort(parse_tree pt,
     
     qsort(pt.pt_vec, pt.pt_len, sizeof(cg_obj*), co_cmp);
     for (i=0; i<pt.pt_len; i++){
-	co = pt.pt_vec[i];
-	if (co){ /* XXX: Is this necessary? Can the sub-call re-sort this pt? */
-	    if (co->co_mark == 0){ /* not recursive */
-		co->co_mark = 1;
-		if (co->co_next && recursive)
-		    cligen_parsetree_sort(co->co_pt, 1);
-		co->co_mark = 0;
-	    }
+	if ((co = pt.pt_vec[i]) == NULL)
+	    continue;
+	if (co->co_mark == 0){ /* not recursive */
+	    co->co_mark = 1;
+	    if (co->co_next && recursive)
+		cligen_parsetree_sort(co->co_pt, 1);
+	    co->co_mark = 0;
 	}
     }
 }
@@ -915,14 +914,13 @@ co_search1(parse_tree pt,
 	return co;
 }
 
-/*! Insert cligen object in a parse-tree list alphabetically
- * at what position to insert <name>
- * @param[in]  pt      CLIgen parse-tree
- * @param[in]  co1     CLIgen object to insert
- * @param[in]  low     Lower bound
- * @param[in]  upper    Upper bound
- * @retval     co      Object found
- * @retval     NULL    Not found
+/*! Position where to insert cligen object into a parse-tree list alphabetically
+ * at what position to insert co1. Insert after this position
+ * @param[in]  pt        CLIgen parse-tree
+ * @param[in]  co1       CLIgen object to insert
+ * @param[in]  low       Lower bound
+ * @param[in]  upper     Upper bound (+1)
+ * @retval     position 
  * @see co_insert Main function
  */
 static int
@@ -933,7 +931,7 @@ co_insert_pos(parse_tree pt,
 {
     int     mid;
     int     cmp;
-    cg_obj *co2;
+    cg_obj *co2; /* variable for objects in list */
 
     if (upper < low)
 	return low; /* not found */
@@ -943,22 +941,10 @@ co_insert_pos(parse_tree pt,
     if (co1 == NULL)
 	return 0; /* Insert in 1st pos */
     co2 = pt.pt_vec[mid];
-    /* XXX: MATCHING PROBLEM: 
-       should be same as in co_insert
-     */
-#if 0
-    cmp = str_cmp(co1->co_command, co2 ? co2->co_command : NULL);
-#else
     if (co2 == NULL)
 	cmp = 1;
-    else{
-#if 1
-	cmp = co_eq(co1, co2);
-#else
-        cmp = str_cmp(co1->co_command, co2->co_command);
-#endif
-    }
-#endif
+    else
+	cmp = co_eq(co1, co2); /* -1 if co1 < co2,.. */
     if (cmp < 0)
 	return co_insert_pos(pt, co1, low, mid-1);
     else if (cmp > 0)
@@ -987,18 +973,13 @@ co_insert(parse_tree *pt,
     size_t  size;
     cg_obj *co2;
 
-    /* find closest to co in parsetree, last one that is < co */
+    /* find closest to co in parsetree, insert after pos. */
     pos = co_insert_pos(*pt, co1, 0, pt->pt_len);
     /* check if exists */
     if (pos < pt->pt_len){
-	co2 = pt->pt_vec[pos];
+	co2 = pt->pt_vec[pos]; /* insert after co2 */
 	if (co1 == NULL && co2==NULL)
 	    return NULL;
-	/* XXX: MATCHING PROBLEM:
-	   Note, there is a subtle difference between co_eq and
-	   equality in str_cmp, so maybe we should use str_cmp instead? 
-	   At least, equality should be the same as in co_insert_pos()
-	*/
 	if (co1 && co2 && co_eq(co1, co2)==0){
 	    cligen_parsetree_merge(&co2->co_pt, co2, co1->co_pt);
 	    co_free(co1, 1);

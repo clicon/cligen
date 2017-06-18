@@ -138,7 +138,8 @@ cbuf_reset(cbuf *cb)
  * @retval      See printf
  */
 int
-cprintf(cbuf *cb, const char *format, ...)
+cprintf(cbuf       *cb, 
+	const char *format, ...)
 {
     va_list ap;
     int diff;

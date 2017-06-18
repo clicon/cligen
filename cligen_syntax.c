@@ -333,7 +333,9 @@ cligen_callbackv_str2fn(parse_tree    pt,
  * @note OBSOLETE: try using cligen_expandv_str2fn instead
  */
 int
-cligen_expand_str2fn(parse_tree pt, expand_str2fn_t *str2fn, void *arg)
+cligen_expand_str2fn(parse_tree       pt, 
+		     expand_str2fn_t *str2fn, 
+		     void            *arg)
 {
     int                 retval = -1;
     cg_obj             *co;

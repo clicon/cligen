@@ -80,14 +80,8 @@ typedef int (expandv_cb)(cligen_handle h,       /* handler: cligen or userhandle
 			 char         *name,    /* name of this function (in text) */
 			 cvec         *cvv,     /* vars vector of values in command */
 			 cvec         *argv,    /* argument vector given to callback */
-#if 1
-			 struct cvec  *commands,/* vector of commands */
-			 struct cvec  *helptexts /* vector of help-texts */
-#else
-			 int          *len,     /* len of return commands & helptxt */
-			 char       ***commands,/* vector of function strings */
-			 char       ***helptexts /* vector of help-texts */
-#endif
+			 cvec         *commands,/* vector of commands */
+			 cvec         *helptexts /* vector of help-texts */
 			     );
 
 /* expand_cb2 is an update of expand_cb where entries are added using
