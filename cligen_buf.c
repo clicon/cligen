@@ -62,8 +62,8 @@ struct cbuf {
 /*! Allocate cligen buffer. The handle returned can be used in  successive sprintf calls
  * which dynamically print a string.
  * The handle should be freed by cbuf_free()
- * Return the allocated object handle on success.
- * Returns NULL on error.
+ * @retval cb   The allocated objecyt handle on success.
+ * @retval NULL Error.
  */
 cbuf *
 cbuf_new(void)
@@ -82,6 +82,7 @@ cbuf_new(void)
 }
 
 /*! Free cligen buffer previously allocated with cbuf_new
+ * @param[in]   cb  Cligen buffer
  */
 void
 cbuf_free(cbuf *cb)
@@ -94,6 +95,7 @@ cbuf_free(cbuf *cb)
 }
 
 /*! Return actual byte buffer of cligen buffer
+ * @param[in]   cb  Cligen buffer
  */
 char*
 cbuf_get(cbuf *cb)
@@ -101,7 +103,9 @@ cbuf_get(cbuf *cb)
     return cb->cb_buffer;
 }
 
-/*! Return length of cligen buffer
+/*! Return length of string in cligen buffer (not buffer length itself)
+ * @param[in]   cb  Cligen buffer
+ * @see cbuf_buflen
  */
 int
 cbuf_len(cbuf *cb)
@@ -109,7 +113,18 @@ cbuf_len(cbuf *cb)
     return cb->cb_strlen;
 }
 
+/*! Return length of buffer itself, ie allocated bytes
+ * @param[in]   cb  Cligen buffer
+ * @see cbuf_len
+ */
+int
+cbuf_buflen(cbuf *cb)
+{
+    return cb->cb_buflen;
+}
+
 /*! Reset a cligen buffer. That is, restart it from scratch.
+ * @param[in]   cb  Cligen buffer
  */
 void
 cbuf_reset(cbuf *cb)
@@ -125,7 +140,8 @@ cbuf_reset(cbuf *cb)
  * @retval      See printf
  */
 int
-cprintf(cbuf *cb, const char *format, ...)
+cprintf(cbuf       *cb, 
+	const char *format, ...)
 {
     va_list ap;
     int diff;

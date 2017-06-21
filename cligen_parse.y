@@ -528,16 +528,14 @@ cgy_cmd(struct cligen_parse_yacc_arg *ya, char *cmd)
     return 0;
 }
 
-/* 
-   cgy_reference
-   Create a REFERENCE node that references another tree.
+/*!   Create a REFERENCE node that references another tree.
    This is evaluated in runtime by pt_expand().
    See also db2tree() in clicon/apps/cli_main.c on how to create such a tree
-   And pt_expand_1()/pt_callback_reference() how it is expanded
-   And
+   And pt_expand_treeref()/pt_callback_reference() how it is expanded
  */
 static int
-cgy_reference(struct cligen_parse_yacc_arg *ya, char *name)
+cgy_reference(struct cligen_parse_yacc_arg *ya, 
+	      char                         *name)
 {
     struct cgy_list *cl; 
     cg_obj          *cop;   /* parent */

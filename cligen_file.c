@@ -110,12 +110,14 @@ callback(cligen_handle handle, cvec *cvv, cvec *argv)
 		buf
 	    );
     }
-    cv = NULL;
-    i=0;
-    while ((cv = cvec_each(argv, cv)) != NULL) {
-	cv2str(cv, buf, sizeof(buf)-1);
-	fprintf(stderr, "arg %d: %s\n", i++, buf);
-    }
+    if (argv){
+	    cv = NULL;
+	    i=0;
+	    while ((cv = cvec_each(argv, cv)) != NULL) {
+		cv2str(cv, buf, sizeof(buf)-1);
+		fprintf(stderr, "arg %d: %s\n", i++, buf);
+	    }
+	}
     return 0;
 }
 
@@ -208,6 +210,8 @@ main(int argc, char *argv[])
 	cligen_tabmode_set(h, strcmp(str,"long") == 0);
     if ((str = cvec_find_str(globals, "comment")) != NULL)
 	cligen_comment_set(h, *str);
+    if ((str = cvec_find_str(globals, "mode")) != NULL)
+	cligen_tree_active_set(h, str);
     cvec_free(globals);
 
     if (print_syntax){

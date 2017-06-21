@@ -68,7 +68,9 @@
  * See also 
  */
 int
-cvec_add_string(cvec *cvv, char *name, char *val)
+cvec_add_string(cvec *cvv, 
+		char *name, 
+		char *val)
 {
     cg_var *cv;
     int     retval = -1;

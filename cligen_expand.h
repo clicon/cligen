@@ -42,12 +42,16 @@
  */
 /* Here we should have expand_cb but it is in cligen_gen.h */
 
+/* backward compat macros */
+#define pt_expand_1(h, coprev, pt) pt_expand_treeref(h, coprev, pt)
+#define pt_expand_cleanup_1(pt) pt_expand_treeref_cleanup(pt)
+
 /*
  * Prototypes
  */
-int pt_expand_1(cligen_handle h, cg_obj *coprev, parse_tree *pt);
+int pt_expand_treeref(cligen_handle h, cg_obj *coprev, parse_tree *pt);
 int pt_expand_2(cligen_handle h, parse_tree *pt, cvec *cvec, parse_tree *ptn, int hide);
-int pt_expand_cleanup_1(parse_tree *pt);
+int pt_expand_treeref_cleanup(parse_tree *pt);
 int pt_expand_cleanup_2(parse_tree pt);
 int pt_expand_add(cg_obj *co, parse_tree ptn);
 int reference_path_match(cg_obj *co1, parse_tree pt0, cg_obj **co0p);

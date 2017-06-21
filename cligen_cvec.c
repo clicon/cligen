@@ -137,28 +137,30 @@ cvec_from_var(cg_var *cv)
  *
  * Reset and free a cligen vector as previously created by cvec_new(). this includes
  * freeing all cv:s that the cvec consists of.
- * @param  cvec    The cligen variable vector
+ * @param[in]  cvv   Cligen variable vector
  */
 int
-cvec_free(cvec *cvec)
+cvec_free(cvec *cvv)
 {
-    if (cvec) {
-	cvec_reset(cvec);
-	free(cvec);
+    if (cvv) {
+	cvec_reset(cvv);
+	free(cvv);
     }
     return 0;
 }
 
 /*! Initialize a cligen variable vector (cvec) with 'len' numbers of variables.
  *
- * See also cvec_new()
+
  * Each individual cv initialized with CGV_ERR and no value.
  *
- * @param cvv  The cligen variable vector
- * @param len  Number of cv elements. Can be zero and elements added incrementally.
+ * @param[in] cvv  Cligen variable vector
+ * @param[in] len  Number of cv elements. Can be zero and elements added incrementally.
+ * @see cvec_new
  */
 int
-cvec_init(cvec *cvv, int len)
+cvec_init(cvec *cvv, 
+	  int   len)
 {
     cvv->vr_len = len; 
     if (len && (cvv->vr_vec = calloc(cvv->vr_len, sizeof(cg_var))) == NULL)
@@ -168,7 +170,8 @@ cvec_init(cvec *cvv, int len)
 
 /*! Reset cligen variable vector resetting it to an initial state as returned by cvec_new
  *
- * See also cvec_free. But this function does not actually free the cvec.
+ * @param[in]  cvv   Cligen variable vector
+ * @see also cvec_free. But this function does not actually free the cvec.
  */
 int
 cvec_reset(cvec *cvv)
@@ -187,11 +190,14 @@ cvec_reset(cvec *cvv)
 
 /*! Given a cv in a cligen variable vector (cvec) return the next cv.
  *
+ * @param[in]  cvv    The cligen variable vector
+ * @param[in]  cv0    Return element after this, or first element if this is NULL
  * Given an element (cv0) in a cligen variable vector (cvec) return the next element.
- * if cv0 is NULL, return first element.
+ * @retval cv   Next element
  */
 cg_var *
-cvec_next(cvec *cvv, cg_var *cv0)
+cvec_next(cvec   *cvv, 
+	  cg_var *cv0)
 {
     cg_var *cv = NULL;
     int i;
@@ -208,10 +214,13 @@ cvec_next(cvec *cvv, cg_var *cv0)
 
 /*! Append a new cligen variable (cv) to cligen variable vector (cvec) and return it.
  *
- * See also cv_new, but this is allocated contiguosly as a part of a cvec.
+ * @param[in] cvv   Cligen variable vector
+ * @param[in] type  Append a new cv to the vector with this type
+ * @see also cv_new, but this is allocated contiguosly as a part of a cvec.
  */
 cg_var *
-cvec_add(cvec *cvv, enum cv_type type)
+cvec_add(cvec        *cvv, 
+	 enum cv_type type)
 {
     int     len = cvv->vr_len + 1;
     cg_var *cv;
@@ -232,7 +241,8 @@ cvec_add(cvec *cvv, enum cv_type type)
  * @retval    tail Return the new last tail variable (copy of cv)
  */
 cg_var *
-cvec_append_var(cvec *cvv, cg_var *cv)
+cvec_append_var(cvec   *cvv, 
+		cg_var *cv)
 {
     cg_var *tail = NULL;
 
@@ -249,13 +259,17 @@ cvec_append_var(cvec *cvv, cg_var *cv)
 
 /*! Delete a cv variable from a cvec. Note: cv is not reset & cv may be stale!
  *
- * This is a dangerous command since the cv it deletes (such as created by cvec_add)
- * may have been modified with realloc (eg cvec_add/delete) and therefore can not be 
- * used as a reference.  Safer methods are to use cvec_find/cvec_i to find a cv and 
- * then to immediately remove it. 
+ * @param[in]  cvv   Cligen variable vector
+ * @param[in]  del   variable to delete
+ *
+ * @note This is a dangerous command since the cv it deletes (such as created by 
+ * cvec_add) may have been modified with realloc (eg cvec_add/delete) and 
+ * therefore can not be used as a reference.  Safer methods are to use 
+ * cvec_find/cvec_i to find a cv and then to immediately remove it. 
  */
 int
-cvec_del(cvec *cvv, cg_var *del)
+cvec_del(cvec   *cvv, 
+	 cg_var *del)
 {
     int i;
     cg_var *cv;
@@ -284,6 +298,7 @@ cvec_del(cvec *cvv, cg_var *del)
 }
 
 /*! Return allocated length of a cvec.
+ * @param[in]  cvv   Cligen variable vector
  */
 int     
 cvec_len(cvec *cvv)
@@ -292,11 +307,12 @@ cvec_len(cvec *cvv)
 }
 
 /*! Return i:th element of cligen variable vector cvec.
- * @param  cvv	  	Cligen variable list
- * @param  i	  	Order of element to get
+ * @param[in]  cvv   Cligen variable vector
+ * @param[in]  i     Order of element to get
  */
 cg_var *
-cvec_i(cvec *cvv, int i)
+cvec_i(cvec *cvv, 
+       int   i)
 {
     if (i < cvv->vr_len)
 	return &cvv->vr_vec[i];
@@ -305,20 +321,19 @@ cvec_i(cvec *cvv, int i)
 
 /*! Iterate through all cligen variables in a cvec list
  *
- * @param  cvv	  	Cligen variable list
- * @param  prev		Last cgv (or NULL)
+ * @param[in] cvv       Cligen variable vector
+ * @param[in] prev	Last cgv (or NULL)
  * @retval cv           Next variable structure.
  * @retval NULL         When end of list reached.
  * @code
- *	   cg_var *cv = NULL;
- *	   while ((cv = cvec_each(cvv, cv)) != NULL) {
+ *    cg_var *cv = NULL;
+ *       while ((cv = cvec_each(cvv, cv)) != NULL) 
  *	     ...
- *	   }
  * @endcode
-
  */
 cg_var *
-cvec_each(cvec *cvv, cg_var *prev)
+cvec_each(cvec   *cvv, 
+	  cg_var *prev)
 {
   if (prev == NULL){   /* Initialization */
       if (cvv->vr_len > 0)
@@ -329,13 +344,19 @@ cvec_each(cvec *cvv, cg_var *prev)
   return cvec_next(cvv, prev);
 }
 
-/*! Like cvec_each but skip element 0. 
+/*! Iterate through all except first cligen variables in a cvec list
  *
+ * @param[in] cvv   Cligen variable vector
+ * @param[in] prev  Last cgv (or NULL)
+ * @retval cv       Next variable structure.
+ * @retval NULL     When end of list reached.
  * Common in many cvecs where [0] is the command-line and all
  * others are arguments.
+ * @see cvec_each  For all elements, dont skip first
  */
 cg_var *
-cvec_each1(cvec *cvv, cg_var *prev)
+cvec_each1(cvec   *cvv, 
+	   cg_var *prev)
 {
   if (prev == NULL){   /* Initialization */
       if (cvv->vr_len > 1)
@@ -388,7 +409,7 @@ cvec_dup(cvec *old)
  *
  * @param  [in]     co_match    Leaf CLIgen syntax node
  * @param  [in]     cmd         Command string 
- * @param  [in,out] vr          Initialized cvec (cvec_new or cvec_reset). CLIgen 
+ * @param  [in,out] cvv         Initialized cvec (cvec_new or cvec_reset). CLIgen 
  *                              variable record         
  * @retval          0           OK
  * @retval          -1          Error
@@ -501,6 +522,9 @@ cvec_match(cg_obj *co_match,
 
 /*! Create a cv list with a single string element.
  *
+ * @param[in]  cmd  Text string
+ * @retval     NULL Error
+ * @retval     cvv  Cligen variable list
  * Help function when creating cvec to cligen callbacks.
  */
 cvec *
@@ -521,8 +545,8 @@ cvec_start(char *cmd)
 }
 
 /*! Pretty print cligen variable list to a file
- * @param[in]  f   File to print to
- * @param[in]  cvv CLIGEN vector variable to be printed
+ * @param[in]  f    File to print to
+ * @param[in]  cvv  Cligen variable vector to print
  * @see cvec2cbuf
  */
 int
@@ -546,8 +570,8 @@ cvec_print(FILE *f,
 }
 
 /*! Pretty print cligen variable list to a cligen buffer
- * @param[out] cb  CLIGEN buffer (should already be initialized w cbuf_new)
- * @param[in]  cvv CLIGEN vector variable to be printed
+ * @param[out] cb   Cligen buffer (should already be initialized w cbuf_new)
+ * @param[in]  cvv  Cligen variable vector to print
  * @see cvec_print
  */
 int
@@ -569,11 +593,17 @@ cvec2cbuf(cbuf *cb,
 
 /*! Return first cv in a cvec matching a name
  *
- * Given an CLIgen variable vector cvec, and the name of a variable, return the first 
- * matching entry. 
+ * Given an CLIgen variable vector cvec, and the name of a variable, return the 
+ * first matching entry. 
+ * @param[in]  cvv   Cligen variable vector
+ * @param[in]  name  Name to match
+ * @retval     cv    Element matching name. NULL
+ * @retval     NULL  Not found
+ * @see cvec_find_var
  */
 cg_var *
-cvec_find(cvec *cvv, char *name)
+cvec_find(cvec *cvv, 
+	  char *name)
 {
     cg_var *cv = NULL;
 
@@ -583,10 +613,16 @@ cvec_find(cvec *cvv, char *name)
     return NULL;
 }
 
-/*! Like cvec_find, but only search non-keywords
+/*! Return first non-keyword cv in a cvec matching a name
+ * @param[in]  cvv   Cligen variable vector
+ * @param[in]  name  Name to match
+ * @retval     cv    Element matching name. NULL
+ * @retval     NULL  Not found
+ * @see cvec_find
  */
 cg_var *
-cvec_find_var(cvec *cvv, char *name)
+cvec_find_var(cvec *cvv,
+	      char *name)
 {
     cg_var *cv = NULL;
 
@@ -596,28 +632,16 @@ cvec_find_var(cvec *cvv, char *name)
     return NULL;
 }
 
-#ifdef notyet
-/*
- * cvec_var_i
- * Like cvec_i but only works with variables.
+/*! Return first keyword cv in a cvec matching a name
+ * @param[in]  cvv   Cligen variable vector
+ * @param[in]  name  Name to match
+ * @retval     cv    Element matching name. NULL
+ * @retval     NULL  Not found
+ * @see cvec_find
  */
 cg_var *
-cvec_var_i(cvec *cvv, char *name)
-{
-    cg_var *cv = NULL;
-
-    while ((cv = cvec_each(cvv, cv)) != NULL) 
-	if (cv->var_name && strcmp(cv->var_name, name) == 0 && !cv->var_const)
-	    return cv;
-    return NULL;
-}
-#endif
-
-
-/*! Like cvec_find, but only search keywords
- */
-cg_var *
-cvec_find_keyword(cvec *cvv, char *name)
+cvec_find_keyword(cvec *cvv, 
+		  char *name)
 {
     cg_var *cv = NULL;
 
@@ -629,12 +653,19 @@ cvec_find_keyword(cvec *cvv, char *name)
 
 /*! Typed version of cvec_find that returns the string value.
  *
- * Note: (1) Does not see the difference between not finding the cv, and finding one
+
+ * @param[in]  cvv   Cligen variable vector
+ * @param[in]  name  Name to match
+ * @retval     cv    Element matching name. NULL
+ * @retval     NULL  Not found
+ * @note Does not see the difference between not finding the cv, and finding one
  *           with wrong type - in both cases NULL is returned.
- *       (2) the returned string must be copied since it points directly into the cv.
+ * @note The returned string must be copied since it points directly into the cv.
+ * @see cvec_find
  */
 char *
-cvec_find_str(cvec *cvv, char *name)
+cvec_find_str(cvec *cvv, 
+	      char *name)
 {
     cg_var *cv;
 
@@ -644,8 +675,9 @@ cvec_find_str(cvec *cvv, char *name)
 }
 
 /*! Get name of cligen variable vector
- * @param  cvv   A cligen variable vector
+ * @param  cvv  Cligen variable vector
  * @retval str  The name of the cvec as a string, can be NULL, no copy
+ * @retval      name Name of variable vector
  */
 char *
 cvec_name_get(cvec *cvv)
@@ -660,7 +692,8 @@ cvec_name_get(cvec *cvv)
  * The existing name, if any, is freed
  */
 char *
-cvec_name_set(cvec *cvv, char *name)
+cvec_name_set(cvec *cvv, 
+	      char *name)
 {
     char *s1 = NULL;
 
@@ -677,6 +710,7 @@ cvec_name_set(cvec *cvv, char *name)
 
 
 /*! Changes cvec find function behaviour, exclude keywords or include them.
+ * @param[in] status
  */
 int 
 cv_exclude_keys(int status)

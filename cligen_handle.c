@@ -147,7 +147,7 @@ cligen_init(void)
 }
 
 /*! This is the last call to the CLIgen API an application should make
- * @param h       CLIgen handle
+ * @param[in] h       CLIgen handle
  */
 int
 cligen_exit(cligen_handle h)
@@ -175,6 +175,7 @@ cligen_exit(cligen_handle h)
 }
 
 /*! Check struct magic number for sanity checks
+ * @param[in] h       CLIgen handle
  * return 0 if OK, -1 if fail.
  */
 int
@@ -187,6 +188,7 @@ cligen_check(cligen_handle h)
 }
 
 /*! return CLIgen exiting status
+ * @param[in] h       CLIgen handle
  */
 int 
 cligen_exiting(cligen_handle h)
@@ -197,9 +199,11 @@ cligen_exiting(cligen_handle h)
 }
 
 /*! Set  CLIgen exiting status
+ * @param[in] h       CLIgen handle
  */
 int 
-cligen_exiting_set(cligen_handle h, int status)
+cligen_exiting_set(cligen_handle h, 
+		   int           status)
 {
     struct cligen_handle *ch = handle(h);
 
@@ -208,6 +212,7 @@ cligen_exiting_set(cligen_handle h, int status)
 }
 
 /*! Get comment character.
+ * @param[in] h       CLIgen handle
  */
 char
 cligen_comment(cligen_handle h)
@@ -218,9 +223,11 @@ cligen_comment(cligen_handle h)
 }
 
 /*! Set comment character.
+ * @param[in] h       CLIgen handle
  */
 int
-cligen_comment_set(cligen_handle h, char c)
+cligen_comment_set(cligen_handle h, 
+		   char          c)
 {
     struct cligen_handle *ch = handle(h);
 
@@ -229,7 +236,7 @@ cligen_comment_set(cligen_handle h, char c)
 }
 
 /*! Get current prompt string
- * @param h       CLIgen handle
+ * @param[in] h       CLIgen handle
  */
 char*
 cligen_prompt(cligen_handle h)
@@ -240,11 +247,12 @@ cligen_prompt(cligen_handle h)
 }
 
 /*! Set CLIgen prompt string. See manual for special prompt characters.
- * @param h       CLIgen handle
- * @param prompt  Prompt string
+ * @param[in] h       CLIgen handle
+ * @param[in] prompt  Prompt string
  */
 int
-cligen_prompt_set(cligen_handle h, char *prompt)
+cligen_prompt_set(cligen_handle h, 
+		  char         *prompt)
 {
     struct cligen_handle *ch = handle(h);
 
@@ -262,12 +270,13 @@ cligen_prompt_set(cligen_handle h, char *prompt)
 }
 
 /*! Find a parsetree by its name, if name==NULL, return first parse-tree
- * @param h       CLIgen handle
- * @param name    Name of tree
+ * @param[in] h       CLIgen handle
+ * @param[in] name    Name of tree
  * Note name of parse-tree is assigned when you do cligen_tree_add
  */
 parse_tree *
-cligen_tree_find(cligen_handle h, char *name)
+cligen_tree_find(cligen_handle h, 
+		 char         *name)
 {
     parse_tree_list      *ptl;
     parse_tree           *pt;
@@ -282,13 +291,15 @@ cligen_tree_find(cligen_handle h, char *name)
 }
 
 /*! Add a new parsetree last in list
- * @param h       CLIgen handle
- * @param name    name of parse-tree
- * @param pt      parse-tree passed by value(!)
+ * @param[in] h       CLIgen handle
+ * @param[in] name    name of parse-tree
+ * @param[jn] pt      parse-tree passed by value(!)
  * Note, if this is the first tree, it is activated by default
  */
 int 
-cligen_tree_add(cligen_handle h, char *name, parse_tree pt)
+cligen_tree_add(cligen_handle h, 
+		char         *name, 
+		parse_tree    pt)
 {
     parse_tree_list           *ptl;
     parse_tree_list           *ptlast;
@@ -319,10 +330,12 @@ cligen_tree_add(cligen_handle h, char *name, parse_tree pt)
 }
 
 /*! Delete a parsetree list entry not parsetree itself
- * @param h       CLIgen handle
+ * @param[in] h       CLIgen handle
+
  */
 int 
-cligen_tree_del(cligen_handle h, char *name)
+cligen_tree_del(cligen_handle h, 
+		char         *name)
 {
     parse_tree_list  *ptl;
     parse_tree_list **ptl_prev;
@@ -344,10 +357,10 @@ cligen_tree_del(cligen_handle h, char *name)
 
 /*! Iterate through all parsed cligen trees 
  *
- * @param  h	  	Cligen handle
- * @param  pt		Cligen parse-tree iteration variable. Must be initialized to NULL
- * @retval pt           Next parse-tree structure.
- * @retval NULL         When end of list reached.
+ * @param[in] h   CLIgen handle
+ * @param[in] pt  Cligen parse-tree iteration variable. Must be initialized to NULL
+ * @retval pt     Next parse-tree structure.
+ * @retval NULL   When end of list reached.
  * @code
  *    parse_tree *pt = NULL;
  *    while ((pt = cligen_tree_each(h, pt)) != NULL) {
@@ -358,7 +371,8 @@ cligen_tree_del(cligen_handle h, char *name)
  * Note: the list contains all parse-trees added by cligen_tree_add()
  */
 parse_tree *
-cligen_tree_each(cligen_handle h, parse_tree *pt0)
+cligen_tree_each(cligen_handle h, 
+		 parse_tree   *pt0)
 {
     struct cligen_handle *ch = handle(h);
     parse_tree_list      *ptl;
@@ -376,11 +390,12 @@ cligen_tree_each(cligen_handle h, parse_tree *pt0)
 }
 
 /*! Return i:th parse-tree of parsed cligen trees 
- * @param  h	  	Cligen handle
- * @param  i	  	Order of element to get
+ * @param[in] h  CLIgen handle
+ * @param[in] i  Order of element to get
  */
 parse_tree *
-cligen_tree_i(cligen_handle h, int i0)
+cligen_tree_i(cligen_handle h, 
+	      int           i0)
 {
     struct cligen_handle *ch = handle(h);
     parse_tree_list      *ptl;
@@ -392,7 +407,7 @@ cligen_tree_i(cligen_handle h, int i0)
 }
 
 /*! Get name of currently active parsetree.
- * @param h       CLIgen handle
+ * @param[in] h       CLIgen handle
  */
 parse_tree *
 cligen_tree_active_get(cligen_handle h)
@@ -407,12 +422,14 @@ cligen_tree_active_get(cligen_handle h)
 }
 
 /*! Set currently active parsetree by name
+ * @param[in] h       CLIgen handle
  * @retval -1     Parse-tree not found, active tree not changed
  * @retval  1     Parse-tree found and set as active.
  * If parse-tree not found all are inactivated.
  */
 int
-cligen_tree_active_set(cligen_handle h, char *name)
+cligen_tree_active_set(cligen_handle h, 
+		       char         *name)
 {
     struct cligen_handle *ch = handle(h);
     int                   retval = -1;
@@ -442,7 +459,7 @@ cligen_tree_active_set(cligen_handle h, char *name)
 #define TREENAME_KEYWORD_DEFAULT "treename"
 
 /*! Get name of treename keyword used in parsing
- * @param h       CLIgen handle
+ * @param[in] h       CLIgen handle
  * Example in CLIgen file where 'treename' is treename_keyword:
  * treename = "foo";
  * bar @bar;
@@ -457,9 +474,11 @@ cligen_treename_keyword(cligen_handle h)
 }
 
 /*! Set currently active parsetree by name.
+ * @param[in] h       CLIgen handle
  */
 int
-cligen_treename_keyword_set(cligen_handle h, char *treename)
+cligen_treename_keyword_set(cligen_handle h, 
+			    char         *treename)
 {
     struct cligen_handle *ch = handle(h);
 
@@ -478,7 +497,7 @@ cligen_treename_keyword_set(cligen_handle h, char *treename)
 /*! Return CLIgen object that matched in the current callback.
  *  After an evaluation when calling a callback, a node has been matched in the
  * current parse-tree. This matching node is returned (and set) here.
- * @param h       CLIgen handle
+ * @param[in] h       CLIgen handle
  */
 cg_obj *
 cligen_co_match(cligen_handle h)
@@ -488,8 +507,12 @@ cligen_co_match(cligen_handle h)
     return ch->ch_co_match;
 }
 
+/*!
+ * @param[in] h       CLIgen handle
+ */
 int
-cligen_co_match_set(cligen_handle h, cg_obj *co)
+cligen_co_match_set(cligen_handle h, 
+		    cg_obj       *co)
 {
     struct cligen_handle *ch = handle(h);
 
@@ -507,7 +530,7 @@ cligen_co_match_set(cligen_handle h, cg_obj *co)
  *   return 0;
  * }
  * @endcode
- * @param h       CLIgen handle
+ * @param[in] h       CLIgen handle
  */
 char *
 cligen_fn_str_get(cligen_handle h)
@@ -519,12 +542,12 @@ cligen_fn_str_get(cligen_handle h)
 
 /*! Set callback function name string
  *
-
- * @param h       CLIgen handle
- * @param fn_str  Name of function that was called in this callback
+ * @param[in] h       CLIgen handle
+ * @param[in] fn_str  Name of function that was called in this callback
  */
 int
-cligen_fn_str_set(cligen_handle h, char *fn_str)
+cligen_fn_str_set(cligen_handle h, 
+		  char         *fn_str)
 {
     struct cligen_handle *ch = handle(h);
 
@@ -546,7 +569,7 @@ cligen_fn_str_set(cligen_handle h, char *fn_str)
  * Example: syntax is 'a b;'. mode = 0 gives completion to 'a ' on first TAB and 
  * to 'a b ' on second. mode = 1 gives completion to 'a b ' on first TAB.
  *
- * @param h       CLIgen handle
+ * @param[in] h       CLIgen handle
  * @retval 0   for each TAB complete one level. (default)
  * @retval 1   complete all unique levels at once
  */
@@ -560,11 +583,12 @@ cligen_completion(cligen_handle h)
 
 /*! Set completion mode. 
  *
- * @param h       CLIgen handle
- * @param mode    0: complete 1 level. 1: complete all
+ * @param[in] h       CLIgen handle
+ * @param[in] mode    0: complete 1 level. 1: complete all
  */
 int
-cligen_completion_set(cligen_handle h, int mode)
+cligen_completion_set(cligen_handle h, 
+		      int           mode)
 {
     struct cligen_handle *ch = handle(h);
 
@@ -578,7 +602,7 @@ cligen_completion_set(cligen_handle h, int mode)
  * Why is there no match of an input string in the parse-tree?
  * The call to cliread_parse/getline/eval returns CG_NOMATCH and this is where
  * the reason is stored.
- * @param h       CLIgen handle
+ * @param[in] h       CLIgen handle
  */
 char *
 cligen_nomatch(cligen_handle h)
@@ -589,11 +613,12 @@ cligen_nomatch(cligen_handle h)
 }
 
 /*! Set Error string explaining why there was no match.
- * @param h       CLIgen handle
- * @param fmt     Format string, printf style followed by arguments
+ * @param[in] h       CLIgen handle
+ * @param[in] fmt     Format string, printf style followed by arguments
  */
 int
-cligen_nomatch_set(cligen_handle h, const char *fmt, ...)
+cligen_nomatch_set(cligen_handle h, 
+		   const char   *fmt, ...)
 {
     struct cligen_handle *ch = handle(h);
     int res;
@@ -626,7 +651,7 @@ cligen_nomatch_set(cligen_handle h, const char *fmt, ...)
 static int _terminalrows; /* XXX: global since cli_output dont take handle */
 
 /*! Get number of displayed terminal rows.
- * @param h       CLIgen handle
+ * @param[in] h       CLIgen handle
  */
 int 
 cligen_terminalrows(cligen_handle h)
@@ -637,11 +662,12 @@ cligen_terminalrows(cligen_handle h)
 }
 
 /*! Set number of displayed terminal rows.
- * @param h       CLIgen handle
- * @param rows    Number of lines in a terminal (y-direction)
+ * @param[in] h       CLIgen handle
+ * @param[in] rows    Number of lines in a terminal (y-direction)
  */
 int 
-cligen_terminalrows_set(cligen_handle h, int rows)
+cligen_terminalrows_set(cligen_handle h, 
+			int           rows)
 {
     struct cligen_handle *ch = handle(h);
 
@@ -652,7 +678,7 @@ cligen_terminalrows_set(cligen_handle h, int rows)
 
 /*! Get length of lines (number of 'columns' in a line)
  *
- * @param h       CLIgen handle
+ * @param[in] h       CLIgen handle
  */
 int 
 cligen_terminal_length(cligen_handle h)
@@ -664,11 +690,12 @@ cligen_terminal_length(cligen_handle h)
 
 /*! Set length of lines (number of 'columns' in a line)
  *
- * @param h       CLIgen handle
- * @param length  Number of characters in a line - x-direction
+ * @param[in] h       CLIgen handle
+ * @param[in] length  Number of characters in a line - x-direction
  */
 int 
-cligen_terminal_length_set(cligen_handle h, int length)
+cligen_terminal_length_set(cligen_handle h, 
+			   int           length)
 {
     struct cligen_handle *ch = handle(h);
 
@@ -680,7 +707,7 @@ cligen_terminal_length_set(cligen_handle h, int length)
 
 /*! Get tab-mode. 
  *
- * @param h       CLIgen handle
+ * @param[in] h       CLIgen handle
  * @retval 0    'short/ios' mode.
  * @retval 1    long/junos mode.
  */
@@ -694,11 +721,12 @@ cligen_tabmode(cligen_handle h)
 
 /*! Set tab-mode
  *
- * @param h       CLIgen handle
- * @param mode 0 is 'short/ios' mode, 1 is long/junos mode.
+ * @param[in] h       CLIgen handle
+ * @param[in] mode    0 is 'short/ios' mode, 1 is long/junos mode.
  */
 int 
-cligen_tabmode_set(cligen_handle h, int mode)
+cligen_tabmode_set(cligen_handle h, 
+		   int           mode)
 {
     struct cligen_handle *ch = handle(h);
 
@@ -710,7 +738,7 @@ static int _lexicalorder = 0; /* XXX shouldnt be global */
 
 /*! Get lexical matching order
  * 
- * @param h       CLIgen handle
+ * @param[in] h       CLIgen handle
  * @retval 0  strcmp
  * @retval 1  strverscmp
  */
@@ -725,11 +753,12 @@ cligen_lexicalorder(cligen_handle h)
 
 /*! Set lexical matching order.
  * 
- * @param h       CLIgen handle
+ * @param[in] h       CLIgen handle
  * @param n  strcmp (0) or strverscmp (1).
  */
 int
-cligen_lexicalorder_set(cligen_handle h, int n)
+cligen_lexicalorder_set(cligen_handle h, 
+			int           n)
 {
 //    struct cligen_handle *ch = handle(h);
 
@@ -740,9 +769,8 @@ cligen_lexicalorder_set(cligen_handle h, int n)
 
 static int _ignorecase = 0; /* XXX shouldnt be global */
 
-
 /*! Ignore uppercase/lowercase or not
- * @param h       CLIgen handle
+ * @param[in] h       CLIgen handle
  */
 int
 cligen_ignorecase(cligen_handle h)
@@ -754,9 +782,11 @@ cligen_ignorecase(cligen_handle h)
 }
 
 /*! Ignore uppercase/lowercase or not
+ * @param[in] h       CLIgen handle
  */
 int
-cligen_ignorecase_set(cligen_handle h, int n)
+cligen_ignorecase_set(cligen_handle h, 
+		      int           n)
 {
 //    struct cligen_handle *ch = handle(h);
 
@@ -766,6 +796,7 @@ cligen_ignorecase_set(cligen_handle h, int n)
 }
 
 /*! Debug syntax by printing dynamically on stderr. Get function.
+ * @param[in] h       CLIgen handle
  */
 int cligen_logsyntax(cligen_handle h)
 {
@@ -775,8 +806,10 @@ int cligen_logsyntax(cligen_handle h)
 }
 
 /*! Debug syntax by printing dynamically on stderr. Set function.
+ * @param[in] h       CLIgen handle
  */
-int cligen_logsyntax_set(cligen_handle h, int n)
+int cligen_logsyntax_set(cligen_handle h, 
+			 int           n)
 {
     struct cligen_handle *ch = handle(h);
 
@@ -788,6 +821,7 @@ int cligen_logsyntax_set(cligen_handle h, int n)
  *
  * An application may choose to use another handle than cligen_handle in callbacks
  * and completion functions. 
+ * @param[in] h       CLIgen handle
  */
 void*
 cligen_userhandle(cligen_handle h)
@@ -798,9 +832,11 @@ cligen_userhandle(cligen_handle h)
 }
 
 /*! Set app-specific handle for callbacks instead of cligen handle
+ * @param[in] h       CLIgen handle
  */
 int
-cligen_userhandle_set(cligen_handle h, void *userhandle)
+cligen_userhandle_set(cligen_handle h, 
+		      void         *userhandle)
 {
     struct cligen_handle *ch = handle(h);
 
@@ -810,6 +846,9 @@ cligen_userhandle_set(cligen_handle h, void *userhandle)
 
 static int _getline_bufsize = 128;
 
+/*!
+ * @param[in] h       CLIgen handle
+ */
 char*
 cligen_buf(cligen_handle h)
 {
@@ -818,6 +857,9 @@ cligen_buf(cligen_handle h)
     return ch->ch_buf;
 }
 
+/*!
+ * @param[in] h       CLIgen handle
+ */
 char*
 cligen_killbuf(cligen_handle h)
 {
@@ -826,12 +868,18 @@ cligen_killbuf(cligen_handle h)
     return ch->ch_killbuf;
 }
 
+/*!
+ * @param[in] h       CLIgen handle
+ */
 int 
 gl_bufsize(cligen_handle h)
 {
     return _getline_bufsize;
 }
 
+/*!
+ * @param[in] h       CLIgen handle
+ */
 int
 gl_buf_init(cligen_handle h)
 {
@@ -846,6 +894,9 @@ gl_buf_init(cligen_handle h)
     return 0;
 }
 
+/*!
+ * @param[in] h       CLIgen handle
+ */
 int       
 gl_buf_increase(cligen_handle h)
 {
@@ -862,6 +913,9 @@ gl_buf_increase(cligen_handle h)
     return 0;
 }
 
+/*!
+ * @param[in] h       CLIgen handle
+ */
 int
 gl_buf_cleanup(cligen_handle h)
 {
@@ -881,8 +935,11 @@ gl_buf_cleanup(cligen_handle h)
  * backward compatibabilty functions, consider remove
  */
 #if 1 
-/* note cant inline since it may be used in plugins */
-parse_tree *cligen_tree(cligen_handle h, char *name)
+/* note cant inline since it may be used in plugins 
+ * @param[in] h       CLIgen handle
+ */
+parse_tree *cligen_tree(cligen_handle h, 
+			char         *name)
 {
     return cligen_tree_find(h, name);
 }

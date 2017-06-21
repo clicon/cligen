@@ -714,7 +714,7 @@ match_pattern_node(cligen_handle h,
 
     /* co_orig is original object in case of expansion */
     co_orig = co_match->co_ref?co_match->co_ref: co_match;
-    if (pt_expand_1(h, co_match, &co_match->co_pt) < 0) /* sub-tree expansion */
+    if (pt_expand_treeref(h, co_match, &co_match->co_pt) < 0) /* sub-tree expansion */
 	goto error; 
 
     if (co_match->co_type == CO_VARIABLE){
