@@ -199,17 +199,52 @@ cliread_init(cligen_handle h)
 /*! Print columns
  */
 static int
-column_print(FILE *fout, int col, pt_vec pt, int min, int max, int level)
+column_print(FILE  *fout, 
+	     int    col, 
+	     pt_vec pt, 
+	     int    min, 
+	     int    max, 
+	     int    level)
 { 
   int    i = 0;
   int    j = 0;
-  int    count = max-min;
+  int    count;
   int    d_lines;
   int    linesize = 0;
   char   *line;
   cg_obj *co;
   cbuf   *cb;
+  char   *prev = NULL;
 
+  if ((cb = cbuf_new()) == NULL){
+      fprintf(stderr, "cbuf_new: %s\n", strerror(errno));
+      return -1;
+  }
+#ifdef notyet
+  /* This is for removing duplicates */
+  j = 0;
+  for(i = min; i < max; i++) {
+      if ((co = pt[i]) != NULL &&
+	  co->co_type == CO_VARIABLE){
+	  cbuf_reset(cb);
+	  cov2cbuf(cb, co, 1);
+	  fprintf(stderr, "var: %s\n", cbuf_get(cb));
+	  if (prev && strcmp(cbuf_get(cb), prev)==0){
+	      co[i] = co[i+1]; /* skip */
+	  } else
+	      j++;
+	  free(prev);
+	  if ((prev = strdup(cbuf_get(cb))) == NULL){
+	      fprintf(stderr, "strdup: %s\n", strerror(errno));
+	      return -1;
+	  }
+      }
+      else
+	  j++;
+  }
+  max = j;
+#endif
+  count = max-min;
   d_lines = count/col + 1;
   linesize = col * COLUMN_WIDTH;
   if ((line = (char *)malloc (linesize+1)) == NULL) {
@@ -223,14 +258,10 @@ column_print(FILE *fout, int col, pt_vec pt, int min, int max, int level)
 	    if (co->co_command != NULL){
 		switch (co->co_type){
 		case CO_VARIABLE:
-		    if ((cb = cbuf_new()) == NULL){
-			fprintf(stderr, "cbuf_new: %s\n", strerror(errno));
-			return -1;
-		    }
+		    cbuf_reset(cb);
 		    cov2cbuf(cb, co, 1);
 		    memcpy(&line[j*(COLUMN_WIDTH+1)], cbuf_get(cb), 
 			   (COLUMN_WIDTH < cbuf_len(cb)) ? COLUMN_WIDTH : cbuf_len(cb));
-		    cbuf_free(cb);
 		    break;
 		case CO_COMMAND:
 		    memcpy(&line[j*(COLUMN_WIDTH+1)], co->co_command, 
@@ -248,7 +279,12 @@ column_print(FILE *fout, int col, pt_vec pt, int min, int max, int level)
     j = 0;
     fprintf(fout, "%s\n", line);  
   }  
-  free(line);
+  if (cb)
+    cbuf_free(cb);
+  if (prev)
+    free(prev);
+  if (line)
+      free(line);
   return 0;
 }
 
@@ -283,8 +319,7 @@ show_multi(cligen_handle h,
     }
     if ((level = command_levels(string)) < 0)
 	goto done;
-    
-    if (nr>0) /* min, max only defined if nr > 0 */
+       if (nr>0) /* min, max only defined if nr > 0 */
 	column_print(fout, 3, pt1, 
 		     matchv[0],
 		     matchv[nr-1],
@@ -339,6 +374,7 @@ show_multi_long(cligen_handle h,
     int          retval = -1;
     cg_obj      *co;
     int          skip;
+    char        *prev = NULL;
 
     memset(cmd, 0, COLUMN_WIDTH+1); /* always a zero in last char */
     /* Build match vector, but why would string ever be NULL? */
@@ -420,15 +456,27 @@ show_multi_long(cligen_handle h,
 		break;
 	    }
 	    if (!skip)
+		if (prev && strcmp(cmd, prev)==0)
+		    skip++;
+	    if (!skip){
 		fprintf (fout, "  %*s %s\n", 
 			 -COLUMN_WIDTH, 
 			 cmd,
 			 co->co_help ? co->co_help : "");
+		if (prev)
+		    free(prev);
+		if ((prev = strdup(cmd)) == NULL){
+		    fprintf(stderr, "strdup: %s\n", strerror(errno));
+		    return -1;
+		}
+	    }
 	}
 	fflush (fout);
     }
     retval = 0;
   done:
+    if (prev)
+	free(prev);
     if (matchv)
 	free(matchv);
     return retval;

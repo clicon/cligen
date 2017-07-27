@@ -192,7 +192,7 @@ stripdup(char *s0)
 <OPTION>.                 { return -1;}
 
 <STRING>\n                { _YA->ya_linenum++; }
-<STRING>\\                { _YA->ya_lex_state = STRING; BEGIN(ESCAPE); }
+
 <STRING>\"                { BEGIN(_YA->ya_lex_string_state); return DQ; }
 <STRING>.                 { cligen_parselval.string = strdup(yytext);
                             return CHAR;}
