@@ -3080,13 +3080,13 @@ match_regexp(char *string,
     int len0;
 
     len0 = strlen(pattern0);
-    if (len0 > sizeof(pattern)-3){
+    if (len0 > sizeof(pattern)-5){
 	fprintf(stderr, "pattern too long\n");
 	return -1;
     }
-    pattern[0] = '^';
-    strncpy(pattern+1, pattern0, sizeof(pattern)-1);
-    strncat(pattern, "$",  sizeof(pattern)-len0-1);
+    strncpy(pattern, "^(", 2);
+    strncpy(pattern+2, pattern0, sizeof(pattern)-1);
+    strncat(pattern, ")$",  sizeof(pattern)-len0-1);
     if (regcomp(&re, pattern, REG_NOSUB|REG_EXTENDED) != 0) 
 	return(0);      /* report error */
     status = regexec(&re, string, (size_t) 0, NULL, 0);
