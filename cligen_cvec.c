@@ -178,6 +178,10 @@ cvec_reset(cvec *cvv)
 {
     cg_var *cv = NULL;
     
+    if (!cvv) {
+	    return 0;
+    }
+
     while ((cv = cvec_each(cvv, cv)) != NULL)  
 	cv_reset(cv);
     if (cvv->vr_vec)
@@ -202,6 +206,10 @@ cvec_next(cvec   *cvv,
     cg_var *cv = NULL;
     int i;
 
+    if (!cvv) {
+	    return 0;
+    }
+
     if (cv0 == NULL)
 	cv = cvv->vr_vec;
     else {
@@ -222,8 +230,14 @@ cg_var *
 cvec_add(cvec        *cvv, 
 	 enum cv_type type)
 {
-    int     len = cvv->vr_len + 1;
+    int     len;
     cg_var *cv;
+
+	if (!cvv) {
+		return 0;
+	}
+    
+    len = cvv->vr_len + 1;
 
     if ((cvv->vr_vec = realloc(cvv->vr_vec, len*sizeof(cg_var))) == NULL)
 	return NULL;
@@ -303,6 +317,9 @@ cvec_del(cvec   *cvv,
 int     
 cvec_len(cvec *cvv)
 {
+	if (!cvv) {
+		return 0;
+	}
     return cvv->vr_len;
 }
 
@@ -314,6 +331,9 @@ cg_var *
 cvec_i(cvec *cvv, 
        int   i)
 {
+	if (!cvv) {
+		return NULL;
+	}
     if (i < cvv->vr_len)
 	return &cvv->vr_vec[i];
     return NULL;
@@ -335,6 +355,10 @@ cg_var *
 cvec_each(cvec   *cvv, 
 	  cg_var *prev)
 {
+	if (!cvv) {
+		return 0;
+	}
+
   if (prev == NULL){   /* Initialization */
       if (cvv->vr_len > 0)
 	  return &cvv->vr_vec[0];
@@ -358,6 +382,10 @@ cg_var *
 cvec_each1(cvec   *cvv, 
 	   cg_var *prev)
 {
+    if (!cvv) {
+	    return 0;
+    }
+
   if (prev == NULL){   /* Initialization */
       if (cvv->vr_len > 1)
 	  return &cvv->vr_vec[1];
@@ -382,6 +410,10 @@ cvec_dup(cvec *old)
     cg_var *cv0 = NULL;
     cg_var *cv1;
     int     i;
+
+    if (!old) {
+	    return NULL;
+    }
 
     if ((new = cvec_new(old->vr_len)) == NULL)
 	return NULL;
@@ -428,6 +460,10 @@ cvec_match(cg_obj *co_match,
     char      *val;
     int        level;
     int        retval = -1;
+
+    if (!cvv) {
+	    return 0;
+    }
 
     nrlevels   = -1;
     nrargs   = 0;

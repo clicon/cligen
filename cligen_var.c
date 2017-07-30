@@ -89,6 +89,10 @@ static char *cg_urlprotostr[] = {
 char *
 cv_name_get(cg_var *cv)
 {
+	if (!cv) {
+		return 0;
+	}
+
     return cv->var_name;
 }
 
@@ -104,6 +108,10 @@ cv_name_set(cg_var *cv,
 	    char   *s0)
 {
     char *s1 = NULL;
+
+	if (!cv) {
+		return 0;
+	}
 
     /* Duplicate s0. Must be done before a free, in case s0 is part of the original */
     if (s0){
@@ -123,6 +131,10 @@ cv_name_set(cg_var *cv,
 enum cv_type
 cv_type_get(cg_var *cv)
 {
+	if (!cv) {
+		return 0;
+	}
+
     return cv->var_type;
 }
 
@@ -135,6 +147,10 @@ enum cv_type
 cv_type_set(cg_var      *cv, 
 	    enum cv_type x)
 {
+	if (!cv) {
+		return 0;
+	}
+
     return (cv->var_type = x);
 }
 
@@ -145,6 +161,10 @@ cv_type_set(cg_var      *cv,
 char
 cv_const_get(cg_var *cv)
 {
+	if (!cv) {
+		return 0;
+	}
+
     return cv->var_const;
 }
 
@@ -158,6 +178,10 @@ char
 cv_const_set(cg_var *cv, 
 	     int     c)
 {
+	if (!cv) {
+		return 0;
+	}
+
     return (cv->var_const = c);
 }
 
@@ -168,6 +192,10 @@ char
 cv_flag(cg_var *cv, 
 	char    mask)
 {
+	if (!cv) {
+		return 0;
+	}
+
     return cv->var_flag & mask;
 }
 
@@ -178,6 +206,10 @@ char
 cv_flag_clr(cg_var *cv, 
 	    char    mask)
 {
+	if (!cv) {
+		return 0;
+	}
+
     return cv->var_flag ^= mask;
 }
 
@@ -188,6 +220,10 @@ char
 cv_flag_set(cg_var *cv, 
 	    char    mask)
 {
+	if (!cv) {
+		return 0;
+	}
+
     return cv->var_flag |= mask;
 }
 
@@ -197,6 +233,10 @@ cv_flag_set(cg_var *cv,
 void *
 cv_value_get(cg_var *cv)
 {
+	if (!cv) {
+		return 0;
+	}
+
     return &cv->u;
 }
 
@@ -206,6 +246,10 @@ cv_value_get(cg_var *cv)
 char
 cv_bool_get(cg_var *cv)
 {
+	if (!cv) {
+		return 0;
+	}
+
     return ((cv)->u.varu_bool);
 }
 
@@ -216,6 +260,10 @@ char
 cv_bool_set(cg_var *cv, 
 	    char    x)
 {
+	if (!cv) {
+		return 0;
+	}
+
     return (cv->u.varu_bool = x);
 }
 
@@ -225,6 +273,10 @@ cv_bool_set(cg_var *cv,
 int8_t
 cv_int8_get(cg_var *cv)
 {
+	if (!cv) {
+		return 0;
+	}
+
     return ((cv)->u.varu_int8);
 }
 
@@ -235,6 +287,10 @@ int8_t
 cv_int8_set(cg_var *cv, 
 	    int8_t  x)
 {
+	if (!cv) {
+		return 0;
+	}
+
     return (cv->u.varu_int8 = x);
 }
 
@@ -244,6 +300,10 @@ cv_int8_set(cg_var *cv,
 int16_t
 cv_int16_get(cg_var *cv)
 {
+	if (!cv) {
+		return 0;
+	}
+
     return ((cv)->u.varu_int16);
 }
 
@@ -254,6 +314,10 @@ int16_t
 cv_int16_set(cg_var *cv, 
 	     int16_t x)
 {
+	if (!cv) {
+		return 0;
+	}
+
     return (cv->u.varu_int16 = x);
 }
 
@@ -263,6 +327,10 @@ cv_int16_set(cg_var *cv,
 int32_t
 cv_int32_get(cg_var *cv)
 {
+	if (!cv) {
+		return 0;
+	}
+
     return ((cv)->u.varu_int32);
 }
 
@@ -273,6 +341,10 @@ int32_t
 cv_int32_set(cg_var *cv, 
 	     int32_t x)
 {
+	if (!cv) {
+		return 0;
+	}
+
     return (cv->u.varu_int32 = x);
 }
 
@@ -282,6 +354,10 @@ cv_int32_set(cg_var *cv,
 int64_t
 cv_int64_get(cg_var *cv)
 {
+	if (!cv) {
+		return 0;
+	}
+
     return ((cv)->u.varu_int64);
 }
 
@@ -292,6 +368,10 @@ int64_t
 cv_int64_set(cg_var *cv, 
              int64_t x)
 {
+	if (!cv) {
+		return 0;
+	}
+
     return (cv->u.varu_int64 = x);
 }
 
@@ -301,6 +381,10 @@ cv_int64_set(cg_var *cv,
 uint8_t
 cv_uint8_get(cg_var *cv)
 {
+	if (!cv) {
+		return 0;
+	}
+
     return ((cv)->u.varu_uint8);
 }
 
@@ -311,6 +395,10 @@ uint8_t
 cv_uint8_set(cg_var *cv,
 	     uint8_t x)
 {
+	if (!cv) {
+		return 0;
+	}
+
     return (cv->u.varu_uint8 = x);
 }
 
@@ -320,6 +408,10 @@ cv_uint8_set(cg_var *cv,
 uint16_t
 cv_uint16_get(cg_var *cv)
 {
+	if (!cv) {
+		return 0;
+	}
+
     return ((cv)->u.varu_uint16);
 }
 
@@ -339,6 +431,10 @@ cv_uint16_set(cg_var  *cv,
 uint32_t
 cv_uint32_get(cg_var *cv)
 {
+	if (!cv) {
+		return 0;
+	}
+
     return ((cv)->u.varu_uint32);
 }
 
@@ -349,6 +445,10 @@ uint32_t
 cv_uint32_set(cg_var  *cv, 
 	      uint32_t x)
 {
+	if (!cv) {
+		return 0;
+	}
+
     return (cv->u.varu_uint32 = x);
 }
 
@@ -358,6 +458,10 @@ cv_uint32_set(cg_var  *cv,
 uint64_t
 cv_uint64_get(cg_var *cv)
 {
+	if (!cv) {
+		return 0;
+	}
+
     return ((cv)->u.varu_uint64);
 }
 
@@ -368,6 +472,10 @@ uint64_t
 cv_uint64_set(cg_var  *cv, 
 	      uint64_t x)
 {
+	if (!cv) {
+		return 0;
+	}
+
     return (cv->u.varu_uint64 = x);
 }
 
@@ -377,6 +485,10 @@ cv_uint64_set(cg_var  *cv,
 uint8_t 
 cv_dec64_n_get(cg_var *cv)
 {
+	if (!cv) {
+		return 0;
+	}
+
     return ((cv)->var_dec64_n);
 }
 
@@ -388,6 +500,10 @@ uint8_t
 cv_dec64_n_set(cg_var *cv, 
 	       uint8_t x)
 {
+	if (!cv) {
+		return 0;
+	}
+
     return (cv->var_dec64_n = x);
 }
 
@@ -397,6 +513,10 @@ cv_dec64_n_set(cg_var *cv,
 int64_t 
 cv_dec64_i_get(cg_var *cv)
 {
+	if (!cv) {
+		return 0;
+	}
+
     return ((cv)->var_dec64_i);
 }
 
@@ -407,6 +527,10 @@ int64_t
 cv_dec64_i_set(cg_var *cv, 
 	       int64_t x)
 {
+	if (!cv) {
+		return 0;
+	}
+
     return (cv->var_dec64_i = x);
 }
 
@@ -418,6 +542,10 @@ cv_dec64_i_set(cg_var *cv,
 char *
 cv_string_get(cg_var *cv)
 {
+	if (!cv) {
+		return 0;
+	}
+
     return ((cv)->u.varu_string);
 }
 
@@ -429,6 +557,10 @@ cv_string_set(cg_var *cv,
 	      char   *s0)
 {
     char *s1 = NULL;
+
+	if (!cv) {
+		return 0;
+	}
 
     /* Duplicate s0. Must be done before a free, in case s0 is part of the original */
     if (s0){
@@ -447,13 +579,17 @@ cv_string_set(cg_var *cv,
 struct in_addr *
 cv_ipv4addr_get(cg_var *cv)
 {
+	if (!cv) {
+		return 0;
+	}
+
     return &cv->u.varu_ipv4addr.varipv4_ipv4addr;
 }
 
 struct in_addr *
 cv_ipv4addr_set(cg_var *cv, struct in_addr *addr)
 {
-	if (addr) {
+	if (cv && addr) {
 		cv->var_ipv4addr = *addr;
 	}
 	return addr;
@@ -465,12 +601,20 @@ cv_ipv4addr_set(cg_var *cv, struct in_addr *addr)
 uint8_t
 cv_ipv4masklen_get(cg_var *cv)
 {
+	if (!cv) {
+		return 0;
+	}
+
     return cv->u.varu_ipv4addr.varipv4_masklen;
 }
 
 uint8_t
 cv_ipv4masklen_set(cg_var *cv, uint8_t masklen)
 {
+	if (!cv) {
+		return 0;
+	}
+
 	cv->u.varu_ipv4addr.varipv4_masklen = masklen;
 	return masklen;
 }
@@ -481,6 +625,10 @@ cv_ipv4masklen_set(cg_var *cv, uint8_t masklen)
 struct in6_addr *
 cv_ipv6addr_get(cg_var *cv)
 {
+	if (!cv) {
+		return 0;
+	}
+
     return &cv->u.varu_ipv6addr.varipv6_ipv6addr;
 }
 
@@ -490,6 +638,10 @@ cv_ipv6addr_get(cg_var *cv)
 uint8_t
 cv_ipv6masklen_get(cg_var *cv)
 {
+	if (!cv) {
+		return 0;
+	}
+
     return cv->u.varu_ipv6addr.varipv6_masklen;
 }
 
@@ -501,6 +653,10 @@ cv_ipv6masklen_get(cg_var *cv)
 char *
 cv_mac_get(cg_var *cv)
 {
+	if (!cv) {
+		return 0;
+	}
+
     return cv->u.varu_macaddr;
 }
 
@@ -512,6 +668,10 @@ cv_mac_get(cg_var *cv)
 unsigned char *
 cv_uuid_get(cg_var *cv)
 {
+	if (!cv) {
+		return 0;
+	}
+
     return cv->u.varu_uuid;
 }
 
@@ -522,6 +682,10 @@ unsigned char *
 cv_uuid_set(cg_var        *cv, 
 	    unsigned char *u)
 {
+	if (!cv) {
+		return 0;
+	}
+
     memcpy((char*)&cv->u.varu_uuid, u, 16);
     return cv->u.varu_uuid;
 }
@@ -532,6 +696,11 @@ cv_uuid_set(cg_var        *cv,
 struct timeval
 cv_time_get(cg_var *cv)
 {
+	if (!cv) {
+		struct timeval t = { 0 };
+		return t;
+	}
+
     return cv->u.varu_time;
 }
 
@@ -543,6 +712,11 @@ struct timeval
 cv_time_set(cg_var        *cv, 
 	    struct timeval t)
 {
+	if (!cv) {
+		struct timeval t = { 0 };
+		return t;
+	}
+
     cv->u.varu_time = t;
     return t;
 }
@@ -555,6 +729,10 @@ cv_time_set(cg_var        *cv,
 char *
 cv_urlproto_get(cg_var *cv)
 {
+	if (!cv) {
+		return 0;
+	}
+
     return (cv)->u.varu_url.varurl_proto;
 }
 
@@ -567,6 +745,10 @@ cv_urlproto_set(cg_var *cv,
 		char   *s0)
 {
     char *s1 = NULL;
+
+	if (!cv) {
+		return 0;
+	}
 
     /* Duplicate s0. Must be done before a free, in case s0 is part of the original */
     if (s0){
@@ -587,6 +769,10 @@ cv_urlproto_set(cg_var *cv,
 char *
 cv_urladdr_get(cg_var *cv)
 {
+	if (!cv) {
+		return 0;
+	}
+
     return (cv)->u.varu_url.varurl_addr;
 }
 
@@ -599,6 +785,10 @@ cv_urladdr_set(cg_var *cv,
 	       char   *s0)
 {
     char *s1 = NULL;
+
+	if (!cv) {
+		return 0;
+	}
 
     /* Duplicate s0. Must be done before a free, in case s0 is part of the original */
     if (s0){
@@ -619,6 +809,10 @@ cv_urladdr_set(cg_var *cv,
 char *
 cv_urlpath_get(cg_var *cv)
 {
+	if (!cv) {
+		return 0;
+	}
+
     return (cv)->u.varu_url.varurl_path;
 }
 
@@ -631,6 +825,10 @@ cv_urlpath_set(cg_var *cv,
 	       char   *s0)
 {
     char *s1 = NULL;
+
+	if (!cv) {
+		return 0;
+	}
 
     /* Duplicate s0. Must be done before a free, in case s0 is part of the original */
     if (s0){
@@ -651,6 +849,10 @@ cv_urlpath_set(cg_var *cv,
 char *
 cv_urluser_get(cg_var *cv)
 {
+	if (!cv) {
+		return 0;
+	}
+
     return (cv)->u.varu_url.varurl_user;
 }
 
@@ -663,6 +865,10 @@ cv_urluser_set(cg_var *cv,
 	       char   *s0)
 {
     char *s1 = NULL;
+
+	if (!cv) {
+		return 0;
+	}
 
     /* Duplicate s0. Must be done before a free, in case s0 is part of the original */
     if (s0){
@@ -683,6 +889,10 @@ cv_urluser_set(cg_var *cv,
 char *
 cv_urlpasswd_get(cg_var *cv)
 {
+	if (!cv) {
+		return 0;
+	}
+
     return (cv)->u.varu_url.varurl_passwd;
 }
 
@@ -695,6 +905,10 @@ cv_urlpasswd_set(cg_var *cv,
 		 char   *s0)
 {
     char *s1 = NULL;
+
+	if (!cv) {
+		return 0;
+	}
 
     /* Duplicate s0. Must be done before a free, in case s0 is part of the original */
     if (s0){
