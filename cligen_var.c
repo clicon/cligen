@@ -764,7 +764,7 @@ parse_int16(char    *str,
  * @retval  0 : Validation not OK, malloced reason is returned
  * @retval  1 : Validation OK, value returned in val parameter
  */
-static int
+int
 parse_int32(char    *str, 
 	    int32_t *val, 
 	    char   **reason)
