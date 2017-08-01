@@ -3085,7 +3085,7 @@ match_regexp(char *string,
 	return -1;
     }
     strncpy(pattern, "^(", 2);
-    strncpy(pattern+2, pattern0, sizeof(pattern)-1);
+    strncpy(pattern+2, pattern0, sizeof(pattern)-2);
     strncat(pattern, ")$",  sizeof(pattern)-len0-1);
     if (regcomp(&re, pattern, REG_NOSUB|REG_EXTENDED) != 0) 
 	return(0);      /* report error */
