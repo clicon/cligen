@@ -2289,6 +2289,9 @@ cv2str(cg_var *cv,
     char uuidstr[37];
     char timestr[27];
 
+    if (!cv) {
+	    return 0;
+    }
     switch (cv->var_type){
     case CGV_INT8:
 	len = snprintf(str, size, "%" PRId8, cv->var_int8);
@@ -2405,6 +2408,9 @@ cv2str_dup(cg_var *cv)
     int   len;
     char *str;
 
+    if (!cv) {
+	    return NULL;
+    }
     if ((len = cv2str (cv, NULL, 0)) < 0)
 	return NULL;
     if ((str = (char *)malloc (len+1)) == NULL)
