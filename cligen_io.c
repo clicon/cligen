@@ -209,16 +209,28 @@ cligen_redraw(cligen_handle h)
 /*! Register a suspend (^Z) function hook 
  */
 int
-cligen_susp_hook(cligen_handle h, cligen_susp_cb_t *fn)
+cligen_susp_hook(cligen_handle     h, 
+		 cligen_susp_cb_t *fn)
 {
     gl_susp_hook = fn; /* XXX global */
+    return 0;
+}
+
+/*! Register an interrupt hook, called if read() interrupted with (some) SIG
+ */
+int
+cligen_interrupt_hook(cligen_handle          h, 
+		      cligen_interrupt_cb_t *fn)
+{
+    gl_interrupt_hook = fn; 
     return 0;
 }
 
 /*! Register extra exit characters (in addition to ctrl-c)
  */
 void 
-cligen_exitchar_add(cligen_handle h, char c)
+cligen_exitchar_add(cligen_handle h, 
+		    char          c)
 {
     gl_exitchar_add(c); /* XXX global */
 }
@@ -261,3 +273,4 @@ cligen_help(FILE *f, parse_tree pt)
     }
     return 0;
 }
+

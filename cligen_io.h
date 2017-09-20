@@ -40,7 +40,8 @@
  * Constants
  */
 
-#define COLUMN_WIDTH  24 /* For column formatting how many chars for command/var */
+#define COLUMN_MIN_WIDTH  21 /* For column formatting how many chars minimum 
+				for command/var */
 
 /* CLIgen event register callback type */
 typedef int (cligen_fd_cb_t)(int, void*);
@@ -54,6 +55,7 @@ int cligen_regfd(int fd, cligen_fd_cb_t *cb, void *arg);
 int cligen_unregfd(int fd);
 void cligen_redraw(cligen_handle h);
 int cligen_susp_hook(cligen_handle h, cligen_susp_cb_t *fn);
+int cligen_interrupt_hook(cligen_handle h, cligen_interrupt_cb_t *fn);
 void cligen_exitchar_add(cligen_handle h, char c);
 int cligen_help(FILE *f, parse_tree pt);
 

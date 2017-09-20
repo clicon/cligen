@@ -73,25 +73,31 @@
 #include "cligen_read.h"
 #include "getline.h"
 
+/* Struct for printing command and help */
+struct cmd_help{
+    char *ch_cmd;
+    char *ch_help;
+};
+
 /*
  * Local prototypes
  */
-static int show_multi(cligen_handle h, FILE *fout, char *s, parse_tree pt, cvec *cvec);
-static int show_multi_long(cligen_handle h, FILE *fout, char *s, parse_tree pt, cvec *);
+static int show_help_columns(cligen_handle h, FILE *fout, char *s, parse_tree pt, cvec *cvec);
+static int show_help_line(cligen_handle h, FILE *fout, char *s, parse_tree pt, cvec *);
 static int complete(cligen_handle h, char *s0, int *lenp, parse_tree pt, cvec *cvec);
 
 /*! Callback from getline: '?' has been typed on command line
  * Just show help by calling long help show function. 
- * INPUT:
- *   string - Input string to match
- *   cursor_loc - Location of cursor
- * RETURNS:
- *   1 (OK: required by getline)
- * XXX: Two flaws that have to do with getline:
- *   2) Errors from sub-functions are ignored
+ * @param[in]  string Input string to match
+ * @param[in]  cursor_loc - Location of cursor
+ * @retval  1 (OK: required by getline)
+ * @note Flaw related to getline: Errors from sub-functions are ignored
+ * @see cli_tab_hook
  */
 static int
-cli_qmark_hook (void *arg, char *string, int cursor_loc)
+cli_qmark_hook(void *arg, 
+	       char *string, 
+	       int   cursor_loc)
 {
     cligen_handle h = (cligen_handle)arg;
     parse_tree   *pt;     /* Orig parse-tree */
@@ -110,7 +116,7 @@ cli_qmark_hook (void *arg, char *string, int cursor_loc)
 	goto quit;
     if (pt_expand_2(h, pt, cvec, &ptn, 1) < 0)      /* expansion */
 	return -1;
-    if (show_multi_long(h, stdout, string, ptn, cvec) <0)
+    if (show_help_line(h, stdout, string, ptn, cvec) <0)
 	goto quit;
     retval = 1;
   quit:
@@ -129,18 +135,18 @@ cli_qmark_hook (void *arg, char *string, int cursor_loc)
  * First try to complete the string if the possibilities
  * allow that (at least one unique common character). 
  * If no completion was made, then show the command alternatives.
- * INPUT:
- *   string - Input string to match
- *   prompt_width - not used (required by getline)
- * INPUT_OUTPUT
- *   cursorp - Pointer to location of cursor on entry and exit
- * RETURNS:
- *   -2 (value != -1 required by getline)
- * XXX: Two flaws that have to do with getline:
- *   2) Errors from sub-functions are ignored
+ * @param[in]     string       Input string to match
+ * @param[in]     prompt_width Not used (required by getline)
+ * @param[in,out] cursorp      Pointer to location of cursor on entry and exit
+ * @retval  -2 (value != -1 required by getline)
+ * @note Flaw related to getline: Errors from sub-functions are ignored
+ * @see cli_qmark_hook
  */
 static int 
-cli_tab_hook(void *arg, char *string, int prompt_width, int *cursorp)
+cli_tab_hook(void *arg, 
+	     char *string, 
+	     int   prompt_width, 
+	     int  *cursorp)
 {
     cligen_handle h = (cligen_handle)arg;
     int	          old_cursor;
@@ -166,11 +172,11 @@ cli_tab_hook(void *arg, char *string, int prompt_width, int *cursorp)
 	if (old_cursor == *cursorp) { 	/* Cursor hasnt changed */
 	    fputs ("\n", stdout);
 	    if (cligen_tabmode(h) == 1){
-		if (show_multi_long(h, stdout, string, ptn, cvec) < 0)
+		if (show_help_line(h, stdout, string, ptn, cvec) < 0)
 		    goto quit;
 	    }
 	    else
-		if (show_multi(h, stdout, string, ptn, cvec) < 0)
+		if (show_help_columns(h, stdout, string, ptn, cvec) < 0)
 		    goto quit;
 	}
     }
@@ -197,95 +203,39 @@ cliread_init(cligen_handle h)
 }
 
 /*! Print columns
+ * @param[in]  cnr  Number of columns.
+ * @param[in]  cw   Width of column
  */
 static int
-column_print(FILE  *fout, 
-	     int    col, 
-	     pt_vec pt, 
-	     int    min, 
-	     int    max, 
-	     int    level)
+column_print(FILE            *fout, 
+	     int              cnr, 
+	     int              cw,
+	     struct cmd_help *chvec,
+	     int              len,
+	     int              level)
 { 
-  int    i = 0;
-  int    j = 0;
-  int    count;
-  int    d_lines;
-  int    linesize = 0;
-  char   *line;
-  cg_obj *co;
-  cbuf   *cb;
-  char   *prev = NULL;
+    int              retval = -1;
+    int              li; /* line number */
+    int              ci; /* column number */
+    int              linenr;
+    struct cmd_help *ch;
 
-  if ((cb = cbuf_new()) == NULL){
-      fprintf(stderr, "cbuf_new: %s\n", strerror(errno));
-      return -1;
-  }
-#ifdef notyet
-  /* This is for removing duplicates */
-  j = 0;
-  for(i = min; i < max; i++) {
-      if ((co = pt[i]) != NULL &&
-	  co->co_type == CO_VARIABLE){
-	  cbuf_reset(cb);
-	  cov2cbuf(cb, co, 1);
-	  fprintf(stderr, "var: %s\n", cbuf_get(cb));
-	  if (prev && strcmp(cbuf_get(cb), prev)==0){
-	      co[i] = co[i+1]; /* skip */
-	  } else
-	      j++;
-	  free(prev);
-	  if ((prev = strdup(cbuf_get(cb))) == NULL){
-	      fprintf(stderr, "strdup: %s\n", strerror(errno));
-	      return -1;
-	  }
-      }
-      else
-	  j++;
-  }
-  max = j;
-#endif
-  count = max-min;
-  d_lines = count/col + 1;
-  linesize = col * COLUMN_WIDTH;
-  if ((line = (char *)malloc (linesize+1)) == NULL) {
-    perror("column_print: malloc");
-    return -1;
-  }
-  for(i = 0; i < d_lines; i++) {
-    memset(line, ' ', linesize);
-    while ((j < col) && ((j * d_lines + i) <= count)) {
-	if ((co = pt[min + i+j*d_lines]) != NULL){
-	    if (co->co_command != NULL){
-		switch (co->co_type){
-		case CO_VARIABLE:
-		    cbuf_reset(cb);
-		    cov2cbuf(cb, co, 1);
-		    memcpy(&line[j*(COLUMN_WIDTH+1)], cbuf_get(cb), 
-			   (COLUMN_WIDTH < cbuf_len(cb)) ? COLUMN_WIDTH : cbuf_len(cb));
-		    break;
-		case CO_COMMAND:
-		    memcpy(&line[j*(COLUMN_WIDTH+1)], co->co_command, 
-			   (COLUMN_WIDTH < strlen(co->co_command)) ? COLUMN_WIDTH : strlen(co->co_command));
-		    break;
-		case CO_REFERENCE:
-		default:
-		    break;
-		}
-	    }
+    linenr = len/cnr + 1;
+    for (ci=0, li = 0; li < linenr; li++) {
+	while ((ci < cnr) && (li*cnr+ci < len)) {
+	    ch = &chvec[li*cnr+ci];
+	    fprintf (fout, " %*s", 
+		     -(cw-1), 
+		     ch->ch_cmd);
+	    ci++;
 	}
-	j++;
-    }
-    line[col*COLUMN_WIDTH]='\0';
-    j = 0;
-    fprintf(fout, "%s\n", line);  
-  }  
-  if (cb)
-    cbuf_free(cb);
-  if (prev)
-    free(prev);
-  if (line)
-      free(line);
-  return 0;
+	ci = 0;
+	fprintf(fout, "\n");  
+    }  
+    fflush(fout);
+    retval = 0;
+    // done:
+    return retval;
 }
 
 /*! Show briefly the commands available (show no help)
@@ -299,19 +249,35 @@ column_print(FILE  *fout,
  * @retval     -1      Error
  */
 static int
-show_multi(cligen_handle h, 
-	   FILE         *fout, 
-	   char         *string, 
-	   parse_tree    pt, 
-	   cvec         *cvec)
+show_help_columns(cligen_handle h, 
+		  FILE         *fout, 
+		  char         *string, 
+		  parse_tree    pt, 
+		  cvec         *cvec)
 {
-    int    nr = 0;
-    int    level;
-    pt_vec pt1;
-    int    matchlen = 0;
-    int   *matchv = NULL;
-    int    retval = -1;
+    int              retval = -1;
+    int              nr = 0;
+    int              level;
+    pt_vec           pt1;
+    int              matchlen = 0;
+    int             *matchv = NULL;
+    int              i;
+    int              nrcmd = 0;
+    struct cmd_help *chvec = NULL;
+    struct cmd_help *ch;
+    cg_obj          *co;
+    cbuf            *cb = NULL;
+    char            *cmd;
+    char            *prev = NULL;
+    int              maxlen = 0;
+    int              column_width;
+    int              column_nr;
+    int              rest;
 
+    if ((cb = cbuf_new()) == NULL){
+	fprintf(stderr, "cbuf_new: %s\n", strerror(errno));
+	return -1;
+    }
     if (string != NULL){
 	if ((nr = match_pattern(h, string, pt, 0, 1,
 				&pt1, &matchv, &matchlen, cvec, NULL)) < 0)
@@ -319,13 +285,71 @@ show_multi(cligen_handle h,
     }
     if ((level = command_levels(string)) < 0)
 	goto done;
-       if (nr>0) /* min, max only defined if nr > 0 */
-	column_print(fout, 3, pt1, 
-		     matchv[0],
-		     matchv[nr-1],
-		     level);
+    if (nr>0){ /* min, max only defined if nr > 0 */
+	/* Go through match vector and collect commands and helps */
+	if ((chvec = calloc(matchlen, sizeof(struct cmd_help))) ==NULL){
+	    perror("calloc");
+	    goto done;
+	}
+	nrcmd = 0;
+	for (i = 0; i<matchlen; i++){ // nr-1?
+	    if ((co = pt1[i]) == NULL)
+		continue;
+	    if (co->co_command == NULL)
+		continue;		
+	    cmd = NULL;
+	    switch (co->co_type){
+	    case CO_VARIABLE:
+		cbuf_reset(cb);
+		cov2cbuf(cb, co, 1);
+		cmd = cbuf_get(cb);
+		break;
+	    case CO_COMMAND:
+		cmd = co->co_command;
+		break;
+	    case CO_REFERENCE:
+	    default:
+		continue;
+	    }
+	    if (cmd == NULL || strlen(cmd)==0)
+		continue;
+	    if (prev && strcmp(cmd, prev)==0)
+		continue;
+	    ch = &chvec[nrcmd++];
+	    if ((ch->ch_cmd = strdup(cmd)) == NULL){
+		perror("strdup");
+		goto done;
+	    }
+	    prev = ch->ch_cmd;
+	    maxlen = strlen(cmd)>maxlen?strlen(cmd):maxlen;
+	}
+	maxlen++;
+	column_width = maxlen<COLUMN_MIN_WIDTH?COLUMN_MIN_WIDTH:maxlen;
+	column_nr = cligen_terminal_length(h)/column_width;
+	if (column_nr < 1)
+	    column_nr = 1;
+	rest = cligen_terminal_length(h)%column_width;
+	column_width += rest/column_nr;
+	if (column_print(fout, 
+			 column_nr,
+			 column_width,
+			 chvec, 
+			 nrcmd,
+			 level) < 0)
+	    goto done;
+    }
+
     retval = 0;
   done:
+    if (chvec){
+	for (i=0; i<nrcmd; i++){
+	    if (chvec[i].ch_cmd)
+		free(chvec[i].ch_cmd);
+	}
+	free(chvec);
+    }
+    if (cb)
+	cbuf_free(cb);
     if (matchv)
 	free(matchv);
     return retval;
@@ -353,30 +377,37 @@ Possible completions:
 
  */
 static int
-show_multi_long(cligen_handle h, 
-		FILE         *fout, 
-		char         *string, 
-		parse_tree    pt, 
-		cvec         *cvec)
+show_help_line(cligen_handle h, 
+	       FILE         *fout, 
+	       char         *string, 
+	       parse_tree    pt, 
+	       cvec         *cvec)
 {
-    int          nr = 0;
-    int	         i;
-    int          level;
-    pt_vec       pt1;
-    char	*tmp;
-    char	*tmpp;
-    char 	 cmd[COLUMN_WIDTH+1];
-    int          matchlen = 0;
-    int         *matchv = NULL;
-    int          mv;
-    int          res;
-    cbuf        *cb;
-    int          retval = -1;
-    cg_obj      *co;
-    int          skip;
-    char        *prev = NULL;
+    int              retval = -1;
+    int              nr = 0;
+    int	             i;
+    int              nrcmd = 0;
+    int              level;
+    pt_vec           pt1;
+    char	    *tmp;
+    char	    *tmpp;
+    char 	    *cmd = NULL;
+    int              matchlen = 0;
+    int             *matchv = NULL;
+    int              mv;
+    int              res;
+    cbuf            *cb;
+    cg_obj          *co;
+    char            *prev = NULL;
+    struct cmd_help *chvec = NULL;
+    struct cmd_help *ch;
+    int              maxlen = 0;
+    int              column_width;
 
-    memset(cmd, 0, COLUMN_WIDTH+1); /* always a zero in last char */
+    if ((cb = cbuf_new()) == NULL){
+	fprintf(stderr, "cbuf_new: %s\n", strerror(errno));
+	return -1;
+    }
     /* Build match vector, but why would string ever be NULL? */
     if (string != NULL){
 	if ((nr = match_pattern(h, string, pt, 0, 1, &pt1, &matchv, &matchlen, cvec, NULL)) < 0)
@@ -388,10 +419,10 @@ show_multi_long(cligen_handle h,
     /* If last char is blank, look for next level in parse-tree 
        eg, syntax is x (y|z) and we have typed 'x ' then show
        help for y and z, not x.
-     */
+    */
     if (strlen(string) && isblank(string[strlen(string)-1])){
 	if ((tmpp = tmp = strdup(string)) == NULL){
-	    perror("show_multi_long: strdup");
+	    perror("show_help_line: strdup");
 	    goto done;
 	}
 	cli_trim(&tmpp, cligen_comment(h));
@@ -399,7 +430,7 @@ show_multi_long(cligen_handle h,
 	/* if it is ok to <cr> here (at end of one mode) 
 	   Example: x [y|z] and we have typed 'x ', then show
 	   help for y and z and a 'cr' for 'x'.
-	 */
+	*/
 	if ((res = match_pattern_exact(h, tmpp, pt, 0, cvec, NULL))  < 0){
 	    free(tmp);
 	    goto done;
@@ -407,7 +438,7 @@ show_multi_long(cligen_handle h,
 
 	if (res) {
 	    fprintf (fout, "  <cr>\n");
-	    fflush (fout);
+	    fflush(fout);
 	}
 	free (tmp);
 	/* The following is a kludge to correct a memory error triggered by:
@@ -422,80 +453,99 @@ show_multi_long(cligen_handle h,
 	if ((nr = match_pattern(h, string, pt, 0, 1, &pt1, &matchv, &matchlen, cvec, NULL)) < 0)
 
 	    goto done;
-
     }
-  
     if (!nr){
 	retval = 0;
 	goto done;
     }
-
-    /* Go through match vector */
-    for (i = 0; i<matchlen; i++){
-	assert((mv = matchv[i])!=-1);
-	co = pt1[mv];
-	if (co->co_command != NULL){
-	    skip = 0;
-	    switch (co->co_type){
-	    case CO_VARIABLE:
-		if ((cb = cbuf_new()) == NULL){
-		    fprintf(stderr, "cbuf_new: %s\n", strerror(errno));
-		    return -1;
-		}
-		cov2cbuf(cb, co, 1);
-		snprintf(cmd, COLUMN_WIDTH, "%s", cbuf_get(cb));
-		cbuf_free(cb);
-		break;
-	    case CO_COMMAND:
-		strncpy (cmd, co->co_command, COLUMN_WIDTH);
-		break;
-	    case CO_REFERENCE:
-		skip++;
-		break;
-	    default:
-		break;
-	    }
-	    if (!skip)
-		if (prev && strcmp(cmd, prev)==0)
-		    skip++;
-	    if (!skip){
-		fprintf (fout, "  %*s %s\n", 
-			 -COLUMN_WIDTH, 
-			 cmd,
-			 co->co_help ? co->co_help : "");
-		if (prev)
-		    free(prev);
-		if ((prev = strdup(cmd)) == NULL){
-		    fprintf(stderr, "strdup: %s\n", strerror(errno));
-		    return -1;
-		}
-	    }
-	}
-	fflush (fout);
+    /* Go through match vector and collect commands and helps */
+    if ((chvec = calloc(matchlen, sizeof(struct cmd_help))) ==NULL){
+	perror("calloc");
+	goto done;
     }
+    nrcmd=0;
+    for (i = 0; i<matchlen; i++){
+	mv = matchv[i];
+	co = pt1[mv];
+	if (co->co_command == NULL)
+	    continue;
+	cmd=NULL;
+	switch (co->co_type){
+	case CO_VARIABLE:
+	    cbuf_reset(cb);
+	    cov2cbuf(cb, co, 1);
+	    if ((cmd = strdup(cbuf_get(cb))) == NULL){
+		perror("strdup");
+		goto done;
+	    }
+	    break;
+	case CO_COMMAND:
+	    if ((cmd = strdup(co->co_command)) == NULL){
+		perror("strdup");
+		goto done;
+	    }
+	    break;
+	case CO_REFERENCE:
+	default:
+	    continue;
+	    break;
+	}
+	if (prev && strcmp(cmd, prev)==0)
+	    continue;
+	ch = &chvec[nrcmd++];
+	ch->ch_cmd = cmd;
+	ch->ch_help = co->co_help;
+	prev = cmd;
+	/* Compute longest command */
+	maxlen = strlen(cmd)>maxlen?strlen(cmd):maxlen;
+    }
+    maxlen++;
+    column_width = maxlen<COLUMN_MIN_WIDTH?COLUMN_MIN_WIDTH:maxlen;
+    /* Actually print */
+    for (i = 0; i<matchlen; i++){
+	ch = &chvec[i];
+	if (ch->ch_cmd==NULL)
+	    continue;
+	fprintf(fout, "  %*s %s\n", 
+		 -column_width, 
+		 ch->ch_cmd,
+		 ch->ch_help ? ch->ch_help : "");
+    }
+    fflush(fout);
     retval = 0;
   done:
-    if (prev)
-	free(prev);
+    if (chvec){
+	for (i=0; i<nrcmd; i++){
+	    if (chvec[i].ch_cmd)
+		free(chvec[i].ch_cmd);
+	}
+	free(chvec);
+    }
+    if (cb)
+	cbuf_free(cb);
     if (matchv)
 	free(matchv);
     return retval;
 }
 
 /*! Try to complete a command as much as possible.
- * INPUT:
- *   string  Input string to match
- *   cursorp Pointer to the current cursor in string.
- *   pt      Vector of commands (array of cligen object pointers (cg_obj)
- *   pt_max  Length of the pt array
- * RETURNS:
- *   -1      on Error
- *   0       success
+ * @param[in]  h       CLIgen handle
+ * @param[in]  string  Input string to match
+ * @param[in]  cursorp Pointer to the current cursor in string.
+ * @param[in]  pt      Vector of commands (array of cligen object pointers)
+ * @param[out] cvec    cligen variable vector containing vars/values pair for 
+ *                     completion
+ * @retval    -1       Error
+ * @retval     0       Success
  */
 static int 
-complete(cligen_handle h, char *string, int *cursorp, parse_tree pt, cvec *cvec)
+complete(cligen_handle h, 
+	 char         *string, 
+	 int          *cursorp, 
+	 parse_tree    pt, 
+	 cvec         *cvec)
 {
-    char    *s;
+    char   *s;
     int     cursor = *cursorp;
     int     i, n;
     int     extra;
@@ -527,7 +577,8 @@ complete(cligen_handle h, char *string, int *cursorp, parse_tree pt, cvec *cvec)
  * comment is a character (eg '#')
  */
 void
-cli_trim (char **line, char comment)
+cli_trim (char **line, 
+	  char   comment)
 {
     int		point;
     int		whitespace = 0;
@@ -755,7 +806,6 @@ cliread_eval(cligen_handle     h,
  *                  can be retreived.
  * @param[in]  cvv  A vector of cligen variables present in the string.
  *
- * RETURNS:
  * @retval   int If there is a callback, the return value of the callback is returned,
  * @retval   0   otherwise
  *
@@ -815,7 +865,7 @@ cligen_eval(cligen_handle h,
 
 /*! Turn echo off */
 void 
-cligen_echo_off()
+cligen_echo_off(void)
 {
     struct termios settings;
 
@@ -827,7 +877,7 @@ cligen_echo_off()
 
 /*! Turn echo on */
 void 
-cligen_echo_on()
+cligen_echo_on(void)
 {
     struct termios settings;
 

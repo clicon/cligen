@@ -54,6 +54,7 @@ int 		(*gl_out_hook)() = 0;
 int 		(*gl_tab_hook)() = gl_tab;
 int 		(*gl_qmark_hook)() = 0;
 int		(*gl_susp_hook)() = 0;
+int		(*gl_interrupt_hook)() = 0;
 
 /******************** internal interface *********************************/
 
@@ -425,12 +426,16 @@ gl_getc(cligen_handle h)
 #endif
 
 #if CLIGEN_REGFD 
-    gl_select(); /* block until something arives on stdin */
+    gl_select(); /* block until something arrives on stdin */
 #endif
 #ifdef __unix__
     while ((c = read(0, &ch, 1)) == -1) {
-	if (errno != EINTR)
-	    break;
+	if (errno == EINTR){
+	    if (gl_interrupt_hook(h) <0)
+		return -1;
+	    continue;
+	}
+	break;
     }
     if (c == 0){
 	gl_iseof++;
@@ -557,7 +562,7 @@ void
 gl_setwidth(w)
 int  w;
 {
-    if (w > 20) {
+    if (w > TERM_MIN_SCREEN_WIDTH-1) {
 	gl_termw = w;
 	gl_scroll = w / 3;
     } else {

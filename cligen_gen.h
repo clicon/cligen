@@ -97,7 +97,9 @@ typedef int (expand_cb2)(void *h,              /* handler: cligen or userhandle 
 			 struct cvec *helptexts); /* vector of help-texts */
 #endif
 
+/* handle, buffer, promptlen, tmp*/
 typedef int (cligen_susp_cb_t)(void *h, char *, int, int *);
+typedef int (cligen_interrupt_cb_t)(cligen_handle h);
 
 /*! A parse tree is a top object containing a vector of parse-tree nodes 
  *

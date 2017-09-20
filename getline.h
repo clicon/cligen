@@ -29,6 +29,7 @@ int 	(*gl_in_hook)(void *, char *);
 int 	(*gl_out_hook)(void*, char *);
 int	(*gl_tab_hook)(void*, char *, int, int *);
 cligen_susp_cb_t *gl_susp_hook;
+cligen_interrupt_cb_t *gl_interrupt_hook;
 int	(*gl_qmark_hook)(void*, char *, int);
 
 #else	/* not __STDC__ */

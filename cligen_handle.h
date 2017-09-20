@@ -39,6 +39,7 @@
  * Constants
  */
 #define CLIGEN_PROMPT_DEFAULT "cli> "
+#define TERM_MIN_SCREEN_WIDTH 21 /* hardcoded by getline */
 
 /*
  * Prototypes

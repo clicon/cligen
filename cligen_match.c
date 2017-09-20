@@ -958,8 +958,7 @@ match_pattern_exact(cligen_handle h,
  * 
  * @param[in]  h       cligen handle
  * @param[in]  string  Input string to match
- * @param[in]  pt      Vector of commands (array of cligen object pointers (cg_obj)
- * @param[in]  pt_max  Length of the pt array
+ * @param[in]  pt      Vector of commands (array of cligen object pointers)
  * @param[in]  maxlen  Max length of string
  * @param[out] cvec    cligen variable vector containing vars/values pair for 
  *                     completion

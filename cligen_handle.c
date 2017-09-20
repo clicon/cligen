@@ -47,7 +47,9 @@
 #define __USE_GNU /* strverscmp */
 #include <string.h>
 #include <errno.h>
-
+#include <termios.h>
+#include <signal.h>
+#include <sys/ioctl.h>
 
 #include "cligen_buf.h"
 #include "cligen_var.h"
@@ -79,6 +81,7 @@
  * Constants
  */
 #define TERM_ROWS_DEFAULT 24
+
 
 /*! list of cligen parse-trees, can be searched, and activated */
 typedef struct parse_tree_list  { /* Linked list of cligen parse-trees */
@@ -120,7 +123,24 @@ struct cligen_handle{
     void       *ch_userdata;     /* application-specific data (any data) */
 };
 
+/*! Get window size and set terminal row size
+ */
+static int
+cligen_gwinsz(cligen_handle h)
+{
+    struct winsize ws;
 
+    if (ioctl(STDIN_FILENO, TIOCGWINSZ, &ws) == -1)
+	return -1;
+    cligen_terminalrows_set(h, ws.ws_row);
+    cligen_terminal_length_set(h, ws.ws_col);
+    return 0;
+}
+
+void
+sigwinch_handler(int arg)
+{
+}
 
 /*! This is the first call the CLIgen API and returns a handle. 
  */
@@ -128,7 +148,8 @@ cligen_handle
 cligen_init(void)
 {
     struct cligen_handle *ch;
-    cligen_handle h = NULL;
+    cligen_handle         h = NULL;
+    struct sigaction      sigh;
 
     if ((ch = malloc(sizeof(*ch))) == NULL){
 	fprintf(stderr, "%s: malloc: %s\n", __FUNCTION__, strerror(errno));
@@ -138,7 +159,15 @@ cligen_init(void)
     ch->ch_magic = CLIGEN_MAGIC;
     h = (cligen_handle)ch;
     cligen_prompt_set(h, CLIGEN_PROMPT_DEFAULT);
-    cligen_terminalrows_set(h, TERM_ROWS_DEFAULT);
+    if (cligen_gwinsz(h) < 0)
+	return NULL;
+    cligen_interrupt_hook(h, cligen_gwinsz);
+    memset(&sigh, 0, sizeof(sigh));
+    sigh.sa_handler = sigwinch_handler;
+    if (sigaction(SIGWINCH, &sigh, NULL) < 0){
+	perror("sigaction");
+	return NULL;
+    }
     cliread_init(h);
     gl_buf_init(h);
 
@@ -700,6 +729,8 @@ cligen_terminal_length_set(cligen_handle h,
     struct cligen_handle *ch = handle(h);
 
     ch->ch_terminal_length = length;
+    if (length < 21)
+	length = 21;
     gl_setwidth(length);
     return 0;
 }
@@ -723,6 +754,20 @@ cligen_tabmode(cligen_handle h)
  *
  * @param[in] h       CLIgen handle
  * @param[in] mode    0 is 'short/ios' mode, 1 is long/junos mode.
+ * Two ways to show commands: show_help_column and show_help_line
+ * show_help_line
+ *  cli> interface name 
+ * 100GigabyteEthernet6/0/0 TenGigabyteEthernet6/0/0 TenGigabyteEthernet6/0
+ * TenGigabyteEthernet6/0/0 TenGigabyteEthernet6/0/0 TenGigabyteEthernet6/0
+ *
+ * show_help_columns:
+ * cli> interface name TenGigabyteEthernet6/0/0.
+ * TenGigabyteEthernet6/0/0 This is one mighty interface
+ * TenGigabyteEthernet6/0/0 This is one mighty interface
+ *
+ * short/ios:  ?:   show_multi_long
+ *             TAB: show_multi  (many columns)
+ * long/junos: TAB and ?: show_multi_long
  */
 int 
 cligen_tabmode_set(cligen_handle h, 

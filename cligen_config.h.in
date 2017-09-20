@@ -10,6 +10,9 @@
    cligen_regfd() */
 #undef CLIGEN_REGFD
 
+/* Experimental CLIGEN sub-modes */
+#undef CLIGEN_SUBMODE
+
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
