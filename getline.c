@@ -61,7 +61,7 @@ int		(*gl_interrupt_hook)() = 0;
 /* begin global variables */
 static int      gl_init_done = -1;	/* terminal mode flag  */
 static int      gl_termw = 80;		/* actual terminal width */
-static int      gl_scrolling_mode = 0;	/* Scrolling on / off */
+static int      gl_scrolling_mode = 1;	/* Scrolling on / off */
 static int      gl_scrollw = 27;	/* width of EOL scrolling region */
 static int      gl_width = 0;		/* net size available for input */
 static int      gl_extent = 0;		/* how far to redraw, 0 means all */
@@ -563,7 +563,6 @@ gl_setscrolling(int  mode)
     gl_scrolling_mode = mode;
 }
 
-
 int
 gl_getwidth(void)
 {
@@ -981,6 +980,52 @@ gl_word(cligen_handle h,
     gl_fixup(h, cligen_prompt(h), -1, pos);
 }
 
+static int
+move_cursor_up(int nr)
+{
+    gl_putc(033);
+    gl_putc('[');
+    gl_putc('1');
+    gl_putc('A');
+    return 0;
+}
+
+static int
+move_cursor_right(int nr)
+{
+    char str[16];
+    int  i;
+    gl_putc(033);
+    gl_putc('[');
+    snprintf(str, 15, "%d", nr);
+    for (i=0; i<strlen(str); i++)
+	gl_putc(str[i]);
+    gl_putc('C');
+    return 0;
+}
+
+static int
+wrap_line()
+{
+    gl_putc('\n'); /* wrap line */
+    return 0;
+}
+
+static int
+unwrap_line()
+{
+    move_cursor_up(1);
+    move_cursor_right(gl_termw-1);
+    return 0;
+}
+
+int
+wrap(int p, 
+     int plen)
+{
+    return (p+plen+1)%gl_termw==0;
+}
+
 /*! Emit a newline, reset and redraw prompt and current input line */
 void
 gl_redraw(cligen_handle h)
@@ -990,6 +1035,8 @@ gl_redraw(cligen_handle h)
         gl_fixup(h, cligen_prompt(h), -2, gl_pos);
     }
 }
+
+
 
 /*! Redrawing or moving within line
  *
@@ -1004,19 +1051,19 @@ gl_redraw(cligen_handle h)
  *            move just past the end of the input line.
  */
 static void
-gl_fixup(cligen_handle h, 
-	 char         *prompt, 
-	 int           change, 
-	 int           cursor)
+gl_fixup_noscroll(cligen_handle h, 
+		  char         *prompt, 
+		  int           change, 
+		  int           cursor)
 {
     int          left = 0, right = -1;		/* bounds for redraw */
     int          pad;		/* how much to erase at end of line */
     int          backup;        /* how far to backup before fixing */
-    int          new_shift;     /* value of shift based on cursor */
-    int          extra;         /* adjusts when shift (scroll) happens */
     int          i;
+    int          p; /* pos */
     int          new_right = -1; /* alternate right bound, using gl_extent */
     int          l1, l2;
+    int          plen=strlen(prompt);
 
     if (change == -2) {   /* reset */
 	gl_pos = gl_cnt = fixup_gl_shift = fixup_off_right = fixup_off_left = 0;
@@ -1052,37 +1099,153 @@ gl_fixup(cligen_handle h,
 	gl_putc('\007');
 	cursor = 0;
     }
-    if (gl_scrolling_mode){
-	if (fixup_off_right || (fixup_off_left && cursor < fixup_gl_shift + gl_width - gl_scrollw / 2)){
-	    extra = 2;			/* shift the scrolling boundary */
-	}
-	else 
-	    extra = 0;
-
-	new_shift = cursor + extra + gl_scrollw - gl_width;
-	if (new_shift > 0) {
-	    new_shift /= gl_scrollw;
-	    new_shift *= gl_scrollw;
-	} else
-	    new_shift = 0;
-	if (new_shift != fixup_gl_shift) {	/* scroll occurs */
-	    fixup_gl_shift = new_shift;
-	    fixup_off_left = (fixup_gl_shift)? 1 : 0;
-	    fixup_off_right = (gl_cnt > fixup_gl_shift + gl_width - 1)? 1 : 0;
+    if (change >= 0) {		/* text changed */
+	if (change < fixup_gl_shift + fixup_off_left) {
 	    left = fixup_gl_shift;
-	    new_right = right = (fixup_off_right)? fixup_gl_shift + gl_width - 2 : gl_cnt;
-	} else if (change >= 0) {		/* no scroll, but text changed */
-	    if (change < fixup_gl_shift + fixup_off_left) {
-		left = fixup_gl_shift;
-	    } else {
-		left = change;
-		backup = gl_pos - change;
-	    }
-	    fixup_off_right = (gl_cnt > fixup_gl_shift + gl_width - 1)? 1 : 0;
-	    right = (fixup_off_right)? fixup_gl_shift + gl_width - 2 : gl_cnt;
-	    new_right = (gl_extent && (right > left + gl_extent))? 
-		left + gl_extent : right;
+	} else {
+	    left = change;
+	    backup = gl_pos - change;
 	}
+	right = gl_cnt;
+	new_right = (gl_extent && (right > left + gl_extent))? 
+	    left + gl_extent : right;
+    }
+    pad -= gl_cnt - fixup_gl_shift;
+    pad = (pad < 0)? 0 : pad;
+    if (left <= right) {		/* clean up screen */
+	for (p=left; p < left+backup; p++){
+	    if (wrap(p, plen))
+		unwrap_line();
+	    else
+		gl_putc('\b');
+	}
+	if (left == fixup_gl_shift && fixup_off_left) {
+	    gl_putc('$');
+	    left++;
+        }
+	for (p=left; p < new_right; p++){
+	    gl_putc(cligen_buf(h)[p]);
+	    if (wrap(p, plen))
+		wrap_line();
+	}
+	gl_pos = new_right;
+	for (p=left; p < left+pad; p++){	/* erase remains of prev line */
+	    gl_putc(' ');
+	    if (wrap(p, plen))
+		wrap_line();
+	}
+	gl_pos += pad;
+    }
+    /* move to final cursor location */
+    if (gl_pos - cursor > 0) {
+	for (p=gl_pos; p > cursor; p--){
+	    if (wrap(p-1, plen))
+		unwrap_line();
+	    else
+		gl_putc('\b');
+	} 
+    }
+    else {
+	for (i=gl_pos; i < cursor; i++)
+	    gl_putc(cligen_buf(h)[i]);
+    }
+    gl_pos = cursor;
+}
+
+
+/*! Redrawing or moving within line
+ *
+ * This function is used both for redrawing when input changes or for
+ * moving within the input line.  The parameters are:
+ *   prompt:  compared to last_prompt[] for changes;
+ *   change : the index of the start of changes in the input buffer,
+ *            with -1 indicating no changes, -2 indicating we're on
+ *            a new line, redraw everything.
+ *   cursor : the desired location of the cursor after the call.
+ *            A value of gl_bufsize(h) can be used  to indicate the cursor should
+ *            move just past the end of the input line.
+ */
+static void
+gl_fixup(cligen_handle h, 
+	 char         *prompt, 
+	 int           change, 
+	 int           cursor)
+{
+    int          left = 0, right = -1;		/* bounds for redraw */
+    int          pad;		/* how much to erase at end of line */
+    int          backup;        /* how far to backup before fixing */
+    int          new_shift;     /* value of shift based on cursor */
+    int          extra;         /* adjusts when shift (scroll) happens */
+    int          i;
+    int          new_right = -1; /* alternate right bound, using gl_extent */
+    int          l1, l2;
+
+    if (gl_scrolling_mode == 0)
+	return gl_fixup_noscroll(h, prompt, change, cursor);
+    if (change == -2) {   /* reset */
+	gl_pos = gl_cnt = fixup_gl_shift = fixup_off_right = fixup_off_left = 0;
+	gl_putc('\r');
+	gl_puts(prompt);
+	strncpy(fixup_last_prompt, prompt, sizeof(fixup_last_prompt));
+	change = 0;
+        gl_width = gl_termw - gl_strlen(prompt);
+    } else if (strcmp(prompt, fixup_last_prompt) != 0) {
+	l1 = gl_strlen(fixup_last_prompt);
+	l2 = gl_strlen(prompt);
+	gl_cnt = gl_cnt + l1 - l2;
+	strncpy(fixup_last_prompt, prompt, sizeof(fixup_last_prompt));
+	gl_putc('\r');
+	gl_puts(prompt);
+	gl_pos = fixup_gl_shift;
+        gl_width = gl_termw - l2;
+	change = 0;
+    }
+    pad = (fixup_off_right)? gl_width - 1 : gl_cnt - fixup_gl_shift;   /* old length */
+    backup = gl_pos - fixup_gl_shift;
+    if (change >= 0) {
+        gl_cnt = strlen(cligen_buf(h));
+        if (change > gl_cnt)
+	    change = gl_cnt;
+    }
+    if (cursor > gl_cnt) {
+	if (cursor != gl_bufsize(h))		/* gl_bufsize(h) means end of line */
+	    gl_putc('\007');
+	cursor = gl_cnt;
+    }
+    if (cursor < 0) {
+	gl_putc('\007');
+	cursor = 0;
+    }
+    if (fixup_off_right || (fixup_off_left && cursor < fixup_gl_shift + gl_width - gl_scrollw / 2)){
+	extra = 2;			/* shift the scrolling boundary */
+    }
+    else 
+	extra = 0;
+    
+    new_shift = cursor + extra + gl_scrollw - gl_width;
+    if (new_shift > 0) {
+	new_shift /= gl_scrollw;
+	new_shift *= gl_scrollw;
+    } else
+	new_shift = 0;
+    if (gl_scrolling_mode && 
+	new_shift != fixup_gl_shift) {	/* scroll occurs */
+	fixup_gl_shift = new_shift;
+	fixup_off_left = (fixup_gl_shift)? 1 : 0;
+	fixup_off_right = (gl_cnt > fixup_gl_shift + gl_width - 1)? 1 : 0;
+	left = fixup_gl_shift;
+	new_right = right = (fixup_off_right)? fixup_gl_shift + gl_width - 2 : gl_cnt;
+    } else if (change >= 0) {		/* no scroll, but text changed */
+	if (change < fixup_gl_shift + fixup_off_left) {
+	    left = fixup_gl_shift;
+	} else {
+	    left = change;
+	    backup = gl_pos - change;
+	}
+	fixup_off_right = (gl_cnt > fixup_gl_shift + gl_width - 1)? 1 : 0;
+	right = (fixup_off_right)? fixup_gl_shift + gl_width - 2 : gl_cnt;
+	new_right = (gl_extent && (right > left + gl_extent))? 
+	    left + gl_extent : right;
     }
     pad -= (fixup_off_right)? gl_width - 1 : gl_cnt - fixup_gl_shift;
     pad = (pad < 0)? 0 : pad;
@@ -1108,7 +1271,7 @@ gl_fixup(cligen_handle h,
     i = gl_pos - cursor;		/* move to final cursor location */
     if (i > 0) {
 	while (i--)
-	   gl_putc('\b');
+	    gl_putc('\b');
     } else {
 	for (i=gl_pos; i < cursor; i++)
 	    gl_putc(cligen_buf(h)[i]);
