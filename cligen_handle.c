@@ -729,10 +729,38 @@ cligen_terminal_length_set(cligen_handle h,
     struct cligen_handle *ch = handle(h);
 
     ch->ch_terminal_length = length;
-    if (length < 21)
-	length = 21;
+    if (length < TERM_MIN_SCREEN_WIDTH)
+	length = TERM_MIN_SCREEN_WIDTH;
     gl_setwidth(length);
     return 0;
+}
+
+/*! Get line scrolling mode
+ *
+ * @param[in] h       CLIgen handle
+ * @retval    0       Line scrolling off
+ * @retval    1       Line scrolling on
+ */
+int 
+cligen_line_scrolling(cligen_handle h)
+{
+    return gl_getscrolling();
+}
+
+/*! Set line scrolling mode
+ *
+ * @param[in] h      CLIgen handle
+ * @param[in] mode   0: turn line scrolling off, 1: turn on
+ * @retval    old    Previous setting
+ */
+int 
+cligen_line_scrolling_set(cligen_handle h,
+			  int           mode)
+{
+    int prev = gl_getscrolling();
+
+    gl_setscrolling(mode);
+    return prev;
 }
 
 

@@ -235,42 +235,125 @@ cligen_exitchar_add(cligen_handle h,
     gl_exitchar_add(c); /* XXX global */
 }
 
-
-/*! Print top-level help (all commands) of a parse-tree
+/*! Print help lines for subset of a parsetree vector
+ * @param[in] fout     File to print to, eg stdout
+ * @param[in] ptvec    Cligen parse-node vector
+ * @param[in] matchvec Array of indexes into ptvec to match (the subset)
+ * @param[in] matchlen Length of matchvec
  */
 int
-cligen_help(FILE *f, parse_tree pt)
+print_help_lines(FILE      *fout, 
+		 pt_vec     ptvec,
+		 int       *matchvec,
+		 size_t     matchlen)
+    
 {
-    cg_obj *co;
-    char    cmd[COLUMN_WIDTH+1];
-    int     i;
-    cbuf   *cb;
+    int              retval = -1;
+    cg_obj          *co;
+    char            *cmd;
+    int              i;
+    cbuf            *cb = NULL;
+    struct cmd_help *chvec = NULL;
+    struct cmd_help *ch;
+    int              maxlen = 0;
+    char            *prev = NULL;
+    int              nrcmd = 0;
+    int              column_width;
+    int              vi;
 
-    for (i=0; i<pt.pt_len; i++){
-	co = pt.pt_vec[i];
-	if (co->co_command != NULL){
-	    switch(co->co_type){
-	    case CO_VARIABLE:
-		if ((cb = cbuf_new()) == NULL){
-		    fprintf(stderr, "cbuf_new: %s\n", strerror(errno));
-		    return -1;
-		}
-		cov2cbuf(cb, co, 1);
-		snprintf(cmd, COLUMN_WIDTH, "%s", cbuf_get(cb));
-		cbuf_free(cb);
-		break;
-	    case CO_COMMAND:
-		strncpy (cmd, co->co_command, COLUMN_WIDTH);
-		break;
-	    default:
-		break;
-	    }
-	    cligen_output(f, "  %*s %s\n", 
-		       -COLUMN_WIDTH, 
-		       cmd,
-		       co->co_help ? co->co_help : "");
-	}
+    if ((cb = cbuf_new()) == NULL){
+	fprintf(stderr, "cbuf_new: %s\n", strerror(errno));
+	return -1;
     }
-    return 0;
+    /* Go through match vector and collect commands and helps */
+    if ((chvec = calloc(matchlen, sizeof(struct cmd_help))) ==NULL){
+	perror("calloc");
+	goto done;
+    }
+    for (i=0; i<matchlen; i++){
+	vi = matchvec[i]; /* index into array, extra indirection */
+	co = ptvec[vi];
+	if (co->co_command == NULL)
+	    continue;
+	cmd=NULL;
+	switch(co->co_type){
+	case CO_VARIABLE:
+	    cbuf_reset(cb);
+	    cov2cbuf(cb, co, 1);
+	    if ((cmd = strdup(cbuf_get(cb))) == NULL){
+		perror("strdup");
+		goto done;
+	    }
+	    break;
+	case CO_COMMAND:
+	    if ((cmd = strdup(co->co_command)) == NULL){
+		perror("strdup");
+		goto done;
+	    }
+	    break;
+	default:
+	    continue;
+	    break;
+	}
+	if (prev && strcmp(cmd, prev)==0)
+	    continue;
+	ch = &chvec[nrcmd++];
+	ch->ch_cmd = cmd;
+	ch->ch_help = co->co_help;
+	prev = cmd;
+	/* Compute longest command */
+	maxlen = strlen(cmd)>maxlen?strlen(cmd):maxlen;
+    }
+    maxlen++;
+    column_width = maxlen<COLUMN_MIN_WIDTH?COLUMN_MIN_WIDTH:maxlen;
+    /* Actually print */
+    for (i = 0; i<nrcmd; i++){
+	ch = &chvec[i];
+	fprintf(fout, "  %*s %s\n", 
+		 -column_width, 
+		 ch->ch_cmd,
+		 ch->ch_help ? ch->ch_help : "");
+    }
+    fflush(fout);
+    retval = 0;
+ done:
+    if (chvec){
+	for (i=0; i<nrcmd; i++){
+	    if (chvec[i].ch_cmd)
+		free(chvec[i].ch_cmd);
+	}
+	free(chvec);
+    }
+    if (cb)
+	cbuf_free(cb);
+    return retval;
+}
+
+/*! Print top-level help (all commands) of a parse-tree
+ * @param[in] fout  File to print to, eg stdout
+ * @param[in] pt    Cligen parse-tree
+ */
+int
+cligen_help(FILE      *fout, 
+	    parse_tree pt)
+{
+    int              retval = -1;
+    int              i;
+    int             *matchvec = NULL;
+
+    /* intermediate struct to fit into print_help_lines() parameters */
+    if ((matchvec = calloc(pt.pt_len, sizeof(int))) == NULL){
+	perror("calloc");
+	goto done;
+    }
+    for (i=0; i<pt.pt_len; i++)
+	matchvec[i] = i;
+    if (print_help_lines(fout, pt.pt_vec, matchvec, pt.pt_len) < 0)
+	goto done;
+    retval = 0;
+ done:
+    if (matchvec)
+	free(matchvec);
+    return retval;
 }
 

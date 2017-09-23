@@ -16,6 +16,8 @@ void           gl_exitchar_add(char c);
 void           gl_char_init(void);	
 void           gl_char_cleanup(void);	
 char           *gl_getline(cligen_handle h);		/* read a line of input */
+int             gl_getscrolling();
+void            gl_setscrolling(int);
 void            gl_setwidth(int);		/* specify width of screen */
 int             gl_getwidth(void);		/* get width of screen */
 void            gl_histadd(char *);		/* adds entries to hist */
@@ -37,6 +39,9 @@ int	(*gl_qmark_hook)(void*, char *, int);
 void            gl_char_init();	
 void            gl_char_cleanup();	
 char           *gl_getline();	
+int             gl_getscrolling();
+void            gl_setscrolling();
+int             gl_getwidth();
 void            gl_setwidth();
 int             gl_getwidth();
 void            gl_histadd();

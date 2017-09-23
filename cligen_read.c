@@ -73,12 +73,6 @@
 #include "cligen_read.h"
 #include "getline.h"
 
-/* Struct for printing command and help */
-struct cmd_help{
-    char *ch_cmd;
-    char *ch_help;
-};
-
 /*
  * Local prototypes
  */
@@ -385,32 +379,17 @@ show_help_line(cligen_handle h,
 {
     int              retval = -1;
     int              nr = 0;
-    int	             i;
-    int              nrcmd = 0;
     int              level;
     pt_vec           pt1;
     char	    *tmp;
     char	    *tmpp;
-    char 	    *cmd = NULL;
     int              matchlen = 0;
-    int             *matchv = NULL;
-    int              mv;
+    int             *matchvec = NULL;
     int              res;
-    cbuf            *cb;
-    cg_obj          *co;
-    char            *prev = NULL;
-    struct cmd_help *chvec = NULL;
-    struct cmd_help *ch;
-    int              maxlen = 0;
-    int              column_width;
 
-    if ((cb = cbuf_new()) == NULL){
-	fprintf(stderr, "cbuf_new: %s\n", strerror(errno));
-	return -1;
-    }
     /* Build match vector, but why would string ever be NULL? */
     if (string != NULL){
-	if ((nr = match_pattern(h, string, pt, 0, 1, &pt1, &matchv, &matchlen, cvec, NULL)) < 0)
+	if ((nr = match_pattern(h, string, pt, 0, 1, &pt1, &matchvec, &matchlen, cvec, NULL)) < 0)
 	    goto done;
     }
     if ((level = command_levels(string)) < 0)
@@ -444,13 +423,13 @@ show_help_line(cligen_handle h,
 	/* The following is a kludge to correct a memory error triggered by:
 	   a <rest>;
 	   a input a a ?
-	   Just repeast the same command as abobe,...
+	   Just repeast the same command as above,...
 	*/
-	if (matchv){
-	    free(matchv);
-	    matchv = NULL;
+	if (matchvec){
+	    free(matchvec);
+	    matchvec = NULL;
 	}
-	if ((nr = match_pattern(h, string, pt, 0, 1, &pt1, &matchv, &matchlen, cvec, NULL)) < 0)
+	if ((nr = match_pattern(h, string, pt, 0, 1, &pt1, &matchvec, &matchlen, cvec, NULL)) < 0)
 
 	    goto done;
     }
@@ -458,73 +437,12 @@ show_help_line(cligen_handle h,
 	retval = 0;
 	goto done;
     }
-    /* Go through match vector and collect commands and helps */
-    if ((chvec = calloc(matchlen, sizeof(struct cmd_help))) ==NULL){
-	perror("calloc");
+    if (print_help_lines(fout, pt1, matchvec, matchlen) < 0)
 	goto done;
-    }
-    nrcmd=0;
-    for (i = 0; i<matchlen; i++){
-	mv = matchv[i];
-	co = pt1[mv];
-	if (co->co_command == NULL)
-	    continue;
-	cmd=NULL;
-	switch (co->co_type){
-	case CO_VARIABLE:
-	    cbuf_reset(cb);
-	    cov2cbuf(cb, co, 1);
-	    if ((cmd = strdup(cbuf_get(cb))) == NULL){
-		perror("strdup");
-		goto done;
-	    }
-	    break;
-	case CO_COMMAND:
-	    if ((cmd = strdup(co->co_command)) == NULL){
-		perror("strdup");
-		goto done;
-	    }
-	    break;
-	case CO_REFERENCE:
-	default:
-	    continue;
-	    break;
-	}
-	if (prev && strcmp(cmd, prev)==0)
-	    continue;
-	ch = &chvec[nrcmd++];
-	ch->ch_cmd = cmd;
-	ch->ch_help = co->co_help;
-	prev = cmd;
-	/* Compute longest command */
-	maxlen = strlen(cmd)>maxlen?strlen(cmd):maxlen;
-    }
-    maxlen++;
-    column_width = maxlen<COLUMN_MIN_WIDTH?COLUMN_MIN_WIDTH:maxlen;
-    /* Actually print */
-    for (i = 0; i<matchlen; i++){
-	ch = &chvec[i];
-	if (ch->ch_cmd==NULL)
-	    continue;
-	fprintf(fout, "  %*s %s\n", 
-		 -column_width, 
-		 ch->ch_cmd,
-		 ch->ch_help ? ch->ch_help : "");
-    }
-    fflush(fout);
     retval = 0;
   done:
-    if (chvec){
-	for (i=0; i<nrcmd; i++){
-	    if (chvec[i].ch_cmd)
-		free(chvec[i].ch_cmd);
-	}
-	free(chvec);
-    }
-    if (cb)
-	cbuf_free(cb);
-    if (matchv)
-	free(matchv);
+    if (matchvec)
+	free(matchvec);
     return retval;
 }
 

@@ -89,6 +89,9 @@ int cligen_terminalrows_set(cligen_handle h, int rows);
 int cligen_terminal_length(cligen_handle h);
 int cligen_terminal_length_set(cligen_handle h, int length);
 
+int cligen_line_scrolling(cligen_handle h);
+int cligen_line_scrolling_set(cligen_handle h, int mode);
+
 int cligen_tabmode(cligen_handle h);
 int cligen_tabmode_set(cligen_handle h, int mode);
 
