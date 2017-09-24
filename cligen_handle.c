@@ -81,6 +81,7 @@
  * Constants
  */
 #define TERM_ROWS_DEFAULT 24
+#define GETLINE_BUFLEN_DEFAULT 64 /* startsize, increased with 2x when run out */
 
 
 /*! list of cligen parse-trees, can be searched, and activated */
@@ -169,7 +170,7 @@ cligen_init(void)
 	return NULL;
     }
     cliread_init(h);
-    gl_buf_init(h);
+    cligen_buf_init(h);
 
   done:
     return h;
@@ -185,7 +186,7 @@ cligen_exit(cligen_handle h)
     parse_tree_list *ptl;
 
     gl_histclear();
-    gl_buf_cleanup(h);
+    cligen_buf_cleanup(h);
     if (ch->ch_prompt)
 	free(ch->ch_prompt);
     if (ch->ch_nomatch)
@@ -917,7 +918,7 @@ cligen_userhandle_set(cligen_handle h,
     return 0;
 }
 
-static int _getline_bufsize = 128;
+static int _getline_bufsize = GETLINE_BUFLEN_DEFAULT;
 
 /*!
  * @param[in] h       CLIgen handle
@@ -945,7 +946,7 @@ cligen_killbuf(cligen_handle h)
  * @param[in] h       CLIgen handle
  */
 int 
-gl_bufsize(cligen_handle h)
+cligen_buf_size(cligen_handle h)
 {
     return _getline_bufsize;
 }
@@ -954,15 +955,19 @@ gl_bufsize(cligen_handle h)
  * @param[in] h       CLIgen handle
  */
 int
-gl_buf_init(cligen_handle h)
+cligen_buf_init(cligen_handle h)
 {
     struct cligen_handle *ch = handle(h);
 
-    if ((ch->ch_buf = malloc(_getline_bufsize)) == NULL)
+    if ((ch->ch_buf = malloc(_getline_bufsize)) == NULL){
+	perror("malloc");
 	return -1;
+    }
     memset(ch->ch_buf, 0, _getline_bufsize);
-    if ((ch->ch_killbuf = malloc(_getline_bufsize)) == NULL)
+    if ((ch->ch_killbuf = malloc(_getline_bufsize)) == NULL){
+	perror("malloc");
 	return -1;
+    }
     memset(ch->ch_killbuf, 0, _getline_bufsize);
     return 0;
 }
@@ -971,7 +976,7 @@ gl_buf_init(cligen_handle h)
  * @param[in] h       CLIgen handle
  */
 int       
-gl_buf_increase(cligen_handle h)
+cligen_buf_increase(cligen_handle h)
 {
     struct cligen_handle *ch = handle(h);
     int len0 = _getline_bufsize;
@@ -990,7 +995,7 @@ gl_buf_increase(cligen_handle h)
  * @param[in] h       CLIgen handle
  */
 int
-gl_buf_cleanup(cligen_handle h)
+cligen_buf_cleanup(cligen_handle h)
 {
     struct cligen_handle *ch = handle(h);
     if (ch->ch_buf){

@@ -470,13 +470,13 @@ complete(cligen_handle h,
 
     if (string == NULL)
 	return -1;
-    if ((s = malloc(gl_bufsize(h))) == NULL){ /* s is a temporary copy */
+    if ((s = malloc(cligen_buf_size(h))) == NULL){ /* s is a temporary copy */
 	perror("complete: malloc");
 	return -1;
     }
-    strncpy(s, string, gl_bufsize(h));
+    strncpy(s, string, cligen_buf_size(h));
     s[cursor] = '\0';
-    if (match_complete(h, s, pt, gl_bufsize(h), cvec) < 0)
+    if (match_complete(h, s, pt, cligen_buf_size(h), cvec) < 0)
 	return -1;
     extra = strlen(s) - cursor;      /* Extra characters added? */
     if (extra){
@@ -493,6 +493,8 @@ complete(cligen_handle h,
 
 /*! Trim command line. Remove any leading, trailing and multiple whitespace
  * comment is a character (eg '#')
+ * @param[out]  line
+ * @param[in]   comment
  */
 void
 cli_trim (char **line, 
