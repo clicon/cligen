@@ -16,7 +16,11 @@
 #  You should have received a copy of the GNU General Public License
 #  along with CLIgen; see the file COPYING.
 
-- Added support for SIGWINCH and adapting help columns to window resize
+- New non-line scrolling mode in getline. Use non-scrolling with:
+  cligen_line_scrolling_set(h, 0);
+
+- Added signal SIGWINCH handling for window change size and adapting printing
+  of help string to window resize. 
 
 - Added support for multi-argument callback CLI expand functions.
     See cligen_expandv_str2fn()

@@ -18,7 +18,12 @@
 
 #include <stddef.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <netinet/in.h>
+#include <string.h>
+#include <ctype.h>
+#include <errno.h>
+#include <signal.h>
 
 #include "cligen_buf.h"
 #include "cligen_var.h"
@@ -27,36 +32,54 @@
 #include "cligen_io.h"
 #include "cligen_handle.h"
 
-#include       "getline.h"
+#include "getline.h" /* exported interface */
 
+/********************* exported variables ********************************/
 static int      gl_tab();  /* forward reference needed for gl_tab_hook */
 
-/******************** imported interface *********************************/
-
-#include <string.h>
-#include <ctype.h>
-#include <errno.h>
-#include <signal.h>
-
-#include <stdlib.h>
-
-/********************* exported interface ********************************/
-
-char           *gl_getline();		/* read a line of input */
-void            gl_setwidth();		/* specify width of screen */
-int             gl_getwidth();          /* get width of screen */
-void            gl_histadd();		/* adds entries to hist */
-void            gl_histclear();		/* clears entries to hist */
-void		gl_strwidth();		/* to bind gl_strlen */
-
-int 		(*gl_in_hook)() = 0;
-int 		(*gl_out_hook)() = 0;
-int 		(*gl_tab_hook)() = gl_tab;
-int 		(*gl_qmark_hook)() = 0;
-int		(*gl_susp_hook)() = 0;
-int		(*gl_interrupt_hook)() = 0;
+int (*gl_in_hook)() = NULL;
+int (*gl_out_hook)() = NULL;
+int (*gl_tab_hook)() = gl_tab;
+int (*gl_qmark_hook)() = NULL;
+int (*gl_susp_hook)() = NULL;
+int (*gl_interrupt_hook)() = NULL;
 
 /******************** internal interface *********************************/
+
+/* begin forward declared internal functions */
+static void     gl_init(void);		/* prepare to edit a line */
+static void     gl_cleanup(void);	/* to undo gl_init */
+void            gl_char_init(void);	/* get ready for no echo input */
+void            gl_char_cleanup(void);	/* undo gl_char_init */
+static size_t 	(*gl_strlen)() = (size_t(*)())strlen; 
+					/* returns printable prompt width */
+
+static void     gl_addchar(cligen_handle h, int c);	/* install specified char */
+static void     gl_del(cligen_handle h, int loc);	/* del, either left (-1) or cur (0) */
+static void     gl_error(char *buf);	/* write error msg and die */
+static inline void gl_fixup(cligen_handle h, char*,int,int);/* fixup state variables and screen */
+static int      gl_getc(cligen_handle h);	        /* read one char from terminal */
+static void     gl_kill(cligen_handle h, int pos);	/* delete to EOL */
+static void     gl_kill_begin(cligen_handle h, int pos);	/* delete to BEGIN of line */
+static void     gl_kill_word(cligen_handle h, int pos);	/* delete word */
+static void     gl_newline(cligen_handle);	/* handle \n or \r */
+static int      gl_putc(int c);		/* write one char to terminal */
+static int      gl_puts(char *buf);	/* write a line to terminal */
+
+static void     gl_transpose(cligen_handle h);	/* transpose two chars */
+static void     gl_yank(cligen_handle h);		/* yank killed text */
+static void     gl_word(cligen_handle h, int dir);	/* move a word */
+
+static void     hist_init(void);	/* initializes hist pointers */
+static char    *hist_next(void);	/* return ptr to next item */
+static char    *hist_prev(void);	/* return ptr to prev item */
+static char    *hist_save(char *p);	/* makes copy of a string, without NL */
+
+static void     search_addchar(cligen_handle h, int c);	/* increment search string */
+static void     search_term(cligen_handle);	/* reset with current contents */
+static void     search_back(cligen_handle h, int new);	/* look back for current string */
+static void     search_forw(cligen_handle h, int new);	/* look forw for current string */
+/* end forward declared internal functions */
 
 /* begin global variables */
 static int      gl_init_done = -1;	/* terminal mode flag  */
@@ -95,38 +118,6 @@ static int   search_last = 0;	  /* last match found */
 
 /* end global variables */
 
-static void     gl_init(void);		/* prepare to edit a line */
-static void     gl_cleanup(void);	/* to undo gl_init */
-void            gl_char_init(void);	/* get ready for no echo input */
-void            gl_char_cleanup(void);	/* undo gl_char_init */
-static size_t 	(*gl_strlen)() = (size_t(*)())strlen; 
-					/* returns printable prompt width */
-
-static void     gl_addchar(cligen_handle h, int c);	/* install specified char */
-static void     gl_del(cligen_handle h, int loc);	/* del, either left (-1) or cur (0) */
-static void     gl_error(char *buf);	/* write error msg and die */
-static void     gl_fixup(cligen_handle h, char*,int,int);/* fixup state variables and screen */
-static int      gl_getc(cligen_handle h);	        /* read one char from terminal */
-static void     gl_kill(cligen_handle h, int pos);	/* delete to EOL */
-static void     gl_kill_begin(cligen_handle h, int pos);	/* delete to BEGIN of line */
-static void     gl_kill_word(cligen_handle h, int pos);	/* delete word */
-static void     gl_newline(cligen_handle);	/* handle \n or \r */
-static int      gl_putc(int c);		/* write one char to terminal */
-static int      gl_puts(char *buf);	/* write a line to terminal */
-
-static void     gl_transpose(cligen_handle h);	/* transpose two chars */
-static void     gl_yank(cligen_handle h);		/* yank killed text */
-static void     gl_word(cligen_handle h, int dir);	/* move a word */
-
-static void     hist_init(void);	/* initializes hist pointers */
-static char    *hist_next(void);	/* return ptr to next item */
-static char    *hist_prev(void);	/* return ptr to prev item */
-static char    *hist_save(char *p);	/* makes copy of a string, without NL */
-
-static void     search_addchar(cligen_handle h, int c);	/* increment search string */
-static void     search_term(cligen_handle);	/* reset with current contents */
-static void     search_back(cligen_handle h, int new);	/* look back for current string */
-static void     search_forw(cligen_handle h, int new);	/* look forw for current string */
 
 /************************ nonportable part *********************************/
 
@@ -580,6 +571,9 @@ gl_setwidth(int  w)
     }
 }
 
+/*! main getline function. 
+ * Typically called by cliread.
+ */
 char *
 gl_getline(cligen_handle h)
 {
@@ -606,8 +600,9 @@ gl_getline(cligen_handle h)
             else{
 	    if (escape ==0 && c == '?' && gl_qmark_hook) {
 		escape = 0;
-		if (gl_qmark_hook(h, gl_buf, gl_pos))
-		    gl_fixup(h, gl_prompt, -2, gl_pos);
+		if ((loc = gl_qmark_hook(h, gl_buf, gl_pos)) < 0)
+		    goto err;
+		gl_fixup(h, gl_prompt, -2, gl_pos);
 	    }
 	    else{ 
 		escape = 0;
@@ -632,12 +627,11 @@ gl_getline(cligen_handle h)
 	    }
 	    /* special exit characters */
 	    if (gl_exitchar(c))
-		return gl_exit(h);
+		goto exit;
 	    switch (c) {
 	    case '\n': case '\r': 			/* newline */
 		gl_newline(h);
-		gl_cleanup();
-		return gl_buf;
+		goto done;
 		/*NOTREACHED*/
 		break; 
 	    case '\001': gl_fixup(h, gl_prompt, -1, 0);		/* ^A */
@@ -645,11 +639,10 @@ gl_getline(cligen_handle h)
 	    case '\002': gl_fixup(h, gl_prompt, -1, gl_pos-1);	/* ^B */
 		break;
 	    case '\004':					/* ^D */
-		if (gl_cnt == 0) {
-		    return gl_exit(h);
-		} else {
+		if (gl_cnt == 0) 
+		    goto exit;
+		else 
 		    gl_del(h, 0);
-		}
 		break;
 	    case '\005': gl_fixup(h, gl_prompt, -1, gl_cnt);	/* ^E */
 		break;
@@ -660,9 +653,13 @@ gl_getline(cligen_handle h)
 	    case '\t':        				/* TAB */
                 if (gl_tab_hook) {
 		    tmp = gl_pos;
-	            loc = gl_tab_hook(h, gl_buf, gl_strlen(gl_prompt), &tmp);
-	            if (loc != -1 || tmp != gl_pos)
-	                gl_fixup(h, gl_prompt, loc, tmp);
+	            if ((loc = gl_tab_hook(h, gl_buf, gl_strlen(gl_prompt), &tmp)) < 0)
+			goto err;
+		    gl_fixup(h, gl_prompt, -2, tmp);
+#if 0
+                 if (loc != -1 || tmp != gl_pos)
+                       gl_fixup(h, gl_prompt, loc, tmp);
+#endif
                 }
 		break;
 	    case '\013': gl_kill(h, gl_pos);			/* ^K */
@@ -702,10 +699,8 @@ gl_getline(cligen_handle h)
 				       gl_buf, gl_strlen(gl_prompt), &tmp);
 	            if (loc != -1 || tmp != gl_pos)
 	                gl_fixup(h, gl_prompt, loc, tmp);
-		    if (strchr (gl_buf, '\n')) {
-			gl_cleanup();
-			return gl_buf;
-		    }
+		    if (strchr (gl_buf, '\n')) 
+			goto done;
 		}
 		break;
 	    case '\033':	/* ansi arrow keys (ESC) */
@@ -770,10 +765,15 @@ gl_getline(cligen_handle h)
 		break;
 	    }
 	}
-    }
-    gl_cleanup();
+    } /* while */
     gl_buf[0] = 0;
+ done:
+    gl_cleanup();
     return gl_buf;
+ exit: /* ie exit from cli, not necessarily error */
+    return gl_exit(h);
+ err: /* fatal error */
+    return NULL;
 }
 
 /*! adds the character c to the input buffer at current location */
@@ -1036,8 +1036,6 @@ gl_redraw(cligen_handle h)
     }
 }
 
-
-
 /*! Redrawing or moving within line
  *
  * This function is used both for redrawing when input changes or for
@@ -1166,10 +1164,10 @@ gl_fixup_noscroll(cligen_handle h,
  *            move just past the end of the input line.
  */
 static void
-gl_fixup(cligen_handle h, 
-	 char         *prompt, 
-	 int           change, 
-	 int           cursor)
+gl_fixup_scroll(cligen_handle h, 
+		char         *prompt, 
+		int           change, 
+		int           cursor)
 {
     int          left = 0, right = -1;		/* bounds for redraw */
     int          pad;		/* how much to erase at end of line */
@@ -1180,8 +1178,6 @@ gl_fixup(cligen_handle h,
     int          new_right = -1; /* alternate right bound, using gl_extent */
     int          l1, l2;
 
-    if (gl_scrolling_mode == 0)
-	return gl_fixup_noscroll(h, prompt, change, cursor);
     if (change == -2) {   /* reset */
 	gl_pos = gl_cnt = fixup_gl_shift = fixup_off_right = fixup_off_left = 0;
 	gl_putc('\r');
@@ -1228,8 +1224,7 @@ gl_fixup(cligen_handle h,
 	new_shift *= gl_scrollw;
     } else
 	new_shift = 0;
-    if (gl_scrolling_mode && 
-	new_shift != fixup_gl_shift) {	/* scroll occurs */
+    if (new_shift != fixup_gl_shift) {	/* scroll occurs */
 	fixup_gl_shift = new_shift;
 	fixup_off_left = (fixup_gl_shift)? 1 : 0;
 	fixup_off_right = (gl_cnt > fixup_gl_shift + gl_width - 1)? 1 : 0;
@@ -1277,6 +1272,18 @@ gl_fixup(cligen_handle h,
 	    gl_putc(cligen_buf(h)[i]);
     }
     gl_pos = cursor;
+}
+
+static inline void
+gl_fixup(cligen_handle h, 
+	 char         *prompt, 
+	 int           change, 
+	 int           cursor)
+{
+    if (gl_scrolling_mode)
+	return gl_fixup_scroll(h, prompt, change, cursor);
+    else
+	return gl_fixup_noscroll(h, prompt, change, cursor);
 }
 
 /* default tab handler, acts like tabstops every 8 cols */

@@ -98,10 +98,10 @@ int cligen_tabmode_set(cligen_handle h, int mode);
 char *cligen_buf(cligen_handle h);
 char *cligen_killbuf(cligen_handle h);
 
-int       gl_bufsize(cligen_handle h);
-int       gl_buf_init(cligen_handle h);
-int       gl_buf_cleanup(cligen_handle h);
-int       gl_buf_increase(cligen_handle h);
+int   gl_bufsize(cligen_handle h);
+int   gl_buf_init(cligen_handle h);
+int   gl_buf_cleanup(cligen_handle h);
+int   gl_buf_increase(cligen_handle h);
 
 /* hack */
 int cligen_parsetree_expand(cligen_handle h, parse_tree ***pt, int **e_len, int **e_i);

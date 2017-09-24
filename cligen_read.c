@@ -84,7 +84,8 @@ static int complete(cligen_handle h, char *s0, int *lenp, parse_tree pt, cvec *c
  * Just show help by calling long help show function. 
  * @param[in]  string Input string to match
  * @param[in]  cursor_loc - Location of cursor
- * @retval  1 (OK: required by getline)
+ * @retval  0 OK: required by getline
+ * @retval -1 Error
  * @note Flaw related to getline: Errors from sub-functions are ignored
  * @see cli_tab_hook
  */
@@ -93,35 +94,34 @@ cli_qmark_hook(void *arg,
 	       char *string, 
 	       int   cursor_loc)
 {
-    cligen_handle h = (cligen_handle)arg;
-    parse_tree   *pt;     /* Orig parse-tree */
     int           retval = -1;
-    parse_tree    ptn={0,};     /* Expanded */
+    cligen_handle h = (cligen_handle)arg;
+    parse_tree   *pt=NULL;     /* Orig parse-tree */
+    parse_tree    ptn={0,};    /* Expanded */
     cvec         *cvec = NULL;
 
     fputs ("\n", stdout);
-    if ((pt = cligen_tree_active_get(h)) == NULL){
-	fprintf(stderr, "No active parse-tree found\n");
-	return -1;
-    }
+    if ((pt = cligen_tree_active_get(h)) == NULL)
+	goto ok;
     if (pt_expand_treeref(h, NULL, pt) < 0) /* sub-tree expansion */
-	goto quit; 
+	goto done; 
     if ((cvec = cvec_start(string)) == NULL)
-	goto quit;
+	goto done;
     if (pt_expand_2(h, pt, cvec, &ptn, 1) < 0)      /* expansion */
 	return -1;
     if (show_help_line(h, stdout, string, ptn, cvec) <0)
-	goto quit;
-    retval = 1;
-  quit:
+	goto done;
+ ok:
+    retval = 0;
+  done:
     if (cvec)
 	cvec_free(cvec);
     if (cligen_parsetree_free(ptn, 0) < 0)
 	return -1;
-    if (pt_expand_cleanup_2(*pt) < 0) 
+    if (pt && pt_expand_cleanup_2(*pt) < 0) 
 	return -1;
-    if (pt_expand_treeref_cleanup(pt) < 0) 
-	goto quit;
+    if (pt && pt_expand_treeref_cleanup(pt) < 0) 
+	return -1;
     return retval;
 }
 
@@ -132,7 +132,8 @@ cli_qmark_hook(void *arg,
  * @param[in]     string       Input string to match
  * @param[in]     prompt_width Not used (required by getline)
  * @param[in,out] cursorp      Pointer to location of cursor on entry and exit
- * @retval  -2 (value != -1 required by getline)
+ * @retval  -1    Error
+ * @retval  -2    (value != -1 required by getline)
  * @note Flaw related to getline: Errors from sub-functions are ignored
  * @see cli_qmark_hook
  */
@@ -142,47 +143,46 @@ cli_tab_hook(void *arg,
 	     int   prompt_width, 
 	     int  *cursorp)
 {
+    int           retval = -1;
     cligen_handle h = (cligen_handle)arg;
     int	          old_cursor;
     parse_tree   *pt;     /* Orig */
-    int           retval = -1;
     parse_tree    ptn={0,};     /* Expanded */
     cvec         *cvec = NULL;
 
     old_cursor = *cursorp;  /* Save old location of cursor */
-    if ((pt = cligen_tree_active_get(h)) == NULL){
-	fprintf(stderr, "No active parse-tree found\n");
-	return -1;
-    }
+    if ((pt = cligen_tree_active_get(h)) == NULL)
+	goto ok;
     if (pt_expand_treeref(h, NULL, pt) < 0) /* sub-tree expansion */
-	goto quit;
+	goto done;
     if ((cvec = cvec_start(string)) == NULL)
-	goto quit; 
+	goto done; 
     if (pt_expand_2(h, pt, cvec, &ptn, 1) < 0)      /* expansion */
-	return -1;
+	goto done;
     if (complete(h, string, cursorp, ptn, cvec) < 0)
-	goto quit;
+	goto done;
     else {
 	if (old_cursor == *cursorp) { 	/* Cursor hasnt changed */
 	    fputs ("\n", stdout);
 	    if (cligen_tabmode(h) == 1){
 		if (show_help_line(h, stdout, string, ptn, cvec) < 0)
-		    goto quit;
+		    goto done;
 	    }
 	    else
 		if (show_help_columns(h, stdout, string, ptn, cvec) < 0)
-		    goto quit;
+		    goto done;
 	}
     }
-    retval = -2; /* To getline: -2 means new line, redraw everything.. */
-  quit:
+ ok:
+    retval = 0; 
+ done:
     if (cvec)
 	cvec_free(cvec);
     if (cligen_parsetree_free(ptn, 0) < 0)
 	return -1;
-    if (pt_expand_cleanup_2(*pt) < 0)
+    if (pt && pt_expand_cleanup_2(*pt) < 0)
 	return -1;
-    if (pt_expand_treeref_cleanup(pt) < 0)
+    if (pt && pt_expand_treeref_cleanup(pt) < 0)
 	return -1;
     return retval;	
 }
@@ -214,7 +214,7 @@ column_print(FILE            *fout,
     int              linenr;
     struct cmd_help *ch;
 
-    linenr = len/cnr + 1;
+    linenr = (len-1)/cnr + 1;
     for (ci=0, li = 0; li < linenr; li++) {
 	while ((ci < cnr) && (li*cnr+ci < len)) {
 	    ch = &chvec[li*cnr+ci];

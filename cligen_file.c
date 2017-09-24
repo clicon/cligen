@@ -202,7 +202,7 @@ main(int argc, char *argv[])
     pt = cligen_tree_i(h, 0); 
 
     /* map functions */
-    if (cligen_callbackv_str2fn(*pt, str2fn, NULL) < 0)     
+    if (pt && cligen_callbackv_str2fn(*pt, str2fn, NULL) < 0)     
 	goto done;
     if ((str = cvec_find_str(globals, "prompt")) != NULL)
 	cligen_prompt_set(h, str);
