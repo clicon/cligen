@@ -44,6 +44,7 @@
 #include <limits.h>
 #include <inttypes.h>
 #include <unistd.h>
+#include <ctype.h>
 #include <sys/types.h>
 #include <time.h>
 #include <sys/time.h>
@@ -1425,53 +1426,89 @@ parse_ipv6addr(char            *str,
  * parse string in colon hex notation and return a vector of chars.
  * @param[out] reason     if given, malloced err string (retval=0), needs freeing
  */
-#define MACADDR_STRLEN 17 /* 6*sizeof("xx:")-1 */
+
+#define MACADDR_OCTETS	6
+#define MACADDR_STRLEN	(MACADDR_OCTETS * 3) - 1    /* 6*sizeof("xx:")-1 */
+
 static int
 parse_macaddr(char  *str, 
-	      char   addr[6], 
+	      char   addr[MACADDR_OCTETS], 
 	      char **reason)
 {
-    char s[MACADDR_STRLEN+1], *s1, *s2;
-    int i=0;
-    int tmp; 
-    int retval = -1;
+	char *s1;
+	int n_colons;
+	unsigned int octets[MACADDR_OCTETS];
+	int i;
 
-    if ((str == NULL) || strlen(str) > MACADDR_STRLEN){
-	retval = 0;
-	if (reason && (*reason = cligen_reason("%s: Invalid macaddress", str)) == NULL)
-	    retval = -1;
-	goto done;
-    }
-    strncpy(s, str, MACADDR_STRLEN+1);
-    s2 = s;
-#ifdef HAVE_STRSEP
-    while ((s1 = strsep(&s2, ":")) != NULL)
-#else
-	while ((s1 = strtok((i==0?s2:NULL),":")) != NULL)
-#endif
-	    {
-		if (sscanf(s1, "%x", &tmp) < 1) 
-		    return -1;
-		if (tmp < 0 || 255 < tmp){
-		    retval = 0;
-		    if (reason && (*reason = cligen_reason("%s: Invalid macaddress", str)) == NULL)
-			retval = -1;
-		    goto done;
+	/*
+	 * MAC addresses are exactly MACADDR_STRLEN (17) bytes long.
+	 */
+	if ((str == NULL) || strlen(str) != MACADDR_STRLEN) {
+		if (reason && (*reason = cligen_reason("%s: Invalid MAC address (bad length)", str)) == NULL) {
+			return -1;
 		}
-		addr[i++] = (uint8_t)tmp;
-	    }
-    if (i!=6){
-	retval = 0;
-	if (reason && 
-	    (*reason = cligen_reason("%s: Invalid macaddr", str)) == NULL){
-	    retval = -1;
-	    goto done;
+		return 0;
 	}
-	goto done;
-    }
-    retval = 1; /* OK */
-  done:
-    return retval;
+
+	/*
+	 * Allow only valid charcters 0-9, a-f, A-F and ':'.
+	 */
+	n_colons = 0;
+	for (s1 = str; s1 && *s1; ++s1) {
+		if (isxdigit(*s1)) {
+			continue;
+		}
+		if (*s1 == ':') {
+			++n_colons;
+			continue;
+		}
+
+		if (reason) {
+			*reason = cligen_reason("%s: Invalid MAC address (illegal character '%c')", str, *s1);
+			if (*reason == NULL) {
+				return -1;
+			}
+		}
+		return 0;
+	}
+
+	/*
+	 * Ensure exactly 6 octets.
+	 */
+	if (n_colons != MACADDR_OCTETS - 1) {
+		if (reason) {
+			*reason = cligen_reason("%s: Invalid MAC address (should have 6 octets, not %d)", str, n_colons + 1);
+			if (*reason == NULL) {
+				return -1;
+			}
+		}
+		return 0;
+	}
+
+	/*
+	 * Ensure octets are proper two-character widths.
+	 */
+	if (str[2] != ':' || str[5] != ':' || str[8] != ':'
+	    || str[11] != ':' || str[14] != ':' || str[17] != 0) {
+		if (reason) {
+			*reason = cligen_reason("%s: Invalid MAC address (poorly formed octets)", str);
+			if (*reason == NULL) {
+				return -1;
+			}
+		}
+		return 0;
+	}
+
+	sscanf(str,
+	       "%x:%02x:%02x:%02x:%02x:%02x",
+	       octets + 0, octets + 1, octets + 2,
+	       octets + 3, octets + 4, octets + 5);
+
+	for (i = 0; i < MACADDR_OCTETS; ++i) {
+		addr[i] = octets[i];
+	}
+
+	return 1;	/* OK */
 }
 
 /*! Parse URL
