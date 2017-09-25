@@ -790,7 +790,7 @@ match_pattern_node(cligen_handle h,
  *                       this.
  * @param[in]  hide
  * @param[out] ptp       Returns the vector at the place of matching
- * @param[out] matchv    A vector of integers containing which 
+ * @param[out] matchv    A vector of integers containing which matches
  * @param[out] matchlen  Length of matchv. That is, # of matches and same as 
  *                       return value (if 0-n)
  * @param[out] cvec      cligen variable vector containing vars/values pair for completion
@@ -958,8 +958,7 @@ match_pattern_exact(cligen_handle h,
  * 
  * @param[in]  h       cligen handle
  * @param[in]  string  Input string to match
- * @param[in]  pt      Vector of commands (array of cligen object pointers (cg_obj)
- * @param[in]  pt_max  Length of the pt array
+ * @param[in]  pt      Vector of commands (array of cligen object pointers)
  * @param[in]  maxlen  Max length of string
  * @param[out] cvec    cligen variable vector containing vars/values pair for 
  *                     completion

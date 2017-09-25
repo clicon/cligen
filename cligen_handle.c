@@ -47,7 +47,9 @@
 #define __USE_GNU /* strverscmp */
 #include <string.h>
 #include <errno.h>
-
+#include <termios.h>
+#include <signal.h>
+#include <sys/ioctl.h>
 
 #include "cligen_buf.h"
 #include "cligen_var.h"
@@ -79,6 +81,8 @@
  * Constants
  */
 #define TERM_ROWS_DEFAULT 24
+#define GETLINE_BUFLEN_DEFAULT 64 /* startsize, increased with 2x when run out */
+
 
 /*! list of cligen parse-trees, can be searched, and activated */
 typedef struct parse_tree_list  { /* Linked list of cligen parse-trees */
@@ -120,7 +124,24 @@ struct cligen_handle{
     void       *ch_userdata;     /* application-specific data (any data) */
 };
 
+/*! Get window size and set terminal row size
+ */
+static int
+cligen_gwinsz(cligen_handle h)
+{
+    struct winsize ws;
 
+    if (ioctl(STDIN_FILENO, TIOCGWINSZ, &ws) == -1)
+	return -1;
+    cligen_terminalrows_set(h, ws.ws_row);
+    cligen_terminal_length_set(h, ws.ws_col);
+    return 0;
+}
+
+void
+sigwinch_handler(int arg)
+{
+}
 
 /*! This is the first call the CLIgen API and returns a handle. 
  */
@@ -128,7 +149,8 @@ cligen_handle
 cligen_init(void)
 {
     struct cligen_handle *ch;
-    cligen_handle h = NULL;
+    cligen_handle         h = NULL;
+    struct sigaction      sigh;
 
     if ((ch = malloc(sizeof(*ch))) == NULL){
 	fprintf(stderr, "%s: malloc: %s\n", __FUNCTION__, strerror(errno));
@@ -138,9 +160,17 @@ cligen_init(void)
     ch->ch_magic = CLIGEN_MAGIC;
     h = (cligen_handle)ch;
     cligen_prompt_set(h, CLIGEN_PROMPT_DEFAULT);
-    cligen_terminalrows_set(h, TERM_ROWS_DEFAULT);
+    if (cligen_gwinsz(h) < 0)
+	return NULL;
+    cligen_interrupt_hook(h, cligen_gwinsz);
+    memset(&sigh, 0, sizeof(sigh));
+    sigh.sa_handler = sigwinch_handler;
+    if (sigaction(SIGWINCH, &sigh, NULL) < 0){
+	perror("sigaction");
+	return NULL;
+    }
     cliread_init(h);
-    gl_buf_init(h);
+    cligen_buf_init(h);
 
   done:
     return h;
@@ -156,7 +186,7 @@ cligen_exit(cligen_handle h)
     parse_tree_list *ptl;
 
     gl_histclear();
-    gl_buf_cleanup(h);
+    cligen_buf_cleanup(h);
     if (ch->ch_prompt)
 	free(ch->ch_prompt);
     if (ch->ch_nomatch)
@@ -700,8 +730,38 @@ cligen_terminal_length_set(cligen_handle h,
     struct cligen_handle *ch = handle(h);
 
     ch->ch_terminal_length = length;
+    if (length < TERM_MIN_SCREEN_WIDTH)
+	length = TERM_MIN_SCREEN_WIDTH;
     gl_setwidth(length);
     return 0;
+}
+
+/*! Get line scrolling mode
+ *
+ * @param[in] h       CLIgen handle
+ * @retval    0       Line scrolling off
+ * @retval    1       Line scrolling on
+ */
+int 
+cligen_line_scrolling(cligen_handle h)
+{
+    return gl_getscrolling();
+}
+
+/*! Set line scrolling mode
+ *
+ * @param[in] h      CLIgen handle
+ * @param[in] mode   0: turn line scrolling off, 1: turn on
+ * @retval    old    Previous setting
+ */
+int 
+cligen_line_scrolling_set(cligen_handle h,
+			  int           mode)
+{
+    int prev = gl_getscrolling();
+
+    gl_setscrolling(mode);
+    return prev;
 }
 
 
@@ -723,6 +783,20 @@ cligen_tabmode(cligen_handle h)
  *
  * @param[in] h       CLIgen handle
  * @param[in] mode    0 is 'short/ios' mode, 1 is long/junos mode.
+ * Two ways to show commands: show_help_column and show_help_line
+ * show_help_line
+ *  cli> interface name 
+ * 100GigabyteEthernet6/0/0 TenGigabyteEthernet6/0/0 TenGigabyteEthernet6/0
+ * TenGigabyteEthernet6/0/0 TenGigabyteEthernet6/0/0 TenGigabyteEthernet6/0
+ *
+ * show_help_columns:
+ * cli> interface name TenGigabyteEthernet6/0/0.
+ * TenGigabyteEthernet6/0/0 This is one mighty interface
+ * TenGigabyteEthernet6/0/0 This is one mighty interface
+ *
+ * short/ios:  ?:   show_multi_long
+ *             TAB: show_multi  (many columns)
+ * long/junos: TAB and ?: show_multi_long
  */
 int 
 cligen_tabmode_set(cligen_handle h, 
@@ -844,7 +918,7 @@ cligen_userhandle_set(cligen_handle h,
     return 0;
 }
 
-static int _getline_bufsize = 128;
+static int _getline_bufsize = GETLINE_BUFLEN_DEFAULT;
 
 /*!
  * @param[in] h       CLIgen handle
@@ -872,7 +946,7 @@ cligen_killbuf(cligen_handle h)
  * @param[in] h       CLIgen handle
  */
 int 
-gl_bufsize(cligen_handle h)
+cligen_buf_size(cligen_handle h)
 {
     return _getline_bufsize;
 }
@@ -881,15 +955,19 @@ gl_bufsize(cligen_handle h)
  * @param[in] h       CLIgen handle
  */
 int
-gl_buf_init(cligen_handle h)
+cligen_buf_init(cligen_handle h)
 {
     struct cligen_handle *ch = handle(h);
 
-    if ((ch->ch_buf = malloc(_getline_bufsize)) == NULL)
+    if ((ch->ch_buf = malloc(_getline_bufsize)) == NULL){
+	perror("malloc");
 	return -1;
+    }
     memset(ch->ch_buf, 0, _getline_bufsize);
-    if ((ch->ch_killbuf = malloc(_getline_bufsize)) == NULL)
+    if ((ch->ch_killbuf = malloc(_getline_bufsize)) == NULL){
+	perror("malloc");
 	return -1;
+    }
     memset(ch->ch_killbuf, 0, _getline_bufsize);
     return 0;
 }
@@ -898,7 +976,7 @@ gl_buf_init(cligen_handle h)
  * @param[in] h       CLIgen handle
  */
 int       
-gl_buf_increase(cligen_handle h)
+cligen_buf_increase(cligen_handle h)
 {
     struct cligen_handle *ch = handle(h);
     int len0 = _getline_bufsize;
@@ -917,7 +995,7 @@ gl_buf_increase(cligen_handle h)
  * @param[in] h       CLIgen handle
  */
 int
-gl_buf_cleanup(cligen_handle h)
+cligen_buf_cleanup(cligen_handle h)
 {
     struct cligen_handle *ch = handle(h);
     if (ch->ch_buf){

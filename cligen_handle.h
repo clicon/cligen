@@ -39,6 +39,7 @@
  * Constants
  */
 #define CLIGEN_PROMPT_DEFAULT "cli> "
+#define TERM_MIN_SCREEN_WIDTH 21 /* hardcoded by getline */
 
 /*
  * Prototypes
@@ -88,16 +89,19 @@ int cligen_terminalrows_set(cligen_handle h, int rows);
 int cligen_terminal_length(cligen_handle h);
 int cligen_terminal_length_set(cligen_handle h, int length);
 
+int cligen_line_scrolling(cligen_handle h);
+int cligen_line_scrolling_set(cligen_handle h, int mode);
+
 int cligen_tabmode(cligen_handle h);
 int cligen_tabmode_set(cligen_handle h, int mode);
 
-char *cligen_buf(cligen_handle h);
 char *cligen_killbuf(cligen_handle h);
 
-int       gl_bufsize(cligen_handle h);
-int       gl_buf_init(cligen_handle h);
-int       gl_buf_cleanup(cligen_handle h);
-int       gl_buf_increase(cligen_handle h);
+char *cligen_buf(cligen_handle h);
+int   cligen_buf_size(cligen_handle h);
+int   cligen_buf_init(cligen_handle h);
+int   cligen_buf_cleanup(cligen_handle h);
+int   cligen_buf_increase(cligen_handle h);
 
 /* hack */
 int cligen_parsetree_expand(cligen_handle h, parse_tree ***pt, int **e_len, int **e_i);

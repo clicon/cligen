@@ -18,7 +18,12 @@
 
 #include <stddef.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <netinet/in.h>
+#include <string.h>
+#include <ctype.h>
+#include <errno.h>
+#include <signal.h>
 
 #include "cligen_buf.h"
 #include "cligen_var.h"
@@ -27,72 +32,21 @@
 #include "cligen_io.h"
 #include "cligen_handle.h"
 
-#include       "getline.h"
+#include "getline.h" /* exported interface */
 
+/********************* exported variables ********************************/
 static int      gl_tab();  /* forward reference needed for gl_tab_hook */
 
-/******************** imported interface *********************************/
-
-#include <string.h>
-#include <ctype.h>
-#include <errno.h>
-#include <signal.h>
-
-#include <stdlib.h>
-
-/********************* exported interface ********************************/
-
-char           *gl_getline();		/* read a line of input */
-void            gl_setwidth();		/* specify width of screen */
-int             gl_getwidth();          /* get width of screen */
-void            gl_histadd();		/* adds entries to hist */
-void            gl_histclear();		/* clears entries to hist */
-void		gl_strwidth();		/* to bind gl_strlen */
-
-int 		(*gl_in_hook)() = 0;
-int 		(*gl_out_hook)() = 0;
-int 		(*gl_tab_hook)() = gl_tab;
-int 		(*gl_qmark_hook)() = 0;
-int		(*gl_susp_hook)() = 0;
+int (*gl_in_hook)() = NULL;
+int (*gl_out_hook)() = NULL;
+int (*gl_tab_hook)() = gl_tab;
+int (*gl_qmark_hook)() = NULL;
+int (*gl_susp_hook)() = NULL;
+int (*gl_interrupt_hook)() = NULL;
 
 /******************** internal interface *********************************/
 
-/* XXX: begin global variables */
-static int      gl_init_done = -1;	/* terminal mode flag  */
-static int      gl_termw = 80;		/* actual terminal width */
-static int      gl_scroll = 27;		/* width of EOL scrolling region */
-static int      gl_width = 0;		/* net size available for input */
-static int      gl_extent = 0;		/* how far to redraw, 0 means all */
-static int      gl_overwrite = 0;	/* overwrite mode */
-static int      gl_pos, gl_cnt = 0;     /* position and size of input */
-
-static char     gl_intrc = 0;		/* keyboard SIGINT char (^C) */
-static char     gl_quitc = 0;		/* keyboard SIGQUIT char (^]) */
-static char     gl_suspc = 0;		/* keyboard SIGTSTP char (^Z) */
-static char     gl_dsuspc = 0;		/* delayed SIGTSTP char */
-static int      gl_search_mode = 0;	/* search mode flag */
-
-static int exitchars[8] = {0,}; /* 8 different exit chars should be enough */
-static int gl_iseof = 0;
-
-    static int   fixup_gl_shift;	/* index of first on screen character */
-    static int   fixup_off_right;	/* true if more text right of screen */
-    static int   fixup_off_left;	/* true if more text left of screen */
-    static char  fixup_last_prompt[80] = "";
-
-#define HIST_SIZE 100
-static int      hist_pos = 0, hist_last = 0;
-static char    *hist_buf[HIST_SIZE];
-static char    *hist_pre = 0;
-
-static char  search_prompt[101];  /* prompt includes search string */
-static char  search_string[100];
-static int   search_pos = 0;      /* current location in search_string */
-static int   search_forw_flg = 0; /* search direction flag */
-static int   search_last = 0;	  /* last match found */
-
-/* XXX: end global variables */
-
+/* begin forward declared internal functions */
 static void     gl_init(void);		/* prepare to edit a line */
 static void     gl_cleanup(void);	/* to undo gl_init */
 void            gl_char_init(void);	/* get ready for no echo input */
@@ -103,7 +57,7 @@ static size_t 	(*gl_strlen)() = (size_t(*)())strlen;
 static void     gl_addchar(cligen_handle h, int c);	/* install specified char */
 static void     gl_del(cligen_handle h, int loc);	/* del, either left (-1) or cur (0) */
 static void     gl_error(char *buf);	/* write error msg and die */
-static void     gl_fixup(cligen_handle h, char*,int,int);/* fixup state variables and screen */
+static inline void gl_fixup(cligen_handle h, char*,int,int);/* fixup state variables and screen */
 static int      gl_getc(cligen_handle h);	        /* read one char from terminal */
 static void     gl_kill(cligen_handle h, int pos);	/* delete to EOL */
 static void     gl_kill_begin(cligen_handle h, int pos);	/* delete to BEGIN of line */
@@ -125,6 +79,45 @@ static void     search_addchar(cligen_handle h, int c);	/* increment search stri
 static void     search_term(cligen_handle);	/* reset with current contents */
 static void     search_back(cligen_handle h, int new);	/* look back for current string */
 static void     search_forw(cligen_handle h, int new);	/* look forw for current string */
+/* end forward declared internal functions */
+
+/* begin global variables */
+static int      gl_init_done = -1;	/* terminal mode flag  */
+static int      gl_termw = 80;		/* actual terminal width */
+static int      gl_scrolling_mode = 1;	/* Scrolling on / off */
+static int      gl_scrollw = 27;	/* width of EOL scrolling region */
+static int      gl_width = 0;		/* net size available for input */
+static int      gl_extent = 0;		/* how far to redraw, 0 means all */
+static int      gl_overwrite = 0;	/* overwrite mode */
+static int      gl_pos, gl_cnt = 0;     /* position and size of input */
+
+static char     gl_intrc = 0;		/* keyboard SIGINT char (^C) */
+static char     gl_quitc = 0;		/* keyboard SIGQUIT char (^]) */
+static char     gl_suspc = 0;		/* keyboard SIGTSTP char (^Z) */
+static char     gl_dsuspc = 0;		/* delayed SIGTSTP char */
+static int      gl_search_mode = 0;	/* search mode flag */
+
+static int exitchars[8] = {0,}; /* 8 different exit chars should be enough */
+static int gl_iseof = 0;
+
+static int   fixup_gl_shift;	/* index of first on screen character */
+static int   fixup_off_right;	/* true if more text right of screen */
+static int   fixup_off_left;	/* true if more text left of screen */
+static char  fixup_last_prompt[80] = "";
+
+#define HIST_SIZE 100
+static int      hist_pos = 0, hist_last = 0;
+static char    *hist_buf[HIST_SIZE];
+static char    *hist_pre = 0;
+
+static char  search_prompt[101];  /* prompt includes search string */
+static char  search_string[100];
+static int   search_pos = 0;      /* current location in search_string */
+static int   search_forw_flg = 0; /* search direction flag */
+static int   search_last = 0;	  /* last match found */
+
+/* end global variables */
+
 
 /************************ nonportable part *********************************/
 
@@ -270,8 +263,7 @@ gl_char_cleanup(void)		/* undo effects of gl_char_init */
 }
 
 #if MSDOS || __EMX__ || __GO32__
-int pc_keymap(c)
-int c;
+int pc_keymap(int c)
 {
     switch (c) {
     case 72: c = 16;   /* up -> ^P */
@@ -300,7 +292,9 @@ static struct regfd *extfds = NULL;
 
 /* XXX: If arg is malloced, the treatment of arg creates leaks */
 int
-gl_regfd(int fd, cligen_fd_cb_t *cb, void *arg)
+gl_regfd(int fd, 
+	 cligen_fd_cb_t *cb, 
+	 void *arg)
 {
     int i;
     struct regfd *tmp;
@@ -415,9 +409,9 @@ gl_exit(cligen_handle h)
     return gl_buf;
 }
 
+/*! Get a character without echoing it to screen */
 static int
 gl_getc(cligen_handle h)
-/* get a character without echoing it to screen */
 {
     int             c;
 #ifdef __unix__
@@ -425,12 +419,16 @@ gl_getc(cligen_handle h)
 #endif
 
 #if CLIGEN_REGFD 
-    gl_select(); /* block until something arives on stdin */
+    gl_select(); /* block until something arrives on stdin */
 #endif
 #ifdef __unix__
     while ((c = read(0, &ch, 1)) == -1) {
-	if (errno != EINTR)
-	    break;
+	if (errno == EINTR){
+	    if (gl_interrupt_hook(h) <0)
+		return -1;
+	    continue;
+	}
+	break;
     }
     if (c == 0){
 	gl_iseof++;
@@ -479,8 +477,7 @@ gl_getc(cligen_handle h)
 }
 
 static int
-gl_putc(c)
-int     c;
+gl_putc(int c)
 {
     char   ch = c;
 
@@ -497,8 +494,7 @@ int     c;
 /******************** fairly portable part *********************************/
 
 static int
-gl_puts(buf)
-char *buf;
+gl_puts(char *buf)
 {
     int len; 
     
@@ -511,8 +507,7 @@ char *buf;
 }
 
 static void
-gl_error(buf)
-char *buf;
+gl_error(char *buf)
 {
     int len = strlen(buf);
 
@@ -522,9 +517,9 @@ char *buf;
     exit(1);
 }
 
+/*! set up variables and terminal */
 static void
 gl_init()
-/* set up variables and terminal */
 {
     gl_iseof = 0;
     if (gl_init_done < 0) {		/* -1 only on startup */
@@ -548,41 +543,53 @@ gl_cleanup()
 }
 
 int
+gl_getscrolling(void)
+{
+    return gl_scrolling_mode;
+}
+
+void
+gl_setscrolling(int  mode)
+{
+    gl_scrolling_mode = mode;
+}
+
+int
 gl_getwidth(void)
 {
     return gl_termw;
 }
 
 void
-gl_setwidth(w)
-int  w;
+gl_setwidth(int  w)
 {
-    if (w > 20) {
+    if (w > TERM_MIN_SCREEN_WIDTH-1) {
 	gl_termw = w;
-	gl_scroll = w / 3;
+	gl_scrollw = w / 3;
     } else {
 	gl_error("\n*** Error: minimum screen width is 21\n");
     }
 }
 
+/*! main getline function. 
+ * Typically called by cliread.
+ */
 char *
 gl_getline(cligen_handle h)
 {
     int             c, loc, tmp;
-    char           *gl_buf;
     char           *gl_prompt;
     int             escape = 0;
 #ifdef __unix__
     int	            sig;
 #endif
 
-    gl_buf = cligen_buf(h);
     gl_init();	
     gl_prompt = (cligen_prompt(h))? cligen_prompt(h) : "";
-    gl_buf[0] = 0;
+    cligen_buf(h)[0] = 0;
     if (gl_in_hook)
-	gl_in_hook(h, gl_buf);
-    gl_fixup(h, gl_prompt, -2, gl_bufsize(h));
+	gl_in_hook(h, cligen_buf(h));
+    gl_fixup(h, gl_prompt, -2, cligen_buf_size(h));
     while ((c = gl_getc(h)) >= 0) {
 	gl_extent = 0;  	/* reset to full extent */
 	if (isprint(c)) {
@@ -591,8 +598,9 @@ gl_getline(cligen_handle h)
             else{
 	    if (escape ==0 && c == '?' && gl_qmark_hook) {
 		escape = 0;
-		if (gl_qmark_hook(h, gl_buf, gl_pos))
-		    gl_fixup(h, gl_prompt, -2, gl_pos);
+		if ((loc = gl_qmark_hook(h, cligen_buf(h), gl_pos)) < 0)
+		    goto err;
+		gl_fixup(h, gl_prompt, -2, gl_pos);
 	    }
 	    else{ 
 		escape = 0;
@@ -617,12 +625,11 @@ gl_getline(cligen_handle h)
 	    }
 	    /* special exit characters */
 	    if (gl_exitchar(c))
-		return gl_exit(h);
+		goto exit;
 	    switch (c) {
 	    case '\n': case '\r': 			/* newline */
 		gl_newline(h);
-		gl_cleanup();
-		return gl_buf;
+		goto done;
 		/*NOTREACHED*/
 		break; 
 	    case '\001': gl_fixup(h, gl_prompt, -1, 0);		/* ^A */
@@ -630,11 +637,10 @@ gl_getline(cligen_handle h)
 	    case '\002': gl_fixup(h, gl_prompt, -1, gl_pos-1);	/* ^B */
 		break;
 	    case '\004':					/* ^D */
-		if (gl_cnt == 0) {
-		    return gl_exit(h);
-		} else {
+		if (gl_cnt == 0) 
+		    goto exit;
+		else 
 		    gl_del(h, 0);
-		}
 		break;
 	    case '\005': gl_fixup(h, gl_prompt, -1, gl_cnt);	/* ^E */
 		break;
@@ -645,9 +651,13 @@ gl_getline(cligen_handle h)
 	    case '\t':        				/* TAB */
                 if (gl_tab_hook) {
 		    tmp = gl_pos;
-	            loc = gl_tab_hook(h, gl_buf, gl_strlen(gl_prompt), &tmp);
-	            if (loc != -1 || tmp != gl_pos)
-	                gl_fixup(h, gl_prompt, loc, tmp);
+	            if ((loc = gl_tab_hook(h, cligen_buf(h), gl_strlen(gl_prompt), &tmp)) < 0)
+			goto err;
+		    gl_fixup(h, gl_prompt, -2, tmp);
+#if 0
+                 if (loc != -1 || tmp != gl_pos)
+                       gl_fixup(h, gl_prompt, loc, tmp);
+#endif
                 }
 		break;
 	    case '\013': gl_kill(h, gl_pos);			/* ^K */
@@ -656,18 +666,18 @@ gl_getline(cligen_handle h)
 		    gl_clear_screen(h);				/* ^L */
 		break;
 	    case '\016': 					/* ^N */
-		strncpy(gl_buf, hist_next(), gl_bufsize(h));
+		strncpy(cligen_buf(h), hist_next(), cligen_buf_size(h));
                 if (gl_in_hook)
-	            gl_in_hook(h, gl_buf);
-		gl_fixup(h, gl_prompt, 0, gl_bufsize(h));
+	            gl_in_hook(h, cligen_buf(h));
+		gl_fixup(h, gl_prompt, 0, cligen_buf_size(h));
 		break;
 	    case '\017': gl_overwrite = !gl_overwrite;       	/* ^O */
 		break;
 	    case '\020': 					/* ^P */
-		strncpy(gl_buf, hist_prev(), gl_bufsize(h));
+		strncpy(cligen_buf(h), hist_prev(), cligen_buf_size(h));
                 if (gl_in_hook)
-	            gl_in_hook(h, gl_buf);
-		gl_fixup(h, gl_prompt, 0, gl_bufsize(h));
+	            gl_in_hook(h, cligen_buf(h));
+		gl_fixup(h, gl_prompt, 0, cligen_buf_size(h));
 		break;
 	    case '\022': search_back(h, 1);			/* ^R */
 		break;
@@ -685,13 +695,11 @@ gl_getline(cligen_handle h)
 		if(gl_susp_hook) {
 		    tmp = gl_pos;
 	            loc = gl_susp_hook(cligen_userhandle(h)?cligen_userhandle(h):h,
-				       gl_buf, gl_strlen(gl_prompt), &tmp);
+				       cligen_buf(h), gl_strlen(gl_prompt), &tmp);
 	            if (loc != -1 || tmp != gl_pos)
 	                gl_fixup(h, gl_prompt, loc, tmp);
-		    if (strchr (gl_buf, '\n')) {
-			gl_cleanup();
-			return gl_buf;
-		    }
+		    if (strchr (cligen_buf(h), '\n')) 
+			goto done;
 		}
 		break;
 	    case '\033':	/* ansi arrow keys (ESC) */
@@ -700,16 +708,16 @@ gl_getline(cligen_handle h)
 		if (c == '[' || c == 'O') { 
 		    switch(c = gl_getc(h)) {
 		    case 'A':             			/* up */
-			strncpy(gl_buf, hist_prev(), gl_bufsize(h));
+			strncpy(cligen_buf(h), hist_prev(), cligen_buf_size(h));
                         if (gl_in_hook)
-	                    gl_in_hook(h, gl_buf);
-		        gl_fixup(h, gl_prompt, 0, gl_bufsize(h));
+	                    gl_in_hook(h, cligen_buf(h));
+		        gl_fixup(h, gl_prompt, 0, cligen_buf_size(h));
 		        break;
 		    case 'B':                         	/* down */
-		        strncpy(gl_buf, hist_next(), gl_bufsize(h));
+		        strncpy(cligen_buf(h), hist_next(), cligen_buf_size(h));
                         if (gl_in_hook)
-	                    gl_in_hook(h, gl_buf);
-		        gl_fixup(h, gl_prompt, 0, gl_bufsize(h));
+	                    gl_in_hook(h, cligen_buf(h));
+		        gl_fixup(h, gl_prompt, 0, cligen_buf_size(h));
 		        break;
 		    case 'C': gl_fixup(h, gl_prompt, -1, gl_pos+1); /* right */
 		        break;
@@ -756,21 +764,27 @@ gl_getline(cligen_handle h)
 		break;
 	    }
 	}
-    }
+    } /* while */
+    cligen_buf(h)[0] = 0;
+ done:
     gl_cleanup();
-    gl_buf[0] = 0;
-    return gl_buf;
+    return cligen_buf(h);
+ exit: /* ie exit from cli, not necessarily error */
+    return gl_exit(h);
+ err: /* fatal error */
+    return NULL;
 }
 
+/*! adds the character c to the input buffer at current location */
 static void
-gl_addchar(cligen_handle h, int c)
-/* adds the character c to the input buffer at current location */
+gl_addchar(cligen_handle h, 
+	   int           c)
 {
     int  i;
 
-    if (gl_cnt >= gl_bufsize(h) - 1){
-	gl_buf_increase(h);
-    }
+    if (gl_cnt >= cligen_buf_size(h) - 1)
+	cligen_buf_increase(h); /* assume increase enough for gl_pos-gl_cnt */
+
     if (gl_overwrite == 0 || gl_pos == gl_cnt) {
         for (i=gl_cnt; i >= gl_pos; i--)
             cligen_buf(h)[i+1] = cligen_buf(h)[i];
@@ -783,17 +797,17 @@ gl_addchar(cligen_handle h, int c)
     }
 }
 
+/*! adds the kill buffer to the input buffer at current location */
 static void
 gl_yank(cligen_handle h)
-/* adds the kill buffer to the input buffer at current location */
 {
     int  i, len;
 
     len = strlen(cligen_killbuf(h));
     if (len > 0) {
 	if (gl_overwrite == 0) {
-            if (gl_cnt + len >= gl_bufsize(h) - 1) {
-		gl_buf_increase(h);
+            if (gl_cnt + len >= cligen_buf_size(h) - 1) {
+		cligen_buf_increase(h);
 	    }
             for (i=gl_cnt; i >= gl_pos; i--)
                 cligen_buf(h)[i+len] = cligen_buf(h)[i];
@@ -802,8 +816,8 @@ gl_yank(cligen_handle h)
             gl_fixup(h, cligen_prompt(h), gl_pos, gl_pos+len);
 	} else {
 	    if (gl_pos + len > gl_cnt) {
-                if (gl_pos + len >= gl_bufsize(h) - 1) {
-		    gl_buf_increase(h);
+                if (gl_pos + len >= cligen_buf_size(h) - 1) {
+		    cligen_buf_increase(h);
 		}
 		cligen_buf(h)[gl_pos + len] = 0;
             }
@@ -816,9 +830,9 @@ gl_yank(cligen_handle h)
 	gl_putc('\007');
 }
 
+/*! switch character under cursor and to left of cursor */
 static void
 gl_transpose(cligen_handle h)
-/* switch character under cursor and to left of cursor */
 {
     int    c;
 
@@ -832,19 +846,19 @@ gl_transpose(cligen_handle h)
 	gl_putc('\007');
 }
 
+/*! Cleans up entire line before returning to caller. 
+ *
+ * A \n is appended. If line longer than screen, redraw starting at beginning
+ */
 static void
 gl_newline(cligen_handle h)
-/*
- * Cleans up entire line before returning to caller. A \n is appended.
- * If line longer than screen, we redraw starting at beginning
- */
 {
     int change = gl_cnt;
     int len = gl_cnt;
     int loc = gl_width - 5;	/* shifts line back to start position */
 
-    if (gl_cnt >= gl_bufsize(h) - 1) 
-        gl_error("\n*** Error: gl_getline(): input buffer overflow\n");
+    if (gl_cnt >= cligen_buf_size(h) - 1) 
+	cligen_buf_increase(h); /* assume add 2 chars, since \n\0 added */
     if (gl_out_hook) {
 	change = gl_out_hook(h, cligen_buf(h));
         len = strlen(cligen_buf(h));
@@ -857,13 +871,14 @@ gl_newline(cligen_handle h)
     gl_putc('\n');
 }
 
-static void
-gl_del(cligen_handle h, int loc)
-/*
- * Delete a character.  The loc variable can be:
+/*! Delete a character.  
+ * The loc variable can be:
  *    -1 : delete character to left of cursor
  *     0 : delete character under cursor
  */
+static void
+gl_del(cligen_handle h, 
+       int           loc)
 {
     int i;
 
@@ -875,21 +890,23 @@ gl_del(cligen_handle h, int loc)
 	gl_putc('\007');
 }
 
+/*! Delete from pos to the end of line */
 static void
-gl_kill(cligen_handle h, int pos)
-/* delete from pos to the end of line */
+gl_kill(cligen_handle h, 
+	int           pos)
 {
     if (pos < gl_cnt) {
-	strncpy(cligen_killbuf(h), cligen_buf(h) + pos, gl_bufsize(h));
+	strncpy(cligen_killbuf(h), cligen_buf(h) + pos, cligen_buf_size(h));
 	cligen_buf(h)[pos] = '\0';
 	gl_fixup(h, cligen_prompt(h), pos, pos);
     } else
 	gl_putc('\007');
 }
 
+/* Delete from pos to start of line */
 static void
-gl_kill_begin(cligen_handle h, int pos)
-/* delete from pos to start of line */
+gl_kill_begin(cligen_handle h, 
+	      int           pos)
 {
     int i;
     int len;
@@ -907,9 +924,10 @@ gl_kill_begin(cligen_handle h, int pos)
 	gl_putc('\007');
 }
 
+/*! Delete one previous word from pos */
 static void
-gl_kill_word(cligen_handle h, int pos)
-/* delete one previous word from pos */
+gl_kill_word(cligen_handle h, 
+	     int           pos)
 {
     int i, wpos;
     if (pos != 0) {
@@ -935,9 +953,11 @@ gl_kill_word(cligen_handle h, int pos)
 }
 
 
+/*! Move forward or backword one word */
 static void
-gl_word(cligen_handle h, int direction)
-/* move forward or backword one word */
+gl_word(cligen_handle h, 
+	int           direction)
+
 {
     int pos = gl_pos;
 
@@ -959,6 +979,52 @@ gl_word(cligen_handle h, int direction)
     gl_fixup(h, cligen_prompt(h), -1, pos);
 }
 
+static int
+move_cursor_up(int nr)
+{
+    gl_putc(033);
+    gl_putc('[');
+    gl_putc('1');
+    gl_putc('A');
+    return 0;
+}
+
+static int
+move_cursor_right(int nr)
+{
+    char str[16];
+    int  i;
+    gl_putc(033);
+    gl_putc('[');
+    snprintf(str, 15, "%d", nr);
+    for (i=0; i<strlen(str); i++)
+	gl_putc(str[i]);
+    gl_putc('C');
+    return 0;
+}
+
+static int
+wrap_line()
+{
+    gl_putc('\n'); /* wrap line */
+    return 0;
+}
+
+static int
+unwrap_line()
+{
+    move_cursor_up(1);
+    move_cursor_right(gl_termw-1);
+    return 0;
+}
+
+int
+wrap(int p, 
+     int plen)
+{
+    return (p+plen+1)%gl_termw==0;
+}
+
 void gl_clear_screen(cligen_handle h)
 {
 	if (gl_init_done <= 0) {
@@ -977,9 +1043,9 @@ void gl_clear_screen(cligen_handle h)
         gl_fixup(h, cligen_prompt(h), -2, gl_pos);
 }
 
+/*! Emit a newline, reset and redraw prompt and current input line */
 void
 gl_redraw(cligen_handle h)
-/* emit a newline, reset and redraw prompt and current input line */
 {
     if (gl_init_done > 0) {
         gl_putc('\n');
@@ -987,9 +1053,8 @@ gl_redraw(cligen_handle h)
     }
 }
 
-static void
-gl_fixup(cligen_handle h, char  *prompt, int change, int cursor)
-/*
+/*! Redrawing or moving within line
+ *
  * This function is used both for redrawing when input changes or for
  * moving within the input line.  The parameters are:
  *   prompt:  compared to last_prompt[] for changes;
@@ -997,9 +1062,129 @@ gl_fixup(cligen_handle h, char  *prompt, int change, int cursor)
  *            with -1 indicating no changes, -2 indicating we're on
  *            a new line, redraw everything.
  *   cursor : the desired location of the cursor after the call.
- *            A value of gl_bufsize(h) can be used  to indicate the cursor should
+ *            A value of cligen_buf_size(h) can be used  to indicate the cursor should
  *            move just past the end of the input line.
  */
+static void
+gl_fixup_noscroll(cligen_handle h, 
+		  char         *prompt, 
+		  int           change, 
+		  int           cursor)
+{
+    int          left = 0, right = -1;		/* bounds for redraw */
+    int          pad;		/* how much to erase at end of line */
+    int          backup;        /* how far to backup before fixing */
+    int          i;
+    int          p; /* pos */
+    int          new_right = -1; /* alternate right bound, using gl_extent */
+    int          l1, l2;
+    int          plen=strlen(prompt);
+
+    if (change == -2) {   /* reset */
+	gl_pos = gl_cnt = fixup_gl_shift = fixup_off_right = fixup_off_left = 0;
+	gl_putc('\r');
+	gl_puts(prompt);
+	strncpy(fixup_last_prompt, prompt, sizeof(fixup_last_prompt));
+	change = 0;
+        gl_width = gl_termw - gl_strlen(prompt);
+    } else if (strcmp(prompt, fixup_last_prompt) != 0) {
+	l1 = gl_strlen(fixup_last_prompt);
+	l2 = gl_strlen(prompt);
+	gl_cnt = gl_cnt + l1 - l2;
+	strncpy(fixup_last_prompt, prompt, sizeof(fixup_last_prompt));
+	gl_putc('\r');
+	gl_puts(prompt);
+	gl_pos = fixup_gl_shift;
+        gl_width = gl_termw - l2;
+	change = 0;
+    }
+    pad = (fixup_off_right)? gl_width - 1 : gl_cnt - fixup_gl_shift;   /* old length */
+    backup = gl_pos - fixup_gl_shift;
+    if (change >= 0) {
+        gl_cnt = strlen(cligen_buf(h));
+        if (change > gl_cnt)
+	    change = gl_cnt;
+    }
+    if (cursor > gl_cnt) {
+	if (cursor != cligen_buf_size(h))		/* cligen_buf_size(h) means end of line */
+	    gl_putc('\007');
+	cursor = gl_cnt;
+    }
+    if (cursor < 0) {
+	gl_putc('\007');
+	cursor = 0;
+    }
+    if (change >= 0) {		/* text changed */
+	if (change < fixup_gl_shift + fixup_off_left) {
+	    left = fixup_gl_shift;
+	} else {
+	    left = change;
+	    backup = gl_pos - change;
+	}
+	right = gl_cnt;
+	new_right = (gl_extent && (right > left + gl_extent))? 
+	    left + gl_extent : right;
+    }
+    pad -= gl_cnt - fixup_gl_shift;
+    pad = (pad < 0)? 0 : pad;
+    if (left <= right) {		/* clean up screen */
+	for (p=left; p < left+backup; p++){
+	    if (wrap(p, plen))
+		unwrap_line();
+	    else
+		gl_putc('\b');
+	}
+	if (left == fixup_gl_shift && fixup_off_left) {
+	    gl_putc('$');
+	    left++;
+        }
+	for (p=left; p < new_right; p++){
+	    gl_putc(cligen_buf(h)[p]);
+	    if (wrap(p, plen))
+		wrap_line();
+	}
+	gl_pos = new_right;
+	for (p=left; p < left+pad; p++){	/* erase remains of prev line */
+	    gl_putc(' ');
+	    if (wrap(p, plen))
+		wrap_line();
+	}
+	gl_pos += pad;
+    }
+    /* move to final cursor location */
+    if (gl_pos - cursor > 0) {
+	for (p=gl_pos; p > cursor; p--){
+	    if (wrap(p-1, plen))
+		unwrap_line();
+	    else
+		gl_putc('\b');
+	} 
+    }
+    else {
+	for (i=gl_pos; i < cursor; i++)
+	    gl_putc(cligen_buf(h)[i]);
+    }
+    gl_pos = cursor;
+}
+
+
+/*! Redrawing or moving within line
+ *
+ * This function is used both for redrawing when input changes or for
+ * moving within the input line.  The parameters are:
+ *   prompt:  compared to last_prompt[] for changes;
+ *   change : the index of the start of changes in the input buffer,
+ *            with -1 indicating no changes, -2 indicating we're on
+ *            a new line, redraw everything.
+ *   cursor : the desired location of the cursor after the call.
+ *            A value of cligen_buf_size(h) can be used  to indicate the cursor should
+ *            move just past the end of the input line.
+ */
+static void
+gl_fixup_scroll(cligen_handle h, 
+		char         *prompt, 
+		int           change, 
+		int           cursor)
 {
     int          left = 0, right = -1;		/* bounds for redraw */
     int          pad;		/* how much to erase at end of line */
@@ -1036,7 +1221,7 @@ gl_fixup(cligen_handle h, char  *prompt, int change, int cursor)
 	    change = gl_cnt;
     }
     if (cursor > gl_cnt) {
-	if (cursor != gl_bufsize(h))		/* gl_bufsize(h) means end of line */
+	if (cursor != cligen_buf_size(h))		/* cligen_buf_size(h) means end of line */
 	    gl_putc('\007');
 	cursor = gl_cnt;
     }
@@ -1044,21 +1229,23 @@ gl_fixup(cligen_handle h, char  *prompt, int change, int cursor)
 	gl_putc('\007');
 	cursor = 0;
     }
-    if (fixup_off_right || (fixup_off_left && cursor < fixup_gl_shift + gl_width - gl_scroll / 2))
+    if (fixup_off_right || (fixup_off_left && cursor < fixup_gl_shift + gl_width - gl_scrollw / 2)){
 	extra = 2;			/* shift the scrolling boundary */
+    }
     else 
 	extra = 0;
-    new_shift = cursor + extra + gl_scroll - gl_width;
+    
+    new_shift = cursor + extra + gl_scrollw - gl_width;
     if (new_shift > 0) {
-	new_shift /= gl_scroll;
-	new_shift *= gl_scroll;
+	new_shift /= gl_scrollw;
+	new_shift *= gl_scrollw;
     } else
 	new_shift = 0;
     if (new_shift != fixup_gl_shift) {	/* scroll occurs */
 	fixup_gl_shift = new_shift;
 	fixup_off_left = (fixup_gl_shift)? 1 : 0;
 	fixup_off_right = (gl_cnt > fixup_gl_shift + gl_width - 1)? 1 : 0;
-        left = fixup_gl_shift;
+	left = fixup_gl_shift;
 	new_right = right = (fixup_off_right)? fixup_gl_shift + gl_width - 2 : gl_cnt;
     } else if (change >= 0) {		/* no scroll, but text changed */
 	if (change < fixup_gl_shift + fixup_off_left) {
@@ -1070,7 +1257,7 @@ gl_fixup(cligen_handle h, char  *prompt, int change, int cursor)
 	fixup_off_right = (gl_cnt > fixup_gl_shift + gl_width - 1)? 1 : 0;
 	right = (fixup_off_right)? fixup_gl_shift + gl_width - 2 : gl_cnt;
 	new_right = (gl_extent && (right > left + gl_extent))? 
-	             left + gl_extent : right;
+	    left + gl_extent : right;
     }
     pad -= (fixup_off_right)? gl_width - 1 : gl_cnt - fixup_gl_shift;
     pad = (pad < 0)? 0 : pad;
@@ -1096,7 +1283,7 @@ gl_fixup(cligen_handle h, char  *prompt, int change, int cursor)
     i = gl_pos - cursor;		/* move to final cursor location */
     if (i > 0) {
 	while (i--)
-	   gl_putc('\b');
+	    gl_putc('\b');
     } else {
 	for (i=gl_pos; i < cursor; i++)
 	    gl_putc(cligen_buf(h)[i]);
@@ -1104,9 +1291,24 @@ gl_fixup(cligen_handle h, char  *prompt, int change, int cursor)
     gl_pos = cursor;
 }
 
-static int
-gl_tab(cligen_handle h, char  *buf, int    offset, int   *loc)
+static inline void
+gl_fixup(cligen_handle h, 
+	 char         *prompt, 
+	 int           change, 
+	 int           cursor)
+{
+    if (gl_scrolling_mode)
+	return gl_fixup_scroll(h, prompt, change, cursor);
+    else
+	return gl_fixup_noscroll(h, prompt, change, cursor);
+}
+
 /* default tab handler, acts like tabstops every 8 cols */
+static int
+gl_tab(cligen_handle h, 
+       char         *buf, 
+       int           offset, 
+       int          *loc)
 {
     int i, count, len;
 
@@ -1123,8 +1325,8 @@ gl_tab(cligen_handle h, char  *buf, int    offset, int   *loc)
 
 /******************* strlen stuff **************************************/
 
-void gl_strwidth(func)
-size_t (*func)();
+void 
+gl_strwidth(size_t (*func)())
 {
     if (func != 0) {
 	gl_strlen = func;
@@ -1148,8 +1350,7 @@ hist_init()
 }
 
 void
-gl_histadd(buf)
-char *buf;
+gl_histadd(char *buf)
 {
     char *p = buf;
     int len;
@@ -1192,9 +1393,9 @@ gl_histclear()
     hist_init();
 }
 
+/*! Loads previous hist entry into input buffer, sticks on first */
 static char *
 hist_prev()
-/* loads previous hist entry into input buffer, sticks on first */
 {
     char *p = 0;
     int   next = (hist_pos - 1 + HIST_SIZE) % HIST_SIZE;
@@ -1210,9 +1411,9 @@ hist_prev()
     return p;
 }
 
+/* Loads next hist entry into input buffer, clears on last */
 static char *
 hist_next()
-/* loads next hist entry into input buffer, clears on last */
 {
     char *p = 0;
 
@@ -1227,10 +1428,9 @@ hist_next()
     return p;
 }
 
+/*! Makes a copy of the string */
 static char *
-hist_save(p)
-char *p;
-/* makes a copy of the string */
+hist_save(char *p)
 {
     char *s = 0;
     int   len = strlen(p);
@@ -1287,7 +1487,8 @@ search_update(int c)
 }
 
 static void 
-search_addchar(cligen_handle h, int c)
+search_addchar(cligen_handle h, 
+	       int           c)
 {
     char *loc;
 
@@ -1299,7 +1500,7 @@ search_addchar(cligen_handle h, int c)
 	    cligen_buf(h)[0] = 0;
 	    hist_pos = hist_last;
 	}
-	strncpy(cligen_buf(h), hist_buf[hist_pos], gl_bufsize(h));
+	strncpy(cligen_buf(h), hist_buf[hist_pos], cligen_buf_size(h));
     }
     if ((loc = strstr(cligen_buf(h), search_string)) != 0) {
 	gl_fixup(h, search_prompt, 0, loc - cligen_buf(h));
@@ -1326,7 +1527,8 @@ search_term(cligen_handle h)
 }
 
 static void     
-search_back(cligen_handle h, int new_search)
+search_back(cligen_handle h, 
+	    int new_search)
 {
     int    found = 0;
     char  *p, *loc;
@@ -1346,7 +1548,7 @@ search_back(cligen_handle h, int new_search)
 	       gl_fixup(h, search_prompt, 0, 0);
 	       found = 1;
 	    } else if ((loc = strstr(p, search_string)) != 0) {
-		strncpy(cligen_buf(h), p, gl_bufsize(h));
+		strncpy(cligen_buf(h), p, cligen_buf_size(h));
 		gl_fixup(h, search_prompt, 0, loc - p);
 	       if (new_search)
 		   search_last = hist_pos;
@@ -1359,7 +1561,8 @@ search_back(cligen_handle h, int new_search)
 }
 
 static void     
-search_forw(cligen_handle h, int new_search)
+search_forw(cligen_handle h, 
+	    int           new_search)
 {
     int    found = 0;
     char  *p, *loc;
@@ -1379,7 +1582,7 @@ search_forw(cligen_handle h, int new_search)
 	       gl_fixup(h, search_prompt, 0, 0);
 	       found = 1;
 	    } else if ((loc = strstr(p, search_string)) != 0) {
-		strncpy(cligen_buf(h), p, gl_bufsize(h));
+		strncpy(cligen_buf(h), p, cligen_buf_size(h));
 		gl_fixup(h, search_prompt, 0, loc - p);
 	       if (new_search)
 		   search_last = hist_pos;
