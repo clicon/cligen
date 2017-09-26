@@ -254,7 +254,8 @@ show_help_columns(cligen_handle h,
     int              level;
     pt_vec           pt1;
     int              matchlen = 0;
-    int             *matchv = NULL;
+    int             *matchvec = NULL;
+    int              vi;
     int              i;
     int              nrcmd = 0;
     struct cmd_help *chvec = NULL;
@@ -274,7 +275,7 @@ show_help_columns(cligen_handle h,
     }
     if (string != NULL){
 	if ((nr = match_pattern(h, string, pt, 0, 1,
-				&pt1, &matchv, &matchlen, cvec, NULL)) < 0)
+				&pt1, &matchvec, &matchlen, cvec, NULL)) < 0)
 	    goto done;
     }
     if ((level = command_levels(string)) < 0)
@@ -287,7 +288,8 @@ show_help_columns(cligen_handle h,
 	}
 	nrcmd = 0;
 	for (i = 0; i<matchlen; i++){ // nr-1?
-	    if ((co = pt1[i]) == NULL)
+	    vi=matchvec[i];
+	    if ((co = pt1[vi]) == NULL)
 		continue;
 	    if (co->co_command == NULL)
 		continue;		
@@ -331,7 +333,7 @@ show_help_columns(cligen_handle h,
 			 nrcmd,
 			 level) < 0)
 	    goto done;
-    }
+    } /* nr>0 */
 
     retval = 0;
   done:
@@ -344,8 +346,8 @@ show_help_columns(cligen_handle h,
     }
     if (cb)
 	cbuf_free(cb);
-    if (matchv)
-	free(matchv);
+    if (matchvec)
+	free(matchvec);
     return retval;
 }
 
