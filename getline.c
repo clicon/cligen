@@ -394,8 +394,7 @@ gl_exitchar(char c)
     return 0; /* ^C */
 }
 
-/*
- * Initiate an exit, not actually made, but gl_exiting() will return 1.
+/*! Initiate an exit, not actually made, but gl_exiting() will return 1.
  */
 static char *
 gl_exit(cligen_handle h)
@@ -571,11 +570,17 @@ gl_setwidth(int  w)
     }
 }
 
-/*! main getline function. 
+/*! Main getline function handling a command line
+ *
+ * @param[in]  h     CLIgen handle
+ * @param[out] buf   Pointer to char* buffer containing CLIgen command
+ * @retval     0     OK: string or EOF
+ * @retval    -1     Error
  * Typically called by cliread.
  */
-char *
-gl_getline(cligen_handle h)
+int
+gl_getline(cligen_handle h,
+	   char        **buf)
 {
     int             c, loc, tmp;
     char           *gl_prompt;
@@ -767,11 +772,14 @@ gl_getline(cligen_handle h)
     cligen_buf(h)[0] = 0;
  done:
     gl_cleanup();
-    return cligen_buf(h);
+    *buf = cligen_buf(h);
+    return 0;
  exit: /* ie exit from cli, not necessarily error */
-    return gl_exit(h);
+    gl_exit(h);
+    *buf = cligen_buf(h);
+    return 0;
  err: /* fatal error */
-    return NULL;
+    return -1;
 }
 
 /*! adds the character c to the input buffer at current location */

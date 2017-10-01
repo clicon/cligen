@@ -8,7 +8,7 @@ void    gl_exitchar_add(char c);
 void    gl_char_init(void);	
 void    gl_char_cleanup(void);	
 
-char   *gl_getline(cligen_handle h);		/* read a line of input */
+int     gl_getline(cligen_handle h, char **buf); /* read a line of input */
 int     gl_getscrolling(void);
 void    gl_setscrolling(int);
 void    gl_setwidth(int);		/* specify width of screen */
