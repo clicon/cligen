@@ -225,6 +225,7 @@ main(int argc, char *argv[])
     retval = 0;
   done:
     fclose(f);
-    cligen_exit(h);
+    if (h)
+	cligen_exit(h);
     return retval;
 }

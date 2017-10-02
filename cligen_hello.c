@@ -92,7 +92,8 @@ main(int argc, char *argv[])
 	goto done;
     retval = 0;
   done:
-    cligen_exit(h);
+    if (h)
+	cligen_exit(h);
     return retval;
 }
 

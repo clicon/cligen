@@ -524,10 +524,6 @@ gl_init()
     if (gl_init_done < 0) {		/* -1 only on startup */
         hist_init();
     }
-#if 0
-    if (isatty(0) == 0 || isatty(1) == 0)
-	gl_error("\n*** Error: gl_getline(): not interactive, use stdio.\n");
-#endif
     gl_char_init();
     gl_init_done = 1;
 }
