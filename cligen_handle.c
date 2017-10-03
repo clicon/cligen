@@ -131,8 +131,10 @@ cligen_gwinsz(cligen_handle h)
 {
     struct winsize ws;
 
-    if (ioctl(STDIN_FILENO, TIOCGWINSZ, &ws) == -1)
+    if (ioctl(0, TIOCGWINSZ, &ws) == -1){
+	perror("ioctl(STDIN_FILENO,TIOCGWINSZ)");
 	return -1;
+    }
     cligen_terminalrows_set(h, ws.ws_row);
     cligen_terminal_length_set(h, ws.ws_col);
     return 0;
@@ -160,14 +162,17 @@ cligen_init(void)
     ch->ch_magic = CLIGEN_MAGIC;
     h = (cligen_handle)ch;
     cligen_prompt_set(h, CLIGEN_PROMPT_DEFAULT);
-    if (cligen_gwinsz(h) < 0)
-	return NULL;
-    cligen_interrupt_hook(h, cligen_gwinsz);
-    memset(&sigh, 0, sizeof(sigh));
-    sigh.sa_handler = sigwinch_handler;
-    if (sigaction(SIGWINCH, &sigh, NULL) < 0){
-	perror("sigaction");
-	return NULL;
+    /* Only if stdin and stdout refers to a terminal make win size check */
+    if (isatty(0) && isatty(1)){
+	if (cligen_gwinsz(h) < 0)
+	    return NULL;
+	cligen_interrupt_hook(h, cligen_gwinsz);
+	memset(&sigh, 0, sizeof(sigh));
+	sigh.sa_handler = sigwinch_handler;
+	if (sigaction(SIGWINCH, &sigh, NULL) < 0){
+	    perror("sigaction");
+	    return NULL;
+	}
     }
     cliread_init(h);
     cligen_buf_init(h);

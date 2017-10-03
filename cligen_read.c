@@ -613,22 +613,27 @@ cliread_parse (cligen_handle h,
 
 /*! Read line interactively from terminal using getline (completion, etc)
  *
- * @param[in] h       cligen handle
- * @retval    string  Pointer to command buffer or NULL if EOF.
+ * @param[in] h       CLIgen handle
+ * @retval    string  Pointer to command buffer.
+ * @retval    NULL    EOF or error
  */
 char *
 cliread(cligen_handle h)
 {
-    char   *string;
+    char *string;
     
     do {
-	string = gl_getline(h);
+	string = NULL;
+	if (gl_getline(h, &string) < 0)
+	    goto done;
 	cli_trim(&string, cligen_comment(h));
     } while (strlen(string) == 0 && !gl_eof());
-    if (gl_eof())
-	return NULL; 
+    if (gl_eof()){
+	string = NULL;
+	goto done;
+    }
     gl_histadd(string);
-    
+ done:    
     return string;
 }
 		
