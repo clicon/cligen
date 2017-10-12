@@ -49,6 +49,7 @@ LIBS		= @LIBS@
 INCLUDES	= -I. -I@srcdir@ @INCLUDES@
 SH_SUFFIX	= @SH_SUFFIX@
 pdflatex	= @PDFLATEX@
+HOST_VENDOR     = @host_vendor@
 
 CLIGEN_VERSION = @CLIGEN_VERSION@
 CLIGEN_MAJOR   = @CLIGEN_VERSION_MAJOR@
@@ -154,16 +155,20 @@ lex.cligen_parse.o : lex.cligen_parse.c cligen_parse.tab.h
 
 # Applications
 cligen_hello : cligen_hello.c cligen $(MYLIB) 
-	$(CC) $(CFLAGS) $(INCLUDES) $< $(LDFLAGS) $(LIBS) -o $@ -l:$(MYLIB)
+	$(CC) $(CFLAGS) $(INCLUDES) $< $(LDFLAGS) $(LIBS) -o $@ $(MYLIB)
 
 cligen_file :	cligen_file.c cligen $(MYLIB) 
-	$(CC) $(CFLAGS) $(INCLUDES) $< $(LDFLAGS) $(LIBS) -o $@ -l:$(MYLIB)
+	$(CC) $(CFLAGS) $(INCLUDES) $< $(LDFLAGS) $(LIBS) -o $@ $(MYLIB)
 
 cligen_tutorial :cligen_tutorial.c cligen $(MYLIB) 
-	$(CC) $(CFLAGS) $(INCLUDES) $< $(LDFLAGS) $(LIBS) -o $@ -l:$(MYLIB)
+	$(CC) $(CFLAGS) $(INCLUDES) $< $(LDFLAGS) $(LIBS) -o $@ $(MYLIB)
 
 $(MYLIB) : $(OBJS) $(YACCOBJS)
+ifeq ($(HOST_VENDOR),apple)
+	$(CC) -shared -o $@ $(OBJS) $(YACCOBJS) -undefined dynamic_lookup -o $(MYLIB) $(LIBS)
+else
 	$(CC) -shared -o $@ $(OBJS) $(YACCOBJS) -Wl,-soname=$(MYLIB) $(LIBS)
+endif
 
 # link-name is needed for application linking
 $(MYLIBSO) : $(MYLIB)
