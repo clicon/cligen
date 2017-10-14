@@ -483,7 +483,7 @@ complete(cligen_handle h,
 	goto done;
     extra = strlen(s) - cursor;      /* Extra characters added? */
     if (extra){
-	if (strlen(s) >= cligen_buf_size(h)){
+	while (strlen(s) >= cligen_buf_size(h)){
 	    cligen_buf_increase(h);
 	    string = cligen_buf(h);
 	}

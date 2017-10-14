@@ -1043,7 +1043,7 @@ match_complete(cligen_handle h,
         retval = 0;
 	goto done;
     }
-    if (strlen(*stringp) + minmatch - slen >= *slenp){
+    while (strlen(*stringp) + minmatch - slen >= *slenp){
 	*slenp *= 2;
 	if ((*stringp = realloc(*stringp, *slenp)) == NULL){
 	    fprintf(stderr, "%s realloc: %s\n", __FUNCTION__, strerror(errno));
