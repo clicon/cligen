@@ -87,7 +87,7 @@ cvec_add_string(cvec *cvv,
 
 /*! Utility function for main cligen event loop.
  * You probably should copy this function and make your own main event loop
- * @param   h  cligen handle
+ * @param[in]  h  cligen handle
  * @retval  0  OK
  * @retval -1  Error
  */

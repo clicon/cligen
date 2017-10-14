@@ -78,7 +78,7 @@
  */
 static int show_help_columns(cligen_handle h, FILE *fout, char *s, parse_tree pt, cvec *cvec);
 static int show_help_line(cligen_handle h, FILE *fout, char *s, parse_tree pt, cvec *);
-static int complete(cligen_handle h, char *s0, int *lenp, parse_tree pt, cvec *cvec);
+static int complete(cligen_handle h, int *lenp, parse_tree pt, cvec *cvec);
 
 /*! Callback from getline: '?' has been typed on command line
  * Just show help by calling long help show function. 
@@ -90,12 +90,10 @@ static int complete(cligen_handle h, char *s0, int *lenp, parse_tree pt, cvec *c
  * @see cli_tab_hook
  */
 static int
-cli_qmark_hook(void *arg, 
-	       char *string, 
-	       int   cursor_loc)
+cli_qmark_hook(cligen_handle h,
+	       char         *string)
 {
     int           retval = -1;
-    cligen_handle h = (cligen_handle)arg;
     parse_tree   *pt=NULL;     /* Orig parse-tree */
     parse_tree    ptn={0,};    /* Expanded */
     cvec         *cvec = NULL;
@@ -129,8 +127,7 @@ cli_qmark_hook(void *arg,
  * First try to complete the string if the possibilities
  * allow that (at least one unique common character). 
  * If no completion was made, then show the command alternatives.
- * @param[in]     string       Input string to match
- * @param[in]     prompt_width Not used (required by getline)
+ * @param[in]     h            CLIgen handle
  * @param[in,out] cursorp      Pointer to location of cursor on entry and exit
  * @retval  -1    Error
  * @retval  -2    (value != -1 required by getline)
@@ -138,13 +135,10 @@ cli_qmark_hook(void *arg,
  * @see cli_qmark_hook
  */
 static int 
-cli_tab_hook(void *arg, 
-	     char *string, 
-	     int   prompt_width, 
-	     int  *cursorp)
+cli_tab_hook(cligen_handle h,
+	     int          *cursorp)
 {
     int           retval = -1;
-    cligen_handle h = (cligen_handle)arg;
     int	          old_cursor;
     parse_tree   *pt;     /* Orig */
     parse_tree    ptn={0,};     /* Expanded */
@@ -155,21 +149,22 @@ cli_tab_hook(void *arg,
 	goto ok;
     if (pt_expand_treeref(h, NULL, pt) < 0) /* sub-tree expansion */
 	goto done;
-    if ((cvec = cvec_start(string)) == NULL)
+    if ((cvec = cvec_start(cligen_buf(h))) == NULL)
 	goto done; 
     if (pt_expand_2(h, pt, cvec, &ptn, 1) < 0)      /* expansion */
 	goto done;
-    if (complete(h, string, cursorp, ptn, cvec) < 0)
+    /* Note, can change cligen buf pointer (append and increase) */
+    if (complete(h, cursorp, ptn, cvec) < 0)
 	goto done;
     else {
 	if (old_cursor == *cursorp) { 	/* Cursor hasnt changed */
 	    fputs ("\n", stdout);
 	    if (cligen_tabmode(h) == 1){
-		if (show_help_line(h, stdout, string, ptn, cvec) < 0)
+		if (show_help_line(h, stdout, cligen_buf(h), ptn, cvec) < 0)
 		    goto done;
 	    }
 	    else
-		if (show_help_columns(h, stdout, string, ptn, cvec) < 0)
+		if (show_help_columns(h, stdout, cligen_buf(h), ptn, cvec) < 0)
 		    goto done;
 	}
     }
@@ -283,7 +278,7 @@ show_help_columns(cligen_handle h,
     if (nr>0){ /* min, max only defined if nr > 0 */
 	/* Go through match vector and collect commands and helps */
 	if ((chvec = calloc(matchlen, sizeof(struct cmd_help))) ==NULL){
-	    perror("calloc");
+	    fprintf(stderr, "%s calloc: %s\n", __FUNCTION__, strerror(errno));
 	    goto done;
 	}
 	nrcmd = 0;
@@ -313,7 +308,7 @@ show_help_columns(cligen_handle h,
 		continue;
 	    ch = &chvec[nrcmd++];
 	    if ((ch->ch_cmd = strdup(cmd)) == NULL){
-		perror("strdup");
+		fprintf(stderr, "%s strdup: %s\n", __FUNCTION__, strerror(errno));
 		goto done;
 	    }
 	    prev = ch->ch_cmd;
@@ -403,7 +398,7 @@ show_help_line(cligen_handle h,
     */
     if (strlen(string) && isblank(string[strlen(string)-1])){
 	if ((tmpp = tmp = strdup(string)) == NULL){
-	    perror("show_help_line: strdup");
+	    fprintf(stderr, "%s strdup: %s\n", __FUNCTION__, strerror(errno));
 	    goto done;
 	}
 	cli_trim(&tmpp, cligen_comment(h));
@@ -460,37 +455,49 @@ show_help_line(cligen_handle h,
  */
 static int 
 complete(cligen_handle h, 
-	 char         *string, 
 	 int          *cursorp, 
 	 parse_tree    pt, 
 	 cvec         *cvec)
 {
-    char   *s;
+    int     retval = -1;
+    char   *string;
+    char   *s = NULL;
+    size_t  slen;
     int     cursor = *cursorp;
     int     i, n;
     int     extra;
 
-    if (string == NULL)
-	return -1;
-    if ((s = malloc(cligen_buf_size(h))) == NULL){ /* s is a temporary copy */
-	perror("complete: malloc");
-	return -1;
+    string = cligen_buf(h);
+    if (string == NULL){
+	fprintf(stderr, "%s Input string NULL\n", __FUNCTION__);
+	goto done;
     }
-    strncpy(s, string, cligen_buf_size(h));
+    slen = cligen_buf_size(h);
+    if ((s = malloc(slen)) == NULL){ /* s is a temporary copy */
+	fprintf(stderr, "%s malloc: %s\n", __FUNCTION__, strerror(errno));
+	goto done;
+    }
+    strncpy(s, string, slen);
     s[cursor] = '\0';
-    if (match_complete(h, s, pt, cligen_buf_size(h), cvec) < 0)
-	return -1;
+    if (match_complete(h, pt, &s, &slen, cvec) < 0)
+	goto done;
     extra = strlen(s) - cursor;      /* Extra characters added? */
     if (extra){
+	if (strlen(s) >= cligen_buf_size(h)){
+	    cligen_buf_increase(h);
+	    string = cligen_buf(h);
+	}
 	n = strlen(string) - cursor; /* Nr of chars right of cursor to copy */
 	for (i=cursor+n; i>=cursor; i--)             /* Copy right of cursor */
-	    string[i + extra] = string[i]; 
+	    string[i + extra] = string[i];
 	strncpy(string + cursor, s + cursor, extra); /* Copy the new stuff */
 	*cursorp += extra;                           /* Increase cursor */
     }
+    retval = 0;
+ done:
     if (s)
 	free(s);
-    return 0;
+    return retval;
 }
 
 /*! Trim command line. Remove any leading, trailing and multiple whitespace

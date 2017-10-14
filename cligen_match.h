@@ -56,7 +56,8 @@ int match_pattern_exact(cligen_handle h, char *, parse_tree, int exact, cvec *, 
 int command_levels(char *string);
 int extract_substring(char *string0, int level, char **sp);
 int extract_substring_rest(char *string0, int level, char **sp);
-int match_complete(cligen_handle h, char *string0, parse_tree pt, int maxlen, cvec *cvec);
+int match_complete(cligen_handle h, parse_tree pt,
+		   char **stringp, size_t *slen, cvec *cvec);
 
 #endif /* _CLIGEN_MATCH_H */
 
