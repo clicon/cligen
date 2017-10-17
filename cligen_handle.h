@@ -117,21 +117,4 @@ int cligen_logsyntax_set(cligen_handle h, int n);
 void *cligen_userhandle(cligen_handle h);
 int cligen_userhandle_set(cligen_handle h, void *userhandle);
 
-/*
- * backward compatibabilty functions, consider remove
- */
-#if 1
-parse_tree *cligen_tree(cligen_handle h, char *name);
-
-/* Get name of active tree back. cligen_tree_active_get() gets parse-tree which is 
-   usually what you want. */
-static inline char *cligen_tree_active(cligen_handle h){
-    parse_tree *pt;
-    if ((pt = cligen_tree_active_get(h)) != NULL)
-	return pt->pt_name;
-    return NULL;
-}
-
-#endif
-
 #endif /* _CLIGEN_HANDLE_H_ */
