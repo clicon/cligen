@@ -16,8 +16,6 @@
 #  You should have received a copy of the GNU General Public License
 #  along with CLIgen; see the file COPYING.
 
-- Removed functions: cligen_tree(), cligen_tree_active()
-
 - Fixed newline for non-line scrolling mode
 
 - Port to Mac / Apple Darwin
