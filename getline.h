@@ -24,9 +24,9 @@ int     gl_unregfd(int);
 
 int 	(*gl_in_hook)(void *, char *);
 int 	(*gl_out_hook)(void*, char *);
-int	(*gl_tab_hook)(void*, char *, int, int *);
+int	(*gl_tab_hook)(cligen_handle, int *);
 cligen_susp_cb_t *gl_susp_hook;
 cligen_interrupt_cb_t *gl_interrupt_hook;
-int	(*gl_qmark_hook)(void*, char *, int);
+int	(*gl_qmark_hook)(cligen_handle, char *);
 
 #endif /* GETLINE_H */

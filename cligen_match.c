@@ -285,7 +285,7 @@ command_levels(char *string)
 
 	i = 0;
 	if (s0 == NULL){
-	    perror("command_levels: strdup");
+	    fprintf(stderr, "%s strdup: %s\n", __FUNCTION__, strerror(errno));
 	    return -1;
 	}
 	s = strtok(s0, CLIGEN_DELIMITERS);
@@ -956,21 +956,21 @@ match_pattern_exact(cligen_handle h,
 
 /*! Try to complete a string as far as possible using the syntax.
  * 
- * @param[in]  h       cligen handle
- * @param[in]  string  Input string to match
- * @param[in]  pt      Vector of commands (array of cligen object pointers)
- * @param[in]  maxlen  Max length of string
- * @param[out] cvec    cligen variable vector containing vars/values pair for 
- *                     completion
+ * @param[in]     h       cligen handle
+ * @param[in]     pt      Vector of commands (array of cligen object pointers)
+ * @param[in,out] string  Input string to match and to complete (append to)
+ * @param[in,out] slen    Current string length 
+ * @param[out]    cvec    cligen variable vector containing vars/values pair for
+ *                        completion
  * @retval    -1   Error 
  * @retval     0   No matches, no completions made
  * @retval     1   Function completed by adding characters at the end of "string"
  */
 int 
 match_complete(cligen_handle h, 
-	       char         *string, 
 	       parse_tree    pt, 
-	       int           maxlen, 
+	       char        **stringp, 
+	       size_t       *slenp, 
 	       cvec         *cvec)
 {
     int     level;
@@ -981,6 +981,7 @@ match_complete(cligen_handle h,
     int     minmatch;
     cg_obj *co;
     cg_obj *co1 = NULL;
+    char   *string;
     char   *s;
     char   *ss;
     pt_vec  pt1;
@@ -992,6 +993,7 @@ match_complete(cligen_handle h,
     int     retval = -1;
 
     /* ignore any leading whitespace */
+    string = *stringp;
     s = string;
     while ((strlen(s) > 0) && isblank(*s))
 	    s++;
@@ -1041,7 +1043,14 @@ match_complete(cligen_handle h,
         retval = 0;
 	goto done;
     }
-    assert(strlen(string) + minmatch - slen < maxlen);
+    while (strlen(*stringp) + minmatch - slen >= *slenp){
+	*slenp *= 2;
+	if ((*stringp = realloc(*stringp, *slenp)) == NULL){
+	    fprintf(stderr, "%s realloc: %s\n", __FUNCTION__, strerror(errno));
+	    goto done;
+	}
+	string = *stringp;
+    }
     strncat(string, &co1->co_command[slen], minmatch-slen);
     append = append || minmatch-slen;
     if (equal){ /* add space */

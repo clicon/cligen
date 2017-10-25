@@ -35,11 +35,10 @@
 #include "getline.h" /* exported interface */
 
 /********************* exported variables ********************************/
-static int      gl_tab();  /* forward reference needed for gl_tab_hook */
 
 int (*gl_in_hook)() = NULL;
 int (*gl_out_hook)() = NULL;
-int (*gl_tab_hook)() = gl_tab;
+int (*gl_tab_hook)() = NULL;
 int (*gl_qmark_hook)() = NULL;
 int (*gl_susp_hook)() = NULL;
 int (*gl_interrupt_hook)() = NULL;
@@ -395,6 +394,7 @@ gl_exitchar(char c)
 }
 
 /*! Initiate an exit, not actually made, but gl_exiting() will return 1.
+ * @param[in]  h     CLIgen handle
  */
 static char *
 gl_exit(cligen_handle h)
@@ -408,7 +408,9 @@ gl_exit(cligen_handle h)
     return gl_buf;
 }
 
-/*! Get a character without echoing it to screen */
+/*! Get a character without echoing it to screen 
+ * @param[in]  h     CLIgen handle
+ */
 static int
 gl_getc(cligen_handle h)
 {
@@ -599,7 +601,7 @@ gl_getline(cligen_handle h,
             else{
 	    if (escape ==0 && c == '?' && gl_qmark_hook) {
 		escape = 0;
-		if ((loc = gl_qmark_hook(h, cligen_buf(h), gl_pos)) < 0)
+		if ((loc = gl_qmark_hook(h, cligen_buf(h))) < 0)
 		    goto err;
 		gl_fixup(h, gl_prompt, -2, gl_pos);
 	    }
@@ -652,7 +654,7 @@ gl_getline(cligen_handle h,
 	    case '\t':        				/* TAB */
                 if (gl_tab_hook) {
 		    tmp = gl_pos;
-	            if ((loc = gl_tab_hook(h, cligen_buf(h), gl_strlen(gl_prompt), &tmp)) < 0)
+	            if ((loc = gl_tab_hook(h, &tmp)) < 0)
 			goto err;
 		    gl_fixup(h, gl_prompt, -2, tmp);
 #if 0
@@ -779,7 +781,10 @@ gl_getline(cligen_handle h,
     return -1;
 }
 
-/*! adds the character c to the input buffer at current location */
+/*! Add the character c to the input buffer at current location 
+ * @param[in]  h     CLIgen handle
+ * @param[in]  c     Character
+ */
 static void
 gl_addchar(cligen_handle h, 
 	   int           c)
@@ -801,7 +806,9 @@ gl_addchar(cligen_handle h,
     }
 }
 
-/*! adds the kill buffer to the input buffer at current location */
+/*! Add the kill buffer to the input buffer at current location 
+ * @param[in]  h     CLIgen handle
+ */
 static void
 gl_yank(cligen_handle h)
 {
@@ -834,7 +841,9 @@ gl_yank(cligen_handle h)
 	gl_putc('\007');
 }
 
-/*! switch character under cursor and to left of cursor */
+/*! Switch character under cursor and to left of cursor 
+ * @param[in]  h     CLIgen handle
+ */
 static void
 gl_transpose(cligen_handle h)
 {
@@ -852,33 +861,37 @@ gl_transpose(cligen_handle h)
 
 /*! Cleans up entire line before returning to caller. 
  *
+ * @param[in]  h     CLIgen handle
  * A \n is appended. If line longer than screen, redraw starting at beginning
  */
 static void
 gl_newline(cligen_handle h)
 {
-    int change = gl_cnt;
     int len = gl_cnt;
-    int loc = gl_width - 5;	/* shifts line back to start position */
+    int loc;
 
+    if (gl_scrolling_mode)
+	loc = gl_width - 5;	/* shifts line back to start position */
+    else
+	loc = gl_cnt;
+    
     if (gl_cnt >= cligen_buf_size(h) - 1) 
 	cligen_buf_increase(h); /* assume add 2 chars, since \n\0 added */
     if (gl_out_hook) {
-	change = gl_out_hook(h, cligen_buf(h));
         len = strlen(cligen_buf(h));
     } 
     if (loc > len)
 	loc = len;
-    gl_fixup(h, cligen_prompt(h), change, loc);	/* must do this before appending \n */
+    gl_fixup(h, cligen_prompt(h), -1, loc);	/* must do this before appending \n */
     cligen_buf(h)[len] = '\n';
     cligen_buf(h)[len+1] = '\0';
     gl_putc('\n');
 }
 
 /*! Delete a character.  
- * The loc variable can be:
- *    -1 : delete character to left of cursor
- *     0 : delete character under cursor
+ * @param[in] h    CLIgen handle
+ * @param[in] loc  -1 : delete character to left of cursor
+ *                 0 : delete character under cursor
  */
 static void
 gl_del(cligen_handle h, 
@@ -894,7 +907,10 @@ gl_del(cligen_handle h,
 	gl_putc('\007');
 }
 
-/*! Delete from pos to the end of line */
+/*! Delete position to end of line 
+ * @param[in]  h     CLIgen handle
+ * @param[in]  pos   Delete from pos to the end of line 
+ */
 static void
 gl_kill(cligen_handle h, 
 	int           pos)
@@ -907,7 +923,10 @@ gl_kill(cligen_handle h,
 	gl_putc('\007');
 }
 
-/* Delete from pos to start of line */
+/* Delete from pos to start of line 
+ * @param[in]  h     CLIgen handle
+ * @param[in]  pos   Delete from pos to start of line 
+ */
 static void
 gl_kill_begin(cligen_handle h, 
 	      int           pos)
@@ -928,7 +947,10 @@ gl_kill_begin(cligen_handle h,
 	gl_putc('\007');
 }
 
-/*! Delete one previous word from pos */
+/*! Delete one previous word from pos 
+ * @param[in]  h     CLIgen handle
+ * @param[in]  pos   Delete one previous word from pos 
+ */
 static void
 gl_kill_word(cligen_handle h, 
 	     int           pos)
@@ -957,7 +979,10 @@ gl_kill_word(cligen_handle h,
 }
 
 
-/*! Move forward or backword one word */
+/*! Move forward or backword one word 
+ * @param[in]  h          CLIgen handle
+ * @param[in]  direction  >0 forward; else backward
+ */
 static void
 gl_word(cligen_handle h, 
 	int           direction)
@@ -1047,7 +1072,9 @@ void gl_clear_screen(cligen_handle h)
         gl_fixup(h, cligen_prompt(h), -2, gl_pos);
 }
 
-/*! Emit a newline, reset and redraw prompt and current input line */
+/*! Emit a newline, reset and redraw prompt and current input line 
+ * @param[in]  h     CLIgen handle
+*/
 void
 gl_redraw(cligen_handle h)
 {
@@ -1061,13 +1088,15 @@ gl_redraw(cligen_handle h)
  *
  * This function is used both for redrawing when input changes or for
  * moving within the input line.  The parameters are:
- *   prompt:  compared to last_prompt[] for changes;
- *   change : the index of the start of changes in the input buffer,
- *            with -1 indicating no changes, -2 indicating we're on
- *            a new line, redraw everything.
- *   cursor : the desired location of the cursor after the call.
- *            A value of cligen_buf_size(h) can be used  to indicate the cursor should
- *            move just past the end of the input line.
+ *
+ * @param[in] h       CLIgen handle
+ * @param[in] prompt  Compared to last_prompt[] for changes;
+ * @param[in] change  Index of the start of changes in the input buffer,
+ *                    with -1 indicating no changes, -2 indicating we're on
+ *                    a new line, redraw everything.
+ * @param[in] cursor  The desired location of the cursor after the call.
+ *                    A value of cligen_buf_size(h) can be used  to indicate 
+ *                    the cursor should move just past the end of the input line.
  */
 static void
 gl_fixup_noscroll(cligen_handle h, 
@@ -1307,26 +1336,6 @@ gl_fixup(cligen_handle h,
 	return gl_fixup_noscroll(h, prompt, change, cursor);
 }
 
-/* default tab handler, acts like tabstops every 8 cols */
-static int
-gl_tab(cligen_handle h, 
-       char         *buf, 
-       int           offset, 
-       int          *loc)
-{
-    int i, count, len;
-
-    len = strlen(buf);
-    count = 8 - (offset + *loc) % 8;
-    for (i=len; i >= *loc; i--)
-        buf[i+count] = buf[i];
-    for (i=0; i < count; i++)
-        buf[*loc+i] = ' ';
-    i = *loc;
-    *loc = i + count;
-    return i;
-}
-
 /******************* strlen stuff **************************************/
 
 void 
@@ -1490,6 +1499,9 @@ search_update(int c)
     }
 }
 
+/*! Search addchar
+ * @param[in]  h     CLIgen handle
+ */
 static void 
 search_addchar(cligen_handle h, 
 	       int           c)
@@ -1519,6 +1531,9 @@ search_addchar(cligen_handle h,
     }
 }
 
+/*! Search terminate
+ * @param[in]  h     CLIgen handle
+ */
 static void     
 search_term(cligen_handle h)
 {
@@ -1530,9 +1545,12 @@ search_term(cligen_handle h)
     gl_fixup(h, cligen_prompt(h), 0, gl_pos);
 }
 
+/*! Search backwards
+ * @param[in]  h     CLIgen handle
+ */
 static void     
 search_back(cligen_handle h, 
-	    int new_search)
+	    int           new_search)
 {
     int    found = 0;
     char  *p, *loc;
@@ -1564,6 +1582,9 @@ search_back(cligen_handle h,
     }
 }
 
+/*! Search forward
+ * @param[in]  h     CLIgen handle
+ */
 static void     
 search_forw(cligen_handle h, 
 	    int           new_search)
