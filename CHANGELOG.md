@@ -17,19 +17,18 @@
 * Added support for multi-argument callback CLI expand functions.
     See cligen_expandv_str2fn()
 	
-* Added support for multi-argument callback CLI functions. E.g
-```
-    int callback(cligen_handle handle, cvec *cvv, cvec *argv);
-```
-  where the third argument is a vector instead of a single argument.
+* Added support for multi-argument callback CLI functions. See below where the third argument is a vector instead of a single argument.
   To use this, all CLI callback functions need to be rewritten.
   The old style remains but cannot be mixed with the new.
   See cligen_callback_str2fnv
+```
+    int callback(cligen_handle handle, cvec *cvv, cvec *argv);
+```
 	
 * Removed alias int for int32.	
 * Added option for "relaxed" handling of variable matching. So that 
-- eg <a:string length[4]> | <a:string length[40]> is allowed. 
-- See cligen_match_cgvar_same().
+  * eg <a:string length[4]> | <a:string length[40]> is allowed. 
+  * See cligen_match_cgvar_same().
 
 * type_max2str - get max value of a type
 
