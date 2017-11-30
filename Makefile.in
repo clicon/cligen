@@ -86,8 +86,8 @@ TAGS:
 distclean: clean
 	rm -f Makefile config.log config.status config.h TAGS .depend
 	rm -rf autom4te.cache build.c cligen_config.h
-	rm -rf doc
-	rm -f build-root/*.tar.xz
+	rm -rf doc build-root/rpmbuild
+	rm -f build-root/*.tar.xz build-root/*.rpm extras/rpm/Makefile
 
 export BR=$(CURDIR)/build-root
 
@@ -121,6 +121,12 @@ dist:
 	@xz -v --threads=0 $(DIST_FILE)
 	@$(RM) $(BR)/cligen-latest.tar.xz
 	@ln -rs $(DIST_FILE).xz $(BR)/cligen-latest.tar.xz
+
+pkg-rpm: dist
+	make -C extras/rpm
+
+pkg-srpm: dist
+	make -C extras/rpm srpm
 
 # Default rule  .c.o:	
 %@OBJ_SUFFIX@ : @srcdir@/%.c
