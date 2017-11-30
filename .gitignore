@@ -12,6 +12,7 @@ cligen_hello
 cligen_file
 cligen_tutorial
 autom4te.cache
+build-root/*.tar.xz
 
 # Object files
 *.o
