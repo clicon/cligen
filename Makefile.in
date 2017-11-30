@@ -87,6 +87,40 @@ distclean: clean
 	rm -f Makefile config.log config.status config.h TAGS .depend
 	rm -rf autom4te.cache build.c cligen_config.h
 	rm -rf doc
+	rm -f build-root/*.tar.xz
+
+export BR=$(CURDIR)/build-root
+
+$(BR)/scripts/.version:
+ifneq ("$(wildcard /etc/redhat-release)","")
+	$(shell $(BR)/scripts/version rpm-string > $(BR)/scripts/.version)
+else
+	$(shell $(BR)/scripts/version > $(BR)/scripts/.version)
+endif
+
+DIST_FILE = $(BR)/cligen-$(shell extras/scripts/version).tar
+DIST_SUBDIR = cligen-$(shell extras/scripts/version | cut -f1 -d-)
+
+dist:
+	@if git rev-parse 2> /dev/null ; then \
+	    git archive \
+	      --prefix=$(DIST_SUBDIR)/ \
+	      --format=tar \
+	      -o $(DIST_FILE) \
+	    HEAD ; \
+	    git describe > $(BR)/.version ; \
+	else \
+	    (cd .. ; tar -cf $(DIST_FILE) $(DIST_SUBDIR) --exclude=*.tar) ; \
+	    extras/scripts/version > $(BR)/.version ; \
+	fi
+	@tar --append \
+	  --file $(DIST_FILE) \
+	  --transform='s,.*/.version,$(DIST_SUBDIR)/extras/scripts/.version,' \
+	  $(BR)/.version
+	@$(RM) $(BR)/.version $(DIST_FILE).xz
+	@xz -v --threads=0 $(DIST_FILE)
+	@$(RM) $(BR)/cligen-latest.tar.xz
+	@ln -rs $(DIST_FILE).xz $(BR)/cligen-latest.tar.xz
 
 # Default rule  .c.o:	
 %@OBJ_SUFFIX@ : @srcdir@/%.c
