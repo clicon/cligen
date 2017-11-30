@@ -13,6 +13,8 @@ cligen_file
 cligen_tutorial
 autom4te.cache
 build-root/*.tar.xz
+build-root/*.rpm
+build-root/rpmbuild
 
 # Object files
 *.o
