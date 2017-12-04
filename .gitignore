@@ -3,6 +3,18 @@ build.c
 cligen_parse.tab.c
 cligen_parse.tab.h
 lex.cligen_parse.c
+cligen_config.h
+Makefile
+config.log
+config.status
+cligen
+cligen_hello
+cligen_file
+cligen_tutorial
+autom4te.cache
+build-root/*.tar.xz
+build-root/*.rpm
+build-root/rpmbuild
 
 # Object files
 *.o
