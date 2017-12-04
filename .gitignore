@@ -11,6 +11,7 @@ cligen
 cligen_hello
 cligen_file
 cligen_tutorial
+autom4te.cache
 
 # Object files
 *.o
