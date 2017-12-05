@@ -15,7 +15,6 @@ spec:
 
 srpm: spec
 	rpmbuild -bs \
-	  --define "_prefix @prefix@" \
 	  --define "_topdir $(RPMBUILD)" \
 	  --define "_version $(VERSION)" \
 	  --define "_release $(RELEASE)" \
@@ -24,7 +23,6 @@ srpm: spec
 
 RPM: spec
 	rpmbuild -bb \
-	  --define "_prefix @prefix@" \
 	  --define "_topdir $(RPMBUILD)" \
 	  --define "_version $(VERSION)" \
 	  --define "_release $(RELEASE)" \
