@@ -722,7 +722,7 @@ match_pattern_node(cligen_handle h,
 	    goto error;
     }
     else
-	if (match && co_match->co_type == CO_COMMAND && co_orig->co_type == CO_VARIABLE)
+	if (co_match->co_type == CO_COMMAND && co_orig->co_type == CO_VARIABLE)
 	    if ((cv = add_cov_to_cvec(co_orig, string, cvec)) == NULL)
 		goto error;
     if (pt_expand_2(h, &co_match->co_pt, cvec, &ptn, hide) < 0) /* expand/choice variables */
