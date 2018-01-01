@@ -1,5 +1,9 @@
 # Cligen Changelog
 
+## R3.7.0 (Upcoming)
+
+* Accept input with multiple lines into a single variable. (Thanks Matthew Smith)
+	
 ## R3.6.0 (19 November 2017)
 
 * Fixed newline for non-line scrolling mode
