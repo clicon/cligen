@@ -3,7 +3,7 @@
 
   ***** BEGIN LICENSE BLOCK *****
  
-  Copyright (C) 2001-2017 Olof Hagsand
+  Copyright (C) 2001-2018 Olof Hagsand
 
   This file is part of CLIgen.
 
@@ -122,7 +122,7 @@ callback(cligen_handle handle, cvec *cvv, cvec *argv)
 }
 
 /*! Example of static string to function mapper
- * Note, the syntax need to something like: "a{help}, callback, 42"
+ * Note, the syntax need to something like: "a{help}, callback(42)"
  */
 cgv_fnstype_t *
 str2fn(char *name, void *arg, char **error)

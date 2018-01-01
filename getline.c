@@ -595,23 +595,23 @@ gl_getline(cligen_handle h,
     gl_fixup(h, gl_prompt, -2, cligen_buf_size(h));
     while ((c = gl_getc(h)) >= 0) {
 	gl_extent = 0;  	/* reset to full extent */
-	if (isprint(c)) {
+	if (isprint(c) || (escape&&c=='\n')) {
 	    if (escape == 0 && c == '\\')
                escape++;
             else{
-	    if (escape ==0 && c == '?' && gl_qmark_hook) {
-		escape = 0;
-		if ((loc = gl_qmark_hook(h, cligen_buf(h))) < 0)
-		    goto err;
-		gl_fixup(h, gl_prompt, -2, gl_pos);
-	    }
-	    else{ 
-		escape = 0;
-		if (gl_search_mode)
-		search_addchar(h, c);
-	    else
-		gl_addchar(h, c);
-	    }
+		if (escape ==0 && c == '?' && gl_qmark_hook) {
+		    escape = 0;
+		    if ((loc = gl_qmark_hook(h, cligen_buf(h))) < 0)
+			goto err;
+		    gl_fixup(h, gl_prompt, -2, gl_pos);
+		}
+		else{ 
+		    escape = 0;
+		    if (gl_search_mode)
+			search_addchar(h, c);
+		    else
+			gl_addchar(h, c);
+		}
 	    }
 	} else {
 	    escape = 0;
