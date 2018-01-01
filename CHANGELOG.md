@@ -2,6 +2,10 @@
 
 ## R3.7.0 (Upcoming)
 
+* Fixed bug that appeared when expanding non-completed sub-strings. Eg "Interface eth0
+  10.1.2. ?" could produce a cligen parse error and program termination
+  in some circumstances. Detected by Netgate.
+
 * Accept input with multiple lines into a single variable. (Thanks Matthew Smith)
 	
 ## R3.6.0 (19 November 2017)
