@@ -27,7 +27,7 @@ This package contains header files for CLIGEN.
 %setup
 
 %build
-./configure --prefix=%{_prefix} --libdir=%{_libdir}
+%configure
 make
 
 %install
