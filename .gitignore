@@ -12,7 +12,8 @@ cligen_hello
 cligen_file
 cligen_tutorial
 autom4te.cache
-build-root/*.tar.xz
+build-root/.version
+build-root/*.tar*
 build-root/*.rpm
 build-root/rpmbuild
 
