@@ -117,6 +117,14 @@ dist:
 	  --file $(DIST_FILE) \
 	  --transform='s,.*/.version,$(DIST_SUBDIR)/extras/scripts/.version,' \
 	  $(BR)/.version
+	@for f in $$(git status --porcelain | grep '^D' | awk '{print $$2}'); do \
+	  tar --delete --file $(DIST_FILE) $(DIST_SUBDIR)/$${f}; \
+	done
+	@for f in $$(git status --porcelain -u | grep -v '^D' | awk '{print $$2}'); do \
+	  tar --append --file $(DIST_FILE) \
+	  --transform="s,$${f},$(DIST_SUBDIR)/$${f}," \
+	  $${f}; \
+	done
 	@$(RM) $(BR)/.version $(DIST_FILE).xz
 	@xz -v --threads=0 $(DIST_FILE)
 	@$(RM) $(BR)/cligen-latest.tar.xz
