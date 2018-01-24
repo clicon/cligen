@@ -417,15 +417,18 @@ show_help_line(cligen_handle h,
 	    fflush(fout);
 	}
 	free (tmp);
+#if 0
 	/* The following is a kludge to correct a memory error triggered by:
 	   a <rest>;
 	   a input a a ?
-	   Just repeast the same command as above,...
+	   Just repeat the same command as above,...
+	   1801: This causes a segv for a b c ?
 	*/
 	if (matchvec){
 	    free(matchvec);
 	    matchvec = NULL;
 	}
+#endif
 	if ((nr = match_pattern(h, string, pt, 0, 1, &pt1, &matchvec, &matchlen, cvec, NULL)) < 0)
 
 	    goto done;
