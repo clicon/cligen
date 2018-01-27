@@ -40,7 +40,7 @@
 /*
  * Types
  */
-/* Here we should have expand_cb but it is in cligen_gen.h */
+/* Here we should have expandv_cb but it is in cligen_gen.h */
 
 /* backward compat macros */
 #define pt_expand_1(h, coprev, pt) pt_expand_treeref(h, coprev, pt)
