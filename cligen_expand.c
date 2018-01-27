@@ -160,8 +160,6 @@ transform_var_to_cmd(cg_obj *co,
 	    free(co->co_help);
 	co->co_help = helptext; 
     }
-    if (co->co_expand_fn)
-	co->co_expand_fn = NULL;
     if (co->co_expandv_fn)
 	co->co_expandv_fn = NULL;
     if (co->co_expand_fn_str){
@@ -354,54 +352,6 @@ pt_expand_treeref(cligen_handle h,
 }
 
 /*! Call expand callback and insert expanded commands in place of variable
- * fixed argument callback variant
- * @note should be obsolete but kept for backwaqrd compatibility
- * @see pt_expandv_fn
- */
-static int
-pt_expand_fn(cligen_handle h, 
-	     cg_obj       *co,     
-	     cvec         *cvv,
-	     parse_tree   *ptn,
-	     cg_obj       *parent)
-{
-    int     retval = 0;
-    int     k;
-    int     nr = 0;
-    char  **commands = NULL;
-    char  **helptexts = NULL;
-    cg_obj *con;
-
-    if ((*co->co_expand_fn)(
-			    cligen_userhandle(h)?cligen_userhandle(h):h, 
-			    co->co_expand_fn_str, 
-			    cvv,
-			    cvec_i(co->co_expand_fn_vec, 0),
-			    &nr, 
-			    &commands, 
-			    &helptexts) < 0)
-	goto done;
-    for (k=0; k<nr; k++){
-	pt_realloc(ptn);
-	if (co_expand_sub(co, parent, 
-			  &ptn->pt_vec[ptn->pt_len-1]) < 0)
-	    goto done;
-	con = ptn->pt_vec[ptn->pt_len-1];
-	if (transform_var_to_cmd(con, commands[k], 
-				 helptexts?helptexts[k]:NULL) < 0)
-	    goto done;
-    }
-
-    retval = 0;
- done:
-    if (commands)
-	free(commands);
-    if (helptexts)
-	free(helptexts);
-    return retval;
-}
-
-/*! Call expand callback and insert expanded commands in place of variable
  * variable argument callback variant
  * @see pt_expand_fn
  */
@@ -488,6 +438,7 @@ pt_expand_choice(cg_obj       *co,
 	free(cp);
     return retval;
 }
+
 /*! Take a pattern and expand all <variables> with option 'choice' or 'expand'. 
  * The pattern is expanded by examining the objects they point 
  * to: those objects that are expand or choice variables
@@ -533,26 +484,20 @@ pt_expand_2(cligen_handle h,
 		 * commands in place of the variable
 		 */
 		if (co->co_type == CO_VARIABLE && 
-		    co->co_expand_fn != NULL){
-		    if (pt_expand_fn(h, co, cvv, ptn, parent) < 0)
+		    co->co_expandv_fn != NULL){
+		    if (pt_expand_fnv(h, co, cvv, ptn, parent) < 0)
 			goto done;
 		}
-		else
-		    if (co->co_type == CO_VARIABLE && 
-			co->co_expandv_fn != NULL){
-			if (pt_expand_fnv(h, co, cvv, ptn, parent) < 0)
-			    goto done;
-		    }
-		    else{
-			/* Copy vector element */
-			pt_realloc(ptn);
-			/* Copy cg_obj */
-			if (co_expand_sub(co, parent, 
-					  &ptn->pt_vec[ptn->pt_len-1]) < 0)
-			    goto done;
-			/* Reference old cg_obj */
-			//		  con = ptn->pt_vec[ptn->pt_len-1];
-		    }
+		else{
+		    /* Copy vector element */
+		    pt_realloc(ptn);
+		    /* Copy cg_obj */
+		    if (co_expand_sub(co, parent, 
+				      &ptn->pt_vec[ptn->pt_len-1]) < 0)
+			goto done;
+		    /* Reference old cg_obj */
+		    //		  con = ptn->pt_vec[ptn->pt_len-1];
+		}
 	}
 	else{ 
 	    pt_realloc(ptn); /* empty child */

@@ -2,6 +2,9 @@
 
 ## R3.7.0 (Upcoming)
 
+* Removed pre-R3.6.0 expand functions. Only multi-argument callback CLI expand
+  functions supported, eg cligen_expandv_str2fn()
+
 * Fixed bug that appeared when expanding non-completed sub-strings. Eg "Interface eth0
   10.1.2. ?" could produce a cligen parse error and program termination
   in some circumstances. Detected by Netgate.
