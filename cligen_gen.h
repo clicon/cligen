@@ -58,19 +58,6 @@ enum cg_objtype{
 typedef int (cg_fnstype_t)(cligen_handle h, cvec *vars, cg_var *arg);
 typedef int (cgv_fnstype_t)(cligen_handle h, cvec *vars, cvec *argv);
 
-/* Expand callback function (should be in cligen_expand.h) 
-   Returns 0 if handled expand, that is, it returned commands for 'name'
-           1 if did not handle expand 
-          -1 on error.
-*/
-typedef int (expand_cb)(cligen_handle h,       /* handler: cligen or userhandle */
-			char         *name,    /* name of this function (in text) */
-			cvec         *cvv,     /* vars vector of values in command */
-			cg_var       *arg,     /* argument given to callback */
-			int          *len,     /* len of return commands & helptxt */
-			char       ***commands,/* vector of function strings */
-			char       ***helptexts);/* vector of help-texts */
-
 /* Expand callback function for vector arguments (should be in cligen_expand.h) 
    Returns 0 if handled expand, that is, it returned commands for 'name'
            1 if did not handle expand 
@@ -83,19 +70,6 @@ typedef int (expandv_cb)(cligen_handle h,       /* handler: cligen or userhandle
 			 cvec         *commands,/* vector of commands */
 			 cvec         *helptexts /* vector of help-texts */
 			     );
-
-/* expand_cb2 is an update of expand_cb where entries are added using
- * cvec_add rather than by realloc(). Just a better interface.
- * should be merged into new applications.
- */
-#ifdef notyet
-typedef int (expand_cb2)(void *h,              /* handler: cligen or userhandle */
-			 char *name,           /* name of this function (in text) */
-			 cvec *cvec,           /* vars vector of values in command */
-			 cg_var *arg,          /* argument given to callback */
-			 struct cvec *commands,/* vector of commands */
-			 struct cvec *helptexts); /* vector of help-texts */
-#endif
 
 /* handle, buffer, promptlen, tmp*/
 typedef int (cligen_susp_cb_t)(void *h, char *, int, int *);
@@ -145,9 +119,6 @@ struct cg_varspec{
     enum cv_type    cgs_vtype;         /* its type */
     char           *cgs_show;          /* help text of variable */
     char           *cgs_expand_fn_str; /* expand callback string */
-#if 1 /* try to use cgs_expandv_fn instead */
-    expand_cb      *cgs_expand_fn;     /* expand callback see pt_expand_2 */
-#endif
     expandv_cb     *cgs_expandv_fn;    /* expand callback see pt_expand_2 */
     cvec           *cgs_expand_fn_vec; /* expand callback argument vector */
     char           *cgs_choice;        /* list of choices */
@@ -238,9 +209,6 @@ typedef int (cg_applyfn_t)(cg_obj *co, void *arg);
 #define co_vtype         u.cou_var.cgs_vtype
 #define co_show          u.cou_var.cgs_show
 #define co_expand_fn_str u.cou_var.cgs_expand_fn_str
-#if 1 /* try to use co_expandv_fn instead */
-#define co_expand_fn  	 u.cou_var.cgs_expand_fn
-#endif
 #define co_expandv_fn  	 u.cou_var.cgs_expandv_fn
 #define co_expand_fn_vec u.cou_var.cgs_expand_fn_vec
 #define co_choice	 u.cou_var.cgs_choice
