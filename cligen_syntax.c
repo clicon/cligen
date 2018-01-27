@@ -310,60 +310,6 @@ cligen_callbackv_str2fn(parse_tree    pt,
     return retval;
 }
 
-#if 1 /* Try to use cligen_expandv_str2fn instead */
-/*! Assign functions for variable completion in a parse-tree using a translate function
- *
- * Example: Assume a CLIgen syntax:
- *   a <b:string fn()>;
- * where
- *    fn() is called when "a <TAB>" is entered
- * In the CLIgen spec syntax, "fn" is a string and needs to be translated to actual 
- * function (pointer).
- * This function goes through a complete parse-tree (pt) and applies the translator
- * functions str2fn, if existing, to callback strings (eg "fn") 
- * in the parse-tree to produce function pointers (eg fn) which is stored in the
- * parse-tree nodes. Later, at evaluation time, the actual function (fn) is
- * called when evaluating/interpreting the syntax.
- *
- * @param[in]  pt      parse-tree. Recursively loop thru this
- * @param[in]  str2fn  Translator from strings to function pointers for expand variable
- *                     callbacks. 
- * @param[in]  arg     Function argument for expand callbacks (at evaluation time).
- * @see cligen_expandv_str2fn for translating callback functions
- * @note OBSOLETE: try using cligen_expandv_str2fn instead
- */
-int
-cligen_expand_str2fn(parse_tree       pt, 
-		     expand_str2fn_t *str2fn, 
-		     void            *arg)
-{
-    int                 retval = -1;
-    cg_obj             *co;
-    char               *callback_err = NULL;   /* Error from str2fn callback */
-    int                 i;
-
-    for (i=0; i<pt.pt_len; i++){    
-	if ((co = pt.pt_vec[i]) != NULL){
-	    if (co->co_expand_fn_str != NULL && co->co_expand_fn == NULL){
-		/* Note str2fn is a function pointer */
-		co->co_expand_fn = str2fn(co->co_expand_fn_str, arg, &callback_err);
-		if (callback_err != NULL){
-		    fprintf(stderr, "%s: error: No such function: %s\n",
-			    __FUNCTION__, co->co_expand_fn_str);
-		    goto done;
-		}
-	    }
-	    /* recursive call to next level */
-	    if (cligen_expand_str2fn(co->co_pt, str2fn, arg) < 0)
-		goto done;
-	}
-    }
-    retval = 0;
-  done:
-    return retval;
-}
-#endif /* Try to use cligen_expandv_str2fn instead */
-
 /*! Assign functions for variable completion in a parse-tree using a translate function
  *
  * Example: Assume a CLIgen syntax:
