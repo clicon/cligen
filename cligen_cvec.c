@@ -250,7 +250,6 @@ cvec_append_var(cvec   *cvv,
             tail = NULL;
         }
     }
-
     return tail;
 }
 

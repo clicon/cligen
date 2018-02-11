@@ -55,7 +55,7 @@
 #define YY_DECL int cligen_parselex(void *_ya)
 
 /* typecast macro */
-#define _YA ((struct cligen_parse_yacc_arg *)_ya)
+#define _YA ((cliyacc *)_ya)
 
 #define     MAXBUF  4*4*64*1024
 
@@ -69,7 +69,7 @@ cligen_parsewrap(void)
   return 1;
 }
 
-/* like strdup but strip \:s */
+/*! like strdup but strip \:s */
 static char *
 stripdup(char *s0)
 {
@@ -208,12 +208,10 @@ stripdup(char *s0)
 
 %%
 
-/*
- * cgl_init
- * Initialize scanner.
+/*! Initialize scanner.
  */
 int
-cgl_init(struct cligen_parse_yacc_arg *ya)
+cgl_init(cliyacc *ya)
 {
   BEGIN(INITIAL);
   ya->ya_lexbuf = yy_scan_string (ya->ya_parse_string);
@@ -225,13 +223,11 @@ cgl_init(struct cligen_parse_yacc_arg *ya)
   return 0;
 }
 
-/*
- * cgl_exit
- * free buffers
+/*! Exit cligen lex parser. Free buffers
  * Even within Flex version 2.5 (this is assumed), freeing buffers is different.
  */
 int
-cgl_exit(struct cligen_parse_yacc_arg *ya)
+cgl_exit(cliyacc *ya)
 {
     yy_delete_buffer(ya->ya_lexbuf);
     cligen_parselex_destroy();  /* modern */
