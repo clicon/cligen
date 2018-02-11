@@ -79,7 +79,7 @@ cligen_parse_str(cligen_handle h,
 {
     int                retval = -1;
     int                i;
-    struct cligen_parse_yacc_arg ya = {0,};
+    cliyacc            ya = {0,};
     cg_obj            *co;
     cg_obj             co0; /* tmp top object: NOT malloced */
     cg_obj            *co_top = &co0;
