@@ -569,10 +569,10 @@ cli_trim (char **line,
  * @param[out] co_orig   Object that matches (if retval == 1).
  * @param[out] vr        Variable vector (if retval == 1).
  *
- * @retval  -2             Eof
- * @retval -1              Error
- * @retval  0              No match
- * @retval  1              Exactly one match
+ * @retval  -2             Eof               CG_EOF
+ * @retval -1              Error             CG_ERROR
+ * @retval  0              No match          CG_NOMATCH
+ * @retval  1              Exactly one match CG_MATCH
  * @retval  2+             Multiple matches
  */
 int 
