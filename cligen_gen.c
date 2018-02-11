@@ -590,20 +590,26 @@ co_eq(cg_obj *co1,
 	    eq = 1;
 	if (co2->co_type == CO_REFERENCE)
 	    eq = -1;
-	if (co1->co_type == CO_COMMAND && 
-	    co2->co_vtype == CGV_STRING && 
-	    iskeyword(co2)){
-	    if ((eq = strcmp(co1->co_command, co2->co_keyword)) == 0)
-		goto done;
-	}
-	else
-	if (co2->co_type == CO_COMMAND && 
-	    co1->co_vtype == CGV_STRING && 
-	    iskeyword(co1)){
-	    eq = strcmp(co2->co_command, co1->co_keyword);
+	/* Here one is command and one is variable */
+	if (co1->co_type == CO_COMMAND){
+	    if (co2->co_vtype == CGV_STRING && 
+		iskeyword(co2)){
+		if ((eq = strcmp(co1->co_command, co2->co_keyword)) == 0)
+		    goto done;
+	    }
+	    eq = strcmp(co1->co_command, co2->co_command);
 	    goto done;
 	}
-
+	else{ 	    /* co2->co_type == CO_COMMAND */
+	    if (co1->co_vtype == CGV_STRING && 
+		iskeyword(co1)){
+		eq = strcmp(co1->co_keyword, co2->co_command);
+		goto done;
+	    }
+	    eq = strcmp(co1->co_command, co2->co_command);
+	    goto done;
+	}
+	/* shouldnt reach */
 	goto done;
     }
     switch (co1->co_type){
