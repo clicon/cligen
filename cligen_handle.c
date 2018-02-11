@@ -328,7 +328,7 @@ cligen_tree_find(cligen_handle h,
 /*! Add a new parsetree last in list
  * @param[in] h       CLIgen handle
  * @param[in] name    name of parse-tree
- * @param[jn] pt      parse-tree passed by value(!)
+ * @param[in] pt      parse-tree passed by value(!)
  * Note, if this is the first tree, it is activated by default
  */
 int 
@@ -832,8 +832,8 @@ cligen_lexicalorder(cligen_handle h)
 
 /*! Set lexical matching order.
  * 
- * @param[in] h       CLIgen handle
- * @param n  strcmp (0) or strverscmp (1).
+ * @param[in] h  CLIgen handle
+ * @param[in] n  strcmp (0) or strverscmp (1).
  */
 int
 cligen_lexicalorder_set(cligen_handle h, 

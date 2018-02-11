@@ -148,7 +148,7 @@ match_object(char   *string,
   return match!=0 ? 1 : 0;
 }
 
-/*! Check if perfect match
+/*! Check if "perfect" match, ie a command and matches whole command
  */
 static int
 match_perfect(char   *string, 

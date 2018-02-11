@@ -97,10 +97,12 @@ cligen_loop(cligen_handle h)
     int         retval = -1;
     char       *line;
     int         callback_ret = 0;
+    int         ret;
 
     /* Run the CLI command interpreter */
     while (!cligen_exiting(h)){
-	switch (cliread_eval(h, &line, &callback_ret)){
+	ret = cliread_eval(h, &line, &callback_ret);
+	switch (ret){
 	case CG_EOF: /* eof */
 	    goto done;
 	    break;

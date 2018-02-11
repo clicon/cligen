@@ -2,6 +2,8 @@
 
 ## R3.7.0 (Upcoming)
 
+* Added new cligen_print_obj() function to print CLIgen syntax object (not just parse-trees).
+* Removed support for type "int".  Replace with int8, int16, int32 or int64.
 * Removed pre-R3.6.0 expand functions. Only multi-argument callback CLI expand
   functions supported, eg cligen_expandv_str2fn()
 
