@@ -77,10 +77,11 @@ cb(cligen_handle h, cvec *vars, cvec *argv)
     }
     cv = NULL;
     i=0;
-    while ((cv = cvec_each(argv, cv)) != NULL) {
-	cv2str(cv, buf, sizeof(buf)-1);
-	fprintf(stderr, "arg %d: %s\n", i++, buf);
-    }
+    if (argv)
+	while ((cv = cvec_each(argv, cv)) != NULL) {
+	    cv2str(cv, buf, sizeof(buf)-1);
+	    fprintf(stderr, "arg %d: %s\n", i++, buf);
+	}
     return 0;
 }
 
