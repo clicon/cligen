@@ -109,7 +109,7 @@ static int      hist_pos = 0, hist_last = 0;
 static char    *hist_buf[HIST_SIZE];
 static char    *hist_pre = 0;
 
-#define SEARCH_LEN 10
+#define SEARCH_LEN 100
 static char  search_prompt[SEARCH_LEN+2];  /* prompt includes search string */
 static char  search_string[SEARCH_LEN];
 static int   search_pos = 0;      /* current location in search_string */
