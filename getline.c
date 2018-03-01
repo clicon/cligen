@@ -109,8 +109,9 @@ static int      hist_pos = 0, hist_last = 0;
 static char    *hist_buf[HIST_SIZE];
 static char    *hist_pre = 0;
 
-static char  search_prompt[101];  /* prompt includes search string */
-static char  search_string[100];
+#define SEARCH_LEN 10
+static char  search_prompt[SEARCH_LEN+2];  /* prompt includes search string */
+static char  search_string[SEARCH_LEN];
 static int   search_pos = 0;      /* current location in search_string */
 static int   search_forw_flg = 0; /* search direction flag */
 static int   search_last = 0;	  /* last match found */
@@ -1458,14 +1459,16 @@ search_update(int c)
         search_prompt[0] = '?';
         search_prompt[1] = ' ';
         search_prompt[2] = 0;
-    } else if (c > 0) {
-        search_string[search_pos] = c;
-        search_string[search_pos+1] = 0;
-        search_prompt[search_pos] = c;
-        search_prompt[search_pos+1] = '?';
-        search_prompt[search_pos+2] = ' ';
-        search_prompt[search_pos+3] = 0;
-	search_pos++;
+    } else if (c > 0){
+	if (search_pos+1 < SEARCH_LEN) {
+	    search_string[search_pos] = c;
+	    search_string[search_pos+1] = 0;
+	    search_prompt[search_pos] = c;
+	    search_prompt[search_pos+1] = '?';
+	    search_prompt[search_pos+2] = ' ';
+	    search_prompt[search_pos+3] = 0;
+	    search_pos++;
+	}
     } else {
 	if (search_pos > 0) {
 	    search_pos--;
