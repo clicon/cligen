@@ -383,7 +383,7 @@ co_copy(cg_obj  *co,
     }
     memcpy(con, co, sizeof(cg_obj));
     memset(&con->co_pt_push, 0, sizeof(struct parse_tree));
-
+    memset(&con->co_pt_exp, 0, sizeof(struct parse_tree));
     con->co_ref  = NULL;
     con->co_mark = 0;
     con->co_refdone = 0;
