@@ -163,9 +163,10 @@ cli_tab_hook(cligen_handle h,
 		if (show_help_line(h, stdout, cligen_buf(h), ptn, cvec) < 0)
 		    goto done;
 	    }
-	    else
+	    else{
 		if (show_help_columns(h, stdout, cligen_buf(h), ptn, cvec) < 0)
 		    goto done;
+	    }
 	}
     }
  ok:
@@ -491,6 +492,10 @@ complete(cligen_handle h,
 	    string = cligen_buf(h);
 	}
 	n = strlen(string) - cursor; /* Nr of chars right of cursor to copy */
+	while (strlen(string)+cursor+n >= cligen_buf_size(h)){
+	    cligen_buf_increase(h);
+	    string = cligen_buf(h);
+	}
 	for (i=cursor+n; i>=cursor; i--)             /* Copy right of cursor */
 	    string[i + extra] = string[i];
 	strncpy(string + cursor, s + cursor, extra); /* Copy the new stuff */
