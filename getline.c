@@ -791,9 +791,7 @@ gl_addchar(cligen_handle h,
 {
     int  i;
 
-    if (gl_cnt >= cligen_buf_size(h) - 1)
-	cligen_buf_increase(h); /* assume increase enough for gl_pos-gl_cnt */
-
+    cligen_buf_increase(h, gl_cnt+1); /* assume increase enough for gl_pos-gl_cnt */
     if (gl_overwrite == 0 || gl_pos == gl_cnt) {
         for (i=gl_cnt; i >= gl_pos; i--)
             cligen_buf(h)[i+1] = cligen_buf(h)[i];
@@ -817,9 +815,7 @@ gl_yank(cligen_handle h)
     len = strlen(cligen_killbuf(h));
     if (len > 0) {
 	if (gl_overwrite == 0) {
-            if (gl_cnt + len >= cligen_buf_size(h) - 1) {
-		cligen_buf_increase(h);
-	    }
+	    cligen_buf_increase(h, gl_cnt + len + 1);
             for (i=gl_cnt; i >= gl_pos; i--)
                 cligen_buf(h)[i+len] = cligen_buf(h)[i];
 	    for (i=0; i < len; i++)
@@ -827,9 +823,7 @@ gl_yank(cligen_handle h)
             gl_fixup(h, cligen_prompt(h), gl_pos, gl_pos+len);
 	} else {
 	    if (gl_pos + len > gl_cnt) {
-                if (gl_pos + len >= cligen_buf_size(h) - 1) {
-		    cligen_buf_increase(h);
-		}
+	        cligen_buf_increase(h, gl_pos + len + 1);
 		cligen_buf(h)[gl_pos + len] = 0;
             }
 	    for (i=0; i < len; i++)
@@ -875,8 +869,7 @@ gl_newline(cligen_handle h)
     else
 	loc = gl_cnt;
     
-    if (gl_cnt >= cligen_buf_size(h) - 1) 
-	cligen_buf_increase(h); /* assume add 2 chars, since \n\0 added */
+    cligen_buf_increase(h, gl_cnt+1); /* \n\0 added */
     if (gl_out_hook) {
         len = strlen(cligen_buf(h));
     } 
@@ -916,6 +909,7 @@ gl_kill(cligen_handle h,
 	int           pos)
 {
     if (pos < gl_cnt) {
+        cligen_killbuf_increase(h, cligen_buf_size(h));
 	strncpy(cligen_killbuf(h), cligen_buf(h) + pos, cligen_buf_size(h));
 	cligen_buf(h)[pos] = '\0';
 	gl_fixup(h, cligen_prompt(h), pos, pos);
@@ -936,6 +930,7 @@ gl_kill_begin(cligen_handle h,
 
     if (pos != 0) {
 	len = strlen(cligen_buf(h));
+	cligen_killbuf_increase(h, pos);
 	strncpy(cligen_killbuf(h), cligen_buf(h), pos);
 	cligen_killbuf(h)[pos] = '\0';
 	memmove(cligen_buf(h), cligen_buf(h) + pos, len-pos+1); /* memmove may overlap */
@@ -956,7 +951,10 @@ gl_kill_word(cligen_handle h,
 	     int           pos)
 {
     int i, wpos;
-    if (pos != 0) {
+
+    if (pos == 0) 
+	gl_putc('\007');
+    else {
 	wpos = pos;
 	if (pos > 0)
 	    pos--;
@@ -966,6 +964,7 @@ gl_kill_word(cligen_handle h,
 	    pos--;
 	if (pos < gl_cnt && isspace((int)cligen_buf(h)[pos]))   /* move onto word */
 	    pos++;
+	cligen_killbuf_increase(h, wpos-pos);
 	strncpy(cligen_killbuf(h), cligen_buf(h)+pos, wpos-pos);
 	cligen_killbuf(h)[wpos-pos] = '\0';
 	memmove(cligen_buf(h)+pos, cligen_buf(h) + wpos, wpos-pos+1);
@@ -974,8 +973,7 @@ gl_kill_word(cligen_handle h,
             gl_putc(cligen_buf(h)[i]);
 	gl_fixup(h, cligen_prompt(h), -2, pos);
 
-    } else
-	gl_putc('\007');
+    }
 }
 
 

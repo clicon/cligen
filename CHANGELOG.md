@@ -13,6 +13,8 @@
   * Range check of search string in getline.c
   * buffer error in tab completion
   * dual free when recursive calls
+  * Separated line buffer and kill buffer handling to indefinite length, with
+    separet functions, eg cligen_buf_increase() +-> cligen_killbuf_increase().
   
 * Fixed bug that appeared when expanding non-completed sub-strings. Eg "Interface eth0
   10.1.2. ?" could produce a cligen parse error and program termination

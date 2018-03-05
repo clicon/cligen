@@ -487,15 +487,11 @@ complete(cligen_handle h,
 	goto done;
     extra = strlen(s) - cursor;      /* Extra characters added? */
     if (extra){
-	while (strlen(s) >= cligen_buf_size(h)){
-	    cligen_buf_increase(h);
-	    string = cligen_buf(h);
-	}
+        cligen_buf_increase(h, strlen(s));
+	string = cligen_buf(h);
 	n = strlen(string) - cursor; /* Nr of chars right of cursor to copy */
-	while (strlen(string)+cursor+n >= cligen_buf_size(h)){
-	    cligen_buf_increase(h);
-	    string = cligen_buf(h);
-	}
+        cligen_buf_increase(h, strlen(string)+cursor+n);
+	string = cligen_buf(h);
 	for (i=cursor+n; i>=cursor; i--)             /* Copy right of cursor */
 	    string[i + extra] = string[i];
 	strncpy(string + cursor, s + cursor, extra); /* Copy the new stuff */
