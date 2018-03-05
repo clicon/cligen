@@ -99,9 +99,11 @@ char *cligen_killbuf(cligen_handle h);
 
 char *cligen_buf(cligen_handle h);
 int   cligen_buf_size(cligen_handle h);
+int   cligen_killbuf_size(cligen_handle h);
 int   cligen_buf_init(cligen_handle h);
 int   cligen_buf_cleanup(cligen_handle h);
-int   cligen_buf_increase(cligen_handle h);
+int   cligen_buf_increase(cligen_handle h, size_t size);
+int   cligen_killbuf_increase(cligen_handle h, size_t size);
 
 /* hack */
 int cligen_parsetree_expand(cligen_handle h, parse_tree ***pt, int **e_len, int **e_i);
