@@ -491,7 +491,8 @@ pt_expand_2(cligen_handle h,
 		else{
 		    /* Copy vector element */
 		    pt_realloc(ptn);
-		    /* Copy cg_obj */
+
+		    /* Copy original cg_obj to shadow list*/
 		    if (co_expand_sub(co, parent, 
 				      &ptn->pt_vec[ptn->pt_len-1]) < 0)
 			goto done;
@@ -565,7 +566,7 @@ pt_expand_cleanup_2(parse_tree pt)
 	if ((co = pt.pt_vec[i]) != NULL){
 	    if (co_value_set(co, NULL) < 0)
 		return -1;
-	    if (co->co_pt_exp.pt_vec){
+	    if (co->co_pt_exp.pt_vec != NULL){
 		if (cligen_parsetree_free(co->co_pt_exp, 0) < 0)
 		    return -1;
 		memset(&co->co_pt_exp, 0, sizeof(parse_tree));

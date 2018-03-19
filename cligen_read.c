@@ -163,9 +163,10 @@ cli_tab_hook(cligen_handle h,
 		if (show_help_line(h, stdout, cligen_buf(h), ptn, cvec) < 0)
 		    goto done;
 	    }
-	    else
+	    else{
 		if (show_help_columns(h, stdout, cligen_buf(h), ptn, cvec) < 0)
 		    goto done;
+	    }
 	}
     }
  ok:
@@ -486,11 +487,11 @@ complete(cligen_handle h,
 	goto done;
     extra = strlen(s) - cursor;      /* Extra characters added? */
     if (extra){
-	while (strlen(s) >= cligen_buf_size(h)){
-	    cligen_buf_increase(h);
-	    string = cligen_buf(h);
-	}
+        cligen_buf_increase(h, strlen(s));
+	string = cligen_buf(h);
 	n = strlen(string) - cursor; /* Nr of chars right of cursor to copy */
+        cligen_buf_increase(h, strlen(string)+cursor+n);
+	string = cligen_buf(h);
 	for (i=cursor+n; i>=cursor; i--)             /* Copy right of cursor */
 	    string[i + extra] = string[i];
 	strncpy(string + cursor, s + cursor, extra); /* Copy the new stuff */
@@ -569,10 +570,10 @@ cli_trim (char **line,
  * @param[out] co_orig   Object that matches (if retval == 1).
  * @param[out] vr        Variable vector (if retval == 1).
  *
- * @retval  -2             Eof
- * @retval -1              Error
- * @retval  0              No match
- * @retval  1              Exactly one match
+ * @retval  -2             Eof               CG_EOF
+ * @retval -1              Error             CG_ERROR
+ * @retval  0              No match          CG_NOMATCH
+ * @retval  1              Exactly one match CG_MATCH
  * @retval  2+             Multiple matches
  */
 int 

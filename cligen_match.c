@@ -148,7 +148,7 @@ match_object(char   *string,
   return match!=0 ? 1 : 0;
 }
 
-/*! Check if perfect match
+/*! Check if "perfect" match, ie a command and matches whole command
  */
 static int
 match_perfect(char   *string, 
@@ -737,9 +737,9 @@ match_pattern_node(cligen_handle h,
 				    string0, ptn,
 				    level+1, use_pref, hide,
 				    ptp, matchv, matchlen, cvec, reason0);
-
     if (pt_expand_add(co_orig, ptn) < 0) /* add expanded ptn to orig parsetree */
 	goto error;
+    /* From here ptn is not used (but ptp may be inside ptn) */
     if (co_match->co_type == CO_COMMAND && co_orig->co_type == CO_VARIABLE)
 	if (co_value_set(co_orig, co_match->co_command) < 0)
 	    goto error;

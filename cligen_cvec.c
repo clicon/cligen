@@ -93,9 +93,9 @@ static int excludekeys = 0;
  * Each individual cv initialized with CGV_ERR and no value.
  * Returned cvec needs to be freed with cvec_free().
  *
- * @param  len    Number of cv elements. Can be zero and elements added incrementally.
- * @retval NULL   errno set
- * @retval cv     allocated cligen var
+ * @param[in] len    Number of cv elements. Can be zero and elements added incrementally.
+ * @retval    NULL   errno set
+ * @retval    cv     allocated cligen var
  */
 cvec *
 cvec_new(int len)
@@ -114,8 +114,8 @@ cvec_new(int len)
 
 /*! Create a new vector, initialize the first element to the contents of 'var'
  *
- * @param  var      cg_var to clone and add to vector
- * @retval cvec     allocated cvec
+ * @param[in] var      cg_var to clone and add to vector
+ * @retval    cvec     allocated cvec
  */
 cvec *
 cvec_from_var(cg_var *cv)
@@ -266,7 +266,6 @@ cvec_append_var(cvec   *cvv,
             tail = NULL;
         }
     }
-
     return tail;
 }
 
@@ -439,9 +438,9 @@ cvec_dup(cvec *old)
  *
  * The variable vr should be freed with cvec_reset()!
  *
- * @param  [in]     co_match    Leaf CLIgen syntax node
- * @param  [in]     cmd         Command string 
- * @param  [in,out] cvv         Initialized cvec (cvec_new or cvec_reset). CLIgen 
+ * @param[in]     co_match    Leaf CLIgen syntax node
+ * @param[in]     cmd         Command string 
+ * @param[in,out] cvv         Initialized cvec (cvec_new or cvec_reset). CLIgen 
  *                              variable record         
  * @retval          0           OK
  * @retval          -1          Error
@@ -711,7 +710,7 @@ cvec_find_str(cvec *cvv,
 }
 
 /*! Get name of cligen variable vector
- * @param  cvv  Cligen variable vector
+ * @param[in]  cvv  Cligen variable vector
  * @retval str  The name of the cvec as a string, can be NULL, no copy
  * @retval      name Name of variable vector
  */
@@ -722,8 +721,8 @@ cvec_name_get(cvec *cvv)
 }
 
 /*! Allocate and set name of cligen variable vector, including NULL
- * @param  cvv     A cligen variable vector
- * @param  name   A string that is copied and used as a cvec name, or NULL
+ * @param[in]  cvv     A cligen variable vector
+ * @param[in]  name   A string that is copied and used as a cvec name, or NULL
  * @retval str    The name of the cvec.
  * The existing name, if any, is freed
  */

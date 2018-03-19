@@ -383,7 +383,7 @@ co_copy(cg_obj  *co,
     }
     memcpy(con, co, sizeof(cg_obj));
     memset(&con->co_pt_push, 0, sizeof(struct parse_tree));
-
+    memset(&con->co_pt_exp, 0, sizeof(struct parse_tree));
     con->co_ref  = NULL;
     con->co_mark = 0;
     con->co_refdone = 0;
@@ -590,20 +590,26 @@ co_eq(cg_obj *co1,
 	    eq = 1;
 	if (co2->co_type == CO_REFERENCE)
 	    eq = -1;
-	if (co1->co_type == CO_COMMAND && 
-	    co2->co_vtype == CGV_STRING && 
-	    iskeyword(co2)){
-	    if ((eq = strcmp(co1->co_command, co2->co_keyword)) == 0)
-		goto done;
-	}
-	else
-	if (co2->co_type == CO_COMMAND && 
-	    co1->co_vtype == CGV_STRING && 
-	    iskeyword(co1)){
-	    eq = strcmp(co2->co_command, co1->co_keyword);
+	/* Here one is command and one is variable */
+	if (co1->co_type == CO_COMMAND){
+	    if (co2->co_vtype == CGV_STRING && 
+		iskeyword(co2)){
+		if ((eq = strcmp(co1->co_command, co2->co_keyword)) == 0)
+		    goto done;
+	    }
+	    eq = strcmp(co1->co_command, co2->co_command);
 	    goto done;
 	}
-
+	else{ 	    /* co2->co_type == CO_COMMAND */
+	    if (co1->co_vtype == CGV_STRING && 
+		iskeyword(co1)){
+		eq = strcmp(co1->co_keyword, co2->co_command);
+		goto done;
+	    }
+	    eq = strcmp(co1->co_command, co2->co_command);
+	    goto done;
+	}
+	/* shouldnt reach */
 	goto done;
     }
     switch (co1->co_type){
@@ -963,6 +969,7 @@ co_insert_pos(parse_tree pt,
  * @retval    co   object if found (old _or_ new). NOTE: you must replace calling 
  *                 cg_obj with return.
  * @retval    NULL error
+ * @note co1 maye be deleted in this call
  * XXX: pt=[a b] + co1=[b] -> [a b] but children of one b is lost,..
  */
 cg_obj*

@@ -60,16 +60,15 @@ static int pt2cbuf(cbuf *cb, parse_tree pt, int level, int brief);
 
 /*! Print the syntax specification of a variable syntax spec to a cligen buf
  *
- * @param co    [in]   cligen object from where to print
- * @param cmd   [out]  string to print to
- * @param len   [in]   Length of string
- * @param brief [in]   If set, just <varname>, otherwise clispec parsable format
- * @retval      0      Everything OK
- * @retval      -1     Error
+ * @param[out] cb    CLIgen buffer string to print to
+ * @param[in]  co    Cligen object from where to print
+ * @param[in]  brief If set, just <varname>, otherwise clispec parsable format
+ * @retval     0     OK
+ * @retval    -1     Error
  * @code
-    cbuf *cb = cbuf_new();
-    cov2cbuf(cb, co, brief);
-    cbuf_free(cb);
+ *    cbuf *cb = cbuf_new();
+ *    cov2cbuf(cb, co, brief);
+ *    cbuf_free(cb);
  * @endcode
  *
  * Brief output omits help-strings and variable options except names. Eg:
@@ -77,7 +76,9 @@ static int pt2cbuf(cbuf *cb, parse_tree pt, int level, int brief);
  * brief=1:  a <x>;
  */
 int 
-cov2cbuf(cbuf *cb, cg_obj *co, int brief)
+cov2cbuf(cbuf   *cb,
+	 cg_obj *co,
+	 int     brief)
 {
     int            retval = -1;
 
@@ -128,7 +129,7 @@ cov2cbuf(cbuf *cb, cg_obj *co, int brief)
 }
 
 
-/* is a terminal command, and therefore should be printed with a ';' */
+/*! co is a terminal command, and therefore should be printed with a ';' */
 static int
 terminal(cg_obj *co)
 {
@@ -136,19 +137,25 @@ terminal(cg_obj *co)
 	    co->co_pt.pt_len == 0);
 }
 
+/*! Print a CLIgen object (cg object / co) to a CLIgen buffer
+ */
 static int 
-co2cbuf(cbuf *cb, cg_obj *co, int marginal, int brief)
+co2cbuf(cbuf   *cb,
+	cg_obj *co,
+	int     marginal,
+	int     brief)
 {
     int retval = -1;
     struct cg_callback *cc;
 
-    assert(co->co_command!=NULL);
     switch (co->co_type){
     case CO_COMMAND:
-	cprintf(cb, "%s", co->co_command);
+	if (co->co_command)
+	    cprintf(cb, "%s", co->co_command);
 	break;
     case CO_REFERENCE:
-	cprintf(cb, "@%s", co->co_command);
+	if (co->co_command)
+	    cprintf(cb, "@%s", co->co_command);
 	break;
     case CO_VARIABLE:
 	cov2cbuf(cb, co, brief);
@@ -188,8 +195,17 @@ co2cbuf(cbuf *cb, cg_obj *co, int marginal, int brief)
     return retval;
 }
 
+/*! Print a CLIgen parse-tree to a cbuf
+ * @param[in,out] cb     CLIgen buffer
+ * @param[in]     pt     Cligen parse-tree consisting of cg objects and variables
+ * @param[in]     marginal How many columns to print 
+ * @param[in]     brief  Print brief output, otherwise clispec parsable format
+ */
 static int 
-pt2cbuf(cbuf *cb, parse_tree pt, int marginal, int brief)
+pt2cbuf(cbuf      *cb,
+	parse_tree pt,
+	int        marginal,
+	int        brief)
 {
     int retval = -1;
     int i;
@@ -210,9 +226,9 @@ pt2cbuf(cbuf *cb, parse_tree pt, int marginal, int brief)
 
 /*! Print CLIgen parse-tree to file, brief or detailed.
  *
- * @param f     [in] File to print to
- * @param pt    [in] Cligen parse-tree consisting of cg objects and variables
- * @param brief [in] Print brief output, otherwise clispec parsable format
+ * @param[in] f      File to print to
+ * @param[in] pt     Cligen parse-tree consisting of cg objects and variables
+ * @param[in] brief  Print brief output, otherwise clispec parsable format
  *
  * The output may not be identical to the input syntax. 
  * For example [dd|ee] is printed as:
@@ -221,9 +237,12 @@ pt2cbuf(cbuf *cb, parse_tree pt, int marginal, int brief)
  * Brief output omits help-strings and variable options except names. Eg:
  * brief=0:  a("help string") <x:int32>("variable"), cb();
  * brief=1:  a <x>;
+ * @see cligen_print_obj which prints an individual CLIgen syntax object, not vector
  */
 int 
-cligen_print(FILE *f, parse_tree pt, int brief)
+cligen_print(FILE      *f,
+	     parse_tree pt,
+	     int        brief)
 {
     int   retval = -1;
     cbuf *cb = NULL;
@@ -233,6 +252,36 @@ cligen_print(FILE *f, parse_tree pt, int brief)
 	goto done;
     }
     if (pt2cbuf(cb, pt, 0, brief) < 0)
+	goto done;
+    fprintf(f, "%s", cbuf_get(cb));
+    retval = 0;
+  done:
+    if (cb)
+	cbuf_free(cb);
+    return retval;
+}
+
+/*! Print CLIgen parse-tree object to file, brief or detailed.
+ *
+ * @param[in] f      File to print to
+ * @param[in] co     Cligen object
+ * @param[in] brief  Print brief output, otherwise clispec parsable format
+ *
+ * @see cligen_print  which prints a vector of cligen objects "parse-tree"
+ */
+int 
+cligen_print_obj(FILE    *f,
+		 cg_obj  *co,
+		 int      brief)
+{
+    int   retval = -1;
+    cbuf *cb = NULL;
+
+    if ((cb = cbuf_new()) == NULL){
+	fprintf(stderr, "cbuf_new: %s\n", strerror(errno));
+	goto done;
+    }
+    if (co2cbuf(cb, co, 0, brief) < 0)
 	goto done;
     fprintf(f, "%s", cbuf_get(cb));
     retval = 0;

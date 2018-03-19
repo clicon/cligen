@@ -63,7 +63,8 @@ struct cgy_stack{
 };
 
 
-struct cligen_parse_yacc_arg{
+/*! CLIgen yacc parse structure, with all accumulated state of a parse session */
+struct cligen_parse_yacc{
     cligen_handle         ya_handle;       /* cligen_handle */
     char                 *ya_name;         /* Name of syntax (for error string) */
     char                 *ya_treename;     /* Name of syntax (for error string) */
@@ -80,7 +81,7 @@ struct cligen_parse_yacc_arg{
     int                   ya_lex_string_state; /* lex start condition (STRING) */
 
 };
-
+typedef struct cligen_parse_yacc cliyacc;
 
 /*
  * Variables
@@ -91,11 +92,11 @@ extern char *cligen_parsetext;
  * Prototypes
  */
 
-int cgl_init(struct cligen_parse_yacc_arg *ya);
-int cgl_exit(struct cligen_parse_yacc_arg *ya);
+int cgl_init(cliyacc *ya);
+int cgl_exit(cliyacc *ya);
 
-int cgy_init(struct cligen_parse_yacc_arg *ya, cg_obj *co_top);
-int cgy_exit(struct cligen_parse_yacc_arg *ya);
+int cgy_init(cliyacc *ya, cg_obj *co_top);
+int cgy_exit(cliyacc *ya);
 
 int cligen_parselex(void *_ya);
 int cligen_parseparse(void *);

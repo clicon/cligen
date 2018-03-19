@@ -39,6 +39,7 @@
  */
 int cov2cbuf(cbuf *cb, cg_obj *co, int brief);
 int cligen_print(FILE *f, parse_tree pt, int brief);
+int cligen_print_obj(FILE *f, cg_obj *co, int brief);
 
 #endif /* _CLIGEN_PRINT_H_ */
 

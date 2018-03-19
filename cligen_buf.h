@@ -63,6 +63,11 @@ char *cbuf_get(cbuf *cb);
 int   cbuf_len(cbuf *cb);
 int   cbuf_buflen(cbuf *cb);
 int   cprintf(cbuf *cb, const char *format, ...);
+#if defined(__GNUC__) && __GNUC__ >= 3
+int   cprintf(cbuf *cb, const char *format, ...) __attribute__ ((format (printf, 2, 3)));
+#else
+int   cprintf(cbuf *cb, const char *format, ...);
+#endif
 void  cbuf_reset(cbuf *cb);
 
 #endif /* _CLIGEN_BUF_H */
