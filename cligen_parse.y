@@ -67,7 +67,7 @@
 /* Here starts user C-code */
 
 /* typecast macro */
-#define _YA ((struct cligen_parse_yacc_arg *)_ya)
+#define _YA ((cliyacc *)_ya)
 
 /* add _ya to error paramaters */
 #define YY_(msgid) msgid 
@@ -92,7 +92,6 @@
 #include "cligen_gen.h"
 #include "cligen_syntax.h"
 #include "cligen_handle.h"
-
 #include "cligen_parse.h"
 
 static int debug = 0;
@@ -107,11 +106,12 @@ cligen_parse_debug(int d)
 }
 
 
-/* 
-   cligen_parseerror
-   also called from yacc generated code *
-*/
-void cligen_parseerror(void *_ya, char *s) 
+/*! CLIGEN parse error routine
+ * Also called from yacc generated code *
+ * @param[in]  ya  CLIgen yacc parse struct
+ */
+void cligen_parseerror(void *_ya,
+		       char *s) 
 { 
   fprintf(stderr, "%s%s%d: Error: %s: at or before: '%s'\n", 
 	  _YA->ya_name,
@@ -124,15 +124,16 @@ void cligen_parseerror(void *_ya, char *s)
 
 #define cligen_parseerror1(ya, s) cligen_parseerror(ya, s)
 
-/* 
- * create_cv
- * Create a CLIgen variable (cv) and store it in the current variable object 
+/*! Create a CLIgen variable (cv) and store it in the current variable object 
  * Note that only one such cv can be stored.
+ * @param[in]  ya  CLIgen yacc parse struct
  */
 static cg_var *
-create_cv(struct cligen_parse_yacc_arg *ya, char *type, char *str)
+create_cv(cliyacc *ya,
+	  char    *type,
+	  char    *str)
 {
-    cg_var             *cv = NULL;
+    cg_var   *cv = NULL;
 
     if ((cv = cv_new(CGV_STRING)) == NULL){
 	fprintf(stderr, "malloc: %s\n", strerror(errno));
@@ -145,12 +146,6 @@ create_cv(struct cligen_parse_yacc_arg *ya, char *type, char *str)
 	    cv_free(cv); cv = NULL;
 	    goto done;
 	}
-	else{
-#if 1 /* Backward compatible warning */
-	    if (strcmp(type,"int")==0)
-		fprintf(stderr, "NOTE: type \"int\" obsolete in CLIgen, please replace with int8, int16, int32 or int64\n");
-#endif
-	}
     }
     if (cv_parse(str, cv) < 0){ /* parse str into cgv */
 	cv_free(cv); cv = NULL;
@@ -160,10 +155,12 @@ create_cv(struct cligen_parse_yacc_arg *ya, char *type, char *str)
     return cv;
 }
 
-/*
+/*!
+ * @param[in]  ya  CLIgen yacc parse struct
  */
 static int
-cgy_flag(struct cligen_parse_yacc_arg *ya, char *var)
+cgy_flag(cliyacc *ya,
+	 char    *var)
 {
     struct cgy_stack    *cs = ya->ya_stack;
     cg_var              *cv;
@@ -190,13 +187,16 @@ cgy_flag(struct cligen_parse_yacc_arg *ya, char *var)
     return retval;
 }
 
-/*! Set a new treename. This is fact registers the previous tree and creates a new 
+/*! Set a new treename. In fact registers the previous tree and creates a new .
  * Note that one could have used an assignment: treename = <name>; for this but
  * I decided to create special syntax for this so that assignments can use any
  * variable names.
+ * @param[in]  ya   CLIgen yacc parse struct
+ * @param[in]  name Name of tree
  */
 static int
-cgy_treename(struct cligen_parse_yacc_arg *ya, char *name)
+cgy_treename(cliyacc *ya,
+	     char    *name)
 {
     cg_obj            *co = NULL;
     cg_obj            *cot;
@@ -237,11 +237,14 @@ cgy_treename(struct cligen_parse_yacc_arg *ya, char *name)
     return retval;
 }
 
-/*
+/*! Variable assignment
  * Only string type supported for now
+ * @param[in]  ya  CLIgen yacc parse struct
  */
 static int
-cgy_assignment(struct cligen_parse_yacc_arg *ya, char *var, char *val)
+cgy_assignment(cliyacc *ya,
+	       char    *var,
+	       char    *val)
 {
     struct cgy_stack *cs = ya->ya_stack;
     int              retval = -1;
@@ -289,8 +292,12 @@ cgy_assignment(struct cligen_parse_yacc_arg *ya, char *var, char *val)
     return retval;
 }
 
+/*!
+ * @param[in]  ya  CLIgen yacc parse struct
+ */
 int
-cgy_callback(struct cligen_parse_yacc_arg *ya, char *cb_str)
+cgy_callback(cliyacc *ya,
+	     char    *cb_str)
 {
     struct cgy_stack    *cs = ya->ya_stack;
     struct cg_callback *cc, **ccp;
@@ -314,11 +321,12 @@ cgy_callback(struct cligen_parse_yacc_arg *ya, char *cb_str)
 }
 
 /*! Create a callback argument  and store it in the current callback
+ * @param[in]  ya  CLIgen yacc parse struct
  */
 static int
-cgy_callback_arg(struct cligen_parse_yacc_arg *ya, 
-		 char                         *type, 
-		 char                         *arg)
+cgy_callback_arg(cliyacc *ya, 
+		 char    *type, 
+		 char    *arg)
 {
     int                 retval = -1;
     struct cg_callback *cc;
@@ -343,8 +351,13 @@ cgy_callback_arg(struct cligen_parse_yacc_arg *ya,
     return retval;
 }
 
+/*!
+ * @param[in]  ya  CLIgen yacc parse struct
+ */
 static int
-expand_arg(struct cligen_parse_yacc_arg *ya, char *type, char *arg)
+expand_arg(cliyacc *ya,
+	   char    *type,
+	   char    *arg)
 {
    int      retval = -1;
     cg_var *cv = NULL;
@@ -362,15 +375,20 @@ expand_arg(struct cligen_parse_yacc_arg *ya, char *type, char *arg)
     return retval;
 }
 
+/*!
+ * @param[in]  ya  CLIgen yacc parse struct
+ */
 static int
-expand_fn(struct cligen_parse_yacc_arg *ya, char *fn)
+expand_fn(cliyacc *ya,
+	  char    *fn)
 {
     ya->ya_var->co_expand_fn_str = fn;
     return 0;
 }
 
 static int
-cgy_list_push(cg_obj *co, struct cgy_list **cl0)
+cgy_list_push(cg_obj           *co,
+	      struct cgy_list **cl0)
 {
     struct cgy_list *cl;
 
@@ -386,7 +404,9 @@ cgy_list_push(cg_obj *co, struct cgy_list **cl0)
     return 0;
 }
 
-/* Delet whole list */
+/*! Delete whole list 
+ * @param[in]  ya  CLIgen yacc parse struct
+ */
 static int
 cgy_list_delete(struct cgy_list **cl0)
 {
@@ -399,16 +419,17 @@ cgy_list_delete(struct cgy_list **cl0)
     return 0;
 }
 
-/* 
- * Create new tmp variable cligen object 
+/*! Create new tmp variable cligen object 
  * It must be filled in by later functions.
  * The reason is, the variable must be completely parsed by successive syntax
  * (eg <type:> stuff) and we cant insert it into the object tree until that is done.
  * And completed by the '_post' function
- * Returns: tmp variable object
+ * @param[in]  ya  CLIgen yacc parse struct
+ * @retval tmp variable object
+ * @see cgy_var_post
  */
 static cg_obj *
-cgy_var_pre(struct cligen_parse_yacc_arg *ya)
+cgy_var_create(cliyacc *ya)
 {
     cg_obj *co;
 
@@ -423,8 +444,14 @@ cgy_var_pre(struct cligen_parse_yacc_arg *ya)
     return co;
 }
 
+/*! Set name and type on a (previously created) variable
+ * @param[in]  ya  CLIgen yacc parse struct
+ * @see cgy_var_create
+ */
 static int
-cgy_var_new(struct cligen_parse_yacc_arg *ya, char *name, char *type)
+cgy_var_name_type(cliyacc *ya,
+	    char    *name,
+	    char    *type)
 {
     ya->ya_var->co_command = name; 
     if ((ya->ya_var->co_vtype = cv_str2type(type)) == CGV_ERR){
@@ -432,45 +459,39 @@ cgy_var_new(struct cligen_parse_yacc_arg *ya, char *name, char *type)
 	fprintf(stderr, "%s: Invalid type: %s\n", __FUNCTION__, type);
 	return -1;
     }
-#if 1
-    if (strcmp(type, "int")==0)
-	fprintf(stderr, "NOTE: type \"int\" no longer supported in CLIgen, please replace with int8, int16, int32 or int64\n");
-#endif
-
     return 0;
 }
 
-/* 
- * Complete variable cligen object after parsing is complete and insert it into
- * object hierarchies. That is, insert a variable in each hieracrhy.
- * Returns:
- *       new object or sister that is placed in the hierarchy.
- * Arguments:
- *       cv     - tmp variable object
+/*! Complete variable cligen object after parsing is complete,
+ * And insert it into object hierarchies. 
+ * That is, insert a variable in each hieracrhy.
+ * @param[in]  ya  CLIgen yacc parse struct
+ * @retval 0 on OK
+ * @retval -1 on error
  */
 static int
-cgy_var_post(struct cligen_parse_yacc_arg *ya)
+cgy_var_post(cliyacc *ya)
 {
     struct cgy_list *cl; 
-    cg_obj *cv1; /* variable copy object */
-    cg_obj *cop; /* parent */
-    cg_obj *co;  /* new obj/sister */
-    cg_obj *cv = ya->ya_var;
+    cg_obj          *coc; /* variable copy object */
+    cg_obj          *coparent; /* parent */
+    cg_obj          *co;  /* new obj/sister */
+    cg_obj          *coy = ya->ya_var;
 
 #if 0
-    if (cv->co_vtype == CGV_ERR) /* unassigned */
-	cv->co_vtype = cv_str2type(cv->co_command);
+    if (coy->co_vtype == CGV_ERR) /* unassigned */
+	coy->co_vtype = cv_str2type(coy->co_command);
 #endif
     if (debug)
 	fprintf(stderr, "%s: cmd:%s vtype:%d\n", __FUNCTION__, 
-		cv->co_command,
-		cv->co_vtype );
-    if (cv->co_vtype == CGV_ERR){
+		coy->co_command,
+		coy->co_vtype );
+    if (coy->co_vtype == CGV_ERR){
 	cligen_parseerror1(ya, "Wrong or unassigned variable type"); 	
 	return -1;
     }
 #if 0 /* XXX dont really know what i am doing but variables dont behave nice in choice */
-    if (ya->ya_opt){     /* get cop from stack */
+    if (ya->ya_opt){     /* get coparent from stack */
 	if (ya->ya_stack == NULL){
 	    fprintf(stderr, "Option allowed only within () or []\n");
 	    return -1;
@@ -481,31 +502,32 @@ cgy_var_post(struct cligen_parse_yacc_arg *ya)
 #endif
 	cl = ya->ya_list;
     for (; cl; cl = cl->cl_next){
-	cop = cl->cl_obj;
+	coparent = cl->cl_obj;
 	if (cl->cl_next){
-	    if (co_copy(cv, cop, &cv1) < 0)
+	    if (co_copy(coy, coparent, &coc) < 0) /* duplicate coy to coc */
 		return -1;
 	}
 	else
-	    cv1 = cv; /* Dont copy if last in list */
-	co_up_set(cv1, cop);
-	if ((co = co_insert(&cop->co_pt, cv1)) == NULL) /* co_new may be deleted */
+	    coc = coy; /* Dont copy if last in list */
+	co_up_set(coc, coparent);
+	if ((co = co_insert(&coparent->co_pt, coc)) == NULL) /* coc may be deleted */
 	    return -1;
 	cl->cl_obj = co;
     }
     return 0;
 }
 
-/*
- * Create a new command object. Actually, create a new for every tree in the list
+/*! Create a new command object. 
+ * Actually, create a new for every tree in the list
  * and replace the old with the new object.
- * Returns:
- *  -1 on error 0 on OK
- * Arguments:
- *   cmd: the command string
+ * @param[in]  ya  CLIgen yacc parse struct
+ * @param[in]  cmd the command string
+ * @retval     0   OK
+ * @retval    -1   Error
  */
 static int
-cgy_cmd(struct cligen_parse_yacc_arg *ya, char *cmd)
+cgy_cmd(cliyacc *ya,
+	char    *cmd)
 {
     struct cgy_list *cl; 
     cg_obj *cop; /* parent */
@@ -528,14 +550,15 @@ cgy_cmd(struct cligen_parse_yacc_arg *ya, char *cmd)
     return 0;
 }
 
-/*!   Create a REFERENCE node that references another tree.
-   This is evaluated in runtime by pt_expand().
-   See also db2tree() in clicon/apps/cli_main.c on how to create such a tree
-   And pt_expand_treeref()/pt_callback_reference() how it is expanded
+/*! Create a REFERENCE node that references another tree.
+ * This is evaluated in runtime by pt_expand().
+ * @param[in]  ya  CLIgen yacc parse struct
+ * @see also db2tree() in clicon/apps/cli_main.c on how to create such a tree
+ * @see pt_expand_treeref()/pt_callback_reference() how it is expanded
  */
 static int
-cgy_reference(struct cligen_parse_yacc_arg *ya, 
-	      char                         *name)
+cgy_reference(cliyacc *ya, 
+	      char    *name)
 {
     struct cgy_list *cl; 
     cg_obj          *cop;   /* parent */
@@ -549,24 +572,27 @@ cgy_reference(struct cligen_parse_yacc_arg *ya,
 	    return -1;
 	}
 	cot->co_type    = CO_REFERENCE;
-	if (co_insert(&cop->co_pt, cot) == NULL)  /* co_new may be deleted */
+	if (co_insert(&cop->co_pt, cot) == NULL)  /* cot may be deleted */
 	    return -1;
 	/* Replace parent in cgy_list: not allowed after ref?
 	   but only way to add callbacks to it.
 	*/
 	cl->cl_obj = cot;
-   }
- 
+    }
     return 0;
 }
 
 
-/* assume comment is malloced and not freed by parser */
+/*! Add comment
+ * Assume comment is malloced and not freed by parser 
+ * @param[in]  ya  CLIgen yacc parse struct
+ */
 static int
-cgy_comment(struct cligen_parse_yacc_arg *ya, char *comment)
+cgy_comment(cliyacc *ya,
+	    char    *comment)
 {
     struct cgy_list *cl; 
-    cg_obj *co; 
+    cg_obj          *co; 
 
     for (cl = ya->ya_list; cl; cl = cl->cl_next){
 	co = cl->cl_obj;
@@ -579,8 +605,13 @@ cgy_comment(struct cligen_parse_yacc_arg *ya, char *comment)
     return 0;
 }
 
+/*!
+ * @param[in]  ya  CLIgen yacc parse struct
+ */
 static char *
-cgy_choice_merge(struct cligen_parse_yacc_arg *ya, char *str, char *app)
+cgy_choice_merge(cliyacc *ya,
+		 char    *str,
+		 char    *app)
 {
     int len;
     char *s;
@@ -595,15 +626,15 @@ cgy_choice_merge(struct cligen_parse_yacc_arg *ya, char *str, char *app)
     return s;
 }
 
-/*
- * Post-processing of commands, eg at ';':
+/*! Post-processing of commands, eg at ';':
  *  a cmd;<--
  * But only if parsing succesful.
  * 1. Add callback and args to every list
  * 2. Add empty child unless already empty child
+ * @param[in]  ya  CLIgen yacc parse struct
  */
 int
-cgy_terminal(struct cligen_parse_yacc_arg *ya)
+cgy_terminal(cliyacc *ya)
 {
     struct cgy_list    *cl; 
     cg_obj             *co; 
@@ -660,11 +691,11 @@ cgy_terminal(struct cligen_parse_yacc_arg *ya)
     return retval;  
 }
 
-/*
- * Take the whole cgy_list and push it to the stack 
+/*! Take the whole cgy_list and push it to the stack 
+ * @param[in]  ya  CLIgen yacc parse struct
  */
 static int
-ctx_push(struct cligen_parse_yacc_arg *ya)
+ctx_push(cliyacc *ya)
 {
     struct cgy_list *cl; 
     struct cgy_stack *cs; 
@@ -685,18 +716,17 @@ ctx_push(struct cligen_parse_yacc_arg *ya)
     return 0;
 }
 
-/*
- * ctx_peek_swap
- * Peek context from stack and replace the object list with it
+/*! Peek context from stack and replace the object list with it
  * Typically done in a choice, eg "(c1|c2)" at c2.
  * Dont pop context
-  */
+ * @param[in]  ya  CLIgen yacc parse struct
+ */
 static int
-ctx_peek_swap(struct cligen_parse_yacc_arg *ya)
+ctx_peek_swap(cliyacc *ya)
 {
     struct cgy_stack *cs; 
-    struct cgy_list *cl; 
-    cg_obj *co; 
+    struct cgy_list  *cl; 
+    cg_obj           *co; 
 
     if (debug)
 	fprintf(stderr, "%s\n", __FUNCTION__);
@@ -723,14 +753,13 @@ ctx_peek_swap(struct cligen_parse_yacc_arg *ya)
     return 0;
 }
 
-/*
- * ctx_peek_swap2
- * Peek context from stack and replace the object list with it
+/*! Peek context from stack and replace the object list with it
  * Typically done in a choice, eg "(c1|c2)" at c2.
  * Dont pop context
-  */
+ * @param[in]  ya  CLIgen yacc parse struct
+ */
 static int
-ctx_peek_swap2(struct cligen_parse_yacc_arg *ya)
+ctx_peek_swap2(cliyacc *ya)
 {
     struct cgy_stack *cs; 
     struct cgy_list  *cl; 
@@ -766,19 +795,18 @@ delete_stack_element(struct cgy_stack *cs)
     return 0;
 }
 
-/*
- * ctx_pop_add
- * Pop context from stack and add it to object list
+/*! Pop context from stack and add it to object list
  * Typically done after an option, eg "cmd [opt]"
  * "cmd <push> [opt] <pop>". At pop, all objects saved at push
  * are added to the object list.
-  */
+ * @param[in]  ya  CLIgen yacc parse struct
+ */
 static int
-ctx_pop_add(struct cligen_parse_yacc_arg *ya)
+ctx_pop_add(cliyacc *ya)
 {
     struct cgy_stack *cs; 
-    struct cgy_list *cl; 
-    cg_obj *co; 
+    struct cgy_list  *cl; 
+    cg_obj           *co; 
 
     if (debug)
 	fprintf(stderr, "%s\n", __FUNCTION__);
@@ -802,17 +830,16 @@ ctx_pop_add(struct cligen_parse_yacc_arg *ya)
     return 0;
 }
 
-/*
- * ctx_pop
- * Pop context from stack and discard it.
+/*! Pop context from stack and discard it.
  * Typically done after a grouping, eg "cmd (opt1|opt2)"
+ * @param[in]  ya  CLIgen yacc parse struct
  */
 static int
-ctx_pop(struct cligen_parse_yacc_arg *ya)
+ctx_pop(cliyacc *ya)
 {
     struct cgy_stack *cs; 
-    struct cgy_list *cl; 
-    cg_obj *co; 
+    struct cgy_list  *cl; 
+    cg_obj           *co; 
 
     if (debug)
 	fprintf(stderr, "%s\n", __FUNCTION__);
@@ -830,8 +857,12 @@ ctx_pop(struct cligen_parse_yacc_arg *ya)
     return 0;
 }
 
+/*!
+ * @param[in]  ya  CLIgen yacc parse struct
+ */
 static int
-cg_regexp(struct cligen_parse_yacc_arg *ya, char *rx)
+cg_regexp(cliyacc *ya,
+	  char    *rx)
 {
     ya->ya_var->co_regex = rx;  
     ya->ya_var->co_vtype=CGV_STRING;
@@ -844,13 +875,14 @@ cg_regexp(struct cligen_parse_yacc_arg *ya, char *rx)
  * NOTE: decimal64 fraction-digits must be given before range:
  *   <x:decimal64 fraction-digits:4 range[20.0]>
  * if you want any other fraction-digit than 2
+ * @param[in]  ya  CLIgen yacc parse struct
  */
 static int
-cg_minmax(struct cligen_parse_yacc_arg *ya, 
-	  char                         *minstr, 
-	  char                         *maxstr,
-	  cg_obj                       *yv,
-	  enum cv_type                  cvtype)
+cg_minmax(cliyacc     *ya, 
+	  char        *minstr, 
+	  char        *maxstr,
+	  cg_obj      *yv,
+	  enum cv_type cvtype)
 {
     int     retval = -1;
     char   *reason = NULL;
@@ -906,12 +938,16 @@ cg_minmax(struct cligen_parse_yacc_arg *ya,
     return retval;
 }
 
-/* <x:string length[min:max]> 
-   Note that the co_range structure fields are re-used for string length restrictions.
-   but the range type is uint64, not depending on cv type as int:s
+/*! Add Length
+ * <x:string length[min:max]> 
+ *   Note that the co_range structure fields are re-used for string length restrictions.
+ *   but the range type is uint64, not depending on cv type as int:s
+ * @param[in]  ya  CLIgen yacc parse struct
  */
 static int
-cg_length(struct cligen_parse_yacc_arg *ya, char *minstr, char *maxstr)
+cg_length(cliyacc *ya,
+	  char    *minstr,
+	  char    *maxstr)
 {
     cg_obj *yv;
 
@@ -922,8 +958,13 @@ cg_length(struct cligen_parse_yacc_arg *ya, char *minstr, char *maxstr)
     return cg_minmax(ya, minstr, maxstr, yv, CGV_UINT64);
 }
 
+/*!
+ * @param[in]  ya  CLIgen yacc parse struct
+ */
 static int
-cg_range(struct cligen_parse_yacc_arg *ya, char *minstr, char *maxstr)
+cg_range(cliyacc *ya,
+	 char    *minstr,
+	 char    *maxstr)
 {
     cg_obj *yv;
 
@@ -934,9 +975,12 @@ cg_range(struct cligen_parse_yacc_arg *ya, char *minstr, char *maxstr)
     return cg_minmax(ya, minstr, maxstr, yv, yv->co_vtype);
 }
 
-
-static int
-cg_dec64_n(struct cligen_parse_yacc_arg *ya, char *fraction_digits)
+/*!
+ * @param[in]  ya  CLIgen yacc parse struct
+ */
+ static int
+cg_dec64_n(cliyacc *ya,
+	   char    *fraction_digits)
 {
     cg_obj *yv;
     char   *reason = NULL;
@@ -952,8 +996,12 @@ cg_dec64_n(struct cligen_parse_yacc_arg *ya, char *fraction_digits)
     return 0;
 }
 
+/*!
+ * @param[in]  ya  CLIgen yacc parse struct
+ */
 int
-cgy_init(struct cligen_parse_yacc_arg *ya, cg_obj *co_top)
+cgy_init(cliyacc *ya,
+	 cg_obj  *co_top)
 {
     if (debug)
 	fprintf(stderr, "%s\n", __FUNCTION__);
@@ -965,8 +1013,11 @@ cgy_init(struct cligen_parse_yacc_arg *ya, cg_obj *co_top)
     return 0;
 }
 
+/*!
+ * @param[in]  ya  CLIgen yacc parse struct
+ */
 int
-cgy_exit(struct cligen_parse_yacc_arg *ya)
+cgy_exit(cliyacc *ya)
 {
     struct cgy_stack *cs; 
 
@@ -1083,15 +1134,15 @@ decl        : cmd {if (debug)fprintf(stderr, "decl->cmd\n");}
 
 cmd         : NAME { if (debug)fprintf(stderr, "cmd->NAME(%s)\n", $1);if (cgy_cmd(_ya, $1) < 0) YYERROR; free($1); } 
             | '@' NAME { if (debug)fprintf(stderr, "cmd->@NAME\n");if (cgy_reference(_ya, $2) < 0) YYERROR; free($2); } 
-            | '<' { if ((_YA->ya_var = cgy_var_pre(_YA)) == NULL) YYERROR; }
+            | '<' { if ((_YA->ya_var = cgy_var_create(_YA)) == NULL) YYERROR; }
                variable '>'  { if (cgy_var_post(_ya) < 0) YYERROR; }
             ;
 
-variable    : NAME          { if (cgy_var_new(_ya, $1, $1)<0) YYERROR; }
-            | NAME ':' NAME { if (cgy_var_new(_ya, $1, $3)<0) YYERROR; free($3); }
-            | NAME ' ' { if (cgy_var_new(_ya, $1, $1) < 0) YYERROR; }
+variable    : NAME          { if (cgy_var_name_type(_ya, $1, $1)<0) YYERROR; }
+            | NAME ':' NAME { if (cgy_var_name_type(_ya, $1, $3)<0) YYERROR; free($3); }
+            | NAME ' ' { if (cgy_var_name_type(_ya, $1, $1) < 0) YYERROR; }
               keypairs
-	    | NAME ':' NAME ' ' { if (cgy_var_new(_ya, $1, $3) < 0) YYERROR; free($3); }
+	    | NAME ':' NAME ' ' { if (cgy_var_name_type(_ya, $1, $3) < 0) YYERROR; free($3); }
               keypairs
             ;
 

@@ -328,7 +328,7 @@ cligen_tree_find(cligen_handle h,
 /*! Add a new parsetree last in list
  * @param[in] h       CLIgen handle
  * @param[in] name    name of parse-tree
- * @param[jn] pt      parse-tree passed by value(!)
+ * @param[in] pt      parse-tree passed by value(!)
  * Note, if this is the first tree, it is activated by default
  */
 int 
@@ -832,8 +832,8 @@ cligen_lexicalorder(cligen_handle h)
 
 /*! Set lexical matching order.
  * 
- * @param[in] h       CLIgen handle
- * @param n  strcmp (0) or strverscmp (1).
+ * @param[in] h  CLIgen handle
+ * @param[in] n  strcmp (0) or strverscmp (1).
  */
 int
 cligen_lexicalorder_set(cligen_handle h, 
@@ -924,6 +924,7 @@ cligen_userhandle_set(cligen_handle h,
 }
 
 static int _getline_bufsize = GETLINE_BUFLEN_DEFAULT;
+static int _getline_killbufsize = GETLINE_BUFLEN_DEFAULT;
 
 /*!
  * @param[in] h       CLIgen handle
@@ -947,13 +948,22 @@ cligen_killbuf(cligen_handle h)
     return ch->ch_killbuf;
 }
 
-/*!
+/*! Return length cligen line buffer
  * @param[in] h       CLIgen handle
  */
 int 
 cligen_buf_size(cligen_handle h)
 {
     return _getline_bufsize;
+}
+
+/*! Return length cligen kill buffer
+ * @param[in] h       CLIgen handle
+ */
+int 
+cligen_killbuf_size(cligen_handle h)
+{
+    return _getline_killbufsize;
 }
 
 /*!
@@ -969,34 +979,61 @@ cligen_buf_init(cligen_handle h)
 	return -1;
     }
     memset(ch->ch_buf, 0, _getline_bufsize);
-    if ((ch->ch_killbuf = malloc(_getline_bufsize)) == NULL){
+    if ((ch->ch_killbuf = malloc(_getline_killbufsize)) == NULL){
 	fprintf(stderr, "%s malloc: %s\n", __FUNCTION__, strerror(errno));
 	return -1;
     }
-    memset(ch->ch_killbuf, 0, _getline_bufsize);
+    memset(ch->ch_killbuf, 0, _getline_killbufsize);
     return 0;
 }
 
-/*!
+/*! Increase cligen buffer length with *2 to satisfy new length
  * @param[in] h       CLIgen handle
+ * @param[in] len1    New minimal length (add null for end of string)
+ * |-------------------|------|--------||------|
+ * ^                   ^      ^        ^^      ^
+ * ch_buf              len0   |     len1+1     |
+ *                            bufsize0         bufsize1 = 2^n*bufsize0
  */
 int       
-cligen_buf_increase(cligen_handle h)
+cligen_buf_increase(cligen_handle h,
+		    size_t        len1)
 {
     struct cligen_handle *ch = handle(h);
-    int len0 = _getline_bufsize;
+    size_t                len0 = _getline_bufsize; /* orig length */
 
-    _getline_bufsize *= 2;
+    if (_getline_bufsize >= len1 + 1)
+      return 0;
+    while (_getline_bufsize < len1 + 1)
+      _getline_bufsize *= 2;      
     if ((ch->ch_buf = realloc(ch->ch_buf, _getline_bufsize)) == NULL){
 	fprintf(stderr, "%s realloc: %s\n", __FUNCTION__, strerror(errno));
 	return -1;
     }
     memset(ch->ch_buf+len0, 0, _getline_bufsize-len0);
-    if ((ch->ch_killbuf = realloc(ch->ch_killbuf, _getline_bufsize)) == NULL){
+    return 0;
+}
+
+/*! Increase cligen kill buffer length with *2 to satisfy new length
+ * @param[in] h       CLIgen handle
+ * @param[in] len1    New minimal length
+ */
+int       
+cligen_killbuf_increase(cligen_handle h,
+			size_t        len1)
+{
+    struct cligen_handle *ch = handle(h);
+    int                   len0 = _getline_killbufsize;
+
+    if (_getline_killbufsize >= len1 + 1)
+      return 0;
+    while (_getline_killbufsize < len1 + 1)
+      _getline_killbufsize *= 2;      
+    if ((ch->ch_killbuf = realloc(ch->ch_killbuf, _getline_killbufsize)) == NULL){
 	fprintf(stderr, "%s realloc: %s\n", __FUNCTION__, strerror(errno));
 	return -1;
     }
-    memset(ch->ch_killbuf+len0, 0, _getline_bufsize-len0);
+    memset(ch->ch_killbuf+len0, 0, _getline_killbufsize-len0);
     return 0;
 }
 

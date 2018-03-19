@@ -2,9 +2,20 @@
 
 ## R3.7.0 (Upcoming)
 
+* Added new cligen_print_obj() function to print CLIgen syntax object (not just parse-trees).
+* Fixed issues with mixed variables, choices and commands, see https://github.com/olofhagsand/cligen/issues/5. Thanks Nie WeiYang for detecting this.
+* Removed support for type "int".  Replace with int8, int16, int32 or int64.
 * Removed pre-R3.6.0 expand functions. Only multi-argument callback CLI expand
   functions supported, eg cligen_expandv_str2fn()
 
+* Fuzzing performed using AFL. Following errors found and corrected:
+  * Check for null arg in cligen_tutorial
+  * Range check of search string in getline.c
+  * buffer error in tab completion
+  * dual free when recursive calls
+  * Separated line buffer and kill buffer handling to indefinite length, with
+    separet functions, eg cligen_buf_increase() +-> cligen_killbuf_increase().
+  
 * Fixed bug that appeared when expanding non-completed sub-strings. Eg "Interface eth0
   10.1.2. ?" could produce a cligen parse error and program termination
   in some circumstances. Detected by Netgate.

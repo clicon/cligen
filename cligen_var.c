@@ -2666,9 +2666,9 @@ cvtype_max2str_dup(enum cv_type type)
  * See also cv_parse() which does has simpler error handling.
  * and cv_validate() where the cv is validated against a cligen object specification.
  *
- * @param  str0    Input string. Example, number variable, str can be "7834" or "0x7634"
- * @param  cv      cligen variable, as prepared by cv_reset()/cv_new()
- * @param  reason  If given, and if return value is 0, contains a malloced string
+ * @param[in]  str0    Input string. Example, number variable, str can be "7834" or "0x7634"
+ * @param[in]  cv      cligen variable, as prepared by cv_reset()/cv_new()
+ * @param[out] reason  If given, and if return value is 0, contains a malloced string
  *                 describing the reason why the validation failed. If given must be NULL.
  *
  * @retval -1  Error (fatal), with errno set to indicate error
@@ -2855,8 +2855,8 @@ cv_parse1(char   *str0,
  * and cv_validate() where the cv is validated against a cligen object specification.
  *
  * Arguments:
- * @param  str  Input string. Example, number variable, str can be "7834" or "0x7634"
- * @param  cv   cligen variable, as prepared by cv_reset()/cv_new()
+ * @param[in]  str  Input string. Example, number variable, str can be "7834" or "0x7634"
+ * @param[in]  cv   cligen variable, as prepared by cv_reset()/cv_new()
  * @retval -1 Error (fatal), or parsing error, printf error in stderr.
  * @retval  0 Parse OK
  *
@@ -2891,9 +2891,9 @@ cv_parse(char   *str,
 
 /*! Validate cligen variable cv using the spec in cs.
  *
- * @param [in]  cv      A cligen variable to validate. This is a correctly parsed cv.
- * @param [in]  cs      A cligen variable specification object that defines the cv.
- * @param [out] reason  If given, and if return value is 0, contains a malloced string
+ * @param[in]  cv      A cligen variable to validate. This is a correctly parsed cv.
+ * @param[in]  cs      A cligen variable specification object that defines the cv.
+ * @param[out] reason  If given, and if return value is 0, contains a malloced string
  *                      describing the reason why the validation failed.
  * @retval -1  Error (fatal), with errno set to indicate error
  * @retval 0   Validation not OK, malloced reason is returned. returned reason must be freed
