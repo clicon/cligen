@@ -1,0 +1,80 @@
+#!/usr/bin/make -f
+
+package	= cligen
+
+SOURCEDIR	:= $(shell if [ "$$PWD" != "" ]; then echo $$PWD; else pwd; fi)
+DEBDIR		:= $(shell realpath ${SOURCEDIR}/..)
+
+
+LIB_DIR	= ${DESTDIR}/lib
+
+DEBIANDIR	:= ${SOURCEDIR}/debian
+DEB_MAKE_FILES	= ${DEBIANDIR}/deb_make_files
+
+print_env:
+	@echo "package is ${package}"
+	@echo "BR is ${BR}"
+	@echo "DEBDIR is ${DEBDIR}"
+	@echo "SOURCEDIR is ${SOURCEDIR}"
+	@echo "DESTDIR is ${DESTDIR}"
+
+
+configure-stamp:
+	@echo "---- Configure from debian/rules ---- "
+	./configure \
+		--host=$(DEB_HOST_GNU_TYPE) \
+		--build=$(DEB_BUILD_GNU_TYPE) \
+	touch configure-stamp
+
+
+build-stamp:	configure-stamp
+	@echo "---- Build from debian/rules ---- "
+	-rm -f build-stamp
+	$(MAKE)
+
+.PHONY: build
+build: build-stamp
+
+.PHONY: binary
+binary: binary-indep binary-arch
+
+.PHONY: binary-indep
+binary-indep: build
+
+.PHONY: binary-arch
+binary-arch: install
+
+.PHONY: install
+install: build
+	@echo "---- Install from debian/rules ----"
+	@echo "---- DESTDIR = ${DESTDIR} ---- "
+	$(MAKE) DESTDIR=${DESTDIR} install
+	mkdir -p  ${DESTDIR}/DEBIAN
+	cp debian/control ${DESTDIR}/DEBIAN
+	cp debian/changelog ${DESTDIR}/DEBIAN
+#	cp debian/postinst ${DEBIAN}/postinst
+#	cp debian/postrm ${DEBIAN}/postrm
+	dpkg-shlibdeps ${package}
+	dpkg-gencontrol -P${DESTDIR}
+	cd ${DESTDIR} \
+		&& find . -type f ! -regex '.*DEBIAN/.*' -printf '%P\0' \
+		| xargs -r0 md5sum > DEBIAN/md5sums
+	dpkg-deb --build ${DESTDIR} ../
+
+.PHONY: clean
+clean: configure-stamp
+	@echo "---- Clean from debian/rules ----"
+	rm -f *-stamp
+	$(MAKE) distclean
+	@echo Maybe rm -rf debian/${package}
+	@echo Maybe rm -rf debian/...others...
+	rm -rf build
+
+.FORCE:
+
+override_dh_auto_install:
+	$(MAKE) DESTDIR=$$(pwd)/debian/$(package) prefix=/usr install
+
+
+build-arch:
+build-indep:

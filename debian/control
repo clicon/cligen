@@ -1,0 +1,12 @@
+Source: cligen
+Section: net
+Priority: extra
+Maintainer: Netgate <support@netgate.com>
+Build-Depends: debhelper (>= 9), chrpath, dh-python, python-all
+Standards-Version: 3.9.4
+
+Package: cligen
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: CLI Generator
+  This package provides a CLI toolkit used by Netgate's TNSR product.
