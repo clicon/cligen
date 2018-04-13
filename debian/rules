@@ -50,8 +50,8 @@ install: build
 	@echo "---- DESTDIR = ${DESTDIR} ---- "
 	$(MAKE) DESTDIR=${DESTDIR} install
 	mkdir -p  ${DESTDIR}/DEBIAN
+	@echo "---- Copy debian files to DEBIAN ----"
 	cp debian/control ${DESTDIR}/DEBIAN
-	cp debian/changelog ${DESTDIR}/DEBIAN
 #	cp debian/postinst ${DEBIAN}/postinst
 #	cp debian/postrm ${DEBIAN}/postrm
 	dpkg-shlibdeps ${package}
