@@ -43,7 +43,7 @@ if [ "$1" = "rpm-release" ]; then
 fi
 
 if [ -n "${ADD}" ]; then
-    if [ "$1" = "rpm-string" -o "$1" = "deb-string" ]; then
+    if [ "$1" = "rpm-string" ]; then
       echo ${TAG}-${ADD}${CMTR:+~${CMTR}}${BLD}
     else
       echo ${TAG}-${ADD}${CMT:+~${CMT}}${BLD}
