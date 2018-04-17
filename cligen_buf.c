@@ -171,6 +171,28 @@ cprintf(cbuf       *cb,
     return retval;
 }
 
+/*! Append a character to a cbuf
+ * 
+ * @param [in]  cb      cligen buffer allocated by cbuf_new(), may be reallocated.
+ * @param [in]  c       character to append
+ */
+int
+cbuf_append(cbuf       *cb, 
+  	    int        c)
+{
+    size_t diff;
 
+    /* make sure we have enough space */
+    diff = cb->cb_buflen - (cb->cb_strlen + 1);
+    if (diff <= 0) {
+	cb->cb_buflen *= 2;
+	if ((cb->cb_buffer = realloc(cb->cb_buffer, cb->cb_buflen)) == NULL) {
+            return -1;
+	}
+    }
 
-
+    cb->cb_buffer[cb->cb_strlen++] = c;
+    cb->cb_buffer[cb->cb_strlen] = 0;
+    
+    return 0;
+}
