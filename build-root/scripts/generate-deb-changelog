@@ -17,6 +17,8 @@ CHANGELOG=debian/changelog
 DIST=unstable
 FIRST=1
 
+script_dir=$( cd "$(dirname "${BASH_SOURCE}")" ; pwd -P )
+
 print_changelog_item() {
 	DATE=$(git log -1 --format=%cD ${TAG})
 	DEBFULLNAME=$(git log -1 --format=%an ${TAG})
@@ -35,7 +37,15 @@ print_changelog_item() {
 
 pkg_name=$1
 
-VER=$(build-root/scripts/version)
+if [ -e ${script_dir}/version ]; then
+	version_script=${script_dir}/version
+else
+	echo "Can't find version script."
+	exit -1
+fi
+
+VER=$( ${version_script})
+
 TAG=HEAD
 ADDS=$(echo ${VER} | sed -e 's/~.*//'| cut -s -d- -f2)
 
