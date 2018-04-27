@@ -37,7 +37,11 @@
 AC_INIT(cligen.h)
 
 # Default CFLAGS unless set by environment.
-: ${CFLAGS="-O2"}
+unset default_cflags
+if test -z "$CFLAGS"; then
+   CFLAGS="-O2 -Wall"
+   default_cflags=1
+fi
 
 AC_CONFIG_HEADER(cligen_config.h)
 
@@ -70,6 +74,10 @@ AC_SUBST(SH_SUFFIX)
 AC_SUBST(EXE_SUFFIX)
 AC_SUBST(AR)
 AC_SUBST(RANLIB)
+AC_SUBST(INSTALL_DIR)
+AC_SUBST(INSTALL_INC)
+AC_SUBST(INSTALL_BIN)
+AC_SUBST(INSTALL_LIB)
 #
 
 echo "$host_cpu $host_vendor $host_os"
@@ -89,13 +97,40 @@ AC_MSG_RESULT(Compiler is $CC)
 LIBS="${LIBS} -L." # 
 LDFLAGS=""
 CPPFLAGS="-DHAVE_CONFIG_H ${CPPFLAGS}"
-CFLAGS="${CFLAGS} -Wall" 
 AC_CHECK_LIB(m, main)
 EXE_SUFFIX=""
 OBJ_SUFFIX=".o"
 AR_SUFFIX=".a"
 SH_SUFFIX=".so"
 AR="ar"
+INSTALL_DIR="install -m 0755 -d"
+INSTALL_INC="install -m 0644"
+INSTALL_BIN="install -m 0755"
+INSTALL_LIB="install -m 0644"
+
+AC_ARG_ENABLE(debug, AS_HELP_STRING([--enable-debug],
+	[Build with debug symbols, default: no]),
+	[case "${enableval}" in
+		yes)
+			debug=true
+			if test -n "$default_cflags"; then
+				CFLAGS="-g -O0 -Wall"
+			fi
+			;;
+		no)
+			debug=false
+			INSTALL_BIN="${INSTALL_BIN} -s"
+			INSTALL_LIB="${INSTALL_LIB} -s"
+			;;
+		*)
+			AC_MSG_ERROR([bad value ${enableval} for --enable-debug])
+			;;
+	esac],
+	[
+		debug=false
+		INSTALL_BIN="${INSTALL_BIN} -s"
+		INSTALL_LIB="${INSTALL_LIB} -s"
+	])
 
 AC_MSG_RESULT(CFLAGS is $CFLAGS)	
 AC_MSG_RESULT(CPPFLAGS is $CPPFLAGS)	
