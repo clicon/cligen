@@ -1,80 +1,33 @@
 #!/usr/bin/make -f
-
-package	= cligen
-
-SOURCEDIR	:= $(shell if [ "$$PWD" != "" ]; then echo $$PWD; else pwd; fi)
-DEBDIR		:= $(shell realpath ${SOURCEDIR}/..)
+# See debhelper(7) (uncomment to enable)
+# output every command that modifies files on the build system.
+#export DH_VERBOSE = 1
 
 
-LIB_DIR	= ${DESTDIR}/lib
+# see FEATURE AREAS in dpkg-buildflags(1)
+#export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 
-DEBIANDIR	:= ${SOURCEDIR}/debian
-DEB_MAKE_FILES	= ${DEBIANDIR}/deb_make_files
-
-print_env:
-	@echo "package is ${package}"
-	@echo "BR is ${BR}"
-	@echo "DEBDIR is ${DEBDIR}"
-	@echo "SOURCEDIR is ${SOURCEDIR}"
-	@echo "DESTDIR is ${DESTDIR}"
+# see ENVIRONMENT in dpkg-buildflags(1)
+# package maintainers to append CFLAGS
+#export DEB_CFLAGS_MAINT_APPEND  = -Wall -pedantic
+# package maintainers to append LDFLAGS
+#export DEB_LDFLAGS_MAINT_APPEND = -Wl,--as-needed
 
 
-configure-stamp:
-	@echo "---- Configure from debian/rules ---- "
-	./configure \
-		--host=$(DEB_HOST_GNU_TYPE) \
-		--build=$(DEB_BUILD_GNU_TYPE)
-	touch configure-stamp
+%:
+	dh $@  --with autotools_dev
 
 
-build-stamp:	configure-stamp
-	@echo "---- Build from debian/rules ---- "
-	-rm -f build-stamp
-	$(MAKE)
+# dh_make generated override targets
+# This is example for Cmake (See https://bugs.debian.org/641051 )
+#override_dh_auto_configure:
+#	dh_auto_configure -- #	-DCMAKE_LIBRARY_PATH=$(DEB_HOST_MULTIARCH)
 
-.PHONY: build
-build: build-stamp
-
-.PHONY: binary
-binary: binary-indep binary-arch
-
-.PHONY: binary-indep
-binary-indep: build
-
-.PHONY: binary-arch
-binary-arch: install
-
-.PHONY: install
-install: build
-	@echo "---- Install from debian/rules ----"
-	@echo "---- DESTDIR = ${DESTDIR} ---- "
-	$(MAKE) DESTDIR=${DESTDIR} install
-	mkdir -p  ${DESTDIR}/DEBIAN
-	@echo "---- Copy debian files to DEBIAN ----"
-	cp debian/control ${DESTDIR}/DEBIAN
-#	cp debian/postinst ${DEBIAN}/postinst
-#	cp debian/postrm ${DEBIAN}/postrm
-	dpkg-shlibdeps ${package}
-	dpkg-gencontrol -P${DESTDIR}
-	cd ${DESTDIR} \
-		&& find . -type f ! -regex '.*DEBIAN/.*' -printf '%P\0' \
-		| xargs -r0 md5sum > DEBIAN/md5sums
-	dpkg-deb --build ${DESTDIR} ../
-
-.PHONY: clean
-clean: configure-stamp
-	@echo "---- Clean from debian/rules ----"
-	rm -f *-stamp
-	$(MAKE) distclean
-	@echo Maybe rm -rf debian/${package}
-	@echo Maybe rm -rf debian/...others...
-	rm -rf build
-
-.FORCE:
+override_dh_auto_test:
+	@echo "Maybe later."
 
 override_dh_auto_install:
-	$(MAKE) DESTDIR=$$(pwd)/debian/$(package) prefix=/usr install
+	$(MAKE) \
+		DESTDIR=${DESTDIR} \
+		install
 
-
-build-arch:
-build-indep:
