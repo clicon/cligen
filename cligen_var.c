@@ -823,6 +823,7 @@ parse_int64_base(char    *str,
     }
     if (errno != 0){
 	if ((i == INT64_MIN || i == INT64_MAX) && errno == ERANGE){ 
+	    errno = 0;
 	    if (reason != NULL)
 		if ((*reason = cligen_reason("%s is out of range (type is int64)", str)) == NULL){
 		    retval = -1; /* malloc */
@@ -833,11 +834,13 @@ parse_int64_base(char    *str,
 	}
 	else{
 	    if ((*reason = cligen_reason("%s: %s", str, strerror(errno))) == NULL){
+		errno = 0;
 		retval = -1;
 		goto done;
 	    }
 	}
-    }
+	errno = 0;
+    } /* if errno */
     *val = i;
     retval = 1; /* OK */
   done:
