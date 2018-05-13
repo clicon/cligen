@@ -572,7 +572,7 @@ cgy_reference(cliyacc *ya,
 	    return -1;
 	}
 	cot->co_type    = CO_REFERENCE;
-	if (co_insert(&cop->co_pt, cot) == NULL)  /* cot may be deleted */
+	if ((cot = co_insert(&cop->co_pt, cot)) == NULL)  /* cot may be deleted */
 	    return -1;
 	/* Replace parent in cgy_list: not allowed after ref?
 	   but only way to add callbacks to it.
