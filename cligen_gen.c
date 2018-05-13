@@ -969,7 +969,7 @@ co_insert_pos(parse_tree pt,
  * @retval    co   object if found (old _or_ new). NOTE: you must replace calling 
  *                 cg_obj with return.
  * @retval    NULL error
- * @note co1 maye be deleted in this call
+ * @note co1 maye be deleted in this call. Dont use co after this call,use retval
  * XXX: pt=[a b] + co1=[b] -> [a b] but children of one b is lost,..
  */
 cg_obj*
