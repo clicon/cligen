@@ -48,5 +48,5 @@ if [ -n "${ADD}" ]; then
       echo ${TAG}-${ADD}${CMT:+~${CMT}}${BLD}
     fi
 else
-    echo ${TAG}-release
+    echo ${TAG}-1
 fi
