@@ -64,6 +64,9 @@ ex <a:int32 show:number>("A number");
   # Example of sub-tree reference (here recursion).
   recurse @tutorial;
 
+  # make a translation of the variable by incrementing characters in the string
+  increment <var:string translate:incstr()>, cb();
+
    # Quit CLI
   quit("quit the CLI"),quit(); 
 
@@ -82,6 +85,8 @@ ex <a:int32 show:number>("A number");
       x;
   }
   change tree, changetree("tutorial");
+
+
 
 
 

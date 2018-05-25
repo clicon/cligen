@@ -71,6 +71,10 @@ typedef int (expandv_cb)(cligen_handle h,       /* handler: cligen or userhandle
 			 cvec         *helptexts /* vector of help-texts */
 			     );
 
+/* Translate callback. Translate a variable, eg from cleartext to
+   encrypted passwords The variable type must be kept */
+typedef int (translate_cb_t)(cligen_handle h, struct cg_obj *co, cg_var *cv);
+
 /*! Cligen ^Z suspension callback
  */
 typedef int (cligen_susp_cb_t)(void *h, char *, int, int *);
@@ -78,6 +82,8 @@ typedef int (cligen_susp_cb_t)(void *h, char *, int, int *);
 /*! Cligen ^C interrupt callback
  */
 typedef int (cligen_interrupt_cb_t)(cligen_handle h);
+
+
 
 /*! A parse tree is a top object containing a vector of parse-tree nodes 
  *
@@ -125,6 +131,8 @@ struct cg_varspec{
     char           *cgs_expand_fn_str; /* expand callback string */
     expandv_cb     *cgs_expandv_fn;    /* expand callback see pt_expand_2 */
     cvec           *cgs_expand_fn_vec; /* expand callback argument vector */
+    char           *cgs_translate_fn_str; /* translate function string */
+    translate_cb_t *cgs_translate_fn;  /* variable translate function */
     char           *cgs_choice;        /* list of choices */
     int             cgs_range;         /* int range / str length interval valid */
     cg_var         *cgs_rangecv_low;   /* range/length interval lower limit */
@@ -215,6 +223,8 @@ typedef int (cg_applyfn_t)(cg_obj *co, void *arg);
 #define co_expand_fn_str u.cou_var.cgs_expand_fn_str
 #define co_expandv_fn  	 u.cou_var.cgs_expandv_fn
 #define co_expand_fn_vec u.cou_var.cgs_expand_fn_vec
+#define co_translate_fn_str u.cou_var.cgs_translate_fn_str
+#define co_translate_fn  u.cou_var.cgs_translate_fn
 #define co_choice	 u.cou_var.cgs_choice
 #define co_keyword	 u.cou_var.cgs_choice
 #define co_range	 u.cou_var.cgs_range

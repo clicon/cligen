@@ -360,3 +360,36 @@ cligen_expandv_str2fn(parse_tree        pt,
   done:
     return retval;
 }
+
+/*! Assign functions for translation of variables recusrively
+ */
+int
+cligen_translate_str2fn(parse_tree        pt, 
+			translate_str2fn_t *str2fn, 
+			void             *arg)
+{
+    int                 retval = -1;
+    cg_obj             *co;
+    char               *callback_err = NULL;   /* Error from str2fn callback */
+    int                 i;
+
+    for (i=0; i<pt.pt_len; i++){    
+	if ((co = pt.pt_vec[i]) != NULL){
+	    if (co->co_translate_fn_str != NULL && co->co_translate_fn == NULL){
+		/* Note str2fn is a function pointer */
+		co->co_translate_fn = str2fn(co->co_translate_fn_str, arg, &callback_err);
+		if (callback_err != NULL){
+		    fprintf(stderr, "%s: error: No such function: %s\n",
+			    __FUNCTION__, co->co_translate_fn_str);
+		    goto done;
+		}
+	    }
+	    /* recursive call to next level */
+	    if (cligen_translate_str2fn(co->co_pt, str2fn, arg) < 0)
+		goto done;
+	}
+    }
+    retval = 0;
+  done:
+    return retval;
+}

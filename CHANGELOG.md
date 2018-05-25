@@ -2,6 +2,10 @@
 
 ## R3.7.0 (Upcoming)
 
+* Added variable translator function.
+  * see cligen issue https://github.com/olofhagsand/cligen/issues/8
+  * thanks dcornejo.
+  * Example in tutorial: type increment HAL -> increment IBM
 * Added new cligen_print_obj() function to print CLIgen syntax object (not just parse-trees).
 * Fixed issues with mixed variables, choices and commands, see https://github.com/olofhagsand/cligen/issues/5. Thanks Nie WeiYang for detecting this.
 * Removed support for type "int".  Replace with int8, int16, int32 or int64.

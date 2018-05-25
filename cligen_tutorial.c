@@ -161,7 +161,7 @@ unknown(cligen_handle h, cvec *cvv, cvec *argv)
 {
     cg_var *cv = cvec_i(cvv, 0);
 
-    printf("The command has no assigned callback: %s\n", cv_string_get(cv));
+    fprintf(stderr, "The command has no assigned callback: %s\n", cv_string_get(cv));
     return 0;
 }
 
@@ -191,7 +191,6 @@ str2fn(char *name, void *arg, char **error)
         return quit;
     if (strcmp(name, "changetree") == 0)
         return changetree;
-
     return unknown; /* allow any function (for testing) */
 }
 
@@ -223,6 +222,40 @@ static expandv_cb *
 str2fn_exp(char *name, void *arg, char **error)
 {
     return cli_expand_cb;
+}
+
+/*! Translate function from an original value to a new.
+ * In this case, assume string and increment characters, eg HAL->IBM
+ */
+int
+increment_string(cligen_handle h,
+		 cg_obj       *co, 
+		 cg_var       *cv)
+{
+    char *str;
+    int i;
+    
+    fprintf(stderr, "%s\n", __FUNCTION__);
+    if (cv_type_get(cv) != CGV_STRING)
+	return 0;
+    str = cv_string_get(cv);
+    for (i=0; i<strlen(str); i++)
+	str[i]++;
+    return 0;
+}
+
+/* Translating functions of type translate_str2fn_t 
+ * See the following rule in tutorial_cli:
+ *     increment <var:string translate:incstr()>, callback();
+ */
+translate_cb_t *
+str2fn_trans(char  *name,
+	     void  *arg,
+	     char **error)
+{
+    if (strcmp(name, "incstr") == 0)
+	return increment_string;
+    return NULL;
 }
 
 /*
@@ -283,6 +316,8 @@ main(int argc, char *argv[])
 	if (cligen_callbackv_str2fn(*pt, str2fn, NULL) < 0) /* map functions */
 	    goto done;
 	if (cligen_expandv_str2fn(*pt, str2fn_exp, NULL) < 0)
+	    goto done;
+	if (cligen_translate_str2fn(*pt, str2fn_trans, NULL) < 0)     
 	    goto done;
     }
     if ((str = cvec_find_str(globals, "prompt")) != NULL)
