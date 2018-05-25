@@ -110,6 +110,11 @@ co_expand_sub(cg_obj  *co,
 		fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
 		return -1;
 	    }
+	if (co->co_translate_fn_str)
+	    if ((con->co_translate_fn_str = strdup(co->co_translate_fn_str)) == NULL){
+		fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
+		return -1;
+	    }
 	if (co->co_show)
 	    if ((con->co_show = strdup(co->co_show)) == NULL){
 		fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
@@ -169,6 +174,10 @@ transform_var_to_cmd(cg_obj *co,
     if (co->co_expand_fn_vec){
 	cvec_free(co->co_expand_fn_vec);
 	co->co_expand_fn_vec = NULL;
+    }
+    if (co->co_translate_fn_str){
+	free(co->co_translate_fn_str);
+	co->co_translate_fn_str = NULL;
     }
     if (co->co_show){
 	free(co->co_show);
@@ -479,26 +488,34 @@ pt_expand_2(cligen_handle h,
 		if (pt_expand_choice(co, ptn, parent) < 0)
 		    goto done;
 	    }
-	    else
-		/* Expand variable - call expand callback and insert expanded
-		 * commands in place of the variable
-		 */
-		if (co->co_type == CO_VARIABLE && 
-		    co->co_expandv_fn != NULL){
-		    if (pt_expand_fnv(h, co, cvv, ptn, parent) < 0)
-			goto done;
-		}
-		else{
-		    /* Copy vector element */
-		    pt_realloc(ptn);
+	    /* Expand variable - call expand callback and insert expanded
+	     * commands in place of the variable
+	     */
+	    else if (co->co_type == CO_VARIABLE && 
+		     co->co_expandv_fn != NULL){
+		if (pt_expand_fnv(h, co, cvv, ptn, parent) < 0)
+		    goto done;
+	    }
+#if 0
+	    /* Transform variable - call transform callback and replace value
+	     */
+	    else if (co->co_type == CO_VARIABLE && 
+		     co->co_translate_fn != NULL){
+		if (pt_translate_fn(h, co, cvv, ptn, parent) < 0)
+		    goto done;
+	    }
+#endif
+	    else{
+		/* Copy vector element */
+		pt_realloc(ptn);
 
-		    /* Copy original cg_obj to shadow list*/
-		    if (co_expand_sub(co, parent, 
-				      &ptn->pt_vec[ptn->pt_len-1]) < 0)
-			goto done;
-		    /* Reference old cg_obj */
-		    //		  con = ptn->pt_vec[ptn->pt_len-1];
-		}
+		/* Copy original cg_obj to shadow list*/
+		if (co_expand_sub(co, parent, 
+				  &ptn->pt_vec[ptn->pt_len-1]) < 0)
+		    goto done;
+		/* Reference old cg_obj */
+		//		  con = ptn->pt_vec[ptn->pt_len-1];
+	    }
 	}
 	else{ 
 	    pt_realloc(ptn); /* empty child */

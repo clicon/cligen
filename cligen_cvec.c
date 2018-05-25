@@ -410,9 +410,11 @@ cvec_dup(cvec *old)
  *                              variable record         
  * @retval          0           OK
  * @retval          -1          Error
+ * @see match_variable  where sanity check is made
  */
 int
-cvec_match(cg_obj *co_match, 
+cvec_match(cligen_handle h,
+	   cg_obj *co_match, 
 	   char   *cmd, 
 	   cvec   *cvv)
 {
@@ -494,6 +496,10 @@ cvec_match(cg_obj *co_match,
 		goto done;
 	    }
 	    free (val);
+	    /* If translator function defined, here translate value */
+	    if (co->co_translate_fn != NULL &&
+		co->co_translate_fn(h, co, cv) < 0)
+		goto done;
 	    if (co->co_vtype == CGV_REST)
 		break; /* XXX should break for() */
 	    v++;
