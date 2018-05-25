@@ -194,8 +194,9 @@ cligen_parse_file(cligen_handle h,
     return retval;
 }
 
-/*! Assign functions for callbacks in a parse-tree using a translate function
+/*! Assign functions for callbacks (end of line) using a mapper function
  *
+ * The mapping is done from string to C-function. This is done recursively.
  * Example: Assume a CLIgen syntax:
  *   a <b:string>, fn();
  * where
@@ -251,8 +252,9 @@ cligen_callback_str2fn(parse_tree pt, cg_str2fn_t *str2fn, void *arg)
     return retval;
 }
 
-/*! Assign functions for callbacks in a parse-tree using a translate function
+/*! Assign functions for variable completion using a mapper function
  *
+ * The mapping is done from string to C-function. This is done recursively.
  * Example: Assume a CLIgen syntax:
  *   a <b:string>, fn();
  * where
@@ -310,8 +312,9 @@ cligen_callbackv_str2fn(parse_tree    pt,
     return retval;
 }
 
-/*! Assign functions for variable completion in a parse-tree using a translate function
+/*! Assign functions for variable completion using a mapper function
  *
+ * The mapping is done from string to C-function. This is done recursively.
  * Example: Assume a CLIgen syntax:
  *   a <b:string fn("x","y")>;
  * where
@@ -361,7 +364,11 @@ cligen_expandv_str2fn(parse_tree        pt,
     return retval;
 }
 
-/*! Assign functions for translation of variables recusrively
+/*! Assign functions for translation of variables using a mapper function
+ * The mapping is done from string to C-function. This is done recursively.
+ * @param[in]  pt      Parse-tree. Recursively loop through and call str2fn
+ * @param[in]  str2fn  Translator function from strings to function pointers
+ * @param[in]  arg     Argument to call str2fn with
  */
 int
 cligen_translate_str2fn(parse_tree        pt, 

@@ -7,7 +7,7 @@
 %
 % Title
 %
-\title {CLIgen Manual\\ {\small CLIgen version 3.6}}
+\title {CLIgen Manual\\ {\small CLIgen version 3.7}}
 
 \author{Olof Hagsand}
 %
@@ -18,7 +18,7 @@
 
 % If you want a logo
 % \lhead{\includegraphics[height=9mm]{../../doc/logga_crop.png}}
-\date{December, 2014}
+\date{May, 2018}
 \maketitle
 \setcounter{tocdepth}{2}
 \tableofcontents
@@ -664,6 +664,25 @@ abbbbbbbbbc
 \end{verbatim}
 CLIgen uses POSIX Extended regular expression syntax.
 
+\subsection{Variable translation}
+
+CLIgen supports variable translation. A given variable can be
+translated on-th-fly using a generic translation function. This may be useful for example when hashing or encrypting a value.
+
+In the example below, the variable {\tt var} is translated by the function {\tt incstr}:
+\begin{verbatim}
+    increment <var:string translate:incstr()>, cb();
+\end{verbatim}
+
+In this example, {\tt incstr} simply increments every character in the variable.
+\begin{verbatim}
+    cli> increment HAL
+    variables:        1 name:var type:string value:IBM
+\end{verbatim}
+
+In the same way, a clear text password could e translated to an encrypted string.
+For information on how to implement a translator function, see Section~\ref{sec:translate}.
+
 \section{Operators}
 \label{sec:operators}
 
@@ -1122,6 +1141,32 @@ In other words, as soon as the user selects a line containing the
 variable {\tt interfaces}, {\tt expand\_ifname()} will be
 called. Therefore, be careful to avoid blocking calls within the
 callbacks since this may make the CLI less interactive.
+
+\subsection{Translation}
+\label{sec:translate}
+
+An example of a variable translator function is as follows:
+\begin{verbatim}
+int
+increment_string(cligen_handle h,
+                 cg_obj       *co, 
+                 cg_var       *cv)
+{
+    char *str;
+    int i;
+    
+    if (cv_type_get(cv) != CGV_STRING)
+        return 0;
+    str = cv_string_get(cv);
+    for (i=0; i<strlen(str); i++)
+        str[i]++;
+    return 0;
+}
+\end{verbatim}
+
+In the function, the CLIgen variable {\tt cv} assumed to be a string, every character is incremented, so that the string HAL would be translated to IBM, for example.
+
+In the same way as expand functions, the translator functions must be registered using {\tt cligen\_translate\_str2fn()}. See the tutorial example and code for more details.
 
 \section{Installation}
 
