@@ -235,7 +235,6 @@ increment_string(cligen_handle h,
     char *str;
     int i;
     
-    fprintf(stderr, "%s\n", __FUNCTION__);
     if (cv_type_get(cv) != CGV_STRING)
 	return 0;
     str = cv_string_get(cv);
