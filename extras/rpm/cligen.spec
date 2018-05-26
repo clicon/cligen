@@ -7,6 +7,7 @@ Summary: The CLIGEN command line generation tool
 Group: System Environment/Libraries
 License: ASL 2.0 or GPLv2
 URL: http://www.cligen.se
+AutoReq: no
 BuildRequires: flex, bison
 
 Source: %{name}-%{version}-%{release}.tar.xz
