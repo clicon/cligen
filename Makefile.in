@@ -153,12 +153,12 @@ build.c:
 install: install-lib install-include
 
 install-bin: $(APPS)
-	install -m 755 -d $(DESTDIR)$(bindir) 
-	install -m 755 $(APPS) $(DESTDIR)$(bindir) 
+	install -m 0755 -d $(DESTDIR)$(bindir)
+	install -m 0755 -s $(APPS) $(DESTDIR)$(bindir)
 
 install-lib: $(MYLIB)
-	install -m 755 -d $(DESTDIR)$(libdir) 
-	install -m 755 $(MYLIB) $(DESTDIR)$(libdir) 
+	install -m 0755 -d $(DESTDIR)$(libdir)
+	install -m 0644 -s $(MYLIB) $(DESTDIR)$(libdir)
 	ln -sf $(MYLIB) $(DESTDIR)$(libdir)/$(MYLIBSO)     # -l:libcligen.so.3
 	ln -sf $(MYLIBSO) $(DESTDIR)$(libdir)/$(MYLIBLINK) # -l:libcligen.so
 
@@ -166,8 +166,8 @@ install-lib: $(MYLIB)
 # Installs include files in subdir called 'cligen'. Applications should include
 # <cligen/cligen.h>
 install-include: $(INCS)
-	install -d $(DESTDIR)$(includedir) 
-	install -m 644 $(INCS) $(DESTDIR)$(includedir) 
+	install -m 0755 -d $(DESTDIR)$(includedir)
+	install -m 0644 $(INCS) $(DESTDIR)$(includedir)
 
 uninstall: 
 	rm -f $(DESTDIR)$(libdir)/$(MYLIB)

@@ -1054,6 +1054,7 @@ parse_int64_base(char    *str,
     }
     if (errno != 0){
 	if ((i == INT64_MIN || i == INT64_MAX) && errno == ERANGE){ 
+	    errno = 0;
 	    if (reason != NULL)
 		if ((*reason = cligen_reason("%s is out of range (type is int64)", str)) == NULL){
 		    retval = -1; /* malloc */
@@ -1064,11 +1065,13 @@ parse_int64_base(char    *str,
 	}
 	else{
 	    if ((*reason = cligen_reason("%s: %s", str, strerror(errno))) == NULL){
+		errno = 0;
 		retval = -1;
 		goto done;
 	    }
 	}
-    }
+	errno = 0;
+    } /* if errno */
     *val = i;
     retval = 1; /* OK */
   done:
@@ -1196,7 +1199,7 @@ parse_uint32(char     *str,
  * @retval -1 : Error (fatal), with errno set to indicate error
  * @retval  0 : Validation not OK, malloced reason is returned
  * @retval  1 : Validation OK, value returned in val parameter
- * NOTE: we have to detect a minus sign ourselves,....
+ * @note: we have to detect a minus sign ourselves,....
  */
 int
 parse_uint64(char     *str, 
@@ -1262,7 +1265,7 @@ parse_uint64(char     *str,
  * @retval 0              parse error, reason in reason
  * @retval 1              OK
  */
-static int
+int
 parse_dec64(char    *str, 
 	    uint8_t  n, 
 	    int64_t *dec64_i, 
@@ -1272,7 +1275,7 @@ parse_dec64(char    *str,
     char    *s0 = NULL; /* the whole string, eg aaa.bbb*/
     char    *s1;        /* the first part (eg aaa)  */
     char    *s2;        /* the second part (eg bbb)  */
-    char     ss[64];
+    char    *ss = NULL; /* Help string */
     int      len1;
     int      len2 = 0;
     int      i;
@@ -1289,7 +1292,6 @@ parse_dec64(char    *str,
     if (n<=0 || n>18){
 	if (reason != NULL)
 	    if ((*reason = cligen_reason("%s: fraction-digit=%d given but should be in interval [1:18]", __FUNCTION__, n)) == NULL){
-		retval = -1; /* malloc */
 		goto done;
 	    }
 	retval = 0;
@@ -1301,8 +1303,11 @@ parse_dec64(char    *str,
     }
     s2 = s0;
     s1 = strsep(&s2, ".");
-
     len1 = strlen(s1);
+    if ((ss = malloc(strlen(str)+n+2)) == NULL){
+	retval = -1; /* malloc */
+	goto done;
+    }
     memcpy(ss, s1, len1);
 
     /*
@@ -1335,6 +1340,8 @@ parse_dec64(char    *str,
   done:
     if (s0)
 	free(s0);
+    if (ss)
+	free(ss);
     return retval;
 }
 

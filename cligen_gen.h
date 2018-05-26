@@ -71,8 +71,12 @@ typedef int (expandv_cb)(cligen_handle h,       /* handler: cligen or userhandle
 			 cvec         *helptexts /* vector of help-texts */
 			     );
 
-/* handle, buffer, promptlen, tmp*/
+/*! Cligen ^Z suspension callback
+ */
 typedef int (cligen_susp_cb_t)(void *h, char *, int, int *);
+
+/*! Cligen ^C interrupt callback
+ */
 typedef int (cligen_interrupt_cb_t)(cligen_handle h);
 
 /*! A parse tree is a top object containing a vector of parse-tree nodes 
