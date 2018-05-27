@@ -194,6 +194,7 @@ cligen_parse_file(cligen_handle h,
     return retval;
 }
 
+#ifdef CALLBACK_SINGLEARG
 /*! Assign functions for callbacks (end of line) using a mapper function
  *
  * The mapping is done from string to C-function. This is done recursively.
@@ -251,6 +252,7 @@ cligen_callback_str2fn(parse_tree pt, cg_str2fn_t *str2fn, void *arg)
   done:
     return retval;
 }
+#endif
 
 /*! Assign functions for variable completion using a mapper function
  *

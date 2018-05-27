@@ -110,6 +110,9 @@ co_expand_sub(cg_obj  *co,
 		fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
 		return -1;
 	    }
+	if (co->co_expand_fn_vec)
+	    if ((con->co_expand_fn_vec = cvec_dup(co->co_expand_fn_vec)) == NULL)
+		return -1;
 	if (co->co_translate_fn_str)
 	    if ((con->co_translate_fn_str = strdup(co->co_translate_fn_str)) == NULL){
 		fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
@@ -120,9 +123,6 @@ co_expand_sub(cg_obj  *co,
 		fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
 		return -1;
 	    }
-	if (co->co_expand_fn_vec)
-	    if ((con->co_expand_fn_vec = cvec_dup(co->co_expand_fn_vec)) == NULL)
-		return -1;
 	if (co->co_rangecv_low)
 	    if ((con->co_rangecv_low = cv_dup(co->co_rangecv_low)) == NULL)
 		return -1;
@@ -240,7 +240,9 @@ pt_callback_reference(parse_tree          pt,
 		    return -1;
 	    }
 	    else {
+#ifdef CALLBACK_SINGLEARG
 		cc->cc_fn = cc0->cc_fn; /* iterate */
+#endif
 		cc->cc_fn_vec = cc0->cc_fn_vec; /* iterate */
 		if (cc0->cc_fn_str){
 		    if (cc->cc_fn_str)
