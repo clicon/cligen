@@ -623,6 +623,10 @@ ac_subst_vars='LTLIBOBJS
 LIBOBJS
 EGREP
 GREP
+INSTALL_LIB
+INSTALL_BIN
+INSTALL_INC
+INSTALL_DIR
 RANLIB
 AR
 EXE_SUFFIX
@@ -697,6 +701,7 @@ SHELL'
 ac_subst_files=''
 ac_user_opts='
 enable_option_checking
+enable_debug
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1326,6 +1331,12 @@ fi
 if test -n "$ac_init_help"; then
 
   cat <<\_ACEOF
+
+Optional Features:
+  --disable-option-checking  ignore unrecognized --enable/--with options
+  --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
+  --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
+  --enable-debug          Build with debug symbols, default: no
 
 Some influential environment variables:
   CC          C compiler command
@@ -2124,7 +2135,11 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 # Default CFLAGS unless set by environment.
-: ${CFLAGS="-O2"}
+unset default_cflags
+if test -z "$CFLAGS"; then
+   CFLAGS="-O2 -Wall"
+   default_cflags=1
+fi
 
 ac_config_headers="$ac_config_headers cligen_config.h"
 
@@ -3403,7 +3418,6 @@ $as_echo "Compiler is $CC" >&6; }
 LIBS="${LIBS} -L." #
 LDFLAGS=""
 CPPFLAGS="-DHAVE_CONFIG_H ${CPPFLAGS}"
-CFLAGS="${CFLAGS} -Wall"
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for main in -lm" >&5
 $as_echo_n "checking for main in -lm... " >&6; }
 if ${ac_cv_lib_m_main+:} false; then :
@@ -3448,6 +3462,37 @@ OBJ_SUFFIX=".o"
 AR_SUFFIX=".a"
 SH_SUFFIX=".so"
 AR="ar"
+INSTALL_DIR="install -m 0755 -d"
+INSTALL_INC="install -m 0644"
+INSTALL_BIN="install -m 0755"
+INSTALL_LIB="install -m 0644"
+
+# Check whether --enable-debug was given.
+if test "${enable_debug+set}" = set; then :
+  enableval=$enable_debug; case "${enableval}" in
+		yes)
+			debug=true
+			if test -n "$default_cflags"; then
+				CFLAGS="-g -O0 -Wall"
+			fi
+			;;
+		no)
+			debug=false
+			INSTALL_BIN="${INSTALL_BIN} -s"
+			INSTALL_LIB="${INSTALL_LIB} -s"
+			;;
+		*)
+			as_fn_error $? "bad value ${enableval} for --enable-debug" "$LINENO" 5
+			;;
+	esac
+else
+
+		debug=false
+		INSTALL_BIN="${INSTALL_BIN} -s"
+		INSTALL_LIB="${INSTALL_LIB} -s"
+
+fi
+
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: CFLAGS is $CFLAGS" >&5
 $as_echo "CFLAGS is $CFLAGS" >&6; }
