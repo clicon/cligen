@@ -114,7 +114,9 @@ typedef struct parse_tree parse_tree;
  */
 struct cg_callback  { /* Linked list of command callbacks */
     struct  cg_callback *cc_next;    /**< Next callback in list.  */
+#ifdef CALLBACK_SINGLEARG
     cg_fnstype_t        *cc_fn;      /**< callback/function pointer using cv.  */
+#endif
     cgv_fnstype_t       *cc_fn_vec;  /**< callback/function pointer using cvec.  */
     char                *cc_fn_str;  /**< callback/function name. malloced */
     cvec                *cc_cvec;    /**< callback/function arguments */

@@ -778,6 +778,7 @@ cligen_eval(cligen_handle h,
 		cvec_free(argv);
 	    cligen_fn_str_set(h, NULL);
 	}
+#ifdef CALLBACK_SINGLEARG
 	/* Single cv argument to callback (old) */
     	if (cc->cc_fn){
 	    cg_var             *cv;
@@ -797,6 +798,7 @@ cligen_eval(cligen_handle h,
 		cvec_free(argv);
 	    cligen_fn_str_set(h, NULL);
 	}
+#endif
     }
     return retval;
 }

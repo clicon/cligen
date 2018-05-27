@@ -2,6 +2,8 @@
 
 ## R3.7.0 (Upcoming)
 
+* Removed support for single callback functions
+   Enable in 3.7 by defining CALLBACK_SINGLEARG
 * Added variable translator function.
   * see cligen issue https://github.com/olofhagsand/cligen/issues/8
   * thanks dcornejo.
