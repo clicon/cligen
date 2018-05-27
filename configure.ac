@@ -37,7 +37,8 @@
 AC_INIT(cligen.h)
 
 # Default CFLAGS unless set by environment.
-: ${CFLAGS="-O2"}
+: ${CFLAGS="-O2 -Wall"}
+: ${INSTALLFLAGS="-s"}
 
 AC_CONFIG_HEADER(cligen_config.h)
 
@@ -76,6 +77,7 @@ AC_SUBST(INSTALL)
 AC_SUBST(INSTALL_LIB)
 AC_SUBST(INSTALL_DATA)
 AC_SUBST(INSTALL_PROGRAM)
+AC_SUBST(INSTALLFLAGS)
 AC_SUBST(LN_S)
 #
 
@@ -96,7 +98,6 @@ AC_MSG_RESULT(Compiler is $CC)
 LIBS="${LIBS} -L." # 
 LDFLAGS=""
 CPPFLAGS="-DHAVE_CONFIG_H ${CPPFLAGS}"
-CFLAGS="${CFLAGS} -Wall" 
 AC_CHECK_LIB(m, main)
 EXE_SUFFIX=""
 OBJ_SUFFIX=".o"

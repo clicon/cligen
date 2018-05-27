@@ -51,11 +51,12 @@ SH_SUFFIX	= @SH_SUFFIX@
 pdflatex	= @PDFLATEX@
 HOST_VENDOR     = @host_vendor@
 
-INSTALL		= @INSTALL@
-INSTALL_LIB	= @INSTALL@
-INSTALL_DATA	= @INSTALL@
+INSTALL         = @INSTALL@
+INSTALLFLAGS    = @INSTALLFLAGS@
+INSTALL_LIB     = @INSTALL@
+INSTALL_DATA    = @INSTALL@
 INSTALL_PROGRAM	= @INSTALL@
-
+LN_S            = @LN_S@
 
 CLIGEN_VERSION = @CLIGEN_VERSION@
 CLIGEN_MAJOR   = @CLIGEN_VERSION_MAJOR@
@@ -155,8 +156,8 @@ install-bin: $(APPS)
 	$(INSTALL_BIN) -m 0755  $(APPS) $(DESTDIR)$(bindir)
 
 install-lib: $(MYLIB)
-	$(INSTALL)-m 0755 -d $(DESTDIR)$(libdir)
-	$(INSTALL_LIB) $(MYLIB) $(DESTDIR)$(libdir)
+	$(INSTALL) -m 0755 -d $(DESTDIR)$(libdir)
+	$(INSTALL_LIB) -m 0644 $(MYLIB) $(INSTALLFLAGS) $(DESTDIR)$(libdir)
 	(cd $(DESTDIR)$(libdir) && $(LN_S) -f $(MYLIB) $(MYLIBSO))     # -l:libcligen.so.3
 	(cd $(DESTDIR)$(libdir) && $(LN_S) -f $(MYLIBSO) $(MYLIBLINK)) # -l:libcligen.so
 
