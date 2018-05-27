@@ -498,7 +498,7 @@ cvec_match(cligen_handle h,
 	    free (val);
 	    /* If translator function defined, here translate value */
 	    if (co->co_translate_fn != NULL &&
-		co->co_translate_fn(h, co, cv) < 0)
+		co->co_translate_fn(h, cv) < 0)
 		goto done;
 	    if (co->co_vtype == CGV_REST)
 		break; /* XXX should break for() */

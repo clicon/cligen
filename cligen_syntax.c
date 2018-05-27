@@ -371,9 +371,9 @@ cligen_expandv_str2fn(parse_tree        pt,
  * @param[in]  arg     Argument to call str2fn with
  */
 int
-cligen_translate_str2fn(parse_tree        pt, 
+cligen_translate_str2fn(parse_tree          pt, 
 			translate_str2fn_t *str2fn, 
-			void             *arg)
+			void               *arg)
 {
     int                 retval = -1;
     cg_obj             *co;
