@@ -228,9 +228,8 @@ str2fn_exp(char *name, void *arg, char **error)
  * In this case, assume string and increment characters, eg HAL->IBM
  */
 int
-increment_string(cligen_handle h,
-		 cg_obj       *co, 
-		 cg_var       *cv)
+incstr(cligen_handle h,
+       cg_var       *cv)
 {
     char *str;
     int i;
@@ -253,7 +252,7 @@ str2fn_trans(char  *name,
 	     char **error)
 {
     if (strcmp(name, "incstr") == 0)
-	return increment_string;
+	return incstr;
     return NULL;
 }
 

@@ -1148,9 +1148,8 @@ callbacks since this may make the CLI less interactive.
 An example of a variable translator function is as follows:
 \begin{verbatim}
 int
-increment_string(cligen_handle h,
-                 cg_obj       *co, 
-                 cg_var       *cv)
+incstr(cligen_handle h,
+       cg_var       *cv)
 {
     char *str;
     int i;

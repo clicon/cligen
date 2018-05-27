@@ -73,7 +73,7 @@ typedef int (expandv_cb)(cligen_handle h,       /* handler: cligen or userhandle
 
 /* Translate callback. Translate a variable, eg from cleartext to
    encrypted passwords The variable type must be kept */
-typedef int (translate_cb_t)(cligen_handle h, struct cg_obj *co, cg_var *cv);
+typedef int (translate_cb_t)(cligen_handle h, cg_var *cv);
 
 /*! Cligen ^Z suspension callback
  */

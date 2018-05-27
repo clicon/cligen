@@ -496,15 +496,6 @@ pt_expand_2(cligen_handle h,
 		if (pt_expand_fnv(h, co, cvv, ptn, parent) < 0)
 		    goto done;
 	    }
-#if 0
-	    /* Transform variable - call transform callback and replace value
-	     */
-	    else if (co->co_type == CO_VARIABLE && 
-		     co->co_translate_fn != NULL){
-		if (pt_translate_fn(h, co, cvv, ptn, parent) < 0)
-		    goto done;
-	    }
-#endif
 	    else{
 		/* Copy vector element */
 		pt_realloc(ptn);
