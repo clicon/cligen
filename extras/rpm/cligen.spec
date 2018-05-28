@@ -33,10 +33,11 @@ make
 make DESTDIR=${RPM_BUILD_ROOT} install
 
 %files
-%{_libdir}/lib*
+%attr(0755, root, root) %{_libdir}/libcligen.so.*
 
 %files devel
 %{_includedir}/%{name}/*
+%{_libdir}/libcligen.so
 
 %clean
 
