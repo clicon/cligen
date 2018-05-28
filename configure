@@ -704,6 +704,7 @@ SHELL'
 ac_subst_files=''
 ac_user_opts='
 enable_option_checking
+enable_debug
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1333,6 +1334,12 @@ fi
 if test -n "$ac_init_help"; then
 
   cat <<\_ACEOF
+
+Optional Features:
+  --disable-option-checking  ignore unrecognized --enable/--with options
+  --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
+  --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
+  --enable-debug          Build with debug symbols, default: no
 
 Some influential environment variables:
   CC          C compiler command
@@ -3570,6 +3577,27 @@ AR="ar"
 $as_echo "CFLAGS is $CFLAGS" >&6; }
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: CPPFLAGS is $CPPFLAGS" >&5
 $as_echo "CPPFLAGS is $CPPFLAGS" >&6; }
+# Debug flag
+# Check whether --enable-debug was given.
+if test "${enable_debug+set}" = set; then :
+  enableval=$enable_debug;
+	  if test "$enableval" = no; then
+	      ac_enable_debug=no
+	  else
+	      ac_enable_debug=yes
+          fi
+
+else
+   ac_enable_debug=no
+fi
+
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: debug is $ac_enable_debug" >&5
+$as_echo "debug is $ac_enable_debug" >&6; }
+if test "$ac_enable_debug" = "yes"; then
+   CFLAGS="-g -Wall"
+   INSTALLFLAGS=""
+fi
 
 # Enable BSD select semantics allowing multiple input file descriptors to be enabled at once,
 # Not just stdin. Each extra fd requires a callback which is registered with cligen_regfd()])

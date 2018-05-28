@@ -107,6 +107,21 @@ AR="ar"
 
 AC_MSG_RESULT(CFLAGS is $CFLAGS)	
 AC_MSG_RESULT(CPPFLAGS is $CPPFLAGS)	
+# Debug flag
+AC_ARG_ENABLE(debug, AS_HELP_STRING([--enable-debug],[Build with debug symbols, default: no]),[
+	  if test "$enableval" = no; then
+	      ac_enable_debug=no
+	  else	      
+	      ac_enable_debug=yes
+          fi
+        ],
+	[ ac_enable_debug=no])
+
+AC_MSG_RESULT(debug is $ac_enable_debug)	
+if test "$ac_enable_debug" = "yes"; then
+   CFLAGS="-g -Wall"
+   INSTALLFLAGS=""	
+fi
 
 # Enable BSD select semantics allowing multiple input file descriptors to be enabled at once,
 # Not just stdin. Each extra fd requires a callback which is registered with cligen_regfd()])
