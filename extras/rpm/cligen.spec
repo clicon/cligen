@@ -31,6 +31,7 @@ make
 
 %install
 make DESTDIR=${RPM_BUILD_ROOT} install
+chmod 0755 ${RPM_BUILD_ROOT}/%{_libdir}/libcligen.so.*
 
 %files
 %attr(0755, root, root) %{_libdir}/libcligen.so.*
