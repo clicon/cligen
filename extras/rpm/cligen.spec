@@ -1,3 +1,6 @@
+# Do not require a lib provided by itself
+%global __requires_exclude ^.*libcligen[.]so.*$
+
 %{!?_topdir: %define _topdir %(pwd)}
 
 Name: cligen
