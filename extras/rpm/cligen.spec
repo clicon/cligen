@@ -17,7 +17,7 @@ The CLIGEN command line generation tool.
 %package devel
 Summary: CLIGEN header files
 Group: Development/Libraries
-Requires: cligen
+Requires: %{name} = %{version}-%{release}
 
 %description devel
 This package contains header files for CLIGEN.
