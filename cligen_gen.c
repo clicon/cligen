@@ -346,7 +346,9 @@ co_callback_copy(struct cg_callback  *cc0,
 	    return -1;
 	}
 	memset(cc1, 0, sizeof(*cc1));
+#ifdef CALLBACK_SINGLEARG
 	cc1->cc_fn = cc->cc_fn;
+#endif
 	cc1->cc_fn_vec = cc->cc_fn_vec;
 	if (cc->cc_fn_str)
 	    if ((cc1->cc_fn_str = strdup(cc->cc_fn_str)) == NULL){
@@ -426,6 +428,11 @@ co_copy(cg_obj  *co,
     if (co->co_type == CO_VARIABLE){
 	if (co->co_expand_fn_str)
 	    if ((con->co_expand_fn_str = strdup(co->co_expand_fn_str)) == NULL){
+		fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
+		return -1;
+	    }
+	if (co->co_translate_fn_str)
+	    if ((con->co_translate_fn_str = strdup(co->co_translate_fn_str)) == NULL){
 		fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
 		return -1;
 	    }
@@ -627,7 +634,7 @@ co_eq(cg_obj *co1,
 	    eq = str_cmp(co1->co_expand_fn_str, co2->co_expand_fn_str);
 	    goto done;
 	}
-
+	/* Should we examine co_translate_fn_str? */
 	/* Examine choice: at least one set, and then strcmp */
 	if (co1->co_choice!=NULL || co2->co_choice!=NULL){
 	    eq = str_cmp(co1->co_choice, co2->co_choice);
@@ -824,6 +831,8 @@ co_free(cg_obj *co,
     if (co->co_type == CO_VARIABLE){
 	if (co->co_expand_fn_str)
 	    free(co->co_expand_fn_str);
+	if (co->co_translate_fn_str)
+	    free(co->co_translate_fn_str);
 	if (co->co_show)
 	    free(co->co_show);
 	if (co->co_expand_fn_vec)

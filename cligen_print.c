@@ -119,6 +119,8 @@ cov2cbuf(cbuf   *cb,
 	    }
 	    if (co->co_regex)
 		cprintf(cb, " regexp:\"%s\"", co->co_regex);
+	    if (co->co_translate_fn_str)
+		cprintf(cb, " translate:%s()", co->co_translate_fn_str);
 	    cprintf(cb, "%c", VARIABLE_POST);
 	}
     }

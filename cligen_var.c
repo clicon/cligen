@@ -587,6 +587,10 @@ cv_ipv4addr_get(cg_var *cv)
     return &cv->u.varu_ipv4addr.varipv4_ipv4addr;
 }
 
+/*! Set ipv4addr, pointer returned
+ * @param[in] cv     CLIgen variable
+ * @param[in] addr   storage space for address
+ */
 struct in_addr *
 cv_ipv4addr_set(cg_var *cv, struct in_addr *addr)
 {
@@ -609,6 +613,10 @@ cv_ipv4masklen_get(cg_var *cv)
     return cv->u.varu_ipv4addr.varipv4_masklen;
 }
 
+/*! Set ipv4addr length of cv
+ * @param[in] cv     CLIgen variable
+ * @param[in] masklen storage spave for masklen
+ */
 uint8_t
 cv_ipv4masklen_set(cg_var *cv, uint8_t masklen)
 {

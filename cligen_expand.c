@@ -110,14 +110,19 @@ co_expand_sub(cg_obj  *co,
 		fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
 		return -1;
 	    }
+	if (co->co_expand_fn_vec)
+	    if ((con->co_expand_fn_vec = cvec_dup(co->co_expand_fn_vec)) == NULL)
+		return -1;
+	if (co->co_translate_fn_str)
+	    if ((con->co_translate_fn_str = strdup(co->co_translate_fn_str)) == NULL){
+		fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
+		return -1;
+	    }
 	if (co->co_show)
 	    if ((con->co_show = strdup(co->co_show)) == NULL){
 		fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
 		return -1;
 	    }
-	if (co->co_expand_fn_vec)
-	    if ((con->co_expand_fn_vec = cvec_dup(co->co_expand_fn_vec)) == NULL)
-		return -1;
 	if (co->co_rangecv_low)
 	    if ((con->co_rangecv_low = cv_dup(co->co_rangecv_low)) == NULL)
 		return -1;
@@ -169,6 +174,10 @@ transform_var_to_cmd(cg_obj *co,
     if (co->co_expand_fn_vec){
 	cvec_free(co->co_expand_fn_vec);
 	co->co_expand_fn_vec = NULL;
+    }
+    if (co->co_translate_fn_str){
+	free(co->co_translate_fn_str);
+	co->co_translate_fn_str = NULL;
     }
     if (co->co_show){
 	free(co->co_show);
@@ -231,7 +240,9 @@ pt_callback_reference(parse_tree          pt,
 		    return -1;
 	    }
 	    else {
+#ifdef CALLBACK_SINGLEARG
 		cc->cc_fn = cc0->cc_fn; /* iterate */
+#endif
 		cc->cc_fn_vec = cc0->cc_fn_vec; /* iterate */
 		if (cc0->cc_fn_str){
 		    if (cc->cc_fn_str)
@@ -479,26 +490,25 @@ pt_expand_2(cligen_handle h,
 		if (pt_expand_choice(co, ptn, parent) < 0)
 		    goto done;
 	    }
-	    else
-		/* Expand variable - call expand callback and insert expanded
-		 * commands in place of the variable
-		 */
-		if (co->co_type == CO_VARIABLE && 
-		    co->co_expandv_fn != NULL){
-		    if (pt_expand_fnv(h, co, cvv, ptn, parent) < 0)
-			goto done;
-		}
-		else{
-		    /* Copy vector element */
-		    pt_realloc(ptn);
+	    /* Expand variable - call expand callback and insert expanded
+	     * commands in place of the variable
+	     */
+	    else if (co->co_type == CO_VARIABLE && 
+		     co->co_expandv_fn != NULL){
+		if (pt_expand_fnv(h, co, cvv, ptn, parent) < 0)
+		    goto done;
+	    }
+	    else{
+		/* Copy vector element */
+		pt_realloc(ptn);
 
-		    /* Copy original cg_obj to shadow list*/
-		    if (co_expand_sub(co, parent, 
-				      &ptn->pt_vec[ptn->pt_len-1]) < 0)
-			goto done;
-		    /* Reference old cg_obj */
-		    //		  con = ptn->pt_vec[ptn->pt_len-1];
-		}
+		/* Copy original cg_obj to shadow list*/
+		if (co_expand_sub(co, parent, 
+				  &ptn->pt_vec[ptn->pt_len-1]) < 0)
+		    goto done;
+		/* Reference old cg_obj */
+		//		  con = ptn->pt_vec[ptn->pt_len-1];
+	    }
 	}
 	else{ 
 	    pt_realloc(ptn); /* empty child */

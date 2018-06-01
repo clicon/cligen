@@ -51,6 +51,13 @@ SH_SUFFIX	= @SH_SUFFIX@
 pdflatex	= @PDFLATEX@
 HOST_VENDOR     = @host_vendor@
 
+INSTALL         = @INSTALL@
+INSTALLFLAGS    = @INSTALLFLAGS@
+INSTALL_LIB     = @INSTALL@
+INSTALL_DATA    = @INSTALL@
+INSTALL_PROGRAM	= @INSTALL@
+LN_S            = @LN_S@
+
 CLIGEN_VERSION = @CLIGEN_VERSION@
 CLIGEN_MAJOR   = @CLIGEN_VERSION_MAJOR@
 CLIGEN_MINOR   = @CLIGEN_VERSION_MINOR@
@@ -153,21 +160,21 @@ build.c:
 install: install-lib install-include
 
 install-bin: $(APPS)
-	install -m 0755 -d $(DESTDIR)$(bindir)
-	install -m 0755 -s $(APPS) $(DESTDIR)$(bindir)
+	$(INSTALL) -m 0755 -d $(DESTDIR)$(bindir)
+	$(INSTALL_BIN) -m 0755  $(APPS) $(DESTDIR)$(bindir)
 
 install-lib: $(MYLIB)
-	install -m 0755 -d $(DESTDIR)$(libdir)
-	install -m 0644 -s $(MYLIB) $(DESTDIR)$(libdir)
-	ln -sf $(MYLIB) $(DESTDIR)$(libdir)/$(MYLIBSO)     # -l:libcligen.so.3
-	ln -sf $(MYLIBSO) $(DESTDIR)$(libdir)/$(MYLIBLINK) # -l:libcligen.so
+	$(INSTALL) -m 0755 -d $(DESTDIR)$(libdir)
+	$(INSTALL_LIB) -m 0644 $(MYLIB) $(INSTALLFLAGS) $(DESTDIR)$(libdir)
+	(cd $(DESTDIR)$(libdir) && $(LN_S) -f $(MYLIB) $(MYLIBSO))     # -l:libcligen.so.3
+	(cd $(DESTDIR)$(libdir) && $(LN_S) -f $(MYLIBSO) $(MYLIBLINK)) # -l:libcligen.so
 
 
 # Installs include files in subdir called 'cligen'. Applications should include
 # <cligen/cligen.h>
 install-include: $(INCS)
 	install -m 0755 -d $(DESTDIR)$(includedir)
-	install -m 0644 $(INCS) $(DESTDIR)$(includedir)
+	$(INSTALL_DATA) $(INCS) $(DESTDIR)$(includedir)
 
 uninstall: 
 	rm -f $(DESTDIR)$(libdir)/$(MYLIB)

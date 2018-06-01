@@ -607,7 +607,7 @@ cliread_parse (cligen_handle h,
 	    *co_orig = match_obj->co_ref;
 	else
 	    *co_orig = match_obj;
-	if (cvec_match(*co_orig, string, cvv) < 0){
+	if (cvec_match(h, *co_orig, string, cvv) < 0){
 	    retval = CG_ERROR;
 	    goto done;
 	}
@@ -778,6 +778,7 @@ cligen_eval(cligen_handle h,
 		cvec_free(argv);
 	    cligen_fn_str_set(h, NULL);
 	}
+#ifdef CALLBACK_SINGLEARG
 	/* Single cv argument to callback (old) */
     	if (cc->cc_fn){
 	    cg_var             *cv;
@@ -797,6 +798,7 @@ cligen_eval(cligen_handle h,
 		cvec_free(argv);
 	    cligen_fn_str_set(h, NULL);
 	}
+#endif
     }
     return retval;
 }
