@@ -43,7 +43,7 @@
 }
 
 %token MY_EOF
-%token V_RANGE V_LENGTH V_CHOICE V_KEYWORD V_REGEXP V_FRACTION_DIGITS V_SHOW V_TREENAME
+%token V_RANGE V_LENGTH V_CHOICE V_KEYWORD V_REGEXP V_FRACTION_DIGITS V_SHOW V_TREENAME V_TRANSLATE
 %token DOUBLEPARENT /* (( */
 %token DQ           /* " */
 %token DQP          /* ") */
@@ -383,6 +383,14 @@ expand_fn(cliyacc *ya,
 	  char    *fn)
 {
     ya->ya_var->co_expand_fn_str = fn;
+    return 0;
+}
+
+static int
+cg_translate(cliyacc *ya,
+	     char    *fn)
+{
+    ya->ya_var->co_translate_fn_str = fn;
     return 0;
 }
 
@@ -1180,6 +1188,7 @@ keypair     : NAME '(' ')' { expand_fn(_ya, $1); }
 		_YA->ya_var->co_vtype=CGV_STRING; 
 	      }
             | V_REGEXP  ':' DQ charseq DQ { cg_regexp(_ya, $4); }
+            | V_TRANSLATE ':' NAME '(' ')' { cg_translate(_ya, $3); }
             ;
 
 exparglist : exparglist ',' exparg

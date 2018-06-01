@@ -55,6 +55,9 @@ typedef cgv_fnstype_t *(cgv_str2fn_t)(char *str, void *arg, char **err);
 /* Map function names as strings to CLIgen expand callback */
 typedef expandv_cb *(expandv_str2fn_t)(char *str, void *arg, char **err);
 
+/* Map function names as strings to CLIgen variable translate functions */
+typedef translate_cb_t *(translate_str2fn_t)(char *str, void *arg, char **err);
+
 /*
  * Prototypes
  */
@@ -84,6 +87,7 @@ int cligen_parse_line(cligen_handle h,
 int cligen_callback_str2fn(parse_tree, cg_str2fn_t *str2fn, void *arg);
 int cligen_callbackv_str2fn(parse_tree pt, cgv_str2fn_t *str2fn, void *arg);
 int cligen_expandv_str2fn(parse_tree pt, expandv_str2fn_t *str2fn, void *arg);
+int cligen_translate_str2fn(parse_tree pt, translate_str2fn_t *str2fn, void *arg);
 int cligen_parse_debug(int d); 
 
 #endif /* _CLIGEN_SYNTAX_H_ */

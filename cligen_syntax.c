@@ -194,8 +194,10 @@ cligen_parse_file(cligen_handle h,
     return retval;
 }
 
-/*! Assign functions for callbacks in a parse-tree using a translate function
+#ifdef CALLBACK_SINGLEARG
+/*! Assign functions for callbacks (end of line) using a mapper function
  *
+ * The mapping is done from string to C-function. This is done recursively.
  * Example: Assume a CLIgen syntax:
  *   a <b:string>, fn();
  * where
@@ -250,9 +252,11 @@ cligen_callback_str2fn(parse_tree pt, cg_str2fn_t *str2fn, void *arg)
   done:
     return retval;
 }
+#endif
 
-/*! Assign functions for callbacks in a parse-tree using a translate function
+/*! Assign functions for variable completion using a mapper function
  *
+ * The mapping is done from string to C-function. This is done recursively.
  * Example: Assume a CLIgen syntax:
  *   a <b:string>, fn();
  * where
@@ -310,8 +314,9 @@ cligen_callbackv_str2fn(parse_tree    pt,
     return retval;
 }
 
-/*! Assign functions for variable completion in a parse-tree using a translate function
+/*! Assign functions for variable completion using a mapper function
  *
+ * The mapping is done from string to C-function. This is done recursively.
  * Example: Assume a CLIgen syntax:
  *   a <b:string fn("x","y")>;
  * where
@@ -353,6 +358,43 @@ cligen_expandv_str2fn(parse_tree        pt,
 	    }
 	    /* recursive call to next level */
 	    if (cligen_expandv_str2fn(co->co_pt, str2fn, arg) < 0)
+		goto done;
+	}
+    }
+    retval = 0;
+  done:
+    return retval;
+}
+
+/*! Assign functions for translation of variables using a mapper function
+ * The mapping is done from string to C-function. This is done recursively.
+ * @param[in]  pt      Parse-tree. Recursively loop through and call str2fn
+ * @param[in]  str2fn  Translator function from strings to function pointers
+ * @param[in]  arg     Argument to call str2fn with
+ */
+int
+cligen_translate_str2fn(parse_tree          pt, 
+			translate_str2fn_t *str2fn, 
+			void               *arg)
+{
+    int                 retval = -1;
+    cg_obj             *co;
+    char               *callback_err = NULL;   /* Error from str2fn callback */
+    int                 i;
+
+    for (i=0; i<pt.pt_len; i++){    
+	if ((co = pt.pt_vec[i]) != NULL){
+	    if (co->co_translate_fn_str != NULL && co->co_translate_fn == NULL){
+		/* Note str2fn is a function pointer */
+		co->co_translate_fn = str2fn(co->co_translate_fn_str, arg, &callback_err);
+		if (callback_err != NULL){
+		    fprintf(stderr, "%s: error: No such function: %s\n",
+			    __FUNCTION__, co->co_translate_fn_str);
+		    goto done;
+		}
+	    }
+	    /* recursive call to next level */
+	    if (cligen_translate_str2fn(co->co_pt, str2fn, arg) < 0)
 		goto done;
 	}
     }

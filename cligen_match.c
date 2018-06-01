@@ -79,6 +79,7 @@ int _match_cgvar_same = 0;
  * @retval     0       Not match and reason returned as malloced string.
  * @retval     1       Match
  * Who prints errors?
+ * @see cvec_match where actual allocation of variables is made not only sanity
  */
 static int
 match_variable(cg_obj *co, 
@@ -86,7 +87,7 @@ match_variable(cg_obj *co,
 	       char  **reason)
 {
     int         retval = -1;
-    cg_var     *cv;
+    cg_var     *cv; /* Just a temporary cv for validation */
     cg_varspec *cs;
 
     cs = &co->u.cou_var;
@@ -96,7 +97,11 @@ match_variable(cg_obj *co,
 	cv_dec64_n_set(cv, cs->cgs_dec64_n);
     if ((retval = cv_parse1(str, cv, reason)) <= 0) 
 	goto done;
-    retval = cv_validate(cv, cs, reason);
+    /* here retval should be 1 */
+    /* Validate value */
+    if ((retval = cv_validate(cv, cs, reason)) <= 0)
+	goto done;
+    /* here retval should be 1 */
   done:
     if (cv)
 	cv_free(cv);

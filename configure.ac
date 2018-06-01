@@ -37,7 +37,8 @@
 AC_INIT(cligen.h)
 
 # Default CFLAGS unless set by environment.
-: ${CFLAGS="-O2"}
+: ${CFLAGS="-O2 -Wall"}
+: ${INSTALLFLAGS="-s"}
 
 AC_CONFIG_HEADER(cligen_config.h)
 
@@ -59,6 +60,8 @@ AC_PROG_CC()
 AC_PROG_CPP
 AC_PROG_YACC
 AC_PROG_LEX
+AC_PROG_INSTALL
+AC_PROG_LN_S
 AC_SUBST(CC)
 AC_SUBST(CFLAGS)
 AC_SUBST(LDFLAGS)
@@ -70,6 +73,12 @@ AC_SUBST(SH_SUFFIX)
 AC_SUBST(EXE_SUFFIX)
 AC_SUBST(AR)
 AC_SUBST(RANLIB)
+AC_SUBST(INSTALL)
+AC_SUBST(INSTALL_LIB)
+AC_SUBST(INSTALL_DATA)
+AC_SUBST(INSTALL_PROGRAM)
+AC_SUBST(INSTALLFLAGS)
+AC_SUBST(LN_S)
 #
 
 echo "$host_cpu $host_vendor $host_os"
@@ -89,7 +98,6 @@ AC_MSG_RESULT(Compiler is $CC)
 LIBS="${LIBS} -L." # 
 LDFLAGS=""
 CPPFLAGS="-DHAVE_CONFIG_H ${CPPFLAGS}"
-CFLAGS="${CFLAGS} -Wall" 
 AC_CHECK_LIB(m, main)
 EXE_SUFFIX=""
 OBJ_SUFFIX=".o"
@@ -99,6 +107,21 @@ AR="ar"
 
 AC_MSG_RESULT(CFLAGS is $CFLAGS)	
 AC_MSG_RESULT(CPPFLAGS is $CPPFLAGS)	
+# Debug flag
+AC_ARG_ENABLE(debug, AS_HELP_STRING([--enable-debug],[Build with debug symbols, default: no]),[
+	  if test "$enableval" = no; then
+	      ac_enable_debug=no
+	  else	      
+	      ac_enable_debug=yes
+          fi
+        ],
+	[ ac_enable_debug=no])
+
+AC_MSG_RESULT(debug is $ac_enable_debug)	
+if test "$ac_enable_debug" = "yes"; then
+   CFLAGS="-g -Wall"
+   INSTALLFLAGS=""	
+fi
 
 # Enable BSD select semantics allowing multiple input file descriptors to be enabled at once,
 # Not just stdin. Each extra fd requires a callback which is registered with cligen_regfd()])
