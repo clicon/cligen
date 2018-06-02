@@ -1182,7 +1182,7 @@ keypair     : NAME '(' ')' { expand_fn(_ya, $1); }
             | V_FRACTION_DIGITS ':' NUMBER { 
 		if (cg_dec64_n(_ya, $3) < 0) YYERROR; free($3); 
 	      }
-            | V_CHOICE ':' choices { _YA->ya_var->co_choice = $3; }
+            | V_CHOICE choices { _YA->ya_var->co_choice = $2; }
             | V_KEYWORD ':' NAME { 
 		_YA->ya_var->co_keyword = $3;  
 		_YA->ya_var->co_vtype=CGV_STRING; 
