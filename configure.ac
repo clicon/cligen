@@ -61,20 +61,16 @@ AC_PROG_CPP
 AC_PROG_YACC
 AC_PROG_LEX
 AC_PROG_INSTALL
+
 AC_PROG_LN_S
 AC_SUBST(CC)
 AC_SUBST(CFLAGS)
 AC_SUBST(LDFLAGS)
 AC_SUBST(INCLUDES)
 AC_SUBST(LIBS)
-AC_SUBST(OBJ_SUFFIX)
-AC_SUBST(AR_SUFFIX)
 AC_SUBST(SH_SUFFIX)
-AC_SUBST(EXE_SUFFIX)
-AC_SUBST(AR)
 AC_SUBST(RANLIB)
 AC_SUBST(INSTALL)
-AC_SUBST(INSTALL_LIB)
 AC_SUBST(INSTALL_DATA)
 AC_SUBST(INSTALL_PROGRAM)
 AC_SUBST(INSTALLFLAGS)
@@ -99,14 +95,8 @@ LIBS="${LIBS} -L." #
 LDFLAGS=""
 CPPFLAGS="-DHAVE_CONFIG_H ${CPPFLAGS}"
 AC_CHECK_LIB(m, main)
-EXE_SUFFIX=""
-OBJ_SUFFIX=".o"
-AR_SUFFIX=".a"
 SH_SUFFIX=".so"
-AR="ar"
 
-AC_MSG_RESULT(CFLAGS is $CFLAGS)	
-AC_MSG_RESULT(CPPFLAGS is $CPPFLAGS)	
 # Debug flag
 AC_ARG_ENABLE(debug, AS_HELP_STRING([--enable-debug],[Build with debug symbols, default: no]),[
 	  if test "$enableval" = no; then
@@ -122,6 +112,10 @@ if test "$ac_enable_debug" = "yes"; then
    CFLAGS="-g -Wall"
    INSTALLFLAGS=""	
 fi
+
+AC_MSG_RESULT(CPPFLAGS is $CPPFLAGS)	
+AC_MSG_RESULT(CFLAGS is $CFLAGS)	
+AC_MSG_RESULT(INSTALLFLAGS is $INSTALLFLAGS)
 
 # Enable BSD select semantics allowing multiple input file descriptors to be enabled at once,
 # Not just stdin. Each extra fd requires a callback which is registered with cligen_regfd()])
