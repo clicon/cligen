@@ -627,11 +627,7 @@ INSTALLFLAGS
 INSTALL_LIB
 INSTALL
 RANLIB
-AR
-EXE_SUFFIX
 SH_SUFFIX
-AR_SUFFIX
-OBJ_SUFFIX
 INCLUDES
 LN_S
 INSTALL_DATA
@@ -3480,6 +3476,13 @@ test -z "$INSTALL_SCRIPT" && INSTALL_SCRIPT='${INSTALL}'
 
 test -z "$INSTALL_DATA" && INSTALL_DATA='${INSTALL} -m 644'
 
+echo "INSTALL:$INSTALL"
+echo "INSTALL_BIN:$INSTALL_BIN"
+echo "INSTALL_DATA:$INSTALL_DATA"
+echo "INSTALL_PROGRAM:$INSTALL_PROGRAM"
+echo "INSTALL_LIB:$INSTALL_LIB"
+
+
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether ln -s works" >&5
 $as_echo_n "checking whether ln -s works... " >&6; }
 LN_S=$as_ln_s
@@ -3499,11 +3502,7 @@ fi
 
 
 
-
-
-
-
-
+ # ?
 
 
 
@@ -3567,16 +3566,8 @@ _ACEOF
 
 fi
 
-EXE_SUFFIX=""
-OBJ_SUFFIX=".o"
-AR_SUFFIX=".a"
 SH_SUFFIX=".so"
-AR="ar"
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: CFLAGS is $CFLAGS" >&5
-$as_echo "CFLAGS is $CFLAGS" >&6; }
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: CPPFLAGS is $CPPFLAGS" >&5
-$as_echo "CPPFLAGS is $CPPFLAGS" >&6; }
 # Debug flag
 # Check whether --enable-debug was given.
 if test "${enable_debug+set}" = set; then :
@@ -3598,6 +3589,13 @@ if test "$ac_enable_debug" = "yes"; then
    CFLAGS="-g -Wall"
    INSTALLFLAGS=""
 fi
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: CPPFLAGS is $CPPFLAGS" >&5
+$as_echo "CPPFLAGS is $CPPFLAGS" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: CFLAGS is $CFLAGS" >&5
+$as_echo "CFLAGS is $CFLAGS" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: INSTALLFLAGS is $INSTALLFLAGS" >&5
+$as_echo "INSTALLFLAGS is $INSTALLFLAGS" >&6; }
 
 # Enable BSD select semantics allowing multiple input file descriptors to be enabled at once,
 # Not just stdin. Each extra fd requires a callback which is registered with cligen_regfd()])
