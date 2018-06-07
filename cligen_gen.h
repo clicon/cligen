@@ -235,7 +235,8 @@ typedef int (cg_applyfn_t)(cg_obj *co, void *arg);
 #define co_regex         u.cou_var.cgs_regex
 #define co_dec64_n       u.cou_var.cgs_dec64_n
 
-#define iskeyword(CV) ((CV)->co_choice!=NULL && strchr((CV)->co_choice, '|')==NULL)
+#define iskeyword(CV) 0
+//((CV)->co_choice!=NULL && strchr((CV)->co_choice, '|')==NULL)
 
 /* tmp Access macro */
 
