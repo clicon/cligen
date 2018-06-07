@@ -227,7 +227,8 @@ pt_callback_reference(parse_tree          pt,
     parse_tree         *ptc;
     int                 retval = -1;
     struct cg_callback *cc;
-
+    cg_var             *cv;
+		    
     for (i=0; i<pt.pt_len; i++){    
 	if ((co = pt.pt_vec[i]) == NULL)
 	    continue;
@@ -243,12 +244,19 @@ pt_callback_reference(parse_tree          pt,
 #ifdef CALLBACK_SINGLEARG
 		cc->cc_fn = cc0->cc_fn; /* iterate */
 #endif
-		cc->cc_fn_vec = cc0->cc_fn_vec; /* iterate */
+		cc->cc_fn_vec = cc0->cc_fn_vec; /*  */
 		if (cc0->cc_fn_str){
 		    if (cc->cc_fn_str)
 			free (cc->cc_fn_str);
 		    cc->cc_fn_str = strdup(cc0->cc_fn_str);
 		}
+		/* Append original parameters to end of call */
+		if (cc0->cc_cvec){
+		    cv = NULL;
+		    while ((cv = cvec_each(cc0->cc_cvec, cv)) != NULL)
+			cvec_append_var(cc->cc_cvec, cv);
+		}
+		
 	    }
 	}
 	if (pt_callback_reference(co->co_pt, cc0) < 0)
