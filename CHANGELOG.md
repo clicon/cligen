@@ -2,6 +2,8 @@
 
 ## R3.7.0 (Upcoming)
 
+* Append arguments to reference callback
+  * such as: @datamodel:example, cli_show_auto("candidate", "text");		   
 * Added --enable-debug. Thanks rbgarga
 * Added 
 * Removed support for single callback functions
