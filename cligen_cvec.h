@@ -68,13 +68,12 @@ cvec   *cvec_start(char *cmd);
 int     cvec_print(FILE *f, cvec *vr);
 int     cvec2cbuf(cbuf *cb, cvec *cvv);
 cg_var *cvec_find(cvec *vr, char *name);
-cg_var *cvec_find_var(cvec *vr, char *name);
-cg_var *cvec_find_keyword(cvec *vr, char *name);
 char   *cvec_find_str(cvec *vr, char *name);
 char   *cvec_name_get(cvec *vr);
 char   *cvec_name_set(cvec *vr, char *name);
 int     cv_exclude_keys(int status);
 
+#define cvec_find_var(vr, name) cvec_find((vr), (name)) 
 
 #endif /* _CLIGEN_CVEC_H_ */
 

@@ -570,7 +570,6 @@ add_cov_to_cvec(cg_obj *co,
     if ((cv = cvec_add(cvec, co->co_vtype)) == NULL)
 	return NULL;
     cv_name_set(cv, co->co_command);
-    cv_const_set(cv, iskeyword(co));
     if (cv_parse(cmd, cv) < 0) {
 	cv_reset(cv);
 	cvec_del(cvec, cv);

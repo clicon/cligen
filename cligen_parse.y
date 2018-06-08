@@ -662,11 +662,7 @@ cgy_terminal(cliyacc *ya)
 	}
 	/* variables: special case hide, auth */
 	if (ya->ya_cvec){
-#ifdef notyet /* XXX: where did auth code go? */
-	    if ((cv = cvec_find_var(ya->ya_cvec, "auth")) != NULL)
-		co->co_auth = strdup(cv_string_get(cv));
-#endif
-	    if (cvec_find_var(ya->ya_cvec, "hide") != NULL)
+	    if (cvec_find(ya->ya_cvec, "hide") != NULL)
 		co->co_hide = 1;
 	    /* generic variables */
 	    if ((co->co_cvec = cvec_dup(ya->ya_cvec)) == NULL){
