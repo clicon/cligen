@@ -524,7 +524,6 @@ cvec_match(cligen_handle h,
 	    cv->var_name = strdup4(co->co_command);
 	    if (co->co_show)
 		cv->var_show = strdup4(co->co_show);
-	    cv->var_const = iskeyword(co);
 	    if (co->co_vtype == CGV_DEC64) /* XXX: Seems misplaced? / too specific */
 		cv_dec64_n_set(cv, co->co_dec64_n);
 	    /* String value to structured type */
@@ -547,7 +546,6 @@ cvec_match(cligen_handle h,
 		cv->var_name = strdup4(co->co_command);
 		cv->var_type = CGV_STRING;
 		cv_string_set(cv, co->co_command);
-		cv->var_const = 1;
 		v++;
 	    }
 	    break;
@@ -640,7 +638,6 @@ cvec2cbuf(cbuf *cb,
  * @param[in]  name  Name to match
  * @retval     cv    Element matching name. NULL
  * @retval     NULL  Not found
- * @see cvec_find_var
  */
 cg_var *
 cvec_find(cvec *cvv, 
@@ -654,43 +651,6 @@ cvec_find(cvec *cvv,
     return NULL;
 }
 
-/*! Return first non-keyword cv in a cvec matching a name
- * @param[in]  cvv   Cligen variable vector
- * @param[in]  name  Name to match
- * @retval     cv    Element matching name. NULL
- * @retval     NULL  Not found
- * @see cvec_find
- */
-cg_var *
-cvec_find_var(cvec *cvv,
-	      char *name)
-{
-    cg_var *cv = NULL;
-
-    while ((cv = cvec_each(cvv, cv)) != NULL) 
-	if (cv->var_name && strcmp(cv->var_name, name) == 0 && !cv->var_const)
-	    return cv;
-    return NULL;
-}
-
-/*! Return first keyword cv in a cvec matching a name
- * @param[in]  cvv   Cligen variable vector
- * @param[in]  name  Name to match
- * @retval     cv    Element matching name. NULL
- * @retval     NULL  Not found
- * @see cvec_find
- */
-cg_var *
-cvec_find_keyword(cvec *cvv, 
-		  char *name)
-{
-    cg_var *cv = NULL;
-
-    while ((cv = cvec_each(cvv, cv)) != NULL) 
-	if (cv->var_name && strcmp(cv->var_name, name) == 0 && cv->var_const)
-	    return cv;
-    return NULL;
-}
 
 /*! Typed version of cvec_find that returns the string value.
  *
