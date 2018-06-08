@@ -236,12 +236,9 @@ typedef int (cg_applyfn_t)(cg_obj *co, void *arg);
 #define co_dec64_n       u.cou_var.cgs_dec64_n
 
 #define iskeyword(CV) 0
-//((CV)->co_choice!=NULL && strchr((CV)->co_choice, '|')==NULL)
 
-/* tmp Access macro */
 
-#if 1
-
+/* Access macro */
 static inline cg_obj* 
 co_up(cg_obj *co) 
 {
@@ -254,43 +251,6 @@ co_up_set(cg_obj *co, cg_obj *cop)
     co->co_prev = cop;
     return 0;
 }
-#else
-static inline parse_tree* 
-pt_up(parse_tree *pt)
-{
-    return pt->pt_up;
-}
-
-static inline int
-pt_up_set(parse_tree *pt, parse_tree *ptp) 
-{
-    pt->pt_up = ptp;
-    pt->pt_obj = 0;
-    return 0;
-}
-
-static inline cg_obj* 
-co_up(cg_obj *co) 
-{
-    parse_tree *pt = (parse_tree*)&co->co_pt;
-
-    if (pt->pt_obj)
-	return (cg_obj*)pt_up(pt);
-    else
-	return NULL;
-}
-
-static inline int
-co_up_set(cg_obj *co, cg_obj *cop) 
-{
-    int retval;
-    parse_tree *pt = (parse_tree*)&co->co_pt;
-
-    retval = pt_up_set(pt, (parse_tree*)cop);
-    pt->pt_obj = (cop != NULL);
-    return retval;
-}
-#endif
 
 /*! return top-of-tree (ancestor) */
 static inline cg_obj* 

@@ -47,7 +47,6 @@ struct cg_var {
     enum cv_type var_type; /* Type of variable appears in <name:type ...> */
     char        *var_name; /* Name of variable appears in <name:type ...> */
     char        *var_show; /* Show help-text, same as name or <name..show:<show>> */
-    char         var_const; /* Set if the variable is a keyword */
     char         var_flag ; /* Application-specific flags, no semantics by cligen */
     union {
 	uint8_t	 varu_bool;

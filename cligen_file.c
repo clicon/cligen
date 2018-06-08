@@ -72,8 +72,6 @@ cligen_exec_cb(cligen_handle handle, cvec *cvv, cvec *argv)
 	return 0;
     if ((pid = fork()) == 0){ /* child */
 	while ((cv = cvec_each1(cvv, cv)) != NULL) {
-	    if (cv_const_get(cv))
-		continue;
 	    cv2str(cv, buf, sizeof(buf)-1);
 	    setenv(cv_name_get(cv), buf, 1 );
 	}

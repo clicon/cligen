@@ -138,29 +138,6 @@ cv_type_set(cg_var      *cv,
     return (cv->var_type = x);
 }
 
-/*! Get cv const flag
- * @param[in] cv     CLIgen variable
- * @retval    type   Type of cv
- */
-char
-cv_const_get(cg_var *cv)
-{
-    return cv->var_const;
-}
-
-
-/*! Set CLIgen const flag. 
- * @param[in] cv     CLIgen variable
- * @param[in] t      New type
- * @retval    t      New type
- */
-char
-cv_const_set(cg_var *cv, 
-	     int     c)
-{
-    return (cv->var_const = c);
-}
-
 /*! Get application-specific cv flag
  * @param[in] cv     CLIgen variable
  */

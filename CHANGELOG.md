@@ -2,6 +2,9 @@
 
 ## R3.7.0 (Upcoming)
 
+* Removed code for differentiating "constant" and "variable" cligen vars.
+  * remove cvec_find_keyword
+  * replace cvec_find_var() with cvec_find() (backward compatible macro exists).
 * Append arguments to reference callback
   * such as: @datamodel:example, cli_show_auto("candidate", "text");		   
 * Added --enable-debug. Thanks rbgarga
