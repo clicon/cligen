@@ -83,7 +83,6 @@
 #define TERM_ROWS_DEFAULT 24
 #define GETLINE_BUFLEN_DEFAULT 64 /* startsize, increased with 2x when run out */
 
-
 /*! list of cligen parse-trees, can be searched, and activated */
 typedef struct parse_tree_list  { /* Linked list of cligen parse-trees */
     struct parse_tree_list  *ptl_next;
@@ -160,6 +159,7 @@ cligen_init(void)
     }
     memset(ch, 0, sizeof(*ch));
     ch->ch_magic = CLIGEN_MAGIC;
+    ch->ch_tabmode = 0x0; /* see CLIGEN_TABMODE_* */
     h = (cligen_handle)ch;
     cligen_prompt_set(h, CLIGEN_PROMPT_DEFAULT);
     /* Only if stdin and stdout refers to a terminal make win size check */
@@ -607,6 +607,8 @@ cligen_fn_str_set(cligen_handle h,
  * @param[in] h       CLIgen handle
  * @retval 0   for each TAB complete one level. (default)
  * @retval 1   complete all unique levels at once
+ * @note deprecated
+ * @see cligen_tabmode
  */
 int
 cligen_completion(cligen_handle h)
@@ -620,6 +622,8 @@ cligen_completion(cligen_handle h)
  *
  * @param[in] h       CLIgen handle
  * @param[in] mode    0: complete 1 level. 1: complete all
+ * @note deprecated
+ * @see cligen_tabmode_set
  */
 int
 cligen_completion_set(cligen_handle h, 
@@ -769,12 +773,11 @@ cligen_line_scrolling_set(cligen_handle h,
     return prev;
 }
 
-
 /*! Get tab-mode. 
  *
  * @param[in] h       CLIgen handle
- * @retval 0    'short/ios' mode.
- * @retval 1    long/junos mode.
+ * @retval    flags   Bitwise OR of CLIGEN_TABMODE_* flags
+ * @see cligen_tabmode_set for documentation on mode
  */
 int 
 cligen_tabmode(cligen_handle h)
@@ -784,10 +787,12 @@ cligen_tabmode(cligen_handle h)
     return ch->ch_tabmode;
 }
 
-/*! Set tab-mode
+/*! Set Cligen tab mode. Combination of CLIGEN_TABMODE_* flags
  *
  * @param[in] h       CLIgen handle
- * @param[in] mode    0 is 'short/ios' mode, 1 is long/junos mode.
+ * @param[in] mode    Bitwise OR of CLIGEN_TABMODE_* flags
+ * CLIGEN_TABMODE_COLUMNS:
+ * 0 is 'short/ios' mode, 1 is long/junos mode.
  * Two ways to show commands: show_help_column and show_help_line
  * show_help_line
  *  cli> interface name 
@@ -802,6 +807,27 @@ cligen_tabmode(cligen_handle h)
  * short/ios:  ?:   show_multi_long
  *             TAB: show_multi  (many columns)
  * long/junos: TAB and ?: show_multi_long
+ *
+ * CLIGEN_TABMODE_VARS:
+ * 0: command completion preference, 
+ * 1: same preference for vars
+ * @example if clispec is:
+ * a {
+ *   b;
+ *  <c:int32>, cb("a.b");
+ * }
+ * Typing "a <TAB>"
+ * 0: completes to "a b"
+ * 1: does not complete, shows:
+ *   b
+ *   <c>
+ *
+ * CLIGEN_TABMODE_STEPS
+ * 0: complete 1 level. 1: complete all
+ * Example: syntax is 'a b;':
+ * 0: gives completion to 'a ' on first TAB and to 'a b ' on second. 
+ * 1: gives completion to 'a b ' on first TAB.
+ * @see cligen_completion_set which is deprecated
  */
 int 
 cligen_tabmode_set(cligen_handle h, 

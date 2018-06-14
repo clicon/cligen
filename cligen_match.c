@@ -1025,8 +1025,9 @@ match_complete(cligen_handle h,
 	    retval = 0;
 	    goto done;
 	}
-	if (co->co_type != CO_COMMAND)
-	    continue;
+	if (cligen_tabmode(h) & CLIGEN_TABMODE_VARS == 0)
+	    if (co->co_type != CO_COMMAND)
+		continue;
 	if (co1 == NULL){
 	    minmatch = strlen(co->co_command);
 	    co1 = co;
@@ -1063,7 +1064,7 @@ match_complete(cligen_handle h,
 	level++;
 	slen = 0;
 	co1 = NULL;
-	if (cligen_completion(h) == 1){
+	if (cligen_tabmode(h)&CLIGEN_TABMODE_STEPS){
 	    if (matchv)
 		free(matchv);
 	    matchv = NULL;

@@ -2995,6 +2995,7 @@ cv_dup(cg_var *old)
  *
  * @retval NULL  on error, error printed on stder
  * @retval cv    on success the malloc:ed cligen variable. Needs to be freed w cv_free()
+ * @see cv_free
  */
 cg_var *
 cv_new(enum cv_type type)
@@ -3057,6 +3058,7 @@ cv_reset(cg_var *cv)
 /*! Free a single CLIgen variable (cv) AND frees the cv itself
  *
  * @param[in] cv     CLIgen variable
+ * @see cv_new
  */
 int
 cv_free(cg_var *cv)
