@@ -159,7 +159,7 @@ cli_tab_hook(cligen_handle h,
     else {
 	if (old_cursor == *cursorp) { 	/* Cursor hasnt changed */
 	    fputs ("\n", stdout);
-	    if (cligen_tabmode(h) == 1){
+	    if (cligen_tabmode(h)&CLIGEN_TABMODE_COLUMNS){
 		if (show_help_line(h, stdout, cligen_buf(h), ptn, cvec) < 0)
 		    goto done;
 	    }
