@@ -205,7 +205,8 @@ main(int argc, char *argv[])
     if ((str = cvec_find_str(globals, "prompt")) != NULL)
 	cligen_prompt_set(h, str);
     if ((str = cvec_find_str(globals, "tabmode")) != NULL)
-	cligen_tabmode_set(h, strcmp(str,"long") == 0);
+	if (strcmp(str,"long") == 0)
+	    cligen_tabmode_set(h, CLIGEN_TABMODE_COLUMNS);
     if ((str = cvec_find_str(globals, "comment")) != NULL)
 	cligen_comment_set(h, *str);
     if ((str = cvec_find_str(globals, "mode")) != NULL)
