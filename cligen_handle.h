@@ -41,6 +41,21 @@
 #define CLIGEN_PROMPT_DEFAULT "cli> "
 #define TERM_MIN_SCREEN_WIDTH 21 /* hardcoded by getline */
 
+/* OR CLIGEN_TABMODE_* using cligen_tabmode_set() */
+/* Show columns info: 0: short/ios mode, 1: long/junos mode */
+#define CLIGEN_TABMODE_COLUMNS 0x01 
+
+/* Command keyword preference over variables:
+ * 0: command completion preference, 
+ * 1: same preference for vars
+ */
+#define CLIGEN_TABMODE_VARS    0x02
+
+/* Steps to complete
+ * 0: complete single step. 1: complete all steps at once
+ */
+#define CLIGEN_TABMODE_STEPS    0x04
+
 /*
  * Prototypes
  */
@@ -76,9 +91,6 @@ int cligen_co_match_set(cligen_handle h, cg_obj *co);
 
 char *cligen_fn_str_get(cligen_handle h);
 int cligen_fn_str_set(cligen_handle h, char *fn_str);
-
-int cligen_completion(cligen_handle h);
-int cligen_completion_set(cligen_handle h, int mode);
 
 char *cligen_nomatch(cligen_handle h);
 int cligen_nomatch_set(cligen_handle h, const char *fmt, ...);
@@ -123,6 +135,9 @@ int cligen_userhandle_set(cligen_handle h, void *userhandle);
  * backward compatibabilty functions, consider remove
  */
 #if 1
+int cligen_completion(cligen_handle h);
+int cligen_completion_set(cligen_handle h, int mode);
+
 parse_tree *cligen_tree(cligen_handle h, char *name);
 
 /* Get name of active tree back. cligen_tree_active_get() gets parse-tree which is 
