@@ -61,7 +61,11 @@ typedef int (cligen_fd_cb_t)(int, void*);
  * Prototypes
  */
 int cli_output_reset(void);
+#if defined(__GNUC__) && __GNUC__ >= 3
+int cligen_output(FILE *f, char *templ, ... ) __attribute__ ((format (printf, 2, 3)));
+#else
 int cligen_output(FILE *f, char *templ, ... );
+#endif
 int cligen_regfd(int fd, cligen_fd_cb_t *cb, void *arg);
 int cligen_unregfd(int fd);
 void cligen_redraw(cligen_handle h);
