@@ -180,7 +180,7 @@ int
 cbuf_append(cbuf       *cb,
             int        c)
 {
-    size_t diff;
+    int diff;
 
     /* make sure we have enough space */
     diff = cb->cb_buflen - (cb->cb_strlen + 1);
