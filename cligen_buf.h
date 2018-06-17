@@ -62,7 +62,6 @@ void  cbuf_free(cbuf *cb);
 char *cbuf_get(cbuf *cb);
 int   cbuf_len(cbuf *cb);
 int   cbuf_buflen(cbuf *cb);
-int   cprintf(cbuf *cb, const char *format, ...);
 #if defined(__GNUC__) && __GNUC__ >= 3
 int   cprintf(cbuf *cb, const char *format, ...) __attribute__ ((format (printf, 2, 3)));
 #else
