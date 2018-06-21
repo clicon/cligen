@@ -26,7 +26,7 @@ This package contains header files for CLIGEN.
 %setup
 
 %build
-%configure
+%configure --enable-debug
 make
 
 %install
