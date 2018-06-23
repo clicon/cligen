@@ -2757,6 +2757,7 @@ cv_validate(cg_var     *cv,
 	    }
 	}
 	break;
+    case CGV_REST:
     case CGV_STRING:
 	str = cv_string_get(cv);
 	if (cs->cgs_range){
@@ -2789,7 +2790,6 @@ cv_validate(cg_var     *cv,
 	break;
     case CGV_BOOL:
     case CGV_INTERFACE:
-    case CGV_REST:
     case CGV_IPV4ADDR: 
     case CGV_IPV6ADDR: 
     case CGV_IPV4PFX: 

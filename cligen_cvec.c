@@ -414,9 +414,9 @@ cvec_dup(cvec *old)
  */
 int
 cvec_match(cligen_handle h,
-	   cg_obj *co_match, 
-	   char   *cmd, 
-	   cvec   *cvv)
+	   cg_obj       *co_match, 
+	   char         *cmd, 
+	   cvec         *cvv)
 {
     cg_obj    *co;
     cg_var    *cv;
@@ -491,10 +491,10 @@ cvec_match(cligen_handle h,
 	    /* String value to structured type */
 	    if (cv_parse(val, cv) < 0) {
 		/* This should never happen, since it passes in match_variable() */
-		free (val);
+		if (val) free(val);
 		goto done;
 	    }
-	    free (val);
+	    if (val) free (val);
 	    /* If translator function defined, here translate value */
 	    if (co->co_translate_fn != NULL &&
 		co->co_translate_fn(h, cv) < 0)
