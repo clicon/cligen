@@ -445,7 +445,7 @@ gl_getc(cligen_handle h)
     c = _bios_keybrd(_NKEYBRD_READ);
 #endif  /* MSDOS */
 #ifdef __GO32__
-    c = getkey () ;
+    c = getkey() ;
     if (c > 255) c = pc_keymap(c & 0377);
 #endif /* __GO32__ */
 #ifdef __TURBOC__
@@ -1379,7 +1379,7 @@ gl_histclear()
     int i;
 
     for (i=0; i < HIST_SIZE; i++)
-	if (hist_buf[i] && strlen (hist_buf[i])){
+	if (hist_buf[i] && strlen(hist_buf[i])){
 	    free(hist_buf[i]);
 	    hist_buf[i] = NULL;
 	}
@@ -1430,7 +1430,7 @@ hist_save(char *p)
     char *nl = strchr(p, '\n');
 
     if (nl) {
-        if ((s = malloc (len)) != 0) {
+        if ((s = malloc(len)) != 0) {
             strncpy(s, p, len-1);
 	    s[len-1] = 0;
 	}

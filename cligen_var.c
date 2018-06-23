@@ -1331,7 +1331,7 @@ str2urlproto(char *str)
     for (proto = 1;; proto++){
 	if (cg_urlprotostr[proto] == NULL)
 	    break;
-	if (strcmp (str, cg_urlprotostr[proto]) == 0)
+	if (strcmp(str, cg_urlprotostr[proto]) == 0)
 	    return proto;
     }
     return 0;
@@ -2185,9 +2185,9 @@ cv2str_dup(cg_var *cv)
 
     if ((len = cv2str (cv, NULL, 0)) < 0)
 	return NULL;
-    if ((str = (char *)malloc (len+1)) == NULL)
+    if ((str = (char *)malloc(len+1)) == NULL)
 	return NULL;
-    memset (str, '\0', len+1);
+    memset(str, '\0', len+1);
     if ((cv2str(cv, str, len+1)) < 0){
 	free(str);
 	return NULL;
@@ -2380,9 +2380,9 @@ cvtype_max2str_dup(enum cv_type type)
 
     if ((len = cvtype_max2str(type, NULL, 0)) < 0)
 	return NULL;
-    if ((str = (char *)malloc (len+1)) == NULL)
+    if ((str = (char *)malloc(len+1)) == NULL)
 	return NULL;
-    memset (str, '\0', len+1);
+    memset(str, '\0', len+1);
     if ((cvtype_max2str(type, str, len+1)) < 0){
 	free(str);
 	return NULL;
@@ -2859,7 +2859,7 @@ cv_cmp(cg_var *cv1,
 	return cv1->var_ipv4masklen - cv2->var_ipv4masklen;
     case CGV_IPV6ADDR:
 	return memcmp(&cv1->var_ipv6addr, &cv2->var_ipv6addr,
-		      sizeof (cv1->var_ipv6addr));
+		      sizeof(cv1->var_ipv6addr));
     case CGV_IPV6PFX:
 	if ((n =  memcmp(&cv1->var_ipv6addr, &cv2->var_ipv6addr,
 			 sizeof(cv1->var_ipv6addr))))
@@ -2867,7 +2867,7 @@ cv_cmp(cg_var *cv1,
 	return cv1->var_ipv6masklen - cv2->var_ipv6masklen;
     case CGV_MACADDR:
 	return memcmp(&cv1->var_macaddr, &cv2->var_macaddr,
-		      sizeof (cv1->var_macaddr));
+		      sizeof(cv1->var_macaddr));
 	
     case CGV_URL:
 	if ((n = strcmp(cv1->var_urlproto, cv2->var_urlproto)))
