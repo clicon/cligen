@@ -2,6 +2,8 @@
 
 ## R3.7.0 (Upcoming)
 
+* Fixed bug that REST variable did not work with regexp (thanks David Cornejo, Netgate)
+  * For example this now works: <a:rest regexp:".*">;
 * Added three CLIGEN_TABMODE_* flags for setting with cligen_tabmode_set:
   * CLIGEN_TABMODE_COLUMNS: 0: short/ios mode, 1: long/junos mode 
   * CLIGEN_TABMODE_VARS:    0: command preference, 1: vars have equal pref
