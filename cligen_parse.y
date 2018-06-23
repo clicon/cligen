@@ -869,7 +869,8 @@ cg_regexp(cliyacc *ya,
 	  char    *rx)
 {
     ya->ya_var->co_regex = rx;  
-    ya->ya_var->co_vtype=CGV_STRING;
+    if (ya->ya_var->co_vtype != CGV_STRING && ya->ya_var->co_vtype != CGV_REST)
+	ya->ya_var->co_vtype=CGV_STRING;
     return 0;
 }
 
@@ -1103,7 +1104,7 @@ arglist1   : arglist1 ',' arg
            ;
 
 arg        : typecast arg1 { if ($2 && cgy_callback_arg(_ya, $1, $2) < 0) YYERROR;
-		    if ($1) free($1); if ($2) free($2);
+		    if ($1 != NULL) free($1); if ($2 != NULL) free($2);
               }
            ;
 
