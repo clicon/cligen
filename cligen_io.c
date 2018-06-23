@@ -168,17 +168,17 @@ cligen_output(FILE *f, char *template, ... )
  * Yes/No question. Returns 1 for yes and 0 for no.
  */
 int
-cli_yesno (const char *fmt, ...)
+cli_yesno(const char *fmt, ...)
 {
     va_list	  ap;
     char	  buf[1024];
 
-    va_start (ap, fmt);
-    vsnprintf (buf, sizeof (buf)-1, fmt, ap);
-    va_end (ap);
+    va_start(ap, fmt);
+    vsnprintf(buf, sizeof(buf)-1, fmt, ap);
+    va_end(ap);
     printf("%s [yes/no]: ", buf);
-    if (cli_getln (buf, sizeof (buf)) == 0)
-	if (strlen (buf) && !strncasecmp (buf, "yes", strlen (buf)))
+    if (cli_getln(buf, sizeof(buf)) == 0)
+	if (strlen(buf) && !strncasecmp(buf, "yes", strlen(buf)))
 	    return 1;
     return 0;
 }
