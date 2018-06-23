@@ -98,7 +98,7 @@ cli_qmark_hook(cligen_handle h,
     parse_tree    ptn={0,};    /* Expanded */
     cvec         *cvec = NULL;
 
-    fputs ("\n", stdout);
+    fputs("\n", stdout);
     if ((pt = cligen_tree_active_get(h)) == NULL)
 	goto ok;
     if (pt_expand_treeref(h, NULL, pt) < 0) /* sub-tree expansion */
@@ -158,7 +158,7 @@ cli_tab_hook(cligen_handle h,
 	goto done;
     else {
 	if (old_cursor == *cursorp) { 	/* Cursor hasnt changed */
-	    fputs ("\n", stdout);
+	    fputs("\n", stdout);
 	    if (cligen_tabmode(h)&CLIGEN_TABMODE_COLUMNS){
 		if (show_help_line(h, stdout, cligen_buf(h), ptn, cvec) < 0)
 		    goto done;
@@ -214,7 +214,7 @@ column_print(FILE            *fout,
     for (ci=0, li = 0; li < linenr; li++) {
 	while ((ci < cnr) && (li*cnr+ci < len)) {
 	    ch = &chvec[li*cnr+ci];
-	    fprintf (fout, " %*s", 
+	    fprintf(fout, " %*s", 
 		     -(cw-1), 
 		     ch->ch_cmd);
 	    ci++;
@@ -414,10 +414,10 @@ show_help_line(cligen_handle h,
 	}
 
 	if (res) {
-	    fprintf (fout, "  <cr>\n");
+	    fprintf(fout, "  <cr>\n");
 	    fflush(fout);
 	}
-	free (tmp);
+	free(tmp);
 #if 0
 	/* The following is a kludge to correct a memory error triggered by:
 	   a <rest>;
@@ -510,8 +510,8 @@ complete(cligen_handle h,
  * @param[in]   comment
  */
 void
-cli_trim (char **line, 
-	  char   comment)
+cli_trim(char **line, 
+	 char   comment)
 {
     int		point;
     int		whitespace = 0;
@@ -577,11 +577,11 @@ cli_trim (char **line,
  * @retval  2+             Multiple matches
  */
 int 
-cliread_parse (cligen_handle h, 
-	       char         *string,
-	       parse_tree   *pt,     /* Orig */
-	       cg_obj      **co_orig,
-	       cvec         *cvv)
+cliread_parse(cligen_handle h, 
+	      char         *string,
+	      parse_tree   *pt,     /* Orig */
+	      cg_obj      **co_orig,
+	      cvec         *cvv)
 {
     int           retval = -1;
     cg_obj       *match_obj;
@@ -592,7 +592,7 @@ cliread_parse (cligen_handle h,
 	fprintf(stderr, "%s:\n", __FUNCTION__);
 	cligen_print(stderr, *pt, 0);
     }
-    cli_trim (&string, cligen_comment(h));
+    cli_trim(&string, cligen_comment(h));
     if (pt_expand_treeref(h, NULL, pt) < 0) /* sub-tree expansion, ie @ */
 	goto done; 
     if ((cvec = cvec_start(string)) == NULL)

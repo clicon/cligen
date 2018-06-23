@@ -1066,15 +1066,15 @@ cligen_reason(const char *fmt, ...)
     int     len;
     va_list ap;
 
-    va_start (ap, fmt);
+    va_start(ap, fmt);
     len = vsnprintf(NULL, 0, fmt, ap);
     len++;
-    va_end (ap);
+    va_end(ap);
     if ((reason = malloc(len)) == NULL){
 	fprintf(stderr, "%s: malloc: %s\n", __FUNCTION__, strerror(errno));
 	return NULL;
     }
-    va_start (ap, fmt);
+    va_start(ap, fmt);
 
     if ((res = vsnprintf(reason, len, fmt, ap)) < 0){
 	free(reason);
