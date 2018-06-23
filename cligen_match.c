@@ -66,6 +66,8 @@
 #define MIN(x,y) ((x)<(y)?(x):(y))
 #endif
 
+#define ISREST(co) ((co)->co_type == CO_VARIABLE && (co)->co_vtype == CGV_REST)
+
 /* if several cligen object variables match with same preference, select first */
 int _match_cgvar_same = 0;
 
@@ -121,7 +123,7 @@ match_variable(cg_obj *co,
  * @retval   1         Match
  */
 static int 
-match_object(char   *string, 
+match_object(char   *string,
 	     cg_obj *co, 
 	     int    *exact,
 	     char  **reason)
@@ -320,34 +322,43 @@ command_levels(char *string)
     return i;
 }
 
-/*! Returns a substring of a command at a specific level
+
+/*! Given a string and a position, return token at that level
+ * Returns substrings of a command at a specific level
  * @param[in]  string0  Input string to match
- * @param[in]  level    Which substring to extract
- * @param[out] sp       malloc:d extracted sub-string. Must be freed after use
+ * @param[in]  level    Position of substring to extract
+ * @param[out] sp       If given, contains malloc:d single token sub-string.
  * @retval     0        OK
  * @retval     -1       Error
- * Returns a substring of a command at a specific "level".
  * @code
- *     extract_substring("abcd gh foo", 1, &s)
- *     # returns a pointer to the (malloc:d) string "gh".
+ *     extract_substring("abcd gh foo", 1, &s, &srest)
+ *     # s contains a pointer to the (malloc:d) string "gh".
  * @endcode
- * XXX: Use " and escape characters to group strings with space.
+ * @note Use " and escape characters to group strings with space.
  */
 int
 extract_substring(char  *string0,
 		  int    level, 
 		  char **sp)
 {
+    int   retval = -1;
     char *ss;  
     int   i = 0;
     int   trail;
-    char *ss0;
+    char *ss0 = NULL;
     char *t;
 
-    assert(sp && string0);
+    if (string0 == NULL){
+	fprintf(stderr, "%s string is NULL", __FUNCTION__);
+	goto done;
+    }
+    if (sp == NULL){
+	fprintf(stderr, "%s return string pointer is NULL", __FUNCTION__);
+	goto done;
+    }
     *sp = NULL;
     if ((ss = strdup(string0)) == NULL){
-	fprintf(stderr, "extract_substring: strdup: %s\n", strerror(errno));
+	fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
 	return -1;
     }
     ss0=ss;
@@ -369,33 +380,44 @@ extract_substring(char  *string0,
 	}
 	i++;
     }
-    free(ss0);
-//	i=0;
-//	*sp = NULL;
 
-    return 0;
+    retval = 0;
+ done:
+    if (ss0)
+	free(ss0);
+    return retval;
 }
 
-/*! Returns a substring of a command at a specific level
- * Similar to extract_substring, but return the rest of the string
- * at the given level.
+/*! Given a string and a position, return rest of line
+ *
+ * @param[in]  string0  Input string to match
+ * @param[in]  level    Position of where to return end-of-line
+ * @param[out] sprest   If given, contains malloc:d rest-of-line sub-string. 
  * Eg:     extract_substring_rest("abcd gh foo", 1, &s)
  * returns a pointer to the (malloc:d) string "gh foo".
- * NOTE: the caller must free the pointer after use.
- * @see  extract_substring
+ * @note  caller must free the pointer after use.
+ * @see extract_substring  which returns next token
  */
 int
 extract_substring_rest(char  *string0, 
 		       int    level, 
 		       char **sp)
 {
-    char *string;  
+    int   retval = -1;
+    char *string = NULL;  
     int   len = strlen(string0);
     int   i = 0;
     char *s;
     int   trail;
 
-    assert(sp && string0);
+    if (string0 == NULL){
+	fprintf(stderr, "%s string is NULL", __FUNCTION__);
+	goto done;
+    }
+    if (sp == NULL){
+	fprintf(stderr, "%s return string pointer is NULL", __FUNCTION__);
+	goto done;
+    }
     *sp = NULL;
     string = strdup(string0);
     s = strtok(string, CLIGEN_DELIMITERS);
@@ -414,8 +436,11 @@ extract_substring_rest(char  *string0,
 	}
 	i++;
     }
-    free(string);
-    return 0;
+    retval = 0;
+ done:
+    if (string)
+	free(string);
+    return retval;
 }
 
 /*! Match terminal/leaf cligen objects. Multiple matches is used for completion.
@@ -457,7 +482,9 @@ match_pattern_terminal(cligen_handle h,
 		       char        **reason0
 		       )
 {
-    char   *string;
+    char   *string1 = NULL;
+    char   *reststring = NULL;
+    char   *str;
     int     i;
     int     match;
     int     matches = 0;
@@ -488,12 +515,19 @@ match_pattern_terminal(cligen_handle h,
 	    }
 	    findreason++;
 	}
-    extract_substring(string0, level, &string);
+    if (extract_substring(string0, level, &string1) < 0)
+	goto done;
+    if (extract_substring_rest(string0, level, &reststring) < 0)
+	goto done;
     for (i=0; i<pt.pt_len; i++){
 	if ((co = pt.pt_vec[i]) == NULL)
 	    continue;
 	reason = NULL;
-	if ((match = match_object(string, co, &exact, findreason?&reason:NULL)) < 0)
+	if (ISREST(co))
+	    str = reststring;
+	else
+	    str = string1;
+	if ((match = match_object(str, co, &exact, findreason?&reason:NULL)) < 0)
 	    goto error;
 	if (match){
 	    assert(reason==NULL);
@@ -524,7 +558,6 @@ match_pattern_terminal(cligen_handle h,
 	    findreason = 0;
 	}
     }
-
     if (matches){
 	*ptp = pt.pt_vec;
 	if (reason0 && *reason0){
@@ -543,13 +576,15 @@ match_pattern_terminal(cligen_handle h,
 	}
     }
     *matchlen = matches;
-    if (string)
-	free(string);
+ done:
+    if (string1)
+	free(string1);
+    if (reststring)
+	free(reststring);
     return matches;
   error:
-    if (string)
-	free(string);
-    return -1;
+    matches = -1;
+    goto done;
 }
 
 /*! Help function to append a cv to a cvec. For expansion cvec passed to pt_expand_2
@@ -614,12 +649,14 @@ match_pattern_node(cligen_handle h,
 		   char        **reason0
 		   )
 {
-    char      *string = NULL;
+    int        retval = -1;
+    char      *string1 = NULL;
+    char      *reststring = NULL;
+    char      *str;
     int        i;
     int        match;
     int        matches = 0;
     int        perfect = 0;
-    int        retval = -1;
     cg_obj    *co;
     cg_obj    *co_match;
     cg_obj    *co_orig;
@@ -637,7 +674,7 @@ match_pattern_node(cligen_handle h,
     if (level > command_levels(string0)){
 	fprintf(stderr, "%s: level > command_level in %s\n",
 		__FUNCTION__, string0);
-	return -1;
+	goto done;
     }
     /* If there are only variables in the list, then keep track of variable match errors */
     findreason = 0;
@@ -651,20 +688,28 @@ match_pattern_node(cligen_handle h,
 	    }
 	    findreason++;
 	}
-    extract_substring(string0, level, &string);
+    /* String1 contains next token and reststring to end of line */
+    if (extract_substring(string0, level, &string1) < 0)
+	goto done;
+    if (extract_substring_rest(string0, level, &reststring) < 0)
+	goto done;
     for (i=0; i<pt.pt_len; i++){
 	if ((co = pt.pt_vec[i]) == NULL)
 	    continue;
 	reason = NULL;
-	if ((match = match_object(string, co, &exact, findreason?&reason:NULL)) < 0)
+	if (ISREST(co))
+	    str = reststring;
+	else
+	    str = string1;
+	if ((match = match_object(str, co, &exact, findreason?&reason:NULL)) < 0)
 	    goto error;
 	if (match){
 	    assert(reason==NULL);
 	    /* Special case to catch rest variable and space delimited
 	       arguments after it */
-	    if (co->co_type == CO_VARIABLE && co->co_vtype == CGV_REST)
+	    if (ISREST(co))
 		rest_match = i;
-	    if (match_perfect(string, co)){
+	    if (match_perfect(str, co)){
 		if (!perfect){
 		    matches = 0;
 		    perfect = 1;
@@ -710,7 +755,7 @@ match_pattern_node(cligen_handle h,
 	    cligen_nomatch_set(h, "Ambigious command");
 #endif
 	retval = 0;
-	goto quit;
+	goto done;
     }
     assert(co_match);
     if ((cmd_levels = command_levels(string0)) < 0)
@@ -722,8 +767,28 @@ match_pattern_node(cligen_handle h,
 	goto error; 
 
     if (co_match->co_type == CO_VARIABLE){
-	if ((cv = add_cov_to_cvec(co_match, string, cvec)) == NULL)
+	if ((cv = add_cov_to_cvec(co_match, str, cvec)) == NULL)
 	    goto error;
+	/* 
+	 * Special case: we have matched a REST variable (anything) and
+	 * there is more text have this word, then we can match REST
+	 */
+	if (rest_match != -1){
+	    retval = 1;
+	    if (*matchlen < 1){
+		*matchlen = 1;
+		if ((*matchv = realloc(*matchv, (*matchlen)*sizeof(int))) == NULL){
+		    fprintf(stderr, "%s: realloc: %s\n", __FUNCTION__, strerror(errno));
+		    return -1;
+		}
+	    }
+	    else
+		*matchlen = 1;
+	    *ptp = pt.pt_vec;
+	    (*matchv)[0] = rest_match;
+	    goto done;
+	}
+
     }
     else
 	if (co_match->co_type == CO_COMMAND && co_orig->co_type == CO_VARIABLE)
@@ -749,38 +814,21 @@ match_pattern_node(cligen_handle h,
 	    goto error;
 
     /* Cleanup made on top-level */
-    
-    /* 
-     * Special case: we have matched a REST variable (anything) and
-     * there is more text have this word, then we can match REST
-     */
-    if (retval == 0 && rest_match != -1){
-	retval = 1;
-	if (*matchlen < 1){
-	    *matchlen = 1;
-	    if ((*matchv = realloc(*matchv, (*matchlen)*sizeof(int))) == NULL){
-		fprintf(stderr, "%s: realloc: %s\n", __FUNCTION__, strerror(errno));
-		return -1;
-	    }
-	}
-	else
-	    *matchlen = 1;
-	*ptp = pt.pt_vec;
-	(*matchv)[0] = rest_match;
-    }
-  quit:
+  done:
     if (cv){ /* cv may be stale */
 	cv = cvec_i(cvec, cvec_len(cvec)-1);
 	cv_reset(cv);
 	cvec_del(cvec, cv);
     }
     /* Only the last level may have multiple matches */
-    if (string)
-	free(string);
+    if (string1)
+	free(string1);
+    if (reststring)
+	free(reststring);
     return retval;
   error:
     retval = -1;
-    goto quit;
+    goto done;
 }
 
 /*! CLiIgen object matching function
@@ -1011,7 +1059,8 @@ match_complete(cligen_handle h,
     }
     if ((level = command_levels(s)) < 0)
 	goto done;
-    extract_substring(s, level, &ss);
+    if (extract_substring(s, level, &ss) < 0)
+	goto done;
     slen = ss?strlen(ss):0;
     if (ss)
 	free(ss);
@@ -1019,7 +1068,8 @@ match_complete(cligen_handle h,
     minmatch = slen;
     equal = 1;
     for (i=0; i<matchlen; i++){
-	assert((mv = matchv[i])!=-1);
+	mv = matchv[i];
+	assert(mv != -1);
 	co = pt1[mv];
 	if (co == NULL){
 	    retval = 0;
