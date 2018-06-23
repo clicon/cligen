@@ -527,8 +527,6 @@ cligen_treename_keyword_set(cligen_handle h,
     return 0;
 }
 
-
-
 /*! Return CLIgen object that matched in the current callback.
  *  After an evaluation when calling a callback, a node has been matched in the
  * current parse-tree. This matching node is returned (and set) here.
@@ -672,17 +670,17 @@ cligen_nomatch_set(cligen_handle h,
 	return 0;
     }
     assert(ch->ch_nomatch == NULL);
-    va_start (ap, fmt);
+    va_start(ap, fmt);
     len = vsnprintf(NULL, 0, fmt, ap);
     len++;
-    va_end (ap);
+    va_end(ap);
     if ((ch->ch_nomatch = malloc(len)) == NULL){
 	fprintf(stderr, "%s: malloc: %s\n", __FUNCTION__, strerror(errno));
 	return -1;
     }
-    va_start (ap, fmt);
+    va_start(ap, fmt);
     res = vsnprintf(ch->ch_nomatch, len, fmt, ap);
-    va_end (ap);
+    va_end(ap);
     
     return res;	
 }
