@@ -166,9 +166,8 @@ cv_const_get(cg_var *cv)
 		return 0;
 	}
 
-    return cv->var_const;
+	return cv->var_const;
 }
-
 
 /*! Set CLIgen const flag. 
  * @param[in] cv     CLIgen variable
@@ -183,7 +182,7 @@ cv_const_set(cg_var *cv,
 		return 0;
 	}
 
-    return (cv->var_const = c);
+	return (cv->var_const = c);
 }
 
 /*! Get application-specific cv flag
@@ -197,7 +196,7 @@ cv_flag(cg_var *cv,
 		return 0;
 	}
 
-    return cv->var_flag & mask;
+	return cv->var_flag & mask;
 }
 
 /*! Clear application-specific cv flag 

@@ -9,10 +9,6 @@
   * CLIGEN_TABMODE_VARS:    0: command preference, 1: vars have equal pref
   * CLIGEN_TABMODE_STEPS:   0: complete single step. 1: all steps at once
   * Deprectated cligen_completion[_set](), use cligen_tabmode() instead.
-* Removed code for differentiating "constant" and "variable" cligen vars.
-  * remove cligen "constant" flag
-  * remove cvec_find_keyword
-  * replace cvec_find_var() with cvec_find() (backward compatible macro exists).
 * Append arguments to reference callback
   * such as: @datamodel:example, cli_show_auto("candidate", "text");		   
 * Added --enable-debug. Thanks rbgarga
