@@ -624,7 +624,6 @@ LIBOBJS
 EGREP
 GREP
 INSTALLFLAGS
-INSTALL_LIB
 INSTALL
 RANLIB
 SH_SUFFIX
@@ -2149,7 +2148,7 @@ ac_config_headers="$ac_config_headers cligen_config.h"
 CLIGEN_VERSION_MAJOR="3"
 CLIGEN_VERSION_MINOR="7"
 CLIGEN_VERSION_PATCH="0"
-CLIGEN_VERSION="$CLIGEN_VERSION_MAJOR.$CLIGEN_VERSION_MINOR.${CLIGEN_VERSION_PATCH}-PRE"
+CLIGEN_VERSION="$CLIGEN_VERSION_MAJOR.$CLIGEN_VERSION_MINOR.${CLIGEN_VERSION_PATCH}"
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: CLIGEN version is $CLIGEN_VERSION" >&5
 $as_echo "CLIGEN version is $CLIGEN_VERSION" >&6; }
@@ -3476,12 +3475,6 @@ test -z "$INSTALL_SCRIPT" && INSTALL_SCRIPT='${INSTALL}'
 
 test -z "$INSTALL_DATA" && INSTALL_DATA='${INSTALL} -m 644'
 
-echo "INSTALL:$INSTALL"
-echo "INSTALL_BIN:$INSTALL_BIN"
-echo "INSTALL_DATA:$INSTALL_DATA"
-echo "INSTALL_PROGRAM:$INSTALL_PROGRAM"
-echo "INSTALL_LIB:$INSTALL_LIB"
-
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether ln -s works" >&5
 $as_echo_n "checking whether ln -s works... " >&6; }
@@ -3502,7 +3495,6 @@ fi
 
 
 
- # ?
 
 
 
