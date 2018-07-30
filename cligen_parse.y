@@ -1103,8 +1103,10 @@ arglist1   : arglist1 ',' arg
            | arg
            ;
 
-arg        : typecast arg1 { if ($2 && cgy_callback_arg(_ya, $1, $2) < 0) YYERROR;
-		    if ($1 != NULL) free($1); if ($2 != NULL) free($2);
+arg        : typecast arg1 {
+                    if ($2 && cgy_callback_arg(_ya, $1, $2) < 0) YYERROR;
+		    if ($1 != NULL) free($1);
+		    if ($2 != NULL) free($2);
               }
            ;
 
@@ -1196,8 +1198,10 @@ exparg     : DQ DQ
            | DQ charseq DQ { expand_arg(_ya, "string", $2); free($2); }
            ;
 
-exparg     : typecast arg1 { if ($2 && cgy_callback_arg(_ya, $1, $2) < 0) YYERROR;
-		    if ($1) free($1); if ($2) free($2);
+exparg     : typecast arg1 {
+                    if ($2 && cgy_callback_arg(_ya, $1, $2) < 0) YYERROR;
+		    if ($1) free($1);
+		    if ($2) free($2);
               }
            ;
 
