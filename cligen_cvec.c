@@ -635,6 +635,25 @@ cvec_find_keyword(cvec *cvv,
     return NULL;
 }
 
+/*! Return first non-keyword cv in a cvec matching a name
+ * @param[in]  cvv   Cligen variable vector
+ * @param[in]  name  Name to match
+ * @retval     cv    Element matching name. NULL
+ * @retval     NULL  Not found
+ * @see cvec_find
+ */
+cg_var *
+cvec_find_var(cvec *cvv,
+	      char *name)
+{
+    cg_var *cv = NULL;
+
+    while ((cv = cvec_each(cvv, cv)) != NULL) 
+	if (cv->var_name && strcmp(cv->var_name, name) == 0 && !cv->var_const)
+	    return cv;
+    return NULL;
+}
+
 /*! Typed version of cvec_find that returns the string value.
  *
 

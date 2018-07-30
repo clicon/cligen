@@ -1,5 +1,8 @@
 # Cligen Changelog
 
+## 3.8 (Upcoming)
+* Restored cvec_find_var (as requested by Matt Smith Netgate)
+
 ## R3.7.0 (20 July 2018)
 
 * Fixed bug that REST variable did not work with regexp (thanks David Cornejo, Netgate)
