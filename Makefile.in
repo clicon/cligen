@@ -165,7 +165,7 @@ install-bin: $(APPS)
 
 install-lib: $(MYLIB)
 	$(INSTALL) -m 0755 -d $(DESTDIR)$(libdir)
-	$(INSTALL) -m 0644 $(MYLIB) $(INSTALLFLAGS) $(DESTDIR)$(libdir)
+	$(INSTALL) -m 0644 $(INSTALLFLAGS) $(MYLIB) $(DESTDIR)$(libdir)
 	(cd $(DESTDIR)$(libdir) && $(LN_S) -f $(MYLIB) $(MYLIBSO))     # -l:libcligen.so.3
 	(cd $(DESTDIR)$(libdir) && $(LN_S) -f $(MYLIBSO) $(MYLIBLINK)) # -l:libcligen.so
 

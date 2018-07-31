@@ -1,6 +1,9 @@
 # Cligen Changelog
 
-## R3.7.0 (Upcoming)
+## 3.8 (Upcoming)
+* Restored cvec_find_var (as requested by Matt Smith Netgate)
+
+## R3.7.0 (20 July 2018)
 
 * Fixed bug that REST variable did not work with regexp (thanks David Cornejo, Netgate)
   * For example this now works: <a:rest regexp:".*">;
@@ -8,13 +11,12 @@
   * CLIGEN_TABMODE_COLUMNS: 0: short/ios mode, 1: long/junos mode 
   * CLIGEN_TABMODE_VARS:    0: command preference, 1: vars have equal pref
   * CLIGEN_TABMODE_STEPS:   0: complete single step. 1: all steps at once
-  * Deprectated cligen_completion[_set](), use cligen_tabmode() instead.
+  * Deprecated `cligen_completion_set() and cligen_completion()`, use cligen_tabmode() instead.
 * Append arguments to reference callback
   * such as: @datamodel:example, cli_show_auto("candidate", "text");		   
-* Added --enable-debug. Thanks rbgarga
-* Added 
+* Added --enable-debug to configure. Thanks rbgarga
 * Removed support for single callback functions
-   Enable in 3.7 by defining CALLBACK_SINGLEARG
+  * Enable by defining CALLBACK_SINGLEARG
 * Added variable translator function.
   * see cligen issue https://github.com/olofhagsand/cligen/issues/8
   * thanks dcornejo.
