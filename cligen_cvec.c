@@ -51,19 +51,15 @@
 #include <errno.h>
 
 #include "cligen_buf.h"
-#include "cligen_var.h"
+#include "cligen_cv.h"
 #include "cligen_cvec.h"
 #include "cligen_gen.h"
 #include "cligen_io.h"
 #include "cligen_match.h"
-#include "cligen_cv.h"
 #include "getline.h"
 
-struct cvec{
-    cg_var         *vr_vec;  /* vector of CLIgen variables */
-    int             vr_len;  /* length of vector */
-    char           *vr_name; /* name of cvec, can be NULL */
-};
+#include "cligen_cv_internal.h"
+#include "cligen_cvec_internal.h"
 
 /*! A malloc version that aligns on 4 bytes. To avoid warning from valgrind */
 #define align4(s) (((s)/4)*4 + 4)

@@ -59,14 +59,14 @@
 #endif
 
 #include "cligen_buf.h"
-#include "cligen_var.h"
+#include "cligen_cv.h"
 #include "cligen_cvec.h"
 #include "cligen_gen.h"
 #include "cligen_io.h"
 #include "cligen_match.h"
-#include "cligen_cv.h"
 #include "getline.h"
 
+#include "cligen_cv_internal.h"
 /*
  * URL protocol strings
  */

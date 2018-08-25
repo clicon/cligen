@@ -1,0 +1,101 @@
+/*
+  ***** BEGIN LICENSE BLOCK *****
+ 
+  Copyright (C) 2001-2018 Olof Hagsand
+
+  This file is part of CLIgen.
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+
+  Alternatively, the contents of this file may be used under the terms of
+  the GNU General Public License Version 2 or later (the "GPL"),
+  in which case the provisions of the GPL are applicable instead
+  of those above. If you wish to allow use of your version of this file only
+  under the terms of the GPL, and not to allow others to
+  use your version of this file under the terms of Apache License version 2, indicate
+  your decision by deleting the provisions above and replace them with the 
+  notice and other provisions required by the GPL. If you do not delete
+  the provisions above, a recipient may use your version of this file under
+  the terms of any one of the Apache License version 2 or the GPL.
+
+  ***** END LICENSE BLOCK *****
+
+ * This is an internal CLIgen header file 
+ * Do not use these struct for external use, the internal structure may change. 
+ * @see cligen_handle.h for external API use
+*/
+
+#ifndef _CLIGEN_HANDLE_INTERNAL_H_
+#define _CLIGEN_HANDLE_INTERNAL_H_
+
+/* With sanity check */
+#define handle(h) (assert(cligen_check(h)==0),(struct cligen_handle *)(h))
+
+//#define handle(h) ((struct cligen_handle *)(h))
+
+/*
+ * CLIgen handle code.
+ * Should be moved into its own, but there are some quirks with mutual dependencies
+ * with rest cligen_gen.h that I didnt have time to sort out.
+ */
+/*
+ * Constants
+ */
+#define TERM_ROWS_DEFAULT 24
+#define GETLINE_BUFLEN_DEFAULT 64 /* startsize, increased with 2x when run out */
+
+/*! list of cligen parse-trees, can be searched, and activated */
+typedef struct parse_tree_list  { /* Linked list of cligen parse-trees */
+    struct parse_tree_list  *ptl_next;
+    parse_tree               ptl_parsetree; /* should be free:d */
+    int                      ptl_active;    /* First one is active */
+} parse_tree_list;
+
+#define CLIGEN_MAGIC 0x56ab55aa
+
+/*
+ * Types
+ */
+/* CLIgen handle. Its members should be hidden and only the typedef visible */
+struct cligen_handle{
+    int         ch_magic;        /* magic */
+    char        ch_exiting;      /* Set by callback to request exit of CLIgen */
+    char        ch_comment;      /* comment sign - everything behind it is ignored */
+    char       *ch_prompt;       /* current prompt used */
+    parse_tree_list *ch_tree;         /* Linked list of parsetrees */
+    char       *ch_treename_keyword; /* Name of treename parsing keyword */
+    cg_obj     *ch_co_match;     /* Matching object in latest evaluation */
+    char       *ch_fn_str;       /* Name of active callback function */
+    int         ch_completion;   /* completion mode */    
+    char       *ch_nomatch;      /* Why did a string not match an evaluation? */
+    int         ch_terminal_rows; /* Number of output terminal rows */
+    int         ch_terminal_length; /* Length of terminal row */
+    int         ch_tabmode;      /* short or long output mode on TAB */
+
+    int         ch_lexicalorder; /* strcmp (0) or strverscmp (1) syntax order.
+                                    Also, this is global for now */
+    int         ch_ignorecase; /* dont care about aA (0), care about aA (1) 
+				     does not work if lexicalorder is set.
+				     Also this is global for now
+				  */
+
+    char       *ch_buf;          /* getline input buffer */
+    char       *ch_killbuf;      /* getline killed text */
+
+    int         ch_logsyntax;    /* Debug syntax by printing dynamically on stderr */
+    void       *ch_userhandle;   /* Use this as app-specific callback handle */
+    void       *ch_userdata;     /* application-specific data (any data) */
+};
+
+
+#endif /* _CLIGEN_HANDLE_INTERNAL_H_ */

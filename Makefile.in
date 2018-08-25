@@ -69,7 +69,7 @@ MYLIB        = libcligen$(SH_SUFFIX).$(CLIGEN_MAJOR).$(CLIGEN_MINOR)
 MYLIBSO      = libcligen$(SH_SUFFIX).$(CLIGEN_MAJOR)
 MYLIBLINK    = libcligen$(SH_SUFFIX)
 
-SRC		= cligen_gen.c cligen_handle.c cligen_var.c cligen_match.c \
+SRC		= cligen_gen.c cligen_handle.c cligen_cv.c cligen_match.c \
 		  cligen_read.c cligen_io.c cligen_expand.c cligen_syntax.c \
 		  cligen_print.c cligen_cvec.c cligen_buf.c cligen_util.c \
 		  getline.c build.c

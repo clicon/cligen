@@ -49,15 +49,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "cligen_buf.h"
-
-/*! CLIgen buffer hidden from external view 
- */
-struct cbuf {
-    char  *cb_buffer;     
-    size_t cb_buflen;  
-    size_t cb_strlen;  
-};
+#include "cligen_buf.h"              /* External API */
+#include "cligen_buf_internal.h"            
 
 /*! Allocate cligen buffer. The handle returned can be used in  successive sprintf calls
  * which dynamically print a string.
