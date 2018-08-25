@@ -50,7 +50,7 @@
 #include <net/if.h>
 
 #include "cligen_buf.h"
-#include "cligen_var.h"
+#include "cligen_cv.h"
 #include "cligen_cvec.h"
 #include "cligen_gen.h"
 #include "cligen_handle.h"

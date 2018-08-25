@@ -1,6 +1,10 @@
 # Cligen Changelog
 
 ## 3.8 (Upcoming)
+* Moved hidden C structures from .c files to internal .h headers
+  * Requested by Dcarnejo in https://github.com/olofhagsand/cligen/issues/15
+  * Four new internal headers created: cligen_cv_internal.h, cligen_cvec_internal.h, cligen_buf_internal.h and cligen_handle_internal.h
+* Renamed cligen_var.[ch] to  cligen_cv.[ch] 
 * Restored cvec_find_var (as requested by Matt Smith Netgate)
 
 ## R3.7.0 (20 July 2018)

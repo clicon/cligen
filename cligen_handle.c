@@ -52,7 +52,7 @@
 #include <sys/ioctl.h>
 
 #include "cligen_buf.h"
-#include "cligen_var.h"
+#include "cligen_cv.h"
 #include "cligen_cvec.h"
 #include "cligen_gen.h"
 #include "cligen_io.h"
@@ -61,67 +61,7 @@
 #include "cligen_parse.h"
 #include "getline.h"
 
-#if 0
-#define handle(h) (fprintf(stderr, "%s\n", __FUNCTION__),	\
-                   assert(cligen_check(h)==0),		\
-                   (struct cligen_handle *)(h))
-#endif
-
-/* With sanity check */
-#define handle(h) (assert(cligen_check(h)==0),(struct cligen_handle *)(h))
-
-//#define handle(h) ((struct cligen_handle *)(h))
-
-/*
- * CLIgen handle code.
- * Should be moved into its own, but there are some quirks with mutual dependencies
- * with rest cligen_gen.h that I didnt have time to sort out.
- */
-/*
- * Constants
- */
-#define TERM_ROWS_DEFAULT 24
-#define GETLINE_BUFLEN_DEFAULT 64 /* startsize, increased with 2x when run out */
-
-/*! list of cligen parse-trees, can be searched, and activated */
-typedef struct parse_tree_list  { /* Linked list of cligen parse-trees */
-    struct parse_tree_list  *ptl_next;
-    parse_tree               ptl_parsetree; /* should be free:d */
-    int                      ptl_active;    /* First one is active */
-} parse_tree_list;
-
-#define CLIGEN_MAGIC 0x56ab55aa
-
-/* CLIgen handle. Its members should be hidden and only the typedef visible */
-struct cligen_handle{
-    int         ch_magic;        /* magic */
-    char        ch_exiting;      /* Set by callback to request exit of CLIgen */
-    char        ch_comment;      /* comment sign - everything behind it is ignored */
-    char       *ch_prompt;       /* current prompt used */
-    parse_tree_list *ch_tree;         /* Linked list of parsetrees */
-    char       *ch_treename_keyword; /* Name of treename parsing keyword */
-    cg_obj     *ch_co_match;     /* Matching object in latest evaluation */
-    char       *ch_fn_str;       /* Name of active callback function */
-    int         ch_completion;   /* completion mode */    
-    char       *ch_nomatch;      /* Why did a string not match an evaluation? */
-    int         ch_terminal_rows; /* Number of output terminal rows */
-    int         ch_terminal_length; /* Length of terminal row */
-    int         ch_tabmode;      /* short or long output mode on TAB */
-
-    int         ch_lexicalorder; /* strcmp (0) or strverscmp (1) syntax order.
-                                    Also, this is global for now */
-    int         ch_ignorecase; /* dont care about aA (0), care about aA (1) 
-				     does not work if lexicalorder is set.
-				     Also this is global for now
-				  */
-
-    char       *ch_buf;          /* getline input buffer */
-    char       *ch_killbuf;      /* getline killed text */
-
-    int         ch_logsyntax;    /* Debug syntax by printing dynamically on stderr */
-    void       *ch_userhandle;   /* Use this as app-specific callback handle */
-    void       *ch_userdata;     /* application-specific data (any data) */
-};
+#include "cligen_handle_internal.h"
 
 /*! Get window size and set terminal row size
  */
