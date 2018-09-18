@@ -138,8 +138,10 @@ cvec_from_var(cg_var *cv)
 int
 cvec_free(cvec *cvv)
 {
-    cvec_reset(cvv);
-    free(cvv);
+    if (cvv) {
+	cvec_reset(cvv);
+	free(cvv);
+    }
     return 0;
 }
 
