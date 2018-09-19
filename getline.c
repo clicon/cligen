@@ -1055,20 +1055,20 @@ wrap(int p,
 
 void gl_clear_screen(cligen_handle h)
 {
-	if (gl_init_done <= 0) {
-		return;
-	}
+    if (gl_init_done <= 0) {
+	return;
+    }
 
-	gl_putc('\033');	/* clear */
-	gl_putc('[');
-	gl_putc('2');
-	gl_putc('J');
+    gl_putc('\033');	/* clear */
+    gl_putc('[');
+    gl_putc('2');
+    gl_putc('J');
 
-	gl_putc('\033');	/* home */
-	gl_putc('[');
-	gl_putc('H');
+    gl_putc('\033');	/* home */
+    gl_putc('[');
+    gl_putc('H');
 
-        gl_fixup(h, cligen_prompt(h), -2, gl_pos);
+    gl_fixup(h, cligen_prompt(h), -2, gl_pos);
 }
 
 /*! Emit a newline, reset and redraw prompt and current input line 
