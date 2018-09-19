@@ -666,7 +666,8 @@ gl_getline(cligen_handle h,
 		break;
 	    case '\013': gl_kill(h, gl_pos);			/* ^K */
 		break;
-	    case '\014': gl_redraw(h);				/* ^L */
+	    case '\014':
+		    gl_clear_screen(h);				/* ^L */
 		break;
 	    case '\016': 					/* ^N */
 		strncpy(cligen_buf(h), hist_next(), cligen_buf_size(h));
@@ -1050,6 +1051,24 @@ wrap(int p,
      int plen)
 {
     return (p+plen+1)%gl_termw==0;
+}
+
+void gl_clear_screen(cligen_handle h)
+{
+	if (gl_init_done <= 0) {
+		return;
+	}
+
+	gl_putc('\033');	/* clear */
+	gl_putc('[');
+	gl_putc('2');
+	gl_putc('J');
+
+	gl_putc('\033');	/* home */
+	gl_putc('[');
+	gl_putc('H');
+
+        gl_fixup(h, cligen_prompt(h), -2, gl_pos);
 }
 
 /*! Emit a newline, reset and redraw prompt and current input line 
