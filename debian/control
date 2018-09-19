@@ -1,0 +1,23 @@
+Source: cligen
+Priority: optional
+Maintainer: Netgate <support@netgate.com>
+Build-Depends: debhelper (>=9),autotools-dev
+Standards-Version: 3.9.6
+Section: libs
+Homepage: <insert the upstream URL, if relevant>
+#Vcs-Git: git://anonscm.debian.org/collab-maint/cligen.git
+#Vcs-Browser: https://anonscm.debian.org/cgit/collab-maint/cligen.git
+
+Package: cligen-dev
+Section: libdevel
+Architecture: any
+Depends: cligenBROKEN (= ${binary:Version}), ${misc:Depends}
+Description: CLI Generator development
+  This package provides a CLI development toolkit used by Netgate's
+  TNSR product.
+
+Package: cligen
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: CLI Generator
+  This package provides a CLI toolkit used by Netgate's TNSR product.

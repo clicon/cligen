@@ -17,6 +17,7 @@ void    gl_histadd(char *);		/* adds entries to hist */
 void    gl_histclear();			/* clears entries to hist */
 void	gl_strwidth(gl_strwidth_proc);	/* to bind gl_strlen */
 
+void	gl_clear_screen(cligen_handle h); /* clear sceen and redraw */
 void	gl_redraw(cligen_handle h);	/* issue \n and redraw all */
 int     gl_regfd(int, cligen_fd_cb_t *, void *);
 int     gl_unregfd(int);
