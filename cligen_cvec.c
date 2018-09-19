@@ -1,6 +1,6 @@
 /*
   ***** BEGIN LICENSE BLOCK *****
- 
+
   Copyright (C) 2001-2018 Olof Hagsand
 
   This file is part of CLIgen.
@@ -23,7 +23,7 @@
   of those above. If you wish to allow use of your version of this file only
   under the terms of the GPL, and not to allow others to
   use your version of this file under the terms of Apache License version 2, indicate
-  your decision by deleting the provisions above and replace them with the 
+  your decision by deleting the provisions above and replace them with the
   notice and other provisions required by the GPL. If you do not delete
   the provisions above, a recipient may use your version of this file under
   the terms of any one of the Apache License version 2 or the GPL.
@@ -65,7 +65,7 @@
 #define align4(s) (((s)/4)*4 + 4)
 
 /*! A strdup version that aligns on 4 bytes. To avoid warning from valgrind */
-static inline char * strdup4(char *str) 
+static inline char * strdup4(char *str)
 {
     char *dup;
     int len;
@@ -84,7 +84,7 @@ static inline char * strdup4(char *str)
 static int excludekeys = 0;
 
 /*! Create and initialize a new cligen variable vector (cvec)
- * 
+ *
  * See also cvec_init()
  * Each individual cv initialized with CGV_ERR and no value.
  * Returned cvec needs to be freed with cvec_free().
@@ -155,10 +155,10 @@ cvec_free(cvec *cvv)
  * @see cvec_new
  */
 int
-cvec_init(cvec *cvv, 
+cvec_init(cvec *cvv,
 	  int   len)
 {
-    cvv->vr_len = len; 
+    cvv->vr_len = len;
     if (len && (cvv->vr_vec = calloc(cvv->vr_len, sizeof(cg_var))) == NULL)
 	return -1;
     return 0;
@@ -173,12 +173,12 @@ int
 cvec_reset(cvec *cvv)
 {
     cg_var *cv = NULL;
-    
+
     if (!cvv) {
 	    return 0;
     }
 
-    while ((cv = cvec_each(cvv, cv)) != NULL)  
+    while ((cv = cvec_each(cvv, cv)) != NULL)
 	cv_reset(cv);
     if (cvv->vr_vec)
 	free(cvv->vr_vec);
@@ -196,7 +196,7 @@ cvec_reset(cvec *cvv)
  * @retval cv   Next element
  */
 cg_var *
-cvec_next(cvec   *cvv, 
+cvec_next(cvec   *cvv,
 	  cg_var *cv0)
 {
     cg_var *cv = NULL;
@@ -223,7 +223,7 @@ cvec_next(cvec   *cvv,
  * @see also cv_new, but this is allocated contiguosly as a part of a cvec.
  */
 cg_var *
-cvec_add(cvec        *cvv, 
+cvec_add(cvec        *cvv,
 	 enum cv_type type)
 {
     int     len;
@@ -232,7 +232,7 @@ cvec_add(cvec        *cvv,
 	if (!cvv) {
 		return 0;
 	}
-    
+
     len = cvv->vr_len + 1;
 
     if ((cvv->vr_vec = realloc(cvv->vr_vec, len*sizeof(cg_var))) == NULL)
@@ -251,7 +251,7 @@ cvec_add(cvec        *cvv,
  * @retval    tail Return the new last tail variable (copy of cv)
  */
 cg_var *
-cvec_append_var(cvec   *cvv, 
+cvec_append_var(cvec   *cvv,
 		cg_var *cv)
 {
     cg_var *tail = NULL;
@@ -271,13 +271,13 @@ cvec_append_var(cvec   *cvv,
  * @param[in]  cvv   Cligen variable vector
  * @param[in]  del   variable to delete
  *
- * @note This is a dangerous command since the cv it deletes (such as created by 
- * cvec_add) may have been modified with realloc (eg cvec_add/delete) and 
- * therefore can not be used as a reference.  Safer methods are to use 
- * cvec_find/cvec_i to find a cv and then to immediately remove it. 
+ * @note This is a dangerous command since the cv it deletes (such as created by
+ * cvec_add) may have been modified with realloc (eg cvec_add/delete) and
+ * therefore can not be used as a reference.  Safer methods are to use
+ * cvec_find/cvec_i to find a cv and then to immediately remove it.
  */
 int
-cvec_del(cvec   *cvv, 
+cvec_del(cvec   *cvv,
 	 cg_var *del)
 {
     int i;
@@ -285,7 +285,7 @@ cvec_del(cvec   *cvv,
 
     if (cvec_len(cvv) == 0)
 	return 0;
-    
+
     i = 0;
     cv = NULL;
     while ((cv = cvec_each(cvv, cv)) != NULL) {
@@ -299,7 +299,7 @@ cvec_del(cvec   *cvv,
     if (i != cvec_len(cvv)-1) /* If not last entry, move the remaining cv's */
 	memmove(&cvv->vr_vec[i], &cvv->vr_vec[i+1],
 		(cvv->vr_len-i-1) * sizeof(cvv->vr_vec[0]));
-    
+
     cvv->vr_len--;
     cvv->vr_vec = realloc(cvv->vr_vec, cvv->vr_len*sizeof(cvv->vr_vec[0])); /* Shrink should not fail? */
 
@@ -309,7 +309,7 @@ cvec_del(cvec   *cvv,
 /*! Return allocated length of a cvec.
  * @param[in]  cvv   Cligen variable vector
  */
-int     
+int
 cvec_len(cvec *cvv)
 {
 	if (!cvv) {
@@ -323,7 +323,7 @@ cvec_len(cvec *cvv)
  * @param[in]  i     Order of element to get
  */
 cg_var *
-cvec_i(cvec *cvv, 
+cvec_i(cvec *cvv,
        int   i)
 {
 	if (!cvv) {
@@ -342,12 +342,12 @@ cvec_i(cvec *cvv,
  * @retval NULL         When end of list reached.
  * @code
  *    cg_var *cv = NULL;
- *       while ((cv = cvec_each(cvv, cv)) != NULL) 
+ *       while ((cv = cvec_each(cvv, cv)) != NULL)
  *	     ...
  * @endcode
  */
 cg_var *
-cvec_each(cvec   *cvv, 
+cvec_each(cvec   *cvv,
 	  cg_var *prev)
 {
 	if (!cvv) {
@@ -374,7 +374,7 @@ cvec_each(cvec   *cvv,
  * @see cvec_each  For all elements, dont skip first
  */
 cg_var *
-cvec_each1(cvec   *cvv, 
+cvec_each1(cvec   *cvv,
 	   cg_var *prev)
 {
     if (!cvv) {
@@ -423,10 +423,10 @@ cvec_dup(cvec *old)
     return new;
 }
 
-/*! Create cv list by matching a CLIgen parse-tree and an input string. 
+/*! Create cv list by matching a CLIgen parse-tree and an input string.
  *
- * The matched parse-tree is  given by a syntax-node in a leaf, and by following 
- * the parse-tree 'upwards' in the tree, a syntactic string can be found. 
+ * The matched parse-tree is  given by a syntax-node in a leaf, and by following
+ * the parse-tree 'upwards' in the tree, a syntactic string can be found.
  * This function creates CLIgen cvec structures for every keyword and variable
  * syntax node it encounters, and thus creates one vector of keys and
  * one vector of CLIgen variables.
@@ -435,17 +435,17 @@ cvec_dup(cvec *old)
  * The variable vr should be freed with cvec_reset()!
  *
  * @param[in]     co_match    Leaf CLIgen syntax node
- * @param[in]     cmd         Command string 
- * @param[in,out] cvv         Initialized cvec (cvec_new or cvec_reset). CLIgen 
- *                              variable record         
+ * @param[in]     cmd         Command string
+ * @param[in,out] cvv         Initialized cvec (cvec_new or cvec_reset). CLIgen
+ *                              variable record
  * @retval          0           OK
  * @retval          -1          Error
  * @see match_variable  where sanity check is made
  */
 int
 cvec_match(cligen_handle h,
-	   cg_obj       *co_match, 
-	   char         *cmd, 
+	   cg_obj       *co_match,
+	   char         *cmd,
 	   cvec         *cvv)
 {
     cg_obj    *co;
@@ -587,7 +587,7 @@ cvec_start(char *cmd)
  * @see cvec2cbuf
  */
 int
-cvec_print(FILE *f, 
+cvec_print(FILE *f,
 	   cvec *cvv)
 {
     cg_var *cv = NULL;
@@ -612,7 +612,7 @@ cvec_print(FILE *f,
  * @see cvec_print
  */
 int
-cvec2cbuf(cbuf *cb, 
+cvec2cbuf(cbuf *cb,
 	  cvec *cvv)
 {
     cg_var *cv = NULL;
@@ -630,8 +630,8 @@ cvec2cbuf(cbuf *cb,
 
 /*! Return first cv in a cvec matching a name
  *
- * Given an CLIgen variable vector cvec, and the name of a variable, return the 
- * first matching entry. 
+ * Given an CLIgen variable vector cvec, and the name of a variable, return the
+ * first matching entry.
  * @param[in]  cvv   Cligen variable vector
  * @param[in]  name  Name to match
  * @retval     cv    Element matching name. NULL
@@ -639,12 +639,12 @@ cvec2cbuf(cbuf *cb,
  * @see cvec_find_keyword
  */
 cg_var *
-cvec_find(cvec *cvv, 
+cvec_find(cvec *cvv,
 	  char *name)
 {
     cg_var *cv = NULL;
 
-    while ((cv = cvec_each(cvv, cv)) != NULL) 
+    while ((cv = cvec_each(cvv, cv)) != NULL)
 	if (cv->var_name && strcmp(cv->var_name, name) == 0)
 	    return cv;
     return NULL;
@@ -658,12 +658,12 @@ cvec_find(cvec *cvv,
  * @see cvec_find
  */
 cg_var *
-cvec_find_keyword(cvec *cvv, 
+cvec_find_keyword(cvec *cvv,
 		  char *name)
 {
     cg_var *cv = NULL;
 
-    while ((cv = cvec_each(cvv, cv)) != NULL) 
+    while ((cv = cvec_each(cvv, cv)) != NULL)
 	if (cv->var_name && strcmp(cv->var_name, name) == 0 && cv->var_const)
 	    return cv;
     return NULL;
@@ -682,7 +682,7 @@ cvec_find_var(cvec *cvv,
 {
     cg_var *cv = NULL;
 
-    while ((cv = cvec_each(cvv, cv)) != NULL) 
+    while ((cv = cvec_each(cvv, cv)) != NULL)
 	if (cv->var_name && strcmp(cv->var_name, name) == 0 && !cv->var_const)
 	    return cv;
     return NULL;
@@ -701,7 +701,7 @@ cvec_find_var(cvec *cvv,
  * @see cvec_find
  */
 char *
-cvec_find_str(cvec *cvv, 
+cvec_find_str(cvec *cvv,
 	      char *name)
 {
     cg_var *cv;
@@ -729,7 +729,7 @@ cvec_name_get(cvec *cvv)
  * The existing name, if any, is freed
  */
 char *
-cvec_name_set(cvec *cvv, 
+cvec_name_set(cvec *cvv,
 	      char *name)
 {
     char *s1 = NULL;
@@ -742,14 +742,14 @@ cvec_name_set(cvec *cvv,
     if (cvv->vr_name != NULL)
 	free(cvv->vr_name);
     cvv->vr_name = s1;
-    return s1; 
+    return s1;
 }
 
 
 /*! Changes cvec find function behaviour, exclude keywords or include them.
  * @param[in] status
  */
-int 
+int
 cv_exclude_keys(int status)
 {
     excludekeys = status;
