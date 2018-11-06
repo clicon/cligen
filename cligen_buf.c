@@ -80,9 +80,11 @@ cbuf_new(void)
 void
 cbuf_free(cbuf *cb)
 {
-    if (cb->cb_buffer)
-	free(cb->cb_buffer);
-    free(cb);
+    if (cb) {
+	if (cb->cb_buffer)
+	    free(cb->cb_buffer);
+	free(cb);
+    }
 }
 
 /*! Return actual byte buffer of cligen buffer
