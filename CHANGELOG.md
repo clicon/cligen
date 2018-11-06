@@ -1,6 +1,6 @@
 # Cligen Changelog
 
-## 3.8 (Upcoming)
+## 3.8.0 (6 Nov 2018)
 * Merged a large number of Netgate commits. Thanks!
 * Moved hidden C structures from .c files to internal .h headers
   * Requested by Dcarnejo in https://github.com/olofhagsand/cligen/issues/15
@@ -8,7 +8,7 @@
 * Renamed cligen_var.[ch] to  cligen_cv.[ch] 
 * Restored cvec_find_var (as requested by Matt Smith Netgate)
 
-## R3.7.0 (20 July 2018)
+## 3.7.0 (20 July 2018)
 
 * Fixed bug that REST variable did not work with regexp (thanks David Cornejo, Netgate)
   * For example this now works: <a:rest regexp:".*">;
