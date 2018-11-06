@@ -1,6 +1,7 @@
 # Cligen Changelog
 
 ## 3.8 (Upcoming)
+* Merged a large number of Netgate commits. Thanks!
 * Moved hidden C structures from .c files to internal .h headers
   * Requested by Dcarnejo in https://github.com/olofhagsand/cligen/issues/15
   * Four new internal headers created: cligen_cv_internal.h, cligen_cvec_internal.h, cligen_buf_internal.h and cligen_handle_internal.h
