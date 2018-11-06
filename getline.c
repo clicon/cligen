@@ -19,6 +19,7 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/select.h>
 #include <netinet/in.h>
 #include <string.h>
 #include <ctype.h>
