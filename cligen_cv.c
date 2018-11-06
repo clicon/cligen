@@ -44,6 +44,7 @@
 #include <limits.h>
 #include <inttypes.h>
 #include <unistd.h>
+#include <ctype.h>
 #include <sys/types.h>
 #include <time.h>
 #include <sys/time.h>
@@ -89,6 +90,10 @@ static char *cg_urlprotostr[] = {
 char *
 cv_name_get(cg_var *cv)
 {
+    if (!cv) {
+	return 0;
+    }
+
     return cv->var_name;
 }
 
@@ -104,6 +109,10 @@ cv_name_set(cg_var *cv,
 	    char   *s0)
 {
     char *s1 = NULL;
+
+    if (!cv) {
+	return 0;
+    }
 
     /* Duplicate s0. Must be done before a free, in case s0 is part of the original */
     if (s0){
@@ -123,6 +132,10 @@ cv_name_set(cg_var *cv,
 enum cv_type
 cv_type_get(cg_var *cv)
 {
+    if (!cv) {
+	return 0;
+    }
+
     return cv->var_type;
 }
 
@@ -135,6 +148,10 @@ enum cv_type
 cv_type_set(cg_var      *cv, 
 	    enum cv_type x)
 {
+    if (!cv) {
+	return 0;
+    }
+
     return (cv->var_type = x);
 }
 
@@ -145,6 +162,10 @@ cv_type_set(cg_var      *cv,
 char
 cv_const_get(cg_var *cv)
 {
+    if (!cv) {
+	return 0;
+    }
+
     return cv->var_const;
 }
 
@@ -157,6 +178,10 @@ char
 cv_const_set(cg_var *cv, 
 	     int     c)
 {
+    if (!cv) {
+	return 0;
+    }
+
     return (cv->var_const = c);
 }
 
@@ -167,6 +192,10 @@ char
 cv_flag(cg_var *cv, 
 	char    mask)
 {
+    if (!cv) {
+	return 0;
+    }
+
     return cv->var_flag & mask;
 }
 
@@ -177,6 +206,10 @@ char
 cv_flag_clr(cg_var *cv, 
 	    char    mask)
 {
+    if (!cv) {
+	return 0;
+    }
+
     return cv->var_flag ^= mask;
 }
 
@@ -187,6 +220,10 @@ char
 cv_flag_set(cg_var *cv, 
 	    char    mask)
 {
+    if (!cv) {
+	return 0;
+    }
+
     return cv->var_flag |= mask;
 }
 
@@ -196,6 +233,10 @@ cv_flag_set(cg_var *cv,
 void *
 cv_value_get(cg_var *cv)
 {
+    if (!cv) {
+	return 0;
+    }
+
     return &cv->u;
 }
 
@@ -205,6 +246,10 @@ cv_value_get(cg_var *cv)
 char
 cv_bool_get(cg_var *cv)
 {
+    if (!cv) {
+	return 0;
+    }
+
     return ((cv)->u.varu_bool);
 }
 
@@ -215,6 +260,10 @@ char
 cv_bool_set(cg_var *cv, 
 	    char    x)
 {
+    if (!cv) {
+	return 0;
+    }
+
     return (cv->u.varu_bool = x);
 }
 
@@ -224,6 +273,10 @@ cv_bool_set(cg_var *cv,
 int8_t
 cv_int8_get(cg_var *cv)
 {
+    if (!cv) {
+	return 0;
+    }
+
     return ((cv)->u.varu_int8);
 }
 
@@ -234,6 +287,10 @@ int8_t
 cv_int8_set(cg_var *cv, 
 	    int8_t  x)
 {
+    if (!cv) {
+	return 0;
+    }
+
     return (cv->u.varu_int8 = x);
 }
 
@@ -243,6 +300,10 @@ cv_int8_set(cg_var *cv,
 int16_t
 cv_int16_get(cg_var *cv)
 {
+    if (!cv) {
+	return 0;
+    }
+
     return ((cv)->u.varu_int16);
 }
 
@@ -253,6 +314,10 @@ int16_t
 cv_int16_set(cg_var *cv, 
 	     int16_t x)
 {
+    if (!cv) {
+	return 0;
+    }
+
     return (cv->u.varu_int16 = x);
 }
 
@@ -262,6 +327,10 @@ cv_int16_set(cg_var *cv,
 int32_t
 cv_int32_get(cg_var *cv)
 {
+    if (!cv) {
+	return 0;
+    }
+
     return ((cv)->u.varu_int32);
 }
 
@@ -272,6 +341,10 @@ int32_t
 cv_int32_set(cg_var *cv, 
 	     int32_t x)
 {
+    if (!cv) {
+	return 0;
+    }
+
     return (cv->u.varu_int32 = x);
 }
 
@@ -281,6 +354,10 @@ cv_int32_set(cg_var *cv,
 int64_t
 cv_int64_get(cg_var *cv)
 {
+    if (!cv) {
+	return 0;
+    }
+
     return ((cv)->u.varu_int64);
 }
 
@@ -291,6 +368,10 @@ int64_t
 cv_int64_set(cg_var *cv, 
              int64_t x)
 {
+    if (!cv) {
+	return 0;
+    }
+
     return (cv->u.varu_int64 = x);
 }
 
@@ -300,6 +381,10 @@ cv_int64_set(cg_var *cv,
 uint8_t
 cv_uint8_get(cg_var *cv)
 {
+    if (!cv) {
+	return 0;
+    }
+
     return ((cv)->u.varu_uint8);
 }
 
@@ -310,6 +395,10 @@ uint8_t
 cv_uint8_set(cg_var *cv,
 	     uint8_t x)
 {
+    if (!cv) {
+	return 0;
+    }
+
     return (cv->u.varu_uint8 = x);
 }
 
@@ -319,6 +408,10 @@ cv_uint8_set(cg_var *cv,
 uint16_t
 cv_uint16_get(cg_var *cv)
 {
+    if (!cv) {
+	return 0;
+    }
+
     return ((cv)->u.varu_uint16);
 }
 
@@ -338,6 +431,10 @@ cv_uint16_set(cg_var  *cv,
 uint32_t
 cv_uint32_get(cg_var *cv)
 {
+    if (!cv) {
+	return 0;
+    }
+
     return ((cv)->u.varu_uint32);
 }
 
@@ -348,6 +445,10 @@ uint32_t
 cv_uint32_set(cg_var  *cv, 
 	      uint32_t x)
 {
+    if (!cv) {
+	return 0;
+    }
+
     return (cv->u.varu_uint32 = x);
 }
 
@@ -357,6 +458,10 @@ cv_uint32_set(cg_var  *cv,
 uint64_t
 cv_uint64_get(cg_var *cv)
 {
+    if (!cv) {
+	return 0;
+    }
+
     return ((cv)->u.varu_uint64);
 }
 
@@ -367,6 +472,10 @@ uint64_t
 cv_uint64_set(cg_var  *cv, 
 	      uint64_t x)
 {
+    if (!cv) {
+	return 0;
+    }
+
     return (cv->u.varu_uint64 = x);
 }
 
@@ -376,6 +485,10 @@ cv_uint64_set(cg_var  *cv,
 uint8_t 
 cv_dec64_n_get(cg_var *cv)
 {
+    if (!cv) {
+	return 0;
+    }
+
     return ((cv)->var_dec64_n);
 }
 
@@ -387,6 +500,10 @@ uint8_t
 cv_dec64_n_set(cg_var *cv, 
 	       uint8_t x)
 {
+    if (!cv) {
+	return 0;
+    }
+
     return (cv->var_dec64_n = x);
 }
 
@@ -396,6 +513,10 @@ cv_dec64_n_set(cg_var *cv,
 int64_t 
 cv_dec64_i_get(cg_var *cv)
 {
+    if (!cv) {
+	return 0;
+    }
+
     return ((cv)->var_dec64_i);
 }
 
@@ -406,6 +527,10 @@ int64_t
 cv_dec64_i_set(cg_var *cv, 
 	       int64_t x)
 {
+    if (!cv) {
+	return 0;
+    }
+
     return (cv->var_dec64_i = x);
 }
 
@@ -417,6 +542,10 @@ cv_dec64_i_set(cg_var *cv,
 char *
 cv_string_get(cg_var *cv)
 {
+    if (!cv) {
+	return 0;
+    }
+
     return ((cv)->u.varu_string);
 }
 
@@ -428,6 +557,10 @@ cv_string_set(cg_var *cv,
 	      char   *s0)
 {
     char *s1 = NULL;
+
+    if (!cv) {
+	return 0;
+    }
 
     /* Duplicate s0. Must be done before a free, in case s0 is part of the original */
     if (s0){
@@ -446,6 +579,10 @@ cv_string_set(cg_var *cv,
 struct in_addr *
 cv_ipv4addr_get(cg_var *cv)
 {
+    if (!cv) {
+	return 0;
+    }
+
     return &cv->u.varu_ipv4addr.varipv4_ipv4addr;
 }
 
@@ -456,9 +593,10 @@ cv_ipv4addr_get(cg_var *cv)
 struct in_addr *
 cv_ipv4addr_set(cg_var *cv, struct in_addr *addr)
 {
-    if (addr) {
-        cv->var_ipv4addr = *addr;
+    if (cv && addr) {
+	cv->var_ipv4addr = *addr;
     }
+
     return addr;
 }
 
@@ -468,6 +606,10 @@ cv_ipv4addr_set(cg_var *cv, struct in_addr *addr)
 uint8_t
 cv_ipv4masklen_get(cg_var *cv)
 {
+    if (!cv) {
+	return 0;
+    }
+
     return cv->u.varu_ipv4addr.varipv4_masklen;
 }
 
@@ -478,8 +620,12 @@ cv_ipv4masklen_get(cg_var *cv)
 uint8_t
 cv_ipv4masklen_set(cg_var *cv, uint8_t masklen)
 {
-	cv->u.varu_ipv4addr.varipv4_masklen = masklen;
-	return masklen;
+    if (!cv) {
+	return 0;
+    }
+
+    cv->u.varu_ipv4addr.varipv4_masklen = masklen;
+    return masklen;
 }
 
 /*! Get ipv6addr, pointer returned, can be used to set value.
@@ -488,6 +634,10 @@ cv_ipv4masklen_set(cg_var *cv, uint8_t masklen)
 struct in6_addr *
 cv_ipv6addr_get(cg_var *cv)
 {
+    if (!cv) {
+	return 0;
+    }
+
     return &cv->u.varu_ipv6addr.varipv6_ipv6addr;
 }
 
@@ -497,6 +647,10 @@ cv_ipv6addr_get(cg_var *cv)
 uint8_t
 cv_ipv6masklen_get(cg_var *cv)
 {
+    if (!cv) {
+	return 0;
+    }
+
     return cv->u.varu_ipv6addr.varipv6_masklen;
 }
 
@@ -508,6 +662,10 @@ cv_ipv6masklen_get(cg_var *cv)
 char *
 cv_mac_get(cg_var *cv)
 {
+    if (!cv) {
+	return 0;
+    }
+
     return cv->u.varu_macaddr;
 }
 
@@ -519,6 +677,10 @@ cv_mac_get(cg_var *cv)
 unsigned char *
 cv_uuid_get(cg_var *cv)
 {
+    if (!cv) {
+	return 0;
+    }
+
     return cv->u.varu_uuid;
 }
 
@@ -529,6 +691,10 @@ unsigned char *
 cv_uuid_set(cg_var        *cv, 
 	    unsigned char *u)
 {
+    if (!cv) {
+	return 0;
+    }
+
     memcpy((char*)&cv->u.varu_uuid, u, 16);
     return cv->u.varu_uuid;
 }
@@ -539,6 +705,11 @@ cv_uuid_set(cg_var        *cv,
 struct timeval
 cv_time_get(cg_var *cv)
 {
+    if (!cv) {
+	struct timeval t = { 0 };
+	return t;
+    }
+
     return cv->u.varu_time;
 }
 
@@ -550,6 +721,11 @@ struct timeval
 cv_time_set(cg_var        *cv, 
 	    struct timeval t)
 {
+    if (!cv) {
+	struct timeval t = { 0 };
+	return t;
+    }
+
     cv->u.varu_time = t;
     return t;
 }
@@ -562,6 +738,10 @@ cv_time_set(cg_var        *cv,
 char *
 cv_urlproto_get(cg_var *cv)
 {
+    if (!cv) {
+	return 0;
+    }
+
     return (cv)->u.varu_url.varurl_proto;
 }
 
@@ -574,6 +754,10 @@ cv_urlproto_set(cg_var *cv,
 		char   *s0)
 {
     char *s1 = NULL;
+
+    if (!cv) {
+	return 0;
+    }
 
     /* Duplicate s0. Must be done before a free, in case s0 is part of the original */
     if (s0){
@@ -594,6 +778,10 @@ cv_urlproto_set(cg_var *cv,
 char *
 cv_urladdr_get(cg_var *cv)
 {
+    if (!cv) {
+	return 0;
+    }
+
     return (cv)->u.varu_url.varurl_addr;
 }
 
@@ -606,6 +794,10 @@ cv_urladdr_set(cg_var *cv,
 	       char   *s0)
 {
     char *s1 = NULL;
+
+    if (!cv) {
+	return 0;
+    }
 
     /* Duplicate s0. Must be done before a free, in case s0 is part of the original */
     if (s0){
@@ -626,6 +818,10 @@ cv_urladdr_set(cg_var *cv,
 char *
 cv_urlpath_get(cg_var *cv)
 {
+    if (!cv) {
+	return 0;
+    }
+
     return (cv)->u.varu_url.varurl_path;
 }
 
@@ -638,6 +834,10 @@ cv_urlpath_set(cg_var *cv,
 	       char   *s0)
 {
     char *s1 = NULL;
+
+    if (!cv) {
+	return 0;
+    }
 
     /* Duplicate s0. Must be done before a free, in case s0 is part of the original */
     if (s0){
@@ -658,6 +858,10 @@ cv_urlpath_set(cg_var *cv,
 char *
 cv_urluser_get(cg_var *cv)
 {
+    if (!cv) {
+	return 0;
+    }
+
     return (cv)->u.varu_url.varurl_user;
 }
 
@@ -670,6 +874,10 @@ cv_urluser_set(cg_var *cv,
 	       char   *s0)
 {
     char *s1 = NULL;
+
+    if (!cv) {
+	return 0;
+    }
 
     /* Duplicate s0. Must be done before a free, in case s0 is part of the original */
     if (s0){
@@ -690,6 +898,10 @@ cv_urluser_set(cg_var *cv,
 char *
 cv_urlpasswd_get(cg_var *cv)
 {
+    if (!cv) {
+	return 0;
+    }
+
     return (cv)->u.varu_url.varurl_passwd;
 }
 
@@ -702,6 +914,10 @@ cv_urlpasswd_set(cg_var *cv,
 		 char   *s0)
 {
     char *s1 = NULL;
+
+    if (!cv) {
+	return 0;
+    }
 
     /* Duplicate s0. Must be done before a free, in case s0 is part of the original */
     if (s0){
@@ -1225,53 +1441,89 @@ parse_ipv6addr(char            *str,
  * parse string in colon hex notation and return a vector of chars.
  * @param[out] reason     if given, malloced err string (retval=0), needs freeing
  */
-#define MACADDR_STRLEN 17 /* 6*sizeof("xx:")-1 */
+
+#define MACADDR_OCTETS	6
+#define MACADDR_STRLEN	(MACADDR_OCTETS * 3) - 1    /* 6*sizeof("xx:")-1 */
+
 static int
 parse_macaddr(char  *str, 
-	      char   addr[6], 
+	      char   addr[MACADDR_OCTETS], 
 	      char **reason)
 {
-    char s[MACADDR_STRLEN+1], *s1, *s2;
-    int i=0;
-    int tmp; 
-    int retval = -1;
+    char *s1;
+    int n_colons;
+    unsigned int octets[MACADDR_OCTETS];
+    int i;
 
-    if ((str == NULL) || strlen(str) > MACADDR_STRLEN){
-	retval = 0;
-	if (reason && (*reason = cligen_reason("%s: Invalid macaddress", str)) == NULL)
-	    retval = -1;
-	goto done;
-    }
-    strncpy(s, str, MACADDR_STRLEN+1);
-    s2 = s;
-#ifdef HAVE_STRSEP
-    while ((s1 = strsep(&s2, ":")) != NULL)
-#else
-	while ((s1 = strtok((i==0?s2:NULL),":")) != NULL)
-#endif
-	    {
-		if (sscanf(s1, "%x", &tmp) < 1) 
-		    return -1;
-		if (tmp < 0 || 255 < tmp){
-		    retval = 0;
-		    if (reason && (*reason = cligen_reason("%s: Invalid macaddress", str)) == NULL)
-			retval = -1;
-		    goto done;
-		}
-		addr[i++] = (uint8_t)tmp;
-	    }
-    if (i!=6){
-	retval = 0;
-	if (reason && 
-	    (*reason = cligen_reason("%s: Invalid macaddr", str)) == NULL){
-	    retval = -1;
-	    goto done;
+    /*
+     * MAC addresses are exactly MACADDR_STRLEN (17) bytes long.
+     */
+    if ((str == NULL) || strlen(str) != MACADDR_STRLEN) {
+	if (reason && (*reason = cligen_reason("%s: Invalid MAC address (bad length)", str)) == NULL) {
+	    return -1;
 	}
-	goto done;
+	return 0;
     }
-    retval = 1; /* OK */
-  done:
-    return retval;
+
+    /*
+     * Allow only valid charcters 0-9, a-f, A-F and ':'.
+     */
+    n_colons = 0;
+    for (s1 = str; s1 && *s1; ++s1) {
+	if (isxdigit(*s1)) {
+	    continue;
+	}
+	if (*s1 == ':') {
+	    ++n_colons;
+	    continue;
+	}
+
+	if (reason) {
+	    *reason = cligen_reason("%s: Invalid MAC address (illegal character '%c')", str, *s1);
+	    if (*reason == NULL) {
+		return -1;
+	    }
+	}
+	return 0;
+    }
+
+    /*
+     * Ensure exactly 6 octets.
+     */
+    if (n_colons != MACADDR_OCTETS - 1) {
+	if (reason) {
+	    *reason = cligen_reason("%s: Invalid MAC address (should have 6 octets, not %d)", str, n_colons + 1);
+	    if (*reason == NULL) {
+		return -1;
+	    }
+	}
+	return 0;
+    }
+
+    /*
+     * Ensure octets are proper two-character widths.
+     */
+    if (str[2] != ':' || str[5] != ':' || str[8] != ':'
+	|| str[11] != ':' || str[14] != ':' || str[17] != 0) {
+	if (reason) {
+	    *reason = cligen_reason("%s: Invalid MAC address (poorly formed octets)", str);
+	    if (*reason == NULL) {
+		return -1;
+	    }
+	}
+	return 0;
+    }
+
+    sscanf(str,
+	   "%x:%02x:%02x:%02x:%02x:%02x",
+	   octets + 0, octets + 1, octets + 2,
+	   octets + 3, octets + 4, octets + 5);
+
+    for (i = 0; i < MACADDR_OCTETS; ++i) {
+	addr[i] = octets[i];
+    }
+
+    return 1;	/* OK */
 }
 
 /*! Parse URL
@@ -2097,6 +2349,9 @@ cv2str(cg_var *cv,
     char uuidstr[37];
     char timestr[27];
 
+    if (!cv) {
+	    return 0;
+    }
     switch (cv->var_type){
     case CGV_INT8:
 	len = snprintf(str, size, "%" PRId8, cv->var_int8);
@@ -2213,6 +2468,9 @@ cv2str_dup(cg_var *cv)
     int   len;
     char *str;
 
+    if (!cv) {
+	    return NULL;
+    }
     if ((len = cv2str (cv, NULL, 0)) < 0)
 	return NULL;
     if ((str = (char *)malloc(len+1)) == NULL)
@@ -3097,8 +3355,10 @@ cv_reset(cg_var *cv)
 int
 cv_free(cg_var *cv)
 {
-    cv_reset(cv);
-    free(cv);
+    if (cv) {
+	cv_reset(cv);
+	free(cv);
+    }
     return 0;
 }
 
