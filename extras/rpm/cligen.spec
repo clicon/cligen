@@ -7,7 +7,6 @@ Summary: The CLIGEN command line generation tool
 Group: System Environment/Libraries
 License: ASL 2.0 or GPLv2
 URL: http://www.cligen.se
-AutoReq: no
 BuildRequires: flex, bison
 
 Source: %{name}-%{version}-%{release}.tar.xz
@@ -18,7 +17,7 @@ The CLIGEN command line generation tool.
 %package devel
 Summary: CLIGEN header files
 Group: Development/Libraries
-Requires: cligen
+Requires: %{name} = %{version}-%{release}
 
 %description devel
 This package contains header files for CLIGEN.
@@ -27,17 +26,19 @@ This package contains header files for CLIGEN.
 %setup
 
 %build
-%configure
+%configure --enable-debug
 make
 
 %install
 make DESTDIR=${RPM_BUILD_ROOT} install
+chmod 0755 ${RPM_BUILD_ROOT}/%{_libdir}/libcligen.so.*
 
 %files
-%{_libdir}/lib*
+%attr(0755, root, root) %{_libdir}/libcligen.so.*
 
 %files devel
 %{_includedir}/%{name}/*
+%{_libdir}/libcligen.so
 
 %clean
 
