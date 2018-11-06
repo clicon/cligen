@@ -565,7 +565,6 @@ str_cmp(char *s1,
 #endif /* HAVE_STRVERSCMP */
 }
 
-
 /*! Examine equality between two cligen objects (cg_obj)
  *
  * Two cligen objects are equal if they have:

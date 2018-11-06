@@ -1633,10 +1633,18 @@ done:
 /*! Translate (binary) timeval to (ascii) ISO 8601 time string
  * from timeval to  ISO 8601 date+time on the form 2008-09-21T18:57:21.003456
  * @param[in]  tv   Timeval
- * @param[out] fmt   Format string. 
- * @param[in]  len   Length of format string. Must be at least 27 bytes.
- * @retval     0     OK
- * @retval    -1     Error
+ * @param[out] fmt  Format string. 
+ * @param[in]  len  Length of format string. Must be at least 27 bytes.
+ * @retval     0    OK
+ * @retval    -1    Error
+ * @code
+ *   char timestr[27];
+ *   struct timeval tv;
+ *   gettimeofday(&tv);
+ *   if (time2str(tv, timestr, sizeof(timestr)) < 0)
+ *     err;
+ *   printf("%s", timestr);
+ * @endcode
  */
 int
 time2str(struct timeval tv, 
