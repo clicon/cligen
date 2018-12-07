@@ -1,6 +1,7 @@
 # Cligen Changelog
 
 ## 3.9 (Upcoming)
+* Added cligen_print_trees() function
 * Fixed problem reported by mgsmith@netgate.com where two files loaded will not
 call callback after "a b" command:
 a b c, fn();
