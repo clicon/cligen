@@ -49,6 +49,7 @@
 #include "cligen_cv.h"
 #include "cligen_cvec.h"
 #include "cligen_gen.h"
+#include "cligen_handle.h"
 #include "cligen_print.h"
 
 #define VARIABLE_PRE  '<'
@@ -290,5 +291,31 @@ cligen_print_obj(FILE    *f,
   done:
     if (cb)
 	cbuf_free(cb);
+    return retval;
+}
+
+/*! Print list of CLIgen parse-trees
+ *
+ * @param[in] f      File to print to
+ * @param[in] co     Cligen object
+ * @param[in] brief  Print brief output, otherwise clispec parsable format
+ *
+ * @see cligen_print  which prints a vector of cligen objects "parse-tree"
+ */
+int 
+cligen_print_trees(FILE         *f,
+		   cligen_handle h,
+		   int           brief)
+{
+    int         retval = -1;
+    parse_tree *pt = NULL;
+
+    while ((pt = cligen_tree_each(h, pt)) != NULL) {
+	fprintf(stderr, "%s\n", pt->pt_name);
+	if (!brief && cligen_print(f, *pt, brief) < 0)
+	    goto done;
+    }
+    retval = 0;
+  done:
     return retval;
 }
