@@ -1,5 +1,15 @@
 # Cligen Changelog
 
+## 3.9 (Upcoming)
+* Fixed problem reported by mgsmith@netgate.com where two files loaded will not
+call callback after "a b" command:
+a b c, fn();
+a b, fn();
+
+CLICON_MODE="master";
+CLICON_PLUGIN="example_cli";
+a b, fn();
+
 ## 3.8.0 (6 Nov 2018)
 * Merged a large number of Netgate commits. Thanks!
 * Moved hidden C structures from .c files to internal .h headers
