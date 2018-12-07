@@ -708,10 +708,17 @@ cligen_parsetree_merge(parse_tree *pt0,
 		break;
 	    }
 	    if (co0 && co1 && co_eq(co0, co1)==0){
+		if (co0->co_callbacks == NULL && co1->co_callbacks != NULL){
+		    /* Cornercase: co0 callback is NULL and co1 callback is not 
+		     * Copy from co1 to co0
+		     */
+		    if (co_callback_copy(co1->co_callbacks, &co0->co_callbacks) < 0)
+			goto done;
+		}
 		exist = 1;
 		break;
 	    }
-	}
+	} 
 	if (co1==NULL){ /* empty */
 	    if (exist)
 		continue;
