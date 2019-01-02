@@ -11,7 +11,12 @@ cligen
 cligen_hello
 cligen_file
 cligen_tutorial
+cligen_tutorial.aux
+cligen_tutorial.log
+cligen_tutorial.toc
 autom4te.cache
+.depend
+TAGS
 build-root/.version
 build-root/*.tar*
 build-root/*.rpm
