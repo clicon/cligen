@@ -1,7 +1,7 @@
 /*
   ***** BEGIN LICENSE BLOCK *****
  
-  Copyright (C) 2001-2018 Olof Hagsand
+  Copyright (C) 2001-2019 Olof Hagsand
 
   This file is part of CLIgen.
 
@@ -2874,8 +2874,8 @@ cv_parse1(char   *str0,
  *  - A type field. So that the parser knows how to parse the string
  *  - For decimal64 the fraction_digits (n) must be known.
  *
- * See also cv_parse1() which has extended error handling.
- * and cv_validate() where the cv is validated against a cligen object specification.
+ * @see cv_parse1() with better error handling.
+ * @see cv_validate() where cv is validated against a cligen object specification.
  *
  * Arguments:
  * @param[in]  str  Input string. Example, number variable, str can be "7834" or "0x7634"
