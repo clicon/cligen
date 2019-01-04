@@ -939,7 +939,7 @@ cv_urlpasswd_set(cg_var *cv,
  * @retval  0 : Validation not OK, malloced reason is returned
  * @retval  1 : Validation OK, value returned in val parameter
  */
-static int
+int
 parse_int8(char   *str, 
 	   int8_t *val,
 	   char  **reason)
@@ -971,7 +971,7 @@ parse_int8(char   *str,
  * @retval  0 : Validation not OK, malloced reason is returned
  * @retval  1 : Validation OK, value returned in val parameter
  */
-static int
+int
 parse_int16(char    *str, 
 	    int16_t *val, 
 	    char   **reason)
@@ -1143,7 +1143,7 @@ parse_uint8(char    *str,
  * @retval  0 : Validation not OK, malloced reason is returned
  * @retval  1 : Validation OK, value returned in val parameter
  */
-static int
+int
 parse_uint16(char     *str, 
 	     uint16_t *val, 
 	     char    **reason)
@@ -1175,7 +1175,7 @@ parse_uint16(char     *str,
  * @retval  0 : Validation not OK, malloced reason is returned
  * @retval  1 : Validation OK, value returned in val parameter
  */
-static int
+int
 parse_uint32(char     *str, 
 	     uint32_t *val, 
 	     char    **reason)
