@@ -1,6 +1,7 @@
 # Cligen Changelog
 
 ## 3.9 (Upcoming)
+* Added cv_min_set() and cv_max_set() to set min and max values of a cligen variable respectively
 * Added cligen_print_trees() function
 * Fixed problem reported by mgsmith@netgate.com where two files loaded will not
 call callback after "a b" command:

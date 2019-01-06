@@ -930,7 +930,6 @@ cv_urlpasswd_set(cg_var *cv,
     return s1; 
 }
 
-
 /*! Parse an int8 number and check for errors
  * @param[in]  str     String containing number to parse
  * @param[out] val     Value on success
@@ -2608,6 +2607,8 @@ cv_print(FILE   *f,
  * @see cvtype_max2str_dup
  * You can use str=NULL to get the expected length.
  * The number of (potentially if str=NULL) written bytes is returned.
+ * @note DEC64 type does not work, need fraction-digits,... use cv_max_set
+ * @see cv_max_set
  */
 int
 cvtype_max2str(enum cv_type type, 
@@ -2659,6 +2660,8 @@ cvtype_max2str(enum cv_type type,
  * @param[in]   type  CLIgen variable type
  * @retval      str   Malloced string containing value. Should be freed after use.
  * @see cvtype_max2str
+ * @note DEC64 type does not work, need fraction-digits,... use cv_max_set
+ * @see cv_max_set
  */
 char *
 cvtype_max2str_dup(enum cv_type type)
@@ -2678,6 +2681,86 @@ cvtype_max2str_dup(enum cv_type type)
     return str;
 }
 
+int
+cv_max_set(cg_var *cv)
+{
+    switch (cv->var_type){
+    case CGV_INT8:
+	cv->var_int8 = INT8_MAX;
+	break;
+    case CGV_INT16:
+	cv->var_int16 = INT16_MAX;
+	break;
+    case CGV_INT32:
+	cv->var_int32 = INT32_MAX;
+	break;
+    case CGV_INT64:
+	cv->var_int64 = INT64_MAX;
+	break;
+    case CGV_UINT8:
+	cv->var_uint8 = UINT8_MAX;
+	break;
+    case CGV_UINT16:
+	cv->var_uint16 = UINT16_MAX;
+	break;
+    case CGV_UINT32:
+	cv->var_uint32 = UINT32_MAX;
+	break;
+    case CGV_UINT64:
+	cv->var_uint64 = UINT64_MAX;
+        break;
+    case CGV_DEC64: /* assume fraction-digits is set to something */
+	cv->var_uint64 = INT64_MAX;
+	break;
+    case CGV_BOOL:
+	cv->var_bool = 1;
+	break;
+    default:
+	break;
+    }
+    return 0;
+}
+
+int
+cv_min_set(cg_var *cv)
+{
+    switch (cv->var_type){
+    case CGV_INT8:
+	cv->var_int8 = INT8_MIN;
+	break;
+    case CGV_INT16:
+	cv->var_int16 = INT16_MIN;
+	break;
+    case CGV_INT32:
+	cv->var_int32 = INT32_MIN;
+	break;
+    case CGV_INT64:
+	cv->var_int64 = INT64_MIN;
+	break;
+    case CGV_UINT8:
+	cv->var_uint8 = 0;
+	break;
+    case CGV_UINT16:
+	cv->var_uint16 = 0;
+	break;
+    case CGV_UINT32:
+	cv->var_uint32 = 0;
+	break;
+    case CGV_UINT64:
+	cv->var_uint64 = 0;
+        break;
+    case CGV_DEC64: /* assume fraction-digits is set to something */
+	cv->var_uint64 = INT64_MIN;
+	break;
+    case CGV_BOOL:
+	cv->var_bool = 0;
+	break;
+    default:
+	break;
+    }
+    return 0;
+}
+
 /*! Parse cv from string. 
  *
  * This function expects an initialized cv as created by cv_new() or
@@ -2686,7 +2769,7 @@ cvtype_max2str_dup(enum cv_type type)
  *  - A type field. So that the parser knows how to parse the string
  *  - For decimal64 the fraction_digits (n) must be known.
  *
- * See also cv_parse() which does has simpler error handling.
+ * See also cv_parse() which has simpler error handling.
  * and cv_validate() where the cv is validated against a cligen object specification.
  *
  * @param[in]  str0    Input string. Example, number variable, str can be "7834" or "0x7634"
