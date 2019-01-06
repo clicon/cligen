@@ -218,8 +218,11 @@ char   *cv2str_dup(cg_var *cv);
 
 int     cv_print(FILE *f, cg_var *cgv);
 int     cvtype_max2str(enum cv_type type, char *str, size_t size);
-#define HAVE_CLIGEN_MAX2STR 1 /* XXX Backward compatibility */
 char   *cvtype_max2str_dup(enum cv_type type);
+
+int     cv_max_set(cg_var *cv);
+int     cv_min_set(cg_var *cv);
+
 int     cv_cmp(cg_var *cgv1, cg_var *cgv2);
 int     cv_cp(cg_var *n, cg_var *old);
 cg_var *cv_dup(cg_var *old);
