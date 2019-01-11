@@ -1,6 +1,9 @@
 # Cligen Changelog
 
 ## 3.9 (Upcoming)
+* Added support for ISO 8601 UTC timezone designators Z or +/- for the cligen variable type `time`.
+  * CLIgen did not use timezone and omission of UTC timezone designators is invalid
+  * Example of a proper UTC time syntax is: 2008-09-21T18:57:21.003456Z
 * Added cv_min_set() and cv_max_set() to set min and max values of a cligen variable respectively
 * Added cligen_print_trees() function
 * Fixed problem reported by mgsmith@netgate.com where two files loaded will not
