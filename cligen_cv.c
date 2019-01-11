@@ -1748,7 +1748,7 @@ tonum(int   n,
 }
 
 /*! Translate (ascii) ISO 8601 time string to (binary) timeval
- * Translate ISO 8601 date+time on the form 2008-09-21T18:57:21.003456 to a timeval structure.
+ * Translate ISO 8601 date+time on the form 2008-09-21T18:57:21.003456Z to a timeval structure.
  * @param[in]  in   Input ISO 8601 string
  * @param[out] tv   Timeval
  * @retval     0     OK
@@ -1758,11 +1758,12 @@ tonum(int   n,
  * out timestamp is a 4+4 integer struct timeval  
  * returns 0 if OK parses. -1 if not correct.
  * usec can be 1-6 digits. That is, .3 means 300000 usec.
- * NOTE : string coming in is expected to be UTC and we parse that into a tm struct and
+ * @note : string coming in is expected to be UTC and we parse that into a tm struct and
  * then call mktime(). Problem is mktime() assumes tm is localtime. Therefore we must
  * adjust the timeval with the timezone to get it right. (Should be a mktime() that is
  * UTC).
- * XXX: You should be able to leave out less significant fields. That is, 2003 is
+ * @note Zone designator support have been added (2019-01) but are not stored.
+ * @note You should be able to leave out less significant fields. That is, 2003 is
  * a time. But now you can only leave out usec.
  */
 int
@@ -1782,6 +1783,7 @@ str2time(char           *in,
     int        usec = 0;
     struct tm *tm; 
     time_t     t;
+    char       frac[7];
 
     if ((year = tonum(4, &in[i])) < 0)
 	goto done;
@@ -1824,20 +1826,48 @@ str2time(char           *in,
     if (sec > 59)
 	goto done;
     i += 2;
-    if (in[i] == '\0')
+    switch (in[i]){
+    case '\0':
 	goto mkdate;
-    if (in[i++] != '.')
+	break;
+    case '.':
+	i++;
+	break;
+    case 'Z':
+    case '+':
+    case '-':
+	goto zone;
+    default:
 	goto done;
-    len = strlen(&in[i]);
-    if (len > 6 || len < 1)
+	break;
+    }
+    for (len=0; len<6; len++){
+	if (isdigit(in[i+len]))
+	    frac[len] = in[i+len];
+	else
+	    break;
+    }
+    if (len < 1)
 	goto done;
-    if ((usec = tonum(len, &in[i])) < 0)
+    frac[len] = 0;
+    if ((usec = tonum(len, frac)) < 0)
 	goto done;
     for (j=0; j<6-len; j++)
 	usec *= 10;
     if (usec > 999999)
 	goto done;
     i += len;
+ zone:
+    switch (in[i]){
+    case 'Z':
+	i++;
+	break;
+    case '+': 
+    case '-': /* not parsed */
+	goto mkdate;
+    default:
+	goto done;
+    }
     if (in[i] != '\0')
 	goto done;
   mkdate:
@@ -1882,14 +1912,14 @@ done:
 }
 
 /*! Translate (binary) timeval to (ascii) ISO 8601 time string
- * from timeval to  ISO 8601 date+time on the form 2008-09-21T18:57:21.003456
+ * from timeval to  ISO 8601 date+time on the form 2008-09-21T18:57:21.003456Z
  * @param[in]  tv   Timeval
  * @param[out] fmt  Format string. 
- * @param[in]  len  Length of format string. Must be at least 27 bytes.
+ * @param[in]  len  Length of format string. Must be at least 28 bytes.
  * @retval     0    OK
  * @retval    -1    Error
  * @code
- *   char timestr[27];
+ *   char timestr[28];
  *   struct timeval tv;
  *   gettimeofday(&tv);
  *   if (time2str(tv, timestr, sizeof(timestr)) < 0)
@@ -1906,7 +1936,7 @@ time2str(struct timeval tv,
     struct tm *tm;
 
     tm = gmtime((time_t*)&tv.tv_sec);
-    if (snprintf(fmt, len, "%04d-%02d-%02dT%02d:%02d:%02d.%06ld",
+    if (snprintf(fmt, len, "%04d-%02d-%02dT%02d:%02d:%02d.%06ldZ",
 	     tm->tm_year+1900, tm->tm_mon+1, tm->tm_mday, tm->tm_hour, 
 		 tm->tm_min, tm->tm_sec, tv.tv_usec) < 0)
 	goto done;
@@ -2215,7 +2245,7 @@ cv2cbuf(cg_var *cv,
     char ss[64];
     int  sslen = sizeof(ss);
     char uuidstr[37];
-    char timestr[27];
+    char timestr[28];
 
     switch (cv->var_type){
     case CGV_INT8:
@@ -2346,7 +2376,7 @@ cv2str(cg_var *cv,
     char ss[64];
     int  sslen = sizeof(ss);
     char uuidstr[37];
-    char timestr[27];
+    char timestr[28];
 
     if (!cv) {
 	    return 0;
@@ -2495,7 +2525,7 @@ cv_print(FILE   *f,
     char ss[64];
     int  sslen = sizeof(ss);
     char uuidstr[37];
-    char timestr[27];
+    char timestr[28];
 
     switch (cv->var_type){
     case CGV_INT8:
