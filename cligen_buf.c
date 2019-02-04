@@ -43,14 +43,44 @@
 /*
  * Constants
  */
-#define CBUFLEN_START 8*1024   /* Start length */
+#define CBUFLEN_DEFAULT 1024   /* Start alloc mem length 1K */
+
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 
 #include "cligen_buf.h"              /* External API */
 #include "cligen_buf_internal.h"            
+
+/*
+ * Variables
+ */
+/* This is how large a cbuf is after calling cbuf_new. Note that the cbuf 
+ * may grow after calls to cprintf or cbuf_alloc */
+static uint32_t cbuflen_alloc = CBUFLEN_DEFAULT;
+
+/*! Get cbuf initial memory allocation size
+ * This is how large a cbuf is after calling cbuf_new. Note that the cbuf 
+ * may grow after calls to cprintf or cbuf_alloc
+ */
+uint32_t
+cbuf_alloc_get(void)
+{
+    return cbuflen_alloc;
+}
+
+/*! Set cbuf initial memory allocation size
+ * This is how large a cbuf is after calling cbuf_new. Note that the cbuf 
+ * may grow after calls to cprintf or cbuf_alloc
+ */
+int
+cbuf_alloc_set(uint32_t alloc)
+{
+    cbuflen_alloc = alloc;
+    return 0;
+}
 
 /*! Allocate cligen buffer. The handle returned can be used in  successive sprintf calls
  * which dynamically print a string.
@@ -66,9 +96,9 @@ cbuf_new(void)
     if ((cb = (cbuf*)malloc(sizeof(*cb))) == NULL)
 	return NULL;
     memset(cb, 0, sizeof(*cb));
-    if ((cb->cb_buffer = malloc(CBUFLEN_START)) == NULL)
+    if ((cb->cb_buffer = malloc(cbuflen_alloc)) == NULL)
 	return NULL;
-    cb->cb_buflen = CBUFLEN_START;
+    cb->cb_buflen = cbuflen_alloc;
     memset(cb->cb_buffer, 0, cb->cb_buflen);
     cb->cb_strlen = 0;
     return cb;
@@ -151,7 +181,7 @@ cprintf(cbuf       *cb,
 	return -1;
     diff = cb->cb_buflen - (cb->cb_strlen + retval + 1);
     if (diff <= 0){
-	cb->cb_buflen *= 2;
+	cb->cb_buflen *= 2; /* Double the space - alt linear growth */
 	if ((cb->cb_buffer = realloc(cb->cb_buffer, cb->cb_buflen)) == NULL)
 	    return -1;
 	va_end(ap);
