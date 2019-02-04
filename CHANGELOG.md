@@ -1,6 +1,8 @@
 # Cligen Changelog
 
 ## 3.9 (Upcoming)
+* Changed default cbuf start buf from 8K->1K.
+  * Added functions to get and set this limit: cbuf_alloc_(get|set).
 * Added support for ISO 8601 UTC timezone designators Z or +/- for the cligen variable type `time`.
   * CLIgen did not use timezone and omission of UTC timezone designators is invalid
   * Example of a proper UTC time syntax is: 2008-09-21T18:57:21.003456Z
