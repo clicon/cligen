@@ -2814,7 +2814,7 @@ cv_min_set(cg_var *cv)
  * @code
  *  cg_var *cv = cv_new(CGV_STRING);
  *  char   *reason=NULL;
- *  if (cv_parse1("mystring", cv, &reason) < p0)
+ *  if (cv_parse1("mystring", cv, &reason) < 0)
  *    cv_free(cv);
  *  free(reason);
  * @endcode
@@ -2983,9 +2983,9 @@ cv_parse1(char   *str0,
  *
  * This function expects an initialized cv as created by cv_new() or
  * prepared by cv_reset(). 
- * The following is required of a cv before calling this function:
+ * @note The following is required of a cv before calling this function:
  *  - A type field. So that the parser knows how to parse the string
- *  - For decimal64 the fraction_digits (n) must be known.
+ *  - For decimal64 the fraction_digits (n) must be known (cv_dec64_n_set())
  *
  * @see cv_parse1() with better error handling.
  * @see cv_validate() where cv is validated against a cligen object specification.
@@ -3207,10 +3207,14 @@ cv_validate(cg_var     *cv,
     return retval;
 }
 
-/*! Compare two cv:s
- *
+/*! Compare two CLIgen variables as strcmp(3)
+ * @param[in]  cv1   CLIgen variable #1
+ * @param[in]  cv2   CLIgen variable #2
  * @retval 0   equal
- * @retval !0  not equal, as trcmp return values
+ * @retval !0  not equal, as strcmp(3): an integer less than, equal
+ * to, or greater than zero if cv1 (or the first n bytes thereof) is found,
+ * respectively, to be less than, to match, or be greater than cv2
+ * XXX assume dec64_n are equal 
  */
 int 
 cv_cmp(cg_var *cv1, 
@@ -3242,8 +3246,8 @@ cv_cmp(cg_var *cv1,
     case CGV_UINT64:
 	return (cv1->var_uint64 - cv2->var_uint64);
     case CGV_DEC64:
-	return (cv_dec64_i_get(cv1) - cv_dec64_i_get(cv2) && 
-		cv_dec64_n_get(cv1) - cv_dec64_n_get(cv2));
+	/* XXX assume dec64_n are equal */
+	return (cv_dec64_i_get(cv1) - cv_dec64_i_get(cv2));
     case CGV_BOOL:
 	return (cv1->var_bool - cv2->var_bool);
     case CGV_REST:
@@ -3395,11 +3399,11 @@ cv_dup(cg_var *old)
 
 /*! Create new cligen variable. 
  *
- * See also cvec_add. 
- * Note: returnred cv needs to be freed with cv_free()
- *
  * @retval NULL  on error, error printed on stder
  * @retval cv    on success the malloc:ed cligen variable. Needs to be freed w cv_free()
+ * @note returned cv needs to be freed with cv_free()
+ * @note if type is CGV_DEC64, cv_dec64_n_set needs also be called
+ * @see cvec_add  which adds a cv to an existing cvec
  * @see cv_free
  */
 cg_var *
