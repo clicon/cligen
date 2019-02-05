@@ -594,6 +594,8 @@ cvec_print(FILE *f,
     char   *name;
     int     i = 0;
 
+    if ((name = cvec_name_get(cvv)) != NULL)
+	fprintf(f, "%s:\n", name);
     while ((cv = cvec_each(cvv, cv)) != NULL) {
 	name = cv_name_get(cv);
 	if (name)
