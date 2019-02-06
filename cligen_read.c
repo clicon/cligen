@@ -317,10 +317,10 @@ show_help_columns(cligen_handle h,
 	}
 	maxlen++;
 	column_width = maxlen<COLUMN_MIN_WIDTH?COLUMN_MIN_WIDTH:maxlen;
-	column_nr = cligen_terminal_length(h)/column_width;
+	column_nr = cligen_terminal_width(h)/column_width;
 	if (column_nr < 1)
 	    column_nr = 1;
-	rest = cligen_terminal_length(h)%column_width;
+	rest = cligen_terminal_width(h)%column_width;
 	column_width += rest/column_nr;
 	if (column_print(fout, 
 			 column_nr,
