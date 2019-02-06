@@ -78,8 +78,6 @@ struct cligen_handle{
     char       *ch_fn_str;       /* Name of active callback function */
     int         ch_completion;   /* completion mode */    
     char       *ch_nomatch;      /* Why did a string not match an evaluation? */
-    int         ch_terminal_rows; /* Number of output terminal rows */
-    int         ch_terminal_length; /* Length of terminal row */
     int         ch_tabmode;      /* short or long output mode on TAB */
 
     int         ch_lexicalorder; /* strcmp (0) or strverscmp (1) syntax order.

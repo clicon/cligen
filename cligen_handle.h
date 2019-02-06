@@ -98,11 +98,11 @@ int cligen_nomatch_set(cligen_handle h, const char *fmt, ...)__attribute__ ((for
 #else
 int cligen_nomatch_set(cligen_handle h, const char *fmt, ...);
 #endif
-int cligen_terminalrows(cligen_handle h);
-int cligen_terminalrows_set(cligen_handle h, int rows);
+int cligen_terminal_rows(cligen_handle h);
+int cligen_terminal_rows_set(cligen_handle h, int rows);
 
-int cligen_terminal_length(cligen_handle h);
-int cligen_terminal_length_set(cligen_handle h, int length);
+int cligen_terminal_width(cligen_handle h);
+int cligen_terminal_width_set(cligen_handle h, int length);
 
 int cligen_line_scrolling(cligen_handle h);
 int cligen_line_scrolling_set(cligen_handle h, int mode);

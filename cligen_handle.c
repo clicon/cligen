@@ -64,6 +64,8 @@
 #include "cligen_handle_internal.h"
 
 /*! Get window size and set terminal row size
+ * @param[in] h       CLIgen handle
+ * The only real effect this has is to set the getline width parameter which effects scrolling
  */
 static int
 cligen_gwinsz(cligen_handle h)
@@ -74,8 +76,8 @@ cligen_gwinsz(cligen_handle h)
 	perror("ioctl(STDIN_FILENO,TIOCGWINSZ)");
 	return -1;
     }
-    cligen_terminalrows_set(h, ws.ws_row);
-    cligen_terminal_length_set(h, ws.ws_col);
+    cligen_terminal_rows_set(h, ws.ws_row); /* note special treatment of 0 in sub function */
+    cligen_terminal_width_set(h, ws.ws_col); /* only used in obsolete cli_output */
     return 0;
 }
 
@@ -85,6 +87,9 @@ sigwinch_handler(int arg)
 }
 
 /*! This is the first call the CLIgen API and returns a handle. 
+ * Allocate CLIgen handle to be used in API calls
+ * Initialize prompt, tabs, query terminal setting for width etc.
+ * @retval h  CLIgen handle
  */
 cligen_handle 
 cligen_init(void)
@@ -535,8 +540,6 @@ cligen_fn_str_set(cligen_handle h,
     return 0;
 }
 
-
-
 /*! Get completion mode. 0: complete 1 level. 1: complete all
  *
  * Example: syntax is 'a b;'. mode = 0 gives completion to 'a ' on first TAB and 
@@ -631,7 +634,7 @@ static int _terminalrows; /* XXX: global since cli_output dont take handle */
  * @param[in] h       CLIgen handle
  */
 int 
-cligen_terminalrows(cligen_handle h)
+cligen_terminal_rows(cligen_handle h)
 {
 //    struct cligen_handle *ch = handle(h);
 
@@ -643,12 +646,11 @@ cligen_terminalrows(cligen_handle h)
  * @param[in] rows    Number of lines in a terminal (y-direction)
  */
 int 
-cligen_terminalrows_set(cligen_handle h, 
+cligen_terminal_rows_set(cligen_handle h, 
 			int           rows)
 {
-    struct cligen_handle *ch = handle(h);
+    //    struct cligen_handle *ch = handle(h);
 
-    ch->ch_terminal_rows = rows;
     _terminalrows = rows;
     return 0;
 }
@@ -658,26 +660,31 @@ cligen_terminalrows_set(cligen_handle h,
  * @param[in] h       CLIgen handle
  */
 int 
-cligen_terminal_length(cligen_handle h)
+cligen_terminal_width(cligen_handle h)
 {
 //    struct cligen_handle *ch = handle(h);
 
     return gl_getwidth();
 }
 
-/*! Set length of lines (number of 'columns' in a line)
+/*! Set width of a CLIgen line in characters, ie, the number of 'columns' in a line
  *
  * @param[in] h       CLIgen handle
- * @param[in] length  Number of characters in a line - x-direction
+ * @param[in] length  Number of characters in a line - x-direction (see notes)
+ * @note if length = 0, then set it to 65535 to effectively disable all scrolling mechanisms
+ * @note if length < 21 set it to 21, which is getline's limit.
  */
 int 
-cligen_terminal_length_set(cligen_handle h, 
+cligen_terminal_width_set(cligen_handle h, 
 			   int           length)
 {
-    struct cligen_handle *ch = handle(h);
+    //    struct cligen_handle *ch = handle(h);
 
-    ch->ch_terminal_length = length;
-    if (length < TERM_MIN_SCREEN_WIDTH)
+    /* if length = 0, then set it to 65535 to effectively disable all scrolling mechanisms */
+    if (length == 0)
+	length = 0xffff;
+    /* if length < 21 set it to 21, which is getline's limit. */
+    else if (length < TERM_MIN_SCREEN_WIDTH)
 	length = TERM_MIN_SCREEN_WIDTH;
     gl_setwidth(length);
     return 0;

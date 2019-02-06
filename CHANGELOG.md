@@ -1,6 +1,13 @@
 # Cligen Changelog
 
 ## 3.9 (Upcoming)
+* Fixed: [serial terminals line wrap at 21 characters](https://github.com/olofhagsand/cligen/issues/20)
+  * If no terminal (eg serial) set the terminal width to a large number effectively disabling scrolling behaviour.
+* Renamed terminal setting functions:
+  * cligen_terminal_length -> cligen_terminal_width
+  * cligen_terminal_length_set -> cligen_terminal_width_set
+  * cligen_terminalrows -> cligen_terminal_rows
+  * cligen_terminalrows_set -> cligen_terminal_rows_set
 * Changed default cbuf start buf from 8K->1K.
   * Added functions to get and set this limit: cbuf_alloc_(get|set).
 * Added support for ISO 8601 UTC timezone designators Z or +/- for the cligen variable type `time`.

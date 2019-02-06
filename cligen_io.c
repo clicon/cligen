@@ -76,7 +76,8 @@ cli_output_reset(void)
 /*! CLIgen output function. All printf-style output should be made via this function.
  * 
  * It deals with formatting, page breaks, etc. 
- * NOTE: Many style of outputs cannot be handled this way. Spawning more/less process
+ * @note Consider obsolete
+ * Many style of outputs cannot be handled this way. Spawning more/less process
  * is more general.
  */
 int
@@ -92,7 +93,7 @@ cligen_output(FILE *f, char *template, ... )
     int     term_rows;
     int     len;
 
-    term_rows = cligen_terminalrows(NULL);
+    term_rows = cligen_terminal_rows(NULL);
     /* form a string in buf from all args */
 
     va_start(args, template);
