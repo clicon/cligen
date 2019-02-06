@@ -690,6 +690,31 @@ cligen_terminal_width_set(cligen_handle h,
     return 0;
 }
 
+/*! Get cligen/getline UTF-8 experimental mode
+ *
+ * @param[in] h       CLIgen handle
+ * @retval    0       UTF-8 mode disabled
+ * @retval    1       UTF-8 mode enabled
+ */
+int 
+cligen_utf8_get(cligen_handle h)
+{
+    return gl_utf8_get();
+}
+
+/*! Set cligen/getline UTF-8 experimental mode
+ *
+ * @param[in] h       CLIgen handle
+ * @retval    0       UTF-8 mode disabled
+ * @retval    1       UTF-8 mode enabled
+ */
+int 
+cligen_utf8_set(cligen_handle h,
+		int           mode)
+{
+    return gl_utf8_set(mode);
+}
+
 /*! Get line scrolling mode
  *
  * @param[in] h       CLIgen handle

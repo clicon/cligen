@@ -104,6 +104,9 @@ int cligen_terminal_rows_set(cligen_handle h, int rows);
 int cligen_terminal_width(cligen_handle h);
 int cligen_terminal_width_set(cligen_handle h, int length);
 
+int cligen_utf8_get(cligen_handle h);
+int cligen_utf8_set(cligen_handle h, int mode);
+
 int cligen_line_scrolling(cligen_handle h);
 int cligen_line_scrolling_set(cligen_handle h, int mode);
 

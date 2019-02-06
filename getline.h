@@ -13,6 +13,8 @@ int     gl_getscrolling(void);
 void    gl_setscrolling(int);
 void    gl_setwidth(int);		/* specify width of screen */
 int     gl_getwidth(void);		/* get width of screen */
+int     gl_utf8_set(int mode);          /* set UTF-8 experimental mode */
+int     gl_utf8_get(void);              /* get UTF-8 mode */
 void    gl_histadd(char *);		/* adds entries to hist */
 void    gl_histclear();			/* clears entries to hist */
 void	gl_strwidth(gl_strwidth_proc);	/* to bind gl_strlen */

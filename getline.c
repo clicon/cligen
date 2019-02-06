@@ -84,6 +84,7 @@ static void     search_forw(cligen_handle h, int new);	/* look forw for current 
 /* begin global variables */
 static int      gl_init_done = -1;	/* terminal mode flag  */
 static int      gl_termw = 80;		/* actual terminal width */
+static int      gl_utf8 = 0;		/* UTF-8 experimental mode */
 static int      gl_scrolling_mode = 1;	/* Scrolling on / off */
 static int      gl_scrollw = 27;	/* width of EOL scrolling region */
 static int      gl_width = 0;		/* net size available for input */
@@ -418,7 +419,7 @@ gl_getc(cligen_handle h)
 {
     int             c;
 #ifdef __unix__
-    char            ch;
+    unsigned char  ch;
 #endif
 
 #if CLIGEN_REGFD 
@@ -557,6 +558,26 @@ int
 gl_getwidth(void)
 {
     return gl_termw;
+}
+
+/*! Set UTF-8 experimental mode 
+ * @param[in] enabled   Set to 1 to enable UTF-8 experimental mode
+ */
+int
+gl_utf8_set(int mode)
+{
+    gl_utf8 = mode;
+    return 0;
+}
+
+/*! get UTF-8 experimental mode 
+ * @retval 0 UTF-8 is disabled
+ * @retval 1 UTF-8 is enabled
+ */
+int
+gl_utf8_get(void)
+{
+    return gl_utf8;
 }
 
 void
@@ -740,6 +761,36 @@ gl_getline(cligen_handle h,
 		break;
 	    default:		/* check for a terminal signal */
 #ifdef __unix__
+		if ((c & 0xe0) == 0xc0){ /* UTF-2 */
+		    int c2;
+		    c2 = gl_getc(h);
+		    if (gl_utf8){
+			gl_addchar(h, c);
+			gl_addchar(h, c2);
+		    }
+		}
+		else if ((c & 0xf0) == 0xe0){ /* UTF-2 */
+		    int c2, c3;
+		    c2 = gl_getc(h);
+		    c3 = gl_getc(h);
+		    if (gl_utf8){
+			gl_addchar(h, c);
+			gl_addchar(h, c2);
+			gl_addchar(h, c3);
+		    }
+		}
+		else if ((c & 0xf8) == 0xf0){ /* UTF-3 */
+		    int c2, c3, c4;
+		    c2 = gl_getc(h);
+		    c3 = gl_getc(h);
+		    c4 = gl_getc(h);
+		    if (gl_utf8){
+			gl_addchar(h, c);
+			gl_addchar(h, c2);
+			gl_addchar(h, c3);
+			gl_addchar(h, c4);
+		    }
+		}
 	        if (c > 0) {	/* ignore 0 (reset above) */
 	            sig = 0;
 #ifdef SIGINT

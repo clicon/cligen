@@ -1,6 +1,8 @@
 # Cligen Changelog
 
 ## 3.9 (Upcoming)
+* Added cligen_utf8_set/get functions with default 0 to ignore UTF-8, set to 1 for _experimental_ UTF-8 mode.
+* Fixed: (feature request: make cligen unicode safe)[https://github.com/olofhagsand/cligen/issues/21]
 * Fixed: [serial terminals line wrap at 21 characters](https://github.com/olofhagsand/cligen/issues/20)
   * If no terminal (eg serial) set the terminal width to a large number effectively disabling scrolling behaviour.
 * Renamed terminal setting functions:
