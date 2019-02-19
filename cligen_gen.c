@@ -872,18 +872,17 @@ pt_free1(parse_tree pt,
 {
     int i;
 
-    if (pt.pt_vec == NULL)
-	return 0;
-    for (i=0; i<pt.pt_len; i++)
-	if (pt.pt_vec[i])
-	    co_free(pt.pt_vec[i], recursive);
-    if (pt.pt_name)
-	free(pt.pt_name);
-    pt.pt_name = NULL;
-    if (pt.pt_vec)
+    if (pt.pt_vec != NULL){
+	for (i=0; i<pt.pt_len; i++)
+	    if (pt.pt_vec[i])
+		co_free(pt.pt_vec[i], recursive);
 	free(pt.pt_vec);
-    pt.pt_vec = NULL;
+    }
     pt.pt_len = 0;
+    if (pt.pt_name){
+	free(pt.pt_name);
+	pt.pt_name = NULL;
+    }
     return 0;
 }
 
