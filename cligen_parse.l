@@ -125,12 +125,12 @@ stripdup(char *s0)
 
 <HELP>\n                  { _YA->ya_linenum++; 
                             cligen_parselval.string = strdup(yytext);
-                            return CHAR; }
+                            return CHARS; }
 <HELP><<EOF>>             { return MY_EOF; }
 <HELP>\"\)                { BEGIN(INITIAL); return DQP; /* double-quote parenthes */}
 <HELP>\\                  { _YA->ya_lex_state = HELP; BEGIN(ESCAPE); }
-<HELP>.                   { cligen_parselval.string = strdup(yytext);
-                            return CHAR;}
+<HELP>[^\\"]+             { cligen_parselval.string = strdup(yytext);
+                            return CHARS;}
 
 <NAMEORTYPE>\>            { BEGIN(INITIAL); return *yytext; }
 <NAMEORTYPE>\n            { _YA->ya_linenum++; }
@@ -194,12 +194,12 @@ stripdup(char *s0)
 <STRING>\n                { _YA->ya_linenum++; }
 
 <STRING>\"                { BEGIN(_YA->ya_lex_string_state); return DQ; }
-<STRING>.                 { cligen_parselval.string = strdup(yytext);
-                            return CHAR;}
+<STRING>[^"\n]+           { cligen_parselval.string = strdup(yytext);
+                            return CHARS;}
 
 <ESCAPE>.                 { BEGIN(_YA->ya_lex_state); 
                              cligen_parselval.string = strdup(yytext); 
-                             return CHAR; }
+                             return CHARS; }
 
 <COMMENT>\n               { _YA->ya_linenum++; BEGIN(_YA->ya_lex_state);}
 <COMMENT><<EOF>>          { return MY_EOF; }

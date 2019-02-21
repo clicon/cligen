@@ -52,7 +52,7 @@
 %token <string> NAME    /* in variables: <NAME type:NAME> */
 %token <string> NUMBER  /* In variables */
 %token <string> DECIMAL /* In variables */
-%token <string> CHAR
+%token <string> CHARS
 
 %type <string> charseq
 %type <string> choices
@@ -1213,7 +1213,7 @@ choices     : NUMBER { $$ = $1;}
             | choices '|' DECIMAL { $$ = cgy_choice_merge(_ya, $1, $3); free($3);}
             ;
 
-charseq    : charseq CHAR 
+charseq    : charseq CHARS
               {
 		  int len = strlen($1);
 		  $$ = realloc($1, len+strlen($2) +1); 
@@ -1221,7 +1221,7 @@ charseq    : charseq CHAR
 		  free($2);
                  }
 
-           | CHAR {$$=$1;}
+           | CHARS {$$=$1;}
            ;
 
 
