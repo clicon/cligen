@@ -1,6 +1,6 @@
 # Cligen Changelog
 
-## 3.9 (Upcoming)
+## 3.9.0 (21 Feb 2019)
 * Added cligen_utf8_set/get functions with default 0 to ignore UTF-8, set to 1 for _experimental_ UTF-8 mode.
 * Fixed: (feature request: make cligen unicode safe)[https://github.com/olofhagsand/cligen/issues/21]
 * Fixed: [serial terminals line wrap at 21 characters](https://github.com/olofhagsand/cligen/issues/20)
@@ -17,14 +17,15 @@
   * Example of a proper UTC time syntax is: 2008-09-21T18:57:21.003456Z
 * Added cv_min_set() and cv_max_set() to set min and max values of a cligen variable respectively
 * Added cligen_print_trees() function
-* Fixed problem reported by mgsmith@netgate.com where two files loaded will not
-call callback after "a b" command:
-a b c, fn();
-a b, fn();
+* Fixed problem reported by mgsmith at netgate.com where two files loaded will not call callback after "a b" command:
+	```
+	a b c, fn();
+	a b, fn();
 
-CLICON_MODE="master";
-CLICON_PLUGIN="example_cli";
-a b, fn();
+	CLICON_MODE="master";
+	CLICON_PLUGIN="example_cli";
+	a b, fn();
+	```
 
 ## 3.8.0 (6 Nov 2018)
 * Merged a large number of Netgate commits. Thanks!

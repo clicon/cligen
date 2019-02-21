@@ -1,7 +1,7 @@
 CLIgen
 ======
 
-CLIgen is a Command-Line Interface generator written by Olof Hagsand.
+CLIgen is a Command-Line Interface generator.
 
 Well, actually it is not really a generator, since it does
 not _generate_ code for CLI:s. Instead, it builds and interprets
@@ -30,12 +30,16 @@ The source code here is built and installed using:
   sudo make install.
 ```
 
+
+
 The source builds a single library. If you build applications, you should include cligen.h and link with the library.
 
 There are several example applications:
 * cligen_hello Simplest possible. Just builds a 'hello world' greeting by in-line C
 * cligen_file Read a syntax specification from file. You must supply the file.
 * cligen_tutorial Samples of techniques used in cligen_tutorial.pdf.
+
+See also [Changelog](CHANGELOG.md).
 
 CLIgen is dual license. Either Apache License, Version 2.0 or GNU
 General Public License Version 2. You choose.
