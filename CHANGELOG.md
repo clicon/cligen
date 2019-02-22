@@ -1,5 +1,7 @@
 # Cligen Changelog
 
+## 3.10.0 (Upcoming)
+
 ## 3.9.0 (21 Feb 2019)
 * Added cligen_utf8_set/get functions with default 0 to ignore UTF-8, set to 1 for _experimental_ UTF-8 mode.
 * Fixed: (feature request: make cligen unicode safe)[https://github.com/olofhagsand/cligen/issues/21]
