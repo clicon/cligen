@@ -95,49 +95,49 @@ cov_pref(cg_obj *co)
 	break;
 	/* ints in range 22-60 */
     case CGV_INT8:
-	if (co->co_range)
+	if (co->co_rangelen)
 	    pref = 60;
 	else
 	    pref = 52;
 	break;
     case CGV_INT16:
-	if (co->co_range)
+	if (co->co_rangelen)
 	    pref = 58;
 	else
 	    pref = 50;
 	break;
     case CGV_INT32:
-	if (co->co_range)
+	if (co->co_rangelen)
 	    pref = 56;
 	else
 	    pref = 48;
 	break;
     case CGV_INT64:
-	if (co->co_range)
+	if (co->co_rangelen)
 	    pref = 54;
 	else
 	    pref = 46;
 	break;
     case CGV_UINT8:
-	if (co->co_range)
+	if (co->co_rangelen)
 	    pref = 59;
 	else
 	    pref = 51;
 	break;
     case CGV_UINT16:
-	if (co->co_range)
+	if (co->co_rangelen)
 	    pref = 57;
 	else
 	    pref = 49;
 	break;
     case CGV_UINT32:
-	if (co->co_range)
+	if (co->co_rangelen)
 	    pref = 55;
 	else
 	    pref = 47;
 	break;
     case CGV_UINT64:
-	if (co->co_range)
+	if (co->co_rangelen)
 	    pref = 53;
 	else
 	    pref = 45;
@@ -441,11 +441,11 @@ co_copy(cg_obj  *co,
 		fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
 		return -1;
 	    }
-	if (co->co_rangecv_low)
-	    if ((con->co_rangecv_low = cv_dup(co->co_rangecv_low)) == NULL)
+	if (co->co_rangecvv_low)
+	    if ((con->co_rangecvv_low = cvec_dup(co->co_rangecvv_low)) == NULL)
 		return -1;
-	if (co->co_rangecv_high)
-	    if ((con->co_rangecv_high = cv_dup(co->co_rangecv_high)) == NULL)
+	if (co->co_rangecvv_upp)
+	    if ((con->co_rangecvv_upp = cvec_dup(co->co_rangecvv_upp)) == NULL)
 		return -1;
 	if (co->co_expand_fn_vec)
 	    if ((con->co_expand_fn_vec = cvec_dup(co->co_expand_fn_vec)) == NULL)
@@ -646,32 +646,22 @@ co_eq(cg_obj *co1,
 	}
 	/* Examine int and range */
 	if (cv_isint(co1->co_vtype) || cv_isstring(co1->co_vtype)) {
-	    if ((eq = co1->co_range - co2->co_range) != 0)
+	    int i;
+	    cg_var *cv1, *cv2;
+	    if ((eq = co1->co_rangelen - co2->co_rangelen) != 0)
 		goto done;
-	    /* either both 0 or both 1 */
-	    if (co1->co_range){ /* both ranges set */
-		if (co1->co_rangecv_low && co2->co_rangecv_low){
-		    if ((eq = cv_cmp(co1->co_rangecv_low, co2->co_rangecv_low)) != 0)
+	    /* either both 0 or both same length */
+	    for (i=0; i<co1->co_rangelen; i++){
+		cv1 = cvec_i(co1->co_rangecvv_low, i);
+		cv2 = cvec_i(co2->co_rangecvv_low, i);
+		if ((eq = cv_cmp(cv1, cv2)) != 0)
 			goto done;
-		}
-		else
-		    if (co1->co_rangecv_low || co2->co_rangecv_low){
-			eq = 1;
+		cv1 = cvec_i(co1->co_rangecvv_upp, i);
+		cv2 = cvec_i(co2->co_rangecvv_upp, i);
+		if ((eq = cv_cmp(cv1, cv2)) != 0)
 			goto done;
-		    }
-		if (co1->co_rangecv_high && co2->co_rangecv_high){
-		    if ((eq = cv_cmp(co1->co_rangecv_high, co2->co_rangecv_high)) != 0)
-			goto done;
-		}
-		else
-		    if (co1->co_rangecv_high || co2->co_rangecv_high){
-			eq = 1;
-			goto done;
-		    }
-		goto done;
 	    }
-	}
-
+	} /* range */
 	break;
     }
   done:
@@ -847,10 +837,10 @@ co_free(cg_obj *co,
 	    free(co->co_choice);
 	if (co->co_regex)
 	    free(co->co_regex);
-	if (co->co_rangecv_low)
-	    cv_free(co->co_rangecv_low);
-	if (co->co_rangecv_high)
-	    cv_free(co->co_rangecv_high);
+	if (co->co_rangecvv_low)
+	    cvec_free(co->co_rangecvv_low);
+	if (co->co_rangecvv_upp)
+	    cvec_free(co->co_rangecvv_upp);
     }
 #ifdef notyet
     if (co->co_cv)

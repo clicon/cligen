@@ -123,11 +123,11 @@ co_expand_sub(cg_obj  *co,
 		fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
 		return -1;
 	    }
-	if (co->co_rangecv_low)
-	    if ((con->co_rangecv_low = cv_dup(co->co_rangecv_low)) == NULL)
+	if (co->co_rangecvv_low)
+	    if ((con->co_rangecvv_low = cvec_dup(co->co_rangecvv_low)) == NULL)
 		return -1;
-	if (co->co_rangecv_high)
-	    if ((con->co_rangecv_high = cv_dup(co->co_rangecv_high)) == NULL)
+	if (co->co_rangecvv_upp)
+	    if ((con->co_rangecvv_upp = cvec_dup(co->co_rangecvv_upp)) == NULL)
 		return -1;
 	if (co->co_choice)
 	    if ((con->co_choice = strdup(co->co_choice)) == NULL){
@@ -183,13 +183,13 @@ transform_var_to_cmd(cg_obj *co,
 	free(co->co_show);
 	co->co_show = NULL;
     }
-    if (co->co_rangecv_low){
-	cv_free(co->co_rangecv_low);
-	co->co_rangecv_low = NULL;
+    if (co->co_rangecvv_low){
+	cvec_free(co->co_rangecvv_low);
+	co->co_rangecvv_low = NULL;
     }
-    if (co->co_rangecv_high){
-	cv_free(co->co_rangecv_high);
-	co->co_rangecv_high = NULL;
+    if (co->co_rangecvv_upp){
+	cvec_free(co->co_rangecvv_upp);
+	co->co_rangecvv_upp = NULL;
     }
     if (co->co_choice){
 	free(co->co_choice);

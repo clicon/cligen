@@ -136,9 +136,13 @@ struct cg_varspec{
     char           *cgs_translate_fn_str; /* translate function string */
     translate_cb_t *cgs_translate_fn;  /* variable translate function */
     char           *cgs_choice;        /* list of choices */
-    int             cgs_range;         /* int range / str length interval valid */
-    cg_var         *cgs_rangecv_low;   /* range/length interval lower limit */
-    cg_var         *cgs_rangecv_high;  /* range/length interval upper limit */
+    /* int range / str length of cvv_low/upper bound intervals. Note, the two 
+     * range-cvvs must have the same length. */
+    int             cgs_rangelen;      
+    /* array of lower bound of intervals range. If cv type is CGV_EMPTY 
+     * it means the min value of the type (eg <a:int32 range[40]> */
+    cvec           *cgs_rangecvv_low;  
+    cvec           *cgs_rangecvv_upp;  /* array of upper bound of intervals */
     char           *cgs_regex;         /* regular expression */
     uint8_t         cgs_dec64_n;       /* negative decimal exponential 1..18 */
 };
@@ -229,9 +233,9 @@ typedef int (cg_applyfn_t)(cg_obj *co, void *arg);
 #define co_translate_fn  u.cou_var.cgs_translate_fn
 #define co_choice	 u.cou_var.cgs_choice
 #define co_keyword	 u.cou_var.cgs_choice
-#define co_range	 u.cou_var.cgs_range
-#define co_rangecv_low	 u.cou_var.cgs_rangecv_low
-#define co_rangecv_high	 u.cou_var.cgs_rangecv_high
+#define co_rangelen	 u.cou_var.cgs_rangelen 
+#define co_rangecvv_low	 u.cou_var.cgs_rangecvv_low
+#define co_rangecvv_upp  u.cou_var.cgs_rangecvv_upp
 #define co_regex         u.cou_var.cgs_regex
 #define co_dec64_n       u.cou_var.cgs_dec64_n
 

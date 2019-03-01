@@ -874,38 +874,48 @@ cg_regexp(cliyacc *ya,
     return 0;
 }
 
-/*! Given an optional min and a max, create low and high limits on cv values
+/*! Given an optional min and a max, create low and upper bounds on cv values
+ *
+ * @param[in]  ya      CLIgen yacc parse struct
+ * @param[in]  lowstr  low bound of interval (can be NULL)
+ * @param[in]  uppstr  upper bound of interval
+ * @param[in]  yv      The CLIgen syntax object
+ * @param[in]  cvtype  Type of variable
  * Supported for ints, decimal64 and strings.
  *  <x:int length[min:max]> or <x:int length[max]> 
- * NOTE: decimal64 fraction-digits must be given before range:
+ * @note: decimal64 fraction-digits must be given before range:
  *   <x:decimal64 fraction-digits:4 range[20.0]>
  * if you want any other fraction-digit than 2
- * @param[in]  ya  CLIgen yacc parse struct
  */
 static int
-cg_minmax(cliyacc     *ya, 
-	  char        *minstr, 
-	  char        *maxstr,
-	  cg_obj      *yv,
-	  enum cv_type cvtype)
+cg_range_create(cliyacc     *ya, 
+		char        *lowstr, 
+		char        *uppstr,
+		cg_obj      *yv,
+		enum cv_type cvtype)
 {
     int     retval = -1;
     char   *reason = NULL;
-    cg_var *cv;
+    cg_var *cv1 = NULL;
+    cg_var *cv2 = NULL;
     int     cvret;
 
-    if (minstr != NULL){
-	if ((cv = cv_new(cvtype)) == NULL){
-	    fprintf(stderr, "cv_new %s\n", strerror(errno));
-	    goto done;
-	}
-	if (cv_name_set(cv, "range_low") == NULL){
-	    fprintf(stderr, "cv_name_set %s\n", strerror(errno));
-	    goto done;
-	}
+    /* First create low bound cv */
+    if ((cv1 = cv_new(cvtype)) == NULL){
+	fprintf(stderr, "cv_new %s\n", strerror(errno));
+	goto done;
+    }
+    if (cv_name_set(cv1, "range_low") == NULL){
+	fprintf(stderr, "cv_name_set %s\n", strerror(errno));
+	goto done;
+    }
+    if (lowstr == NULL){
+	cv_type_set(cv1, CGV_EMPTY);
+    }
+    else{
 	if (yv->co_vtype == CGV_DEC64) /* XXX: Seems misplaced? / too specific */
-	    cv_dec64_n_set(cv, yv->co_dec64_n);
-	if ((cvret = cv_parse1(minstr, cv, &reason)) < 0){
+	    cv_dec64_n_set(cv1, yv->co_dec64_n);
+	if ((cvret = cv_parse1(lowstr, cv1, &reason)) < 0){
 	    fprintf(stderr, "cv_parse1 %s\n", strerror(errno));
 	    goto done;
 	}
@@ -914,19 +924,27 @@ cg_minmax(cliyacc     *ya,
 	    free(reason);
 	    goto done;
 	}
-	yv->co_rangecv_low = cv;
     }
-    if ((cv = cv_new(cvtype)) == NULL){
+    /* Then append it to the lowbound cvec, create if NULL */
+    if (yv->co_rangecvv_low == NULL){
+	if ((yv->co_rangecvv_low = cvec_from_var(cv1)) == NULL)
+	    goto done;
+    }
+    else if (cvec_append_var(yv->co_rangecvv_low, cv1) < 0)
+	goto done;
+    
+    /* Then create upper bound cv */
+    if ((cv2 = cv_new(cvtype)) == NULL){
 	fprintf(stderr, "cv_new %s\n", strerror(errno));
 	goto done;
     }
-    if (cv_name_set(cv, "range_high") == NULL){
+    if (cv_name_set(cv2, "range_high") == NULL){
 	fprintf(stderr, "cv_name_set %s\n", strerror(errno));
 	goto done;
     }
     if (yv->co_vtype == CGV_DEC64) /* XXX: Seems misplaced? / too specific */
-	cv_dec64_n_set(cv, yv->co_dec64_n);
-    if ((cvret = cv_parse1(maxstr, cv, &reason)) < 0){
+	cv_dec64_n_set(cv2, yv->co_dec64_n);
+    if ((cvret = cv_parse1(uppstr, cv2, &reason)) < 0){
 	fprintf(stderr, "cv_parse1 %s\n", strerror(errno));
 	goto done;
     }
@@ -935,24 +953,41 @@ cg_minmax(cliyacc     *ya,
 	free(reason);
 	goto done;
     }
-    yv->co_rangecv_high = cv;
 
-    ya->ya_var->co_range++;
+    /* Append it to the upper bound cvec, create if NULL */
+    if (yv->co_rangecvv_upp == NULL){
+	if ((yv->co_rangecvv_upp = cvec_from_var(cv2)) == NULL)
+	    goto done;
+    }
+    else if (cvec_append_var(yv->co_rangecvv_upp, cv2) < 0)
+	goto done;
+    
+    /* Then increment range vector length */
+    yv->co_rangelen++;
     retval = 0;
   done:
+    if (cv1)
+	cv_free(cv1);
+    if (cv2)
+	cv_free(cv2);
     return retval;
 }
 
-/*! Add Length
- * <x:string length[min:max]> 
- *   Note that the co_range structure fields are re-used for string length restrictions.
+/*! A length statement has been parsed. Create length/range cv
+ *
+ * @param[in]  ya      CLIgen yacc parse struct
+ * @param[in]  lowstr  low bound of interval (can be NULL)
+ * @param[in]  uppstr  upper bound of interval
+ * Examples:
+ * <x:string length[min:max]>  <x:string length[max]> 
+ *  @note that the co_range structure fields are re-used for string length restrictions.
  *   but the range type is uint64, not depending on cv type as int:s
- * @param[in]  ya  CLIgen yacc parse struct
+ * @see cg_range
  */
 static int
 cg_length(cliyacc *ya,
-	  char    *minstr,
-	  char    *maxstr)
+	  char    *lowstr,
+	  char    *uppstr)
 {
     cg_obj *yv;
 
@@ -960,16 +995,21 @@ cg_length(cliyacc *ya,
 	fprintf(stderr, "No var obj");
 	return -1;
     }
-    return cg_minmax(ya, minstr, maxstr, yv, CGV_UINT64);
+    return cg_range_create(ya, lowstr, uppstr, yv, CGV_UINT64);
 }
 
-/*!
- * @param[in]  ya  CLIgen yacc parse struct
+/*! A range statement has been parsed. Create range cv
+ * @param[in]  ya      CLIgen yacc parse struct
+ * @param[in]  lowstr  low bound of interval (can be NULL)
+ * @param[in]  uppstr  upper bound of interval
+ * Examples:
+ * <x:int32 range[min:max]>  <x:int32 range[max]> 
+ * @see cg_length
  */
 static int
 cg_range(cliyacc *ya,
-	 char    *minstr,
-	 char    *maxstr)
+	 char    *lowstr,
+	 char    *uppstr)
 {
     cg_obj *yv;
 
@@ -977,7 +1017,7 @@ cg_range(cliyacc *ya,
 	fprintf(stderr, "No var obj");
 	return -1;
     }
-    return cg_minmax(ya, minstr, maxstr, yv, yv->co_vtype);
+    return cg_range_create(ya, lowstr, uppstr, yv, yv->co_vtype);
 }
 
 /*!

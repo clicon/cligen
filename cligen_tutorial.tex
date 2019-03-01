@@ -7,7 +7,7 @@
 %
 % Title
 %
-\title {CLIgen Manual\\ {\small CLIgen version 3.7}}
+\title {CLIgen Manual\\ {\small CLIgen version 3.9}}
 
 \author{Olof Hagsand}
 %
@@ -18,7 +18,7 @@
 
 % If you want a logo
 % \lhead{\includegraphics[height=9mm]{../../doc/logga_crop.png}}
-\date{May, 2018}
+\date{Feb, 2019}
 \maketitle
 \setcounter{tocdepth}{2}
 \tableofcontents
@@ -464,14 +464,15 @@ strings:
   ab"d
 \end{verbatim}
 
-A string can be constrained by a {\tt length} statement. If given, the number of characters in a string is limited to a min/max interval, or just a max.
+A string can be constrained by a {\tt length} statement. If given, the number of characters in a string is limited to a min/max interval, or just a max\footnote{Note that this differs from YANG types where a single bound means exactly that value, see RFC 7950}.
 
 Example:
 \begin{verbatim}
   <addr:string length[8:12]>
   <addr:string length[12]>
+  <addr:string length[2:4] length[8:12]>
 \end{verbatim}
-which means that the {\tt addr} string, if given, must be between 8 and 12 characters long, or just limited to 12 characters, respectively.
+which means that the {\tt addr} string, if given, must be between 8 and 12 characters long, or just limited to 12 characters, or be between 2-4 and 8-12 charcters respectively.
 
 A variant of string is {\tt rest} which accepts all characters until
 the end-of-line. 
@@ -480,12 +481,12 @@ the end-of-line.
 \subsection{Integers}
 There are several integer variables, signed, unsigned, and 8, 16, 32 or 64-bits. For example, the {\tt int32} variable allows any 32-bit integer, and can be specified in decimal or hex format. 
 
-Further, an allowed range of integer can specified, either as an interval or as an upper limit.
+Further, an allowed range of integer can specified, either as an interval or as an upper limit, or a set of ranges:
 
 Examples:
 \begin{verbatim}
   <x:uint32>
-  <x:int8 range[-12:100]>
+  <x:int8 range[-12:80] range[100:110]>>
   <x:int64 range[1000]>
 \end{verbatim}
 
@@ -686,7 +687,7 @@ For information on how to implement a translator function, see Section~\ref{sec:
 \section{Operators}
 \label{sec:operators}
 
-I the regular syntax format, there are (implicit) sequence and choices. For example, the syntax
+In the regular syntax format, there are (implicit) sequence and choices. For example, the syntax
 \begin{verbatim}
   aa bb;
   cc;
@@ -694,6 +695,7 @@ I the regular syntax format, there are (implicit) sequence and choices. For exam
 defines a choice between the sequence {\tt aa bb} and {\tt cc}.
 
 It is also possible to explicitly define choices, optional elements and syntactical groupings.
+
 
 \subsection{Choice and grouping}
 Explit choice between several elements can be made as follows:
@@ -760,6 +762,33 @@ aa bb{
 }
 \end{verbatim}
 which is similar to the syntax used in Section~\ref{sec:syntax}.
+
+
+\subsection{Caveat}
+
+Note that the choice, groupings and optional elements are only
+syntactical structures generating the basic constructs described
+earlier. This means that if you use too many of them, they can
+generate a large number of states and consume memory.
+
+For example, the optional operator {\tt []} will increase the number of states with a
+factor of two. Thus {\tt [a][b][c][d]} will generate 16 states, for
+example.
+
+As an assistant, you can use the {\tt -p} option to {\tt cligen\_file} to see which basic syntax is generated:
+\begin{verbatim}
+$ echo "[a][b][c];" | ./cligen_file -p
+a;{
+   b;{
+      c;
+   }
+   c;
+}
+b;{
+   c;
+}
+c;
+\end{verbatim}
 
 \section{API}
 \label{sec:api}
