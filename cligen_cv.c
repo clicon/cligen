@@ -3021,9 +3021,18 @@ cv_parse(char   *str,
 }
 
 
-#define range_check(i, rmin, rmax, type)       \
-    ((rmin && (i) < cv_##type##_get(rmin)) || \
-     (rmax && (i) > cv_##type##_get(rmax)))
+/*! Range interval check if a number is in an interval
+ * @param[in] i      The number to check if it is in an interval
+ * @param[in] cvlow  cv containing lower bound
+ * @param[in] cvupp  cv containing upper bound
+ * @param[in] type   Numeric type string, eg "int32"
+ * @retval    0      i is outside [low,upper]
+ * @retval    1      i is in [low,upper]
+ * @note need to use macro trick ## to fix different types
+*/
+#define range_check(i, cvlow, cvupp, type)       \
+    (((i) >= cv_##type##_get(cvlow)) && \
+     ((i) <= cv_##type##_get(cvupp)))
 
 /*! Validate cligen variable cv using the spec in cs.
  *
@@ -3043,101 +3052,150 @@ cv_validate(cg_var     *cv,
     int      retval = 1; /* OK */
     int32_t  i = 0;
     uint32_t u = 0;
+    int64_t  i64;
+    uint64_t u64;
     char    *str;
-
+    int      ok;
+    int      j;
+    cg_var  *cv1, *cv2;
+    
     switch (cs->cgs_vtype){
     case CGV_INT8:
-	if (cs->cgs_range){
-	    i = cv_int8_get(cv);
-	    if (range_check(i, cs->cgs_rangecv_low, cs->cgs_rangecv_high, int8)){
-		if (reason)
-		    *reason = cligen_reason("Number out of range: %d", i);
-		retval = 0; /* No match */
+	if (!cs->cgs_rangelen)
+	    break;
+	i = cv_int8_get(cv);
+	ok = 0; 	/* At least one should pass */
+	for (j=0; j<cs->cgs_rangelen; j++){
+	    cv1 = cvec_i(cs->cgs_rangecvv_low, j);
+	    cv2 = cvec_i(cs->cgs_rangecvv_upp, j);
+	    if ((ok = range_check(i, cv1, cv2, int8)) != 0)
 		break;
-	    }
+	}
+	if (!ok){
+	    if (reason)
+		*reason = cligen_reason("Number out of range: %d", i);
+	    retval = 0; /* No match */
 	}
 	break;
     case CGV_INT16:
-	if (cs->cgs_range){
-	    i = cv_int16_get(cv);
-	    if (range_check(i, cs->cgs_rangecv_low, cs->cgs_rangecv_high, int16)){
-		if (reason)
-		    *reason = cligen_reason("Number out of range: %d", i);
-		retval = 0; /* No match */
+	if (!cs->cgs_rangelen)
+	    break;
+	i = cv_int16_get(cv);
+	ok = 0; 	/* At least one should pass */
+	for (j=0; j<cs->cgs_rangelen; j++){
+	    cv1 = cvec_i(cs->cgs_rangecvv_low, j);
+	    cv2 = cvec_i(cs->cgs_rangecvv_upp, j);
+	    if ((ok = range_check(i, cv1, cv2, int16)) != 0)
 		break;
-	    }
+	}
+	if (!ok){
+	    if (reason)
+		*reason = cligen_reason("Number out of range: %d", i);
+	    retval = 0; /* No match */
 	}
 	break;
     case CGV_INT32:
-	if (cs->cgs_range){
-	    i = cv_int32_get(cv);
-	    if (range_check(i, cs->cgs_rangecv_low, cs->cgs_rangecv_high, int32)){
-		if (reason)
-		    *reason = cligen_reason("Number out of range: %d", i);
-		retval = 0; /* No match */
+	if (!cs->cgs_rangelen)
+	    break;
+	i = cv_int32_get(cv);
+	ok = 0; 	/* At least one should pass */
+	for (j=0; j<cs->cgs_rangelen; j++){
+	    cv1 = cvec_i(cs->cgs_rangecvv_low, j);
+	    cv2 = cvec_i(cs->cgs_rangecvv_upp, j);
+	    if ((ok = range_check(i, cv1, cv2, int32)) != 0)
 		break;
-	    }
+	}
+	if (!ok){
+	    if (reason)
+		*reason = cligen_reason("Number out of range: %d", i);
+	    retval = 0; /* No match */
 	}
 	break;
-    case CGV_INT64:{
-	int64_t i64;
-	if (cs->cgs_range){
-	    i64 = cv_int64_get(cv);
-	    if (range_check(i, cs->cgs_rangecv_low, cs->cgs_rangecv_high, int64)){
-		if (reason)
-		    *reason = cligen_reason("Number out of range: %" PRId64, i64);
-		retval = 0; /* No match */
+    case CGV_INT64:
+	if (!cs->cgs_rangelen)
+	    break;
+	i64 = cv_int64_get(cv);
+	ok = 0; 	/* At least one should pass */
+	for (j=0; j<cs->cgs_rangelen; j++){
+	    cv1 = cvec_i(cs->cgs_rangecvv_low, j);
+	    cv2 = cvec_i(cs->cgs_rangecvv_upp, j);
+	    if ((ok = range_check(i64, cv1, cv2, int64)) != 0)
 		break;
-	    }
+	}
+	if (!ok){
+	    if (reason)
+		*reason = cligen_reason("Number out of range: %" PRId64, i64);
+	    retval = 0; /* No match */
 	}
 	break;
-    }
     case CGV_UINT8:
-	if (cs->cgs_range){
-	    u = cv_uint8_get(cv);
-	    if (range_check(u, cs->cgs_rangecv_low, cs->cgs_rangecv_high, uint8)){
-		if (reason)
-		    *reason = cligen_reason("Number out of range: %u", u);
-		retval = 0; /* No match */
+	if (!cs->cgs_rangelen)
+	    break;
+	u = cv_uint8_get(cv);
+	ok = 0; 	/* At least one should pass */
+	for (j=0; j<cs->cgs_rangelen; j++){
+	    cv1 = cvec_i(cs->cgs_rangecvv_low, j);
+	    cv2 = cvec_i(cs->cgs_rangecvv_upp, j);
+	    if ((ok = range_check(u, cv1, cv2, uint8)) != 0)
 		break;
-	    }
+	}
+	if (!ok){
+	    if (reason)
+		*reason = cligen_reason("Number out of range: %u", u);
+	    retval = 0; /* No match */
 	}
 	break;
     case CGV_UINT16:
-	if (cs->cgs_range){
-	    u = cv_uint16_get(cv);
-	    if (range_check(u, cs->cgs_rangecv_low, cs->cgs_rangecv_high, uint16)){
-		if (reason)
-		    *reason = cligen_reason("Number out of range: %u", u);
-		retval = 0; /* No match */
+	if (!cs->cgs_rangelen)
+	    break;
+	u = cv_uint16_get(cv);
+	ok = 0; 	/* At least one should pass */
+	for (j=0; j<cs->cgs_rangelen; j++){
+	    cv1 = cvec_i(cs->cgs_rangecvv_low, j);
+	    cv2 = cvec_i(cs->cgs_rangecvv_upp, j);
+	    if ((ok = range_check(u, cv1, cv2, uint16)) != 0)
 		break;
-	    }
+	}
+	if (!ok){
+	    if (reason)
+		*reason = cligen_reason("Number out of range: %u", u);
+	    retval = 0; /* No match */
 	}
 	break;
     case CGV_UINT32:
-	if (cs->cgs_range){
-	    u = cv_uint32_get(cv);
-	    if (range_check(u, cs->cgs_rangecv_low, cs->cgs_rangecv_high, uint32)){
-		if (reason)
-		    *reason = cligen_reason("Number out of range: %u", u);
-		retval = 0; /* No match */
+	if (!cs->cgs_rangelen)
+	    break;
+	u = cv_uint32_get(cv);
+	ok = 0; 	/* At least one should pass */
+	for (j=0; j<cs->cgs_rangelen; j++){
+	    cv1 = cvec_i(cs->cgs_rangecvv_low, j);
+	    cv2 = cvec_i(cs->cgs_rangecvv_upp, j);
+	    if ((ok = range_check(u, cv1, cv2, uint32)) != 0)
 		break;
-	    }
+	}
+	if (!ok){
+	    if (reason)
+		*reason = cligen_reason("Number out of range: %u", u);
+	    retval = 0; /* No match */
 	}
 	break;
-    case CGV_UINT64:{
-	uint64_t u64;
-	if (cs->cgs_range){
-	    u64 = cv_uint64_get(cv);
-	    if (range_check(u, cs->cgs_rangecv_low, cs->cgs_rangecv_high, uint64)){
-		if (reason)
-		    *reason = cligen_reason("Number out of range: %" PRIu64, u64);
-		retval = 0; /* No match */
+    case CGV_UINT64:
+	if (!cs->cgs_rangelen)
+	    break;
+	u64 = cv_uint64_get(cv);
+	ok = 0; 	/* At least one should pass */
+	for (j=0; j<cs->cgs_rangelen; j++){
+	    cv1 = cvec_i(cs->cgs_rangecvv_low, j);
+	    cv2 = cvec_i(cs->cgs_rangecvv_upp, j);
+	    if ((ok = range_check(u64, cv1, cv2, uint64)) != 0)
 		break;
-	    }
+	}
+	if (!ok){
+	    if (reason)
+		*reason = cligen_reason("Number out of range: %" PRIu64, u64);
+	    retval = 0; /* No match */
 	}
 	break;
-    }
     case CGV_DEC64:
 	if (cv_dec64_n_get(cv) != cs->cgs_dec64_n){
 	    if (reason)
@@ -3145,41 +3203,54 @@ cv_validate(cg_var     *cv,
 					cv->var_dec64_n, cs->cgs_dec64_n);
 	    retval = 0;
 	}
-	if (cs->cgs_range){
-	    i = cv_int64_get(cv);
-	    if (range_check(i, cs->cgs_rangecv_low, cs->cgs_rangecv_high, int64)){
-		if (reason){
-		    char *s = cv2str_dup(cv);
-		    *reason = cligen_reason("Number out of range: %s", s);
-		    free(s);
-		}
-		retval = 0; /* No match */
+	if (!cs->cgs_rangelen)
+	    break;
+	i64 = cv_int64_get(cv);
+	ok = 0; 	/* At least one should pass */
+	for (j=0; j<cs->cgs_rangelen; j++){
+	    cv1 = cvec_i(cs->cgs_rangecvv_low, j);
+	    cv2 = cvec_i(cs->cgs_rangecvv_upp, j);
+	    if ((ok = range_check(i64, cv1, cv2, int64)) != 0)
 		break;
+	}
+	if (!ok){
+	    if (reason){
+		char *s = cv2str_dup(cv);
+		*reason = cligen_reason("Number out of range: %s", s);
+		free(s);
 	    }
+	    retval = 0; /* No match */
 	}
 	break;
     case CGV_REST:
     case CGV_STRING:
 	str = cv_string_get(cv);
-	if (cs->cgs_range){
-	    u = strlen(str);
-	    if (range_check(u, cs->cgs_rangecv_low, cs->cgs_rangecv_high, uint64)){
-		if (reason)
-		    *reason = cligen_reason("String length not within limits: %u", u);
-		retval = 0; /* No match */
-		break;
-	    }
-	}
 	if (cs->cgs_regex != NULL){
-	    if ((retval = match_regexp(cv_string_get(cv), cs->cgs_regex)) < 0)
+	    if ((retval = match_regexp(str, cs->cgs_regex)) < 0)
 		break;
 	    if (retval == 0){
 		if (reason)
 		    *reason = cligen_reason("regexp match fail: %s does not match %s",
-					    cv_string_get(cv), cs->cgs_regex);
+					    str, cs->cgs_regex);
 		retval = 0;
 		break;
 	    }
+	}
+
+	if (!cs->cgs_rangelen)	/* Skip range check */
+	    break;
+	u64 = strlen(str); /* size_t */
+	ok = 0; 	/* At least one should pass */
+	for (j=0; j<cs->cgs_rangelen; j++){
+	    cv1 = cvec_i(cs->cgs_rangecvv_low, j);
+	    cv2 = cvec_i(cs->cgs_rangecvv_upp, j);
+	    if ((ok = range_check(u64, cv1, cv2, uint64)) != 0)
+		break;
+	}
+	if (!ok){
+	    if (reason)
+		*reason = cligen_reason("String length not within limits: %" PRIu64, u64);
+	    retval = 0; /* No match */
 	}
 	break;
     case CGV_ERR:

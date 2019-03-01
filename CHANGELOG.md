@@ -1,6 +1,12 @@
 # Cligen Changelog
 
 ## 3.10.0 (Upcoming)
+* Added support for multiple range and length statements for number and string types. This means thatthe following is allowed, for example:
+  ```
+  <s:string length[2:4] length[8:12]>
+  <x:int8 range[-12:80] range[100:110]>>
+  ```
+  * See [yang type range statement does not support multiple values](https://github.com/clicon/clixon/issues/59)
 
 ## 3.9.0 (21 Feb 2019)
 * Added cligen_utf8_set/get functions with default 0 to ignore UTF-8, set to 1 for _experimental_ UTF-8 mode.

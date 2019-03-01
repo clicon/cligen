@@ -81,7 +81,10 @@ cov2cbuf(cbuf   *cb,
 	 cg_obj *co,
 	 int     brief)
 {
-    int            retval = -1;
+    int     retval = -1;
+    int     i;
+    cg_var *cv1;
+    cg_var *cv2;
 
     if (co->co_choice){
 	if (strchr(co->co_choice, '|'))
@@ -96,20 +99,22 @@ cov2cbuf(cbuf   *cb,
 		    VARIABLE_POST);   
 	else{
 	    cprintf(cb, "%c%s:%s", VARIABLE_PRE, co->co_command, cv_type2str(co->co_vtype));
-	    if (co->co_range){
+
+	    for (i=0; i<co->co_rangelen; i++){
 		if (cv_isint(co->co_vtype))
 		    cprintf(cb, " range[");
 		else
 		    cprintf(cb, " length[");
-		if (co->co_rangecv_low){
-		    cv2cbuf(co->co_rangecv_low, cb);
+		cv1 = cvec_i(co->co_rangecvv_low, i);
+		cv2 = cvec_i(co->co_rangecvv_upp, i);
+		if (cv_type_get(cv1) != CGV_EMPTY){
+		    cv2cbuf(cv1, cb);
 		    cprintf(cb, ":");
 		}
-		if (co->co_rangecv_high){
-		    cv2cbuf(co->co_rangecv_high, cb);
-		}
+		cv2cbuf(cv2, cb);
 		cprintf(cb, "]");
 	    }
+	    
 	    if (co->co_show)
 		cprintf(cb, " show:\"%s\"", co->co_show);
 	    if (co->co_expand_fn_str){

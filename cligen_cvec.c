@@ -193,7 +193,7 @@ cvec_reset(cvec *cvv)
  * @param[in]  cvv    The cligen variable vector
  * @param[in]  cv0    Return element after this, or first element if this is NULL
  * Given an element (cv0) in a cligen variable vector (cvec) return the next element.
- * @retval cv   Next element
+ * @retval cv  Next element
  */
 cg_var *
 cvec_next(cvec   *cvv,
@@ -264,7 +264,6 @@ cvec_append_var(cvec   *cvv,
     }
     return tail;
 }
-
 
 /*! Delete a cv variable from a cvec. Note: cv is not reset & cv may be stale!
  *
