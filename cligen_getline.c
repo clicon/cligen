@@ -32,8 +32,9 @@
 #include "cligen_gen.h"
 #include "cligen_io.h"
 #include "cligen_handle.h"
+#include "cligen_history_internal.h"
 
-#include "getline.h" /* exported interface */
+#include "cligen_getline.h" /* exported interface */
 
 /********************* exported variables ********************************/
 
@@ -47,8 +48,8 @@ int (*gl_interrupt_hook)() = NULL;
 /******************** internal interface *********************************/
 
 /* begin forward declared internal functions */
-static void     gl_init(void);		/* prepare to edit a line */
-static void     gl_cleanup(void);	/* to undo gl_init */
+static void     gl_init1(void);		/* prepare to edit a line */
+static void     gl_cleanup(void);	/* to undo gl_init1 */
 void            gl_char_init(void);	/* get ready for no echo input */
 void            gl_char_cleanup(void);	/* undo gl_char_init */
 static size_t 	(*gl_strlen)() = (size_t(*)())strlen; 
@@ -56,24 +57,17 @@ static size_t 	(*gl_strlen)() = (size_t(*)())strlen;
 
 static void     gl_addchar(cligen_handle h, int c);	/* install specified char */
 static void     gl_del(cligen_handle h, int loc);	/* del, either left (-1) or cur (0) */
-static void     gl_error(char *buf);	/* write error msg and die */
 static inline void gl_fixup(cligen_handle h, char*,int,int);/* fixup state variables and screen */
 static int      gl_getc(cligen_handle h);	        /* read one char from terminal */
 static void     gl_kill(cligen_handle h, int pos);	/* delete to EOL */
 static void     gl_kill_begin(cligen_handle h, int pos);	/* delete to BEGIN of line */
 static void     gl_kill_word(cligen_handle h, int pos);	/* delete word */
 static void     gl_newline(cligen_handle);	/* handle \n or \r */
-static int      gl_putc(int c);		/* write one char to terminal */
 static int      gl_puts(char *buf);	/* write a line to terminal */
 
 static void     gl_transpose(cligen_handle h);	/* transpose two chars */
 static void     gl_yank(cligen_handle h);		/* yank killed text */
 static void     gl_word(cligen_handle h, int dir);	/* move a word */
-
-static void     hist_init(void);	/* initializes hist pointers */
-static char    *hist_next(void);	/* return ptr to next item */
-static char    *hist_prev(void);	/* return ptr to prev item */
-static char    *hist_save(char *p);	/* makes copy of a string, without NL */
 
 static void     search_addchar(cligen_handle h, int c);	/* increment search string */
 static void     search_term(cligen_handle);	/* reset with current contents */
@@ -105,11 +99,6 @@ static int   fixup_gl_shift;	/* index of first on screen character */
 static int   fixup_off_right;	/* true if more text right of screen */
 static int   fixup_off_left;	/* true if more text left of screen */
 static char  fixup_last_prompt[80] = "";
-
-#define HIST_SIZE 100
-static int      hist_pos = 0, hist_last = 0;
-static char    *hist_buf[HIST_SIZE];
-static char    *hist_pre = 0;
 
 #define SEARCH_LEN 100
 static char  search_prompt[SEARCH_LEN+2];  /* prompt includes search string */
@@ -480,7 +469,7 @@ gl_getc(cligen_handle h)
     return c;
 }
 
-static int
+int
 gl_putc(int c)
 {
     char   ch = c;
@@ -510,32 +499,20 @@ gl_puts(char *buf)
     return 0;
 }
 
+/*! set up variables and terminal 
+ * @see gl_init  cal this once first
+ */
 static void
-gl_error(char *buf)
-{
-    int len = strlen(buf);
-
-    gl_cleanup();
-    if (write(2, buf, len) < 0)
-	exit(1);
-    exit(1);
-}
-
-/*! set up variables and terminal */
-static void
-gl_init()
+gl_init1()
 {
     gl_iseof = 0;
-    if (gl_init_done < 0) {		/* -1 only on startup */
-        hist_init();
-    }
     gl_char_init();
     gl_init_done = 1;
 }
 
+/*! undo effects of gl_init1, as necessary */
 static void
 gl_cleanup()
-/* undo effects of gl_init, as necessary */
 {
     if (gl_init_done > 0)
         gl_char_cleanup();
@@ -580,15 +557,14 @@ gl_utf8_get(void)
     return gl_utf8;
 }
 
-void
+int
 gl_setwidth(int  w)
 {
-    if (w > TERM_MIN_SCREEN_WIDTH-1) {
-	gl_termw = w;
-	gl_scrollw = w / 3;
-    } else {
-	gl_error("\n*** Error: minimum screen width is 21\n");
-    }
+    if (w < TERM_MIN_SCREEN_WIDTH)
+	return -1;
+    gl_termw = w;
+    gl_scrollw = w / 3;
+    return 0;
 }
 
 /*! Main getline function handling a command line
@@ -610,7 +586,7 @@ gl_getline(cligen_handle h,
     int	            sig;
 #endif
 
-    gl_init();	
+    gl_init1();	
     gl_prompt = (cligen_prompt(h))? cligen_prompt(h) : "";
     cligen_buf(h)[0] = 0;
     if (gl_in_hook)
@@ -692,7 +668,7 @@ gl_getline(cligen_handle h,
 		    gl_clear_screen(h);				/* ^L */
 		break;
 	    case '\016': 					/* ^N */
-		strncpy(cligen_buf(h), hist_next(), cligen_buf_size(h));
+		hist_copy_next(h);
                 if (gl_in_hook)
 	            gl_in_hook(h, cligen_buf(h));
 		gl_fixup(h, gl_prompt, 0, cligen_buf_size(h));
@@ -700,7 +676,7 @@ gl_getline(cligen_handle h,
 	    case '\017': gl_overwrite = !gl_overwrite;       	/* ^O */
 		break;
 	    case '\020': 					/* ^P */
-		strncpy(cligen_buf(h), hist_prev(), cligen_buf_size(h));
+		hist_copy_prev(h);
                 if (gl_in_hook)
 	            gl_in_hook(h, cligen_buf(h));
 		gl_fixup(h, gl_prompt, 0, cligen_buf_size(h));
@@ -734,13 +710,13 @@ gl_getline(cligen_handle h,
 		if (c == '[' || c == 'O') { 
 		    switch(c = gl_getc(h)) {
 		    case 'A':             			/* up */
-			strncpy(cligen_buf(h), hist_prev(), cligen_buf_size(h));
+			hist_copy_prev(h);
                         if (gl_in_hook)
 	                    gl_in_hook(h, cligen_buf(h));
 		        gl_fixup(h, gl_prompt, 0, cligen_buf_size(h));
 		        break;
 		    case 'B':                         	/* down */
-		        strncpy(cligen_buf(h), hist_next(), cligen_buf_size(h));
+			hist_copy_next(h);
                         if (gl_in_hook)
 	                    gl_in_hook(h, cligen_buf(h));
 		        gl_fixup(h, gl_prompt, 0, cligen_buf_size(h));
@@ -808,7 +784,7 @@ gl_getline(cligen_handle h,
                     if (sig != 0) {
 	                gl_cleanup();
 	                kill(0, sig);
-	                gl_init();
+	                gl_init1();
 	                gl_redraw(h);
 			gl_kill(h, 0);
 			c = 0;
@@ -1397,130 +1373,13 @@ gl_strwidth(size_t (*func)())
     }
 }
 
-/******************* History stuff **************************************/
-
-
-static void
-hist_init()
-{
-    int i;
-
-    hist_pos = 0;
-    hist_last = 0;
-    hist_pre = 0;
-    hist_buf[0] = "";
-    for (i=1; i < HIST_SIZE; i++)
-	hist_buf[i] = (char *)0;
-}
-
-void
-gl_histadd(char *buf)
-{
-    char *p = buf;
-    int len;
-
-    /* in case we call gl_histadd() before we call gl_getline() */
-    if (gl_init_done < 0) {		/* -1 only on startup */
-        hist_init();
-        gl_init_done = 0;
-    }
-    while (*p == ' ' || *p == '\t' || *p == '\n') 
-	p++;
-    if (*p) {
-	len = strlen(buf);
-	if (strchr(p, '\n')) 	/* previously line already has NL stripped */
-	    len--;
-	if (hist_pre == 0 || strlen(hist_pre) != len || 
-			    strncmp(hist_pre, buf, len) != 0) {
-            hist_buf[hist_last] = hist_save(buf);
-	    hist_pre = hist_buf[hist_last];
-            hist_last = (hist_last + 1) % HIST_SIZE;
-            if (hist_buf[hist_last] && *hist_buf[hist_last]) {
-	        free(hist_buf[hist_last]);
-            }
-	    hist_buf[hist_last] = "";
-	}
-    }
-    hist_pos = hist_last;
-}
-
-void
-gl_histclear()
-{
-    int i;
-
-    for (i=0; i < HIST_SIZE; i++)
-	if (hist_buf[i] && strlen(hist_buf[i])){
-	    free(hist_buf[i]);
-	    hist_buf[i] = NULL;
-	}
-    hist_init();
-}
-
-/*! Loads previous hist entry into input buffer, sticks on first */
-static char *
-hist_prev()
-{
-    char *p = 0;
-    int   next = (hist_pos - 1 + HIST_SIZE) % HIST_SIZE;
-
-    if (hist_buf[hist_pos] != 0 && next != hist_last) {
-        hist_pos = next;
-        p = hist_buf[hist_pos];
-    } 
-    if (p == 0) {
-	p = "";
-	gl_putc('\007');
-    }
-    return p;
-}
-
-/* Loads next hist entry into input buffer, clears on last */
-static char *
-hist_next()
-{
-    char *p = 0;
-
-    if (hist_pos != hist_last) {
-        hist_pos = (hist_pos+1) % HIST_SIZE;
-	p = hist_buf[hist_pos];
-    } 
-    if (p == 0) {
-	p = "";
-	gl_putc('\007');
-    }
-    return p;
-}
-
-/*! Makes a copy of the string */
-static char *
-hist_save(char *p)
-{
-    char *s = 0;
-    int   len = strlen(p);
-    char *nl = strchr(p, '\n');
-
-    if (nl) {
-        if ((s = malloc(len)) != 0) {
-            strncpy(s, p, len-1);
-	    s[len-1] = 0;
-	}
-    } else {
-        if ((s = malloc(len+1)) != 0) {
-            strncpy(s, p, len+1);
-        }
-    }
-    if (s == 0) 
-	gl_error("\n*** Error: hist_save() failed on malloc\n");
-    return s;
-}
 
 /******************* Search stuff **************************************/
 
 
-
 static void  
-search_update(int c)
+search_update(cligen_handle h,
+	      int           c)
 {
     if (c == 0) {
 	search_pos = 0;
@@ -1547,7 +1406,7 @@ search_update(int c)
             search_prompt[search_pos+2] = 0;
 	} else {
 	    gl_putc('\007');
-	    hist_pos = hist_last;
+	    hist_pos_set(h, hist_last_get(h));
 	}
     }
 }
@@ -1561,15 +1420,15 @@ search_addchar(cligen_handle h,
 {
     char *loc;
 
-    search_update(c);
+    search_update(h, c);
     if (c < 0) {
 	if (search_pos > 0) {
-	    hist_pos = search_last;
+	    hist_pos_set(h, search_last);
 	} else {
 	    cligen_buf(h)[0] = 0;
-	    hist_pos = hist_last;
+	    hist_pos_set(h, hist_last_get(h));
 	}
-	strncpy(cligen_buf(h), hist_buf[hist_pos], cligen_buf_size(h));
+	hist_copy_pos(h);
     }
     if ((loc = strstr(cligen_buf(h), search_string)) != 0) {
 	gl_fixup(h, search_prompt, 0, loc - cligen_buf(h));
@@ -1592,7 +1451,7 @@ search_term(cligen_handle h)
 {
     gl_search_mode = 0;
     if (cligen_buf(h)[0] == 0)		/* not found, reset hist list */
-        hist_pos = hist_last;
+        hist_pos_set(h, hist_last_get(h));
     if (gl_in_hook)
 	gl_in_hook(h, cligen_buf(h));
     gl_fixup(h, cligen_prompt(h), 0, gl_pos);
@@ -1607,17 +1466,20 @@ search_back(cligen_handle h,
 {
     int    found = 0;
     char  *p, *loc;
+    int    last;
 
     search_forw_flg = 0;
     if (gl_search_mode == 0) {
-	search_last = hist_pos = hist_last;	
-	search_update(0);	
+	last = hist_last_get(h);
+	hist_pos_set(h, last);
+	search_last = last;	
+	search_update(h, 0);
 	gl_search_mode = 1;
         cligen_buf(h)[0] = 0;
 	gl_fixup(h, search_prompt, 0, 0);
     } else if (search_pos > 0) {
 	while (!found) {
-	    p = hist_prev();
+	    p = hist_prev(h);
 	    if (*p == 0) {		/* not found, done looking */
 	       cligen_buf(h)[0] = 0;
 	       gl_fixup(h, search_prompt, 0, 0);
@@ -1626,7 +1488,7 @@ search_back(cligen_handle h,
 		strncpy(cligen_buf(h), p, cligen_buf_size(h));
 		gl_fixup(h, search_prompt, 0, loc - p);
 	       if (new_search)
-		   search_last = hist_pos;
+		   search_last = hist_pos(h);
 	       found = 1;
 	    } 
 	}
@@ -1644,17 +1506,21 @@ search_forw(cligen_handle h,
 {
     int    found = 0;
     char  *p, *loc;
+    int    last;
 
     search_forw_flg = 1;
     if (gl_search_mode == 0) {
-	search_last = hist_pos = hist_last;	
-	search_update(0);	
+	last = hist_last_get(h);
+	hist_pos_set(h, last);
+	search_last = last;
+
+	search_update(h, 0);	
 	gl_search_mode = 1;
         cligen_buf(h)[0] = 0;
 	gl_fixup(h, search_prompt, 0, 0);
     } else if (search_pos > 0) {
 	while (!found) {
-	    p = hist_next();
+	    p = hist_next(h);
 	    if (*p == 0) {		/* not found, done looking */
 	       cligen_buf(h)[0] = 0;
 	       gl_fixup(h, search_prompt, 0, 0);
@@ -1663,7 +1529,7 @@ search_forw(cligen_handle h,
 		strncpy(cligen_buf(h), p, cligen_buf_size(h));
 		gl_fixup(h, search_prompt, 0, loc - p);
 	       if (new_search)
-		   search_last = hist_pos;
+		   search_last = hist_pos(h);
 	       found = 1;
 	    } 
 	}

@@ -71,7 +71,8 @@
 #include "cligen_match.h"
 #include "cligen_expand.h"
 #include "cligen_read.h"
-#include "getline.h"
+#include "cligen_history_internal.h"
+#include "cligen_getline.h"
 
 /*
  * Local prototypes
@@ -639,13 +640,13 @@ cliread(cligen_handle h)
 	    goto done;
 	cli_trim(&string, cligen_comment(h));
     } while (strlen(string) == 0 && !gl_eof());
-    if (gl_eof()){
-	string = NULL;
+    if (gl_eof())
 	goto done;
-    }
-    gl_histadd(string);
- done:    
+    if (hist_add(h, string) < 0)
+	goto done;
     return string;
+ done:
+    return NULL;
 }
 		
 #ifdef notused
@@ -674,8 +675,7 @@ cliread_getline(cligen_handle h,
 {
     char	*string;
 
-    string = cliread(h);
-    if (string == NULL)  /* EOF */
+    if ((string = cliread(h)) == NULL)  /* EOF */
 	return CG_EOF; 
 
     *line = string;

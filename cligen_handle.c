@@ -59,9 +59,12 @@
 #include "cligen_handle.h"
 #include "cligen_read.h"
 #include "cligen_parse.h"
-#include "getline.h"
-
+#include "cligen_history.h"
+#include "cligen_getline.h"
 #include "cligen_handle_internal.h"
+
+#include "cligen_history.h"
+#include "cligen_history_internal.h"
 
 /*! Get window size and set terminal row size
  * @param[in] h       CLIgen handle
@@ -121,7 +124,8 @@ cligen_init(void)
     }
     cliread_init(h);
     cligen_buf_init(h);
-
+    /* getline cant function without some history */
+    (void)cligen_hist_init(h, CLIGEN_HISTSIZE_DEFAULT);
   done:
     return h;
 }
@@ -135,7 +139,7 @@ cligen_exit(cligen_handle h)
     struct cligen_handle *ch = handle(h);
     parse_tree_list *ptl;
 
-    gl_histclear();
+    hist_exit(h);
     cligen_buf_cleanup(h);
     if (ch->ch_prompt)
 	free(ch->ch_prompt);
@@ -540,42 +544,6 @@ cligen_fn_str_set(cligen_handle h,
     return 0;
 }
 
-/*! Get completion mode. 0: complete 1 level. 1: complete all
- *
- * Example: syntax is 'a b;'. mode = 0 gives completion to 'a ' on first TAB and 
- * to 'a b ' on second. mode = 1 gives completion to 'a b ' on first TAB.
- *
- * @param[in] h       CLIgen handle
- * @retval 0   for each TAB complete one level. (default)
- * @retval 1   complete all unique levels at once
- * @note deprecated
- * @see cligen_tabmode
- */
-int
-cligen_completion(cligen_handle h)
-{
-    struct cligen_handle *ch = handle(h);
-
-    return ch->ch_completion;
-}
-
-/*! Set completion mode. 
- *
- * @param[in] h       CLIgen handle
- * @param[in] mode    0: complete 1 level. 1: complete all
- * @note deprecated
- * @see cligen_tabmode_set
- */
-int
-cligen_completion_set(cligen_handle h, 
-		      int           mode)
-{
-    struct cligen_handle *ch = handle(h);
-
-    ch->ch_completion = mode;
-    return 0;
-}
-
 /*! Get Error string explaining why there was no match.
  *
  * Fill error string buffer
@@ -679,6 +647,7 @@ cligen_terminal_width_set(cligen_handle h,
 			   int           length)
 {
     //    struct cligen_handle *ch = handle(h);
+    int retval = -1;
 
     /* if length = 0, then set it to 65535 to effectively disable all scrolling mechanisms */
     if (length == 0)
@@ -686,8 +655,11 @@ cligen_terminal_width_set(cligen_handle h,
     /* if length < 21 set it to 21, which is getline's limit. */
     else if (length < TERM_MIN_SCREEN_WIDTH)
 	length = TERM_MIN_SCREEN_WIDTH;
-    gl_setwidth(length);
-    return 0;
+    if (gl_setwidth(length) < 0)
+	goto done; /* shouldnt happen */
+    retval = 0;
+ done:
+    return retval;
 }
 
 /*! Get cligen/getline UTF-8 experimental mode
@@ -797,7 +769,6 @@ cligen_tabmode(cligen_handle h)
  * Example: syntax is 'a b;':
  * 0: gives completion to 'a ' on first TAB and to 'a b ' on second. 
  * 1: gives completion to 'a b ' on first TAB.
- * @see cligen_completion_set which is deprecated
  */
 int 
 cligen_tabmode_set(cligen_handle h, 
@@ -1040,6 +1011,7 @@ int
 cligen_buf_cleanup(cligen_handle h)
 {
     struct cligen_handle *ch = handle(h);
+
     if (ch->ch_buf){
 	free(ch->ch_buf);
 	ch->ch_buf = NULL;
@@ -1050,18 +1022,4 @@ cligen_buf_cleanup(cligen_handle h)
     }
     return 0;
 }
-
-/*
- * backward compatibabilty functions, consider remove
- */
-#if 1 
-/* note cant inline since it may be used in plugins 
- * @param[in] h       CLIgen handle
- */
-parse_tree *cligen_tree(cligen_handle h, 
-                       char         *name)
-{
-    return cligen_tree_find(h, name);
-}
-#endif
 

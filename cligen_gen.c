@@ -58,7 +58,7 @@
 #include "cligen_read.h"
 #include "cligen_parse.h"
 #include "cligen_handle.h"
-#include "getline.h"
+#include "cligen_getline.h"
 
 /* Internal functions */
 static int pt_free1(parse_tree, int recursive);
