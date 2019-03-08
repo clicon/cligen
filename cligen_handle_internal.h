@@ -91,6 +91,12 @@ struct cligen_handle{
     char       *ch_killbuf;      /* getline killed text */
 
     int         ch_logsyntax;    /* Debug syntax by printing dynamically on stderr */
+    int         ch_hist_size;    /* Number of history lines MUST be >0 */
+    char      **ch_hist_buf;     /* Array of history lines */
+    int         ch_hist_cur;     /* Current position (line) in history */
+    int         ch_hist_last;    /* Last position in history */
+    char       *ch_hist_pre;     /* Previous position in history */
+    
     void       *ch_userhandle;   /* Use this as app-specific callback handle */
     void       *ch_userdata;     /* application-specific data (any data) */
 };

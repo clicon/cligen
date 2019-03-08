@@ -59,7 +59,7 @@
 #include "cligen_read.h"
 #include "cligen_print.h"
 #include "cligen_io.h"
-#include "getline.h"
+#include "cligen_getline.h"
 
 /*
  * Local variables

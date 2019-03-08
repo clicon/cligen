@@ -65,7 +65,7 @@
 #include "cligen_gen.h"
 #include "cligen_io.h"
 #include "cligen_match.h"
-#include "getline.h"
+#include "cligen_getline.h"
 
 #include "cligen_cv_internal.h"
 /*

@@ -72,11 +72,12 @@ MYLIBLINK    = libcligen$(SH_SUFFIX)
 SRC		= cligen_gen.c cligen_handle.c cligen_cv.c cligen_match.c \
 		  cligen_read.c cligen_io.c cligen_expand.c cligen_syntax.c \
 		  cligen_print.c cligen_cvec.c cligen_buf.c cligen_util.c \
-		  getline.c build.c
+		  cligen_history.c cligen_getline.c build.c
 
 INCS		= cligen_cv.h cligen_cvec.h cligen_gen.h cligen_handle.h \
 		  cligen_print.h cligen_read.h cligen_io.h cligen_expand.h \
-		  cligen_syntax.h cligen_buf.h cligen_util.h cligen.h
+		  cligen_syntax.h cligen_buf.h cligen_util.h cligen_history.h \
+                  cligen.h
 
 OBJS		= $(SRC:.c=.o) 
 APPS		= cligen_hello cligen_file cligen_tutorial

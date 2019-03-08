@@ -1,6 +1,14 @@
 # Cligen Changelog
 
 ## 3.10.0 (Upcoming)
+* Added saving of CLI command history between sessions on file and some getline restucturing:
+  * Design is inspired by bash history with some constraints:
+    * The API will load/save its complete history to an open file
+    * The size (number of lines) of the file is the same as `hist_size`.
+    * Only the latest session dumping its history will survive (bash merges multiple session history).
+  * Renamed getline.c to cligen_getline.c
+  * Split out the history part of getline.c to cligen_history.c
+  * Added three API functions for history and history persistence: `cligen_hist_init`, `cligen_hist_file_load` and `cligen_hist_file_save`.
 * Added support for multiple range and length statements for number and string types. This means thatthe following is allowed, for example:
   ```
   <s:string length[2:4] length[8:12]>
