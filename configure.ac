@@ -128,14 +128,6 @@ AC_DEFINE(CLIGEN_REGFD)
 AH_TEMPLATE([CLIGEN_SUBMODE], [Experimental CLIGEN sub-modes])
 AC_DEFINE(CLIGEN_SUBMODE)
 
-# 
-AH_TEMPLATE([CLIGEN_COMPAT_INT], 
-[This is for backward compatibility with int and long types that should be 
- replaced with int32 and int64 respectively. 
- Both in C-code (eg cv_int_get(), cv_long_get()) and CLIGEN parser (eg <x:int>, <x:long>)
-])
-AC_DEFINE(CLIGEN_COMPAT_INT)
-
 AC_CHECK_LIB(socket, socket)
 AC_CHECK_FUNCS(strsep strverscmp)
 

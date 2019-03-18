@@ -52,12 +52,6 @@ typedef void *cligen_handle; /* API */
 #endif  /* _CLIGEN_H_ */
 
 
-/* This is for backward compatibility with int and long types that should be 
- * replaced with int32 and int64 respectively. Also, you can choose from uints and
- * 8/16/32/64 ints in the new system
- */
-#define CLIGEN_COMPAT_INT 1
-
 #include <cligen/cligen_buf.h>
 #include <cligen/cligen_cv.h>
 #include <cligen/cligen_cvec.h>
