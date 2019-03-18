@@ -3600,11 +3600,6 @@ $as_echo "#define CLIGEN_REGFD 1" >>confdefs.h
 $as_echo "#define CLIGEN_SUBMODE 1" >>confdefs.h
 
 
-#
-
-$as_echo "#define CLIGEN_COMPAT_INT 1" >>confdefs.h
-
-
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for socket in -lsocket" >&5
 $as_echo_n "checking for socket in -lsocket... " >&6; }
 if ${ac_cv_lib_socket_socket+:} false; then :

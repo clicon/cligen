@@ -78,20 +78,6 @@ enum cv_type{
   CGV_EMPTY,     /* A type without a value */
 };
 
-/* Backward compatible int and long */
-#ifdef CLIGEN_COMPAT_INT
-#define CGV_INT  CGV_INT32
-#define CGV_LONG CGV_INT64
-
-#define cv_int_get(cv)     cv_int32_get(cv)
-#define cv_int_set(cv, x)  cv_int32_set(cv, x)
-
-#define cv_long_get(cv)    cv_int64_get(cv)
-#define cv_long_set(cv, x) cv_int64_set(cv, x)
-
-#endif
-
-
 /* cv is one of the int-types */
 #define cv_isint(t)((t)==CGV_INT8   || (t)==CGV_INT16|| \
 		    (t)==CGV_INT32  || (t)==CGV_INT64|| \
@@ -206,6 +192,7 @@ int parse_dec64(char *str, uint8_t n, int64_t *dec64_i, char **reason);
 int str2urlproto(char *str);
 int str2uuid(char *in, uuid_t u);
 int uuid2str(uuid_t u, char *in, int len);
+int cligen_tonum(int n, char *s);
 int str2time(char *in, struct timeval *tv);
 int time2str(struct timeval tv, char *fmt, int len);
 

@@ -1725,16 +1725,16 @@ todig(char c)
  * @retval    0  OK
  * @retval   -1  Error
  * eg if s is "23456" and nr is 3, then return 234.
- * note: only positive 32-bit integers 
+ * @note works for positive numbers and up to 2^31
  */
-static int
-tonum(int   n, 
-      char *s)
+int
+cligen_tonum(int   n, 
+	     char *s)
 {
-    int i;
-    int a;
-    int sum = 0;
-    int retval = -1;
+    int      i;
+    int      a;
+    int      sum = 0;
+    int      retval = -1;
 
     for (i=0; i<n; i++){
 	if ((a = todig(s[i])) < 0)
@@ -1751,8 +1751,8 @@ tonum(int   n,
  * Translate ISO 8601 date+time on the form 2008-09-21T18:57:21.003456Z to a timeval structure.
  * @param[in]  in   Input ISO 8601 string
  * @param[out] tv   Timeval
- * @retval     0     OK
- * @retval    -1     Error
+ * @retval     0    OK
+ * @retval    -1    Error
  * T can be space.
  * in-string is upto 26 bytes + null termination (27 bytes in total).
  * out timestamp is a 4+4 integer struct timeval  
@@ -1762,9 +1762,11 @@ tonum(int   n,
  * then call mktime(). Problem is mktime() assumes tm is localtime. Therefore we must
  * adjust the timeval with the timezone to get it right. (Should be a mktime() that is
  * UTC).
+ * @note ISO 8601 accepts years 0000-9999, but struct timeval is more restricted. In this code between 1970-2104
  * @note Zone designator support have been added (2019-01) but are not stored.
  * @note You should be able to leave out less significant fields. That is, 2003 is
  * a time. But now you can only leave out usec.
+ * @see time2str
  */
 int
 str2time(char           *in, 
@@ -1785,21 +1787,21 @@ str2time(char           *in,
     time_t     t;
     char       frac[7];
 
-    if ((year = tonum(4, &in[i])) < 0)
+    if ((year = cligen_tonum(4, &in[i])) < 0)
 	goto done;
     if (year < 1970 || year > 2104)
 	goto done;
     i += 4;
     if (in[i++] != '-')
 	goto done;
-    if ((month = tonum(2, &in[i])) < 0)
+    if ((month = cligen_tonum(2, &in[i])) < 0)
 	goto done;
     if (month < 1 || month > 12)
 	goto done;
     i += 2;
     if (in[i++] != '-')
 	goto done;
-    if ((day = tonum(2, &in[i])) < 0)
+    if ((day = cligen_tonum(2, &in[i])) < 0)
 	goto done;
     if (day < 1 || day > 31)
 	goto done;
@@ -1807,21 +1809,21 @@ str2time(char           *in,
     if (in[i] != 'T' && in[i] != ' ')
 	goto done;
     i++;
-    if ((hour = tonum(2, &in[i])) < 0)
+    if ((hour = cligen_tonum(2, &in[i])) < 0)
 	goto done;
     if (hour > 23)
 	goto done;
     i += 2;
     if (in[i++] != ':')
 	goto done;
-    if ((min = tonum(2, &in[i])) < 0)
+    if ((min = cligen_tonum(2, &in[i])) < 0)
 	goto done;
     if (min > 59)
 	goto done;
     i += 2;
     if (in[i++] != ':')
 	goto done;
-    if ((sec = tonum(2, &in[i])) < 0)
+    if ((sec = cligen_tonum(2, &in[i])) < 0)
 	goto done;
     if (sec > 59)
 	goto done;
@@ -1850,7 +1852,7 @@ str2time(char           *in,
     if (len < 1)
 	goto done;
     frac[len] = 0;
-    if ((usec = tonum(len, frac)) < 0)
+    if ((usec = cligen_tonum(len, frac)) < 0)
 	goto done;
     for (j=0; j<6-len; j++)
 	usec *= 10;
@@ -1926,6 +1928,7 @@ done:
  *     err;
  *   printf("%s", timestr);
  * @endcode
+ * @see str2time
  */
 int
 time2str(struct timeval tv, 
@@ -1944,7 +1947,6 @@ time2str(struct timeval tv,
 done:
     return retval;
 }
-
 
 /*! Translate (parse) a string to a CV type.
  * @param[in] str    Name of type
@@ -1969,12 +1971,6 @@ cv_str2type(char *str)
 	return CGV_UINT32;
     if (strcmp(str, "uint64") == 0)
 	return CGV_UINT64;
-#ifdef CLIGEN_COMPAT_INT
-   if (strcmp(str, "number") == 0 || strcmp(str, "int") == 0)
-       return CGV_INT32;
-   if (strcmp(str, "long") == 0)
-       return CGV_INT64;
-#endif
   if (strcmp(str, "decimal64") == 0)
      return CGV_DEC64;
   if (strcmp(str, "bool") == 0)
@@ -3019,7 +3015,6 @@ cv_parse(char   *str,
     }
     return 0;
 }
-
 
 /*! Range interval check if a number is in an interval
  * @param[in] i      The number to check if it is in an interval

@@ -1,6 +1,9 @@
 # Cligen Changelog
 
 ## 3.10.0 (Upcoming)
+* Removed CLIGEN_COMPAT_INT (finally)
+  * `int`, `number`, and `long`must be replaced with int32 or other integer type
+* Exposed `cligen_tonum()` for external usage
 * Added saving of CLI command history between sessions on file and some getline restucturing:
   * Design is inspired by bash history with some constraints:
     * The API will load/save its complete history to an open file
