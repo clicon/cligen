@@ -201,9 +201,7 @@ lex.cligen_parse.c : cligen_parse.l cligen_parse.tab.h
 	$(LEX) -Pcligen_parse cligen_parse.l # -d is debug 
 
 cligen_parse.tab.c cligen_parse.tab.h: cligen_parse.y
-	$(YACC) -l -d -p cligen_parse cligen_parse.y # -t is debug
-	mv y.tab.c cligen_parse.tab.c
-	mv y.tab.h cligen_parse.tab.h
+	$(YACC) -l -d -b cligen_parse -p cligen_parse cligen_parse.y # -t is debug
 
 lex.cligen_parse.o : lex.cligen_parse.c cligen_parse.tab.h
 	$(CC) $(INCLUDES) -DYY_NO_INPUT $(CFLAGS) -c $<

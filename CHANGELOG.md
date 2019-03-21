@@ -1,6 +1,7 @@
 # Cligen Changelog
 
 ## 3.10.0 (Upcoming)
+* Made Makefile concurrent so that it can be compiled with -jN
 * Removed CLIGEN_COMPAT_INT (finally)
   * `int`, `number`, and `long`must be replaced with int32 or other integer type
 * Exposed `cligen_tonum()` for external usage
