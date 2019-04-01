@@ -1245,7 +1245,8 @@ exparg     : typecast arg1 {
               }
            ;
 
-choices     : NUMBER { $$ = $1;}
+choices     : { $$ = NULL;}
+            | NUMBER { $$ = $1;}
             | NAME { $$ = $1;}
             | DECIMAL { $$ = $1;}
             | choices '|' NUMBER { $$ = cgy_choice_merge(_ya, $1, $3); free($3);}
