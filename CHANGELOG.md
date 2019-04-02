@@ -1,6 +1,7 @@
 # Cligen Changelog
 
 ## 3.10.0 (Upcoming)
+* Handled clispec cornercase: `a("b"")` (where 'b"' is a comment)
 * Allowed empty choice statements
 * Made Makefile concurrent so that it can be compiled with -jN
 * Removed CLIGEN_COMPAT_INT (finally)

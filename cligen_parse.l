@@ -129,7 +129,9 @@ stripdup(char *s0)
 <HELP><<EOF>>             { return MY_EOF; }
 <HELP>\"\)                { BEGIN(INITIAL); return DQP; /* double-quote parenthes */}
 <HELP>\\                  { _YA->ya_lex_state = HELP; BEGIN(ESCAPE); }
-<HELP>[^\\"]+             { cligen_parselval.string = strdup(yytext);
+<HELP>[^\\{")}]+          { cligen_parselval.string = strdup(yytext);
+                            return CHARS;}
+<HELP>.                   { cligen_parselval.string = strdup(yytext);
                             return CHARS;}
 
 <NAMEORTYPE>\>            { BEGIN(INITIAL); return *yytext; }
