@@ -144,10 +144,6 @@ pkg-rpm: dist
 pkg-srpm: dist
 	make -C extras/rpm srpm
 
-# Default rule  .c.o:	
-%@OBJ_SUFFIX@ : @srcdir@/%.c
-	$(CC) $(INCLUDES) $(CFLAGS) -c $<
-# For linux?
 .c.o:
 	$(CC) $(INCLUDES) $(CFLAGS) -c $<
 
@@ -200,8 +196,10 @@ clean:
 lex.cligen_parse.c : cligen_parse.l cligen_parse.tab.h
 	$(LEX) -Pcligen_parse cligen_parse.l # -d is debug 
 
-cligen_parse.tab.c cligen_parse.tab.h: cligen_parse.y
+cligen_parse.tab.h: cligen_parse.y
 	$(YACC) -l -d -b cligen_parse -p cligen_parse cligen_parse.y # -t is debug
+
+cligen_parse.tab.c: cligen_parse.tab.h
 
 lex.cligen_parse.o : lex.cligen_parse.c cligen_parse.tab.h
 	$(CC) $(INCLUDES) -DYY_NO_INPUT $(CFLAGS) -c $<
