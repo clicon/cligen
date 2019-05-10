@@ -116,6 +116,9 @@ hist_add(cligen_handle h,
     char *p = buf;
     int   len;
 
+    if (strlen(buf) >= cligen_buf_size(h))
+	if (cligen_buf_increase(h, strlen(buf)) < 0)
+	    goto done;
     while (*p == ' ' || *p == '\t' || *p == '\n') 
 	p++;
     if (*p) {
@@ -349,7 +352,6 @@ cligen_hist_file_load(cligen_handle h,
     int           ret;
     unsigned char ch;
     cbuf         *cb = NULL;
-    
 
     if ((cb = cbuf_new()) == NULL)
 	goto done;
