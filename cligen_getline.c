@@ -1188,7 +1188,7 @@ gl_fixup_noscroll(cligen_handle h,
     pad -= gl_cnt - fixup_gl_shift;
     pad = (pad < 0)? 0 : pad;
     if (left <= right) {		/* clean up screen */
-	for (p=left; p < left+backup; p++){
+	for (p=left+backup-1; p >= left; p--){
 	    if (wrap(p, plen))
 		unwrap_line();
 	    else
@@ -1204,7 +1204,7 @@ gl_fixup_noscroll(cligen_handle h,
 		wrap_line();
 	}
 	gl_pos = new_right;
-	for (p=left; p < left+pad; p++){	/* erase remains of prev line */
+	for (p=new_right; p < new_right+pad; p++){ /* erase remains of prev line */
 	    gl_putc(' ');
 	    if (wrap(p, plen))
 		wrap_line();

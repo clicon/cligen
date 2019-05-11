@@ -1,6 +1,8 @@
 # Cligen Changelog
 
 ## 3.10.0 (Upcoming)
+* Fixed: [Cligen history doesn't work well with multi line commands #26](https://github.com/olofhagsand/cligen/issues/26)
+  * Also fixed truncated log commands when loading history files
 * Handled clispec cornercase: `a("b"")` (where 'b"' is a comment)
 * Allowed empty choice statements
 * Made Makefile concurrent so that it can be compiled with -jN
