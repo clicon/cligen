@@ -192,6 +192,7 @@ next_token(char **s0,
   size_t len;
   int    quote=0;
   int    leading=0;
+  int    escape = 0;
 
   s = *s0;
   if (s==NULL){
@@ -208,14 +209,23 @@ next_token(char **s0,
     s++;
   }
   st=s; /* token starts */
+  escape = 0;
   for (; *s; s++){ /* Then find token */
     if (quote){
       if (index(CLIGEN_QUOTES, *s) != NULL)
 	break;
     }
-    else
-      if (index(CLIGEN_DELIMITERS, *s) != NULL)
-	break;
+    else{ /* backspace tokens for escaping delimiters */
+	if (escape)
+	    escape = 0;
+	else{
+	    if (*s == '\\')
+		escape++;
+	    else
+		if (index(CLIGEN_DELIMITERS, *s) != NULL)
+		    break;
+	}
+    }
   }
   if (quote && *s){
     s++;

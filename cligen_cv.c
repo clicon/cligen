@@ -2824,6 +2824,7 @@ cv_parse1(char   *str0,
     char  *str;
     char  *mask;
     int    masklen;
+    int    i, j;
 
     if (reason && (*reason != NULL)){
 	fprintf(stderr, "reason must be NULL on calling");
@@ -2863,6 +2864,12 @@ cv_parse1(char   *str0,
 	retval = parse_bool(str, &cv->var_bool, reason);
 	break;
     case CGV_REST:
+	j = 0; /* decode string, remove \<delimiters */
+	for (i=0;i<strlen(str);i++)
+	    if (str[i] != '\\')
+		str[j++] = str[i];
+	for (;j<strlen(str);j++)
+	    str[j] = '\0';
 	if (cv->var_rest)
 	    free(cv->var_rest);
 	if ((cv->var_rest = strdup(str)) == NULL)
@@ -2870,8 +2877,16 @@ cv_parse1(char   *str0,
 	retval = 1;
 	break;
     case CGV_STRING:
-	if (cv->var_string)
+	j = 0; /* decode string, remove \<delimiters */
+	for (i=0;i<strlen(str);i++)
+	    if (str[i] != '\\')
+		str[j++] = str[i];
+	for (;j<strlen(str);j++)
+	    str[j] = '\0';
+	if (cv->var_string){
 	    free(cv->var_string);
+	    cv->var_string = NULL;
+	}
 	if ((cv->var_string = strdup(str)) == NULL)
 	    goto done;
 	retval = 1;
@@ -3560,11 +3575,11 @@ match_regexp(char *string,
 	     char *pattern0)
 {
 #ifdef HAVE_REGEX_H
-    char pattern[1024];
-    int status;
+    char    pattern[1024];
+    int     status;
     regex_t re;
-    char errbuf[1024];
-    int len0;
+    char    errbuf[1024];
+    int     len0;
 
     len0 = strlen(pattern0);
     if (len0 > sizeof(pattern)-5){
@@ -3579,9 +3594,10 @@ match_regexp(char *string,
     status = regexec(&re, string, (size_t) 0, NULL, 0);
     regfree(&re);
     if (status != 0) {
-	regerror(status, &re, errbuf, sizeof(errbuf));
+	regerror(status, &re, errbuf, sizeof(errbuf)); /* XXX error is ignored */
 	return(0);      /* report error */
     }
 #endif /* HAVE_REGEX_H */
     return(1);
 }
+

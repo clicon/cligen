@@ -1,6 +1,15 @@
 # Cligen Changelog
 
 ## 3.10.0 (Upcoming)
+
+* [Choice with space is not working in CLIgen code](https://github.com/olofhagsand/cligen/issues/24) is fixed, but you need to use escape backslash character `\` to make it work.
+  * Example using spec: `choice <string choice:nospace|with\ space>;`
+    ```
+    cli> choice ?
+    nospace                   with\ space              
+    cli> choice with\ space
+    cli>
+    ```
 * Fixed: [Cligen history doesn't work well with multi line commands #26](https://github.com/olofhagsand/cligen/issues/26)
   * Also fixed truncated log commands when loading history files
 * Handled clispec cornercase: `a("b"")` (where 'b"' is a comment)
