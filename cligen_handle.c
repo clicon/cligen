@@ -917,6 +917,7 @@ cligen_killbuf(cligen_handle h)
 
 /*! Return length cligen line buffer
  * @param[in] h       CLIgen handle
+ * @see cligen_buf_increase
  */
 int 
 cligen_buf_size(cligen_handle h)
