@@ -139,7 +139,7 @@ cligen_regex_libxml2_compile(char  *regexp0,
 			     void **recomp)    
 {
     int        retval = -1;
-#ifdef HAVE_LIBXML2
+#ifdef HAVE_LIBXML_XMLREGEXP_H
     xmlChar   *regexp  = (xmlChar*)regexp0;
     xmlRegexp *xrp = NULL;
     
@@ -168,7 +168,7 @@ cligen_regex_libxml2_exec(void *recomp,
 			  char *string0)
 {
     int        retval = -1;
-#ifdef HAVE_LIBXML2
+#ifdef HAVE_LIBXML_XMLREGEXP_H
     xmlChar   *content = (xmlChar*)string0;
     xmlRegexp *xrp = (xmlRegexp *)recomp;
     
@@ -236,7 +236,6 @@ match_regexp(cligen_handle h,
 	     char *string, 
 	     char *pattern0)
 {
-#if 1
     int retval = -1;
     int ret;
     void *re = NULL;
@@ -254,29 +253,4 @@ match_regexp(cligen_handle h,
  fail:
     retval = 0;
     goto done;
-#else
-    char    pattern[1024];
-    int     status;
-    regex_t re;
-    char    errbuf[1024];
-    int     len0;
-
-    len0 = strlen(pattern0);
-    if (len0 > sizeof(pattern)-5){
-	fprintf(stderr, "pattern too long\n");
-	return -1;
-    }
-    strncpy(pattern, "^(", 2);
-    strncpy(pattern+2, pattern0, sizeof(pattern)-2);
-    strncat(pattern, ")$",  sizeof(pattern)-len0-1);
-    if (regcomp(&re, pattern, REG_NOSUB|REG_EXTENDED) != 0) 
-	return(0);      /* report error */
-    status = regexec(&re, string, (size_t) 0, NULL, 0);
-    regfree(&re);
-    if (status != 0) {
-	regerror(status, &re, errbuf, sizeof(errbuf)); /* XXX error is ignored */
-	return(0);      /* report error */
-    }
-    return(1);
-#endif
 }
