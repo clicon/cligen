@@ -890,6 +890,35 @@ cligen_userhandle_set(cligen_handle h,
     return 0;
 }
 
+/*! Get regex engine / method
+ *
+ * @param[in] h   CLIgen handle
+ * @retval    0   Posix regex
+ * @retval    1   XSD Libxml2 regex
+ */
+int
+cligen_regex(cligen_handle h)
+{
+    struct cligen_handle *ch = handle(h);
+
+    return ch->ch_regex;
+}
+
+/*! Set regex engine / method
+ * @param[in] h       CLIgen handle
+ * @param[in] mode    0: posix (default), 1: libxml2 xsd regex
+ */
+int
+cligen_regex_set(cligen_handle h, 
+		 int           mode)
+{
+    struct cligen_handle *ch = handle(h);
+
+    ch->ch_regex = mode;
+    return 0;
+}
+
+
 static int _getline_bufsize = GETLINE_BUFLEN_DEFAULT;
 static int _getline_killbufsize = GETLINE_BUFLEN_DEFAULT;
 

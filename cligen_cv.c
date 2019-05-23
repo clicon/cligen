@@ -55,9 +55,6 @@
 #include <string.h>
 #include <errno.h>
 #include <math.h>
-#ifdef HAVE_REGEX_H
-#include <regex.h>
-#endif
 
 #include "cligen_buf.h"
 #include "cligen_cv.h"
@@ -65,6 +62,7 @@
 #include "cligen_gen.h"
 #include "cligen_io.h"
 #include "cligen_match.h"
+#include "cligen_regex.h"
 #include "cligen_getline.h"
 
 #include "cligen_cv_internal.h"
@@ -3055,7 +3053,8 @@ cv_parse(char   *str,
  * @retval 1   Validation OK
  */
 int
-cv_validate(cg_var     *cv, 
+cv_validate(cligen_handle h,
+	    cg_var     *cv, 
 	    cg_varspec *cs, 
 	    char      **reason)
 {
@@ -3236,7 +3235,7 @@ cv_validate(cg_var     *cv,
     case CGV_STRING:
 	str = cv_string_get(cv);
 	if (cs->cgs_regex != NULL){
-	    if ((retval = match_regexp(str, cs->cgs_regex)) < 0)
+	    if ((retval = match_regexp(h, str, cs->cgs_regex)) < 0)
 		break;
 	    if (retval == 0){
 		if (reason)
@@ -3558,46 +3557,5 @@ cv_free(cg_var *cv)
 	free(cv);
     }
     return 0;
-}
-
-/*! Makes a regexp check of <string> with <pattern>.
- * It is implicitly assumed that the match should be done at the beginning and
- * the end,
- * therefore, the pattern is prefixed with a ^, and postfixed with a $.
- * So, a match is made if <pattern> matches the beginning of <string>.
- * For example <pattern> "foobar" will not match <string> "foo".
- *
- * Returns -1 on error, 0 on no match, 1 on match
- * XXX: alternative if REGEX is not present on system??
- */
-int 
-match_regexp(char *string, 
-	     char *pattern0)
-{
-#ifdef HAVE_REGEX_H
-    char    pattern[1024];
-    int     status;
-    regex_t re;
-    char    errbuf[1024];
-    int     len0;
-
-    len0 = strlen(pattern0);
-    if (len0 > sizeof(pattern)-5){
-	fprintf(stderr, "pattern too long\n");
-	return -1;
-    }
-    strncpy(pattern, "^(", 2);
-    strncpy(pattern+2, pattern0, sizeof(pattern)-2);
-    strncat(pattern, ")$",  sizeof(pattern)-len0-1);
-    if (regcomp(&re, pattern, REG_NOSUB|REG_EXTENDED) != 0) 
-	return(0);      /* report error */
-    status = regexec(&re, string, (size_t) 0, NULL, 0);
-    regfree(&re);
-    if (status != 0) {
-	regerror(status, &re, errbuf, sizeof(errbuf)); /* XXX error is ignored */
-	return(0);      /* report error */
-    }
-#endif /* HAVE_REGEX_H */
-    return(1);
 }
 

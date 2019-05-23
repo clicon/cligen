@@ -216,11 +216,11 @@ cg_var *cv_dup(cg_var *old);
 int     cv_parse(char *str, cg_var *cgv); 
 int     cv_parse1(char *str, cg_var *cgv, char **reason); /* better err-handling */
 
-int     cv_validate(cg_var *cv, struct cg_varspec *cs, char **reason);
+int     cv_validate(cligen_handle h, cg_var *cv, struct cg_varspec *cs, char **reason);
 int     cv_reset(cg_var *cgv); /* not free cgv itself */ /* XXX: free_only */
 int     cv_free(cg_var *cv);   /* free cgv itself */
 cg_var *cv_new(enum cv_type type);
-int     match_regexp(char *string, char *pattern0);
+int     match_regexp(cligen_handle h, char *string, char *pattern0);
 
 #endif /* _CLIGEN_CV_H_ */
 

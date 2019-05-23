@@ -84,7 +84,8 @@ int _match_cgvar_same = 0;
  * @see cvec_match where actual allocation of variables is made not only sanity
  */
 static int
-match_variable(cg_obj *co, 
+match_variable(cligen_handle h,
+	       cg_obj *co, 
 	       char   *str, 
 	       char  **reason)
 {
@@ -101,7 +102,7 @@ match_variable(cg_obj *co,
 	goto done;
     /* here retval should be 1 */
     /* Validate value */
-    if ((retval = cv_validate(cv, cs, reason)) <= 0)
+    if ((retval = cv_validate(h, cv, cs, reason)) <= 0)
 	goto done;
     /* here retval should be 1 */
   done:
@@ -123,7 +124,8 @@ match_variable(cg_obj *co,
  * @retval   1         Match
  */
 static int 
-match_object(char   *string,
+match_object(cligen_handle h,
+	     char   *string,
 	     cg_obj *co, 
 	     int    *exact,
 	     char  **reason)
@@ -146,7 +148,7 @@ match_object(char   *string,
       if (string == NULL)
 	  match++;
       else
-	  if ((match = match_variable(co, string, reason)) < 0)
+	  if ((match = match_variable(h, co, string, reason)) < 0)
 	      return -1;
     break;
   case CO_REFERENCE:
@@ -537,7 +539,7 @@ match_pattern_terminal(cligen_handle h,
 	    str = reststring;
 	else
 	    str = string1;
-	if ((match = match_object(str, co, &exact, findreason?&reason:NULL)) < 0)
+	if ((match = match_object(h, str, co, &exact, findreason?&reason:NULL)) < 0)
 	    goto error;
 	if (match){
 	    assert(reason==NULL);
@@ -712,7 +714,7 @@ match_pattern_node(cligen_handle h,
 	    str = reststring;
 	else
 	    str = string1;
-	if ((match = match_object(str, co, &exact, findreason?&reason:NULL)) < 0)
+	if ((match = match_object(h, str, co, &exact, findreason?&reason:NULL)) < 0)
 	    goto error;
 	if (match){
 	    assert(reason==NULL);
