@@ -99,6 +99,7 @@ struct cligen_handle{
     
     void       *ch_userhandle;   /* Use this as app-specific callback handle */
     void       *ch_userdata;     /* application-specific data (any data) */
+    int         ch_regex;        /* 0: POSIX, 1: LIBXML2 XSD */
 };
 
 

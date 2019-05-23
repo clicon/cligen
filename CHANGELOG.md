@@ -2,6 +2,10 @@
 
 ## 3.10.0 (Upcoming)
 
+* Added XSD regexp w libxml2 support
+  * Added libxml2 regex compile and exec functions
+  * Added libxml2 detection in configure script
+    * May need to start configure with: `CFLAGS="-O2 -I /usr/include/libxml2" ./configure` or with debug: `INSTALLFLAGS="" CFLAGS="-g -Wall -I /usr/include/libxml2" ./configure`
 * [Choice with space is not working in CLIgen code](https://github.com/olofhagsand/cligen/issues/24) is fixed, but you need to use escape backslash character `\` to make it work.
   * Example using spec: `choice <string choice:nospace|with\ space>;`
     ```
