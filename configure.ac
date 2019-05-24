@@ -133,11 +133,10 @@ AC_DEFINE(CLIGEN_SUBMODE)
 # use it you need to call cligen_regex_xsd_set(h, 1) at init.
 AC_ARG_WITH(libxml2,  [  --with-libxml2          use gnome/libxml2 regex engine ] )
 if test "${with_libxml2}"; then
-   # This is for Libxml2 code which we can use for XSD regexp
+   # Find libxml2 lib
    AC_CHECK_LIB(xml2, xmlRegexpCompile)
 
    # Libxml2 may hide its include files under /usr/include/libxml2/libxml
-   # You may need to prepend CPPFLAGS="-I/usr/include/libxml2 to configure
    CPPFLAGS="$CPPFLAGS -I/usr/include/libxml2"
    AC_CHECK_HEADERS([libxml/xmlregexp.h], [], [], [#include "libxml/xmlversion.h"])
 fi

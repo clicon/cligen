@@ -43,12 +43,12 @@ srcdir		= @srcdir@
 includedir	= @includedir@/cligen
 
 CC		= @CC@
-CFLAGS		= -fPIC @CFLAGS@
+CFLAGS		= -fPIC @CPPFLAGS@ @CFLAGS@
 LDFLAGS		= @LDFLAGS@
 LIBS		= @LIBS@
 INCLUDES	= -I. -I@srcdir@ @INCLUDES@
 SH_SUFFIX	= @SH_SUFFIX@
-pdflatex	= @PDFLATEX@
+pdflatex	= pdflatex
 HOST_VENDOR     = @host_vendor@
 
 INSTALL         = @INSTALL@
