@@ -897,24 +897,24 @@ cligen_userhandle_set(cligen_handle h,
  * @retval    1   XSD Libxml2 regex
  */
 int
-cligen_regex(cligen_handle h)
+cligen_regex_xsd(cligen_handle h)
 {
     struct cligen_handle *ch = handle(h);
 
-    return ch->ch_regex;
+    return ch->ch_regex_xsd;
 }
 
-/*! Set regex engine / method
+/*! Set regex engine to 0: posix, or 1: XSD / Libxml2
  * @param[in] h       CLIgen handle
  * @param[in] mode    0: posix (default), 1: libxml2 xsd regex
  */
 int
-cligen_regex_set(cligen_handle h, 
-		 int           mode)
+cligen_regex_xsd_set(cligen_handle h, 
+		     int           mode)
 {
     struct cligen_handle *ch = handle(h);
 
-    ch->ch_regex = mode;
+    ch->ch_regex_xsd = mode;
     return 0;
 }
 
