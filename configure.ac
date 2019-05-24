@@ -128,12 +128,19 @@ AC_DEFINE(CLIGEN_REGFD)
 AH_TEMPLATE([CLIGEN_SUBMODE], [Experimental CLIGEN sub-modes])
 AC_DEFINE(CLIGEN_SUBMODE)
 
-# This is for Libxml2 code which we can use for XSD regexp
-AC_CHECK_LIB(xml2, xmlRegexpCompile)
+# This is for libxml2 XSD regex engine
+# Note this only enables the compiling of the code. In order to actually
+# use it you need to call cligen_regex_xsd_set(h, 1) at init.
+AC_ARG_WITH(libxml2,  [  --with-libxml2          use gnome/libxml2 regex engine ] )
+if test "${with_libxml2}"; then
+   # This is for Libxml2 code which we can use for XSD regexp
+   AC_CHECK_LIB(xml2, xmlRegexpCompile)
 
-# Libxml2 may hide its include files under /usr/include/libxml2/libxml
-# You may need to prepend CFLAGS="-I/usr/include/libxml2 to configure
-AC_CHECK_HEADERS([libxml/xmlregexp.h], [], [], [#include "libxml/xmlversion.h"])
+   # Libxml2 may hide its include files under /usr/include/libxml2/libxml
+   # You may need to prepend CPPFLAGS="-I/usr/include/libxml2 to configure
+   CPPFLAGS="$CPPFLAGS -I/usr/include/libxml2"
+   AC_CHECK_HEADERS([libxml/xmlregexp.h], [], [], [#include "libxml/xmlversion.h"])
+fi
 
 AC_CHECK_LIB(socket, socket)
 AC_CHECK_FUNCS(strsep strverscmp)

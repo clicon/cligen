@@ -196,7 +196,7 @@ cligen_regex_compile(cligen_handle h,
 {
     int   retval = -1;
 
-    if (cligen_regex(h) == 0) 
+    if (cligen_regex_xsd(h) == 0) 
 	retval = cligen_regex_posix_compile(regexp, recomp);
     else 
 	retval = cligen_regex_libxml2_compile(regexp, recomp);
@@ -213,7 +213,7 @@ cligen_regex_exec(cligen_handle h,
 {
     int   retval = -1;
 
-    if (cligen_regex(h) == 0) 
+    if (cligen_regex_xsd(h) == 0) 
 	retval = cligen_regex_posix_exec(recomp, string);
     else 
 	retval = cligen_regex_libxml2_exec(recomp, string);
@@ -248,6 +248,7 @@ match_regexp(cligen_handle h,
 	goto done;
     if (ret == 0)
 	goto fail;
+    retval = 1;
  done:
     return retval;
  fail:
