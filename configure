@@ -3616,7 +3616,7 @@ if test "${with_libxml2+set}" = set; then :
 fi
 
 if test "${with_libxml2}"; then
-   # This is for Libxml2 code which we can use for XSD regexp
+   # Find libxml2 lib
    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for xmlRegexpCompile in -lxml2" >&5
 $as_echo_n "checking for xmlRegexpCompile in -lxml2... " >&6; }
 if ${ac_cv_lib_xml2_xmlRegexpCompile+:} false; then :
@@ -3664,7 +3664,6 @@ fi
 
 
    # Libxml2 may hide its include files under /usr/include/libxml2/libxml
-   # You may need to prepend CPPFLAGS="-I/usr/include/libxml2 to configure
    CPPFLAGS="$CPPFLAGS -I/usr/include/libxml2"
    for ac_header in libxml/xmlregexp.h
 do :
