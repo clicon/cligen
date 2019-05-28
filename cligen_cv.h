@@ -167,6 +167,8 @@ unsigned char *cv_uuid_get(cg_var *cv);
 unsigned char *cv_uuid_set(cg_var *cv, unsigned char *u);
 struct timeval cv_time_get(cg_var *cv);
 struct timeval cv_time_set(cg_var *cv, struct timeval t);
+void *cv_void_get(cg_var *cv);
+int   cv_void_set(cg_var *cv, void *p);
 char *cv_urlproto_get(cg_var *cv);
 char *cv_urlproto_set(cg_var *cv, char *s0);
 char *cv_urladdr_get(cg_var *cv);
