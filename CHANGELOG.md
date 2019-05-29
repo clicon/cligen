@@ -4,6 +4,7 @@
 
 * Experimental: do not expand on non-interactive operations
   * Set EXPAND_ONLY_INTERACTIVE to enable
+* Added support for the "void" type, so you can assign e.g. pointers.
 * Added XSD regexp w libxml2 support
   * Added libxml2 regex compile and exec functions
   * Added libxml2 to configure, enable it at install-time with:

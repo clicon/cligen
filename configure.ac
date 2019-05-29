@@ -134,11 +134,11 @@ AC_DEFINE(CLIGEN_SUBMODE)
 AC_ARG_WITH(libxml2,  [  --with-libxml2          use gnome/libxml2 regex engine ] )
 if test "${with_libxml2}"; then
    # Find libxml2 lib
-   AC_CHECK_LIB(xml2, xmlRegexpCompile)
+   AC_CHECK_LIB(xml2, xmlRegexpCompile,[], AC_MSG_ERROR([libxml2 not found]))
 
    # Libxml2 may hide its include files under /usr/include/libxml2/libxml
    CPPFLAGS="$CPPFLAGS -I/usr/include/libxml2"
-   AC_CHECK_HEADERS([libxml/xmlregexp.h], [], [], [#include "libxml/xmlversion.h"])
+   AC_CHECK_HEADERS([libxml/xmlregexp.h], [], AC_MSG_ERROR([libxml2 header files not found / install libxml2-dev?]), [#include "libxml/xmlversion.h"])
 fi
 
 AC_CHECK_LIB(socket, socket)
