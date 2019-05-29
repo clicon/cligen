@@ -81,7 +81,8 @@ enum cv_type{
   CGV_URL,       /* <proto>://[<user>[:<passwd>]@]<addr>[/<path>] */
   CGV_UUID,      /* Universally Unique Identifier: 550e8400-e29b-41d4-a716-446655440000 */
   CGV_TIME,      /* ISO 8601 date+timestamp: 2008-09-21T18:57:21.003 (extended format) */
-  CGV_VOID,      /* Pointer to external data */
+  CGV_VOID,      /* Pointer to external data. Notes: not freed on cv_free; 
+                    not null-terminated string, cv_cp/dup will retain pointer */
   CGV_EMPTY,     /* A type without a value */
 };
 
