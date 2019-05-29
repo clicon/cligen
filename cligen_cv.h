@@ -42,6 +42,13 @@
 
 #include <stdint.h> /* int64 requires stdint */
 
+/*
+ * Macros and constants
+ * CLIgen flags defined are in the range 0x01 -0x0f
+ * An application can use any flags above that
+ */
+#define V_INVERT  0x01	/* Used by regexp code as inverted regexps */
+
 typedef unsigned char uuid_t[16];
 
 /*
@@ -222,7 +229,6 @@ int     cv_validate(cligen_handle h, cg_var *cv, struct cg_varspec *cs, char **r
 int     cv_reset(cg_var *cgv); /* not free cgv itself */ /* XXX: free_only */
 int     cv_free(cg_var *cv);   /* free cgv itself */
 cg_var *cv_new(enum cv_type type);
-int     match_regexp(cligen_handle h, char *string, char *pattern0);
 
 #endif /* _CLIGEN_CV_H_ */
 

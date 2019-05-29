@@ -5,12 +5,13 @@
 * Experimental: do not expand on non-interactive operations
   * Set EXPAND_ONLY_INTERACTIVE to enable
 * Added support for the "void" type, so you can assign e.g. pointers.
+* Added support for multiple regexps as well as "inverted" regexps
+  * Example: `<name:string regexp:"[a-zA-Z]+" regexp:!"cli.*">;`
 * Added XSD regexp w libxml2 support
   * Added libxml2 regex compile and exec functions
   * Added libxml2 to configure, enable it at install-time with:
     * `./configure --with-libxml2`	
   * Enable libxml2 based regexp:s at program start with: `cligen_regexp_xsd_set(h, 1)`
-  * Added regexps as a vector (cvec) instead of a single vector.
 * [Choice with space is not working in CLIgen code](https://github.com/olofhagsand/cligen/issues/24) is fixed, but you need to use escape backslash character `\` to make it work.
   * Example using spec: `choice <string choice:nospace|with\ space>;`
     ```

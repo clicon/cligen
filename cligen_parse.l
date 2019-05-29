@@ -152,6 +152,7 @@ stripdup(char *s0)
 <VARIABLE>\)              { return *yytext; }
 <VARIABLE>\[              { return *yytext; }
 <VARIABLE>\]              { return *yytext; }
+<VARIABLE>!               { return *yytext; }
 <VARIABLE>\"              { _YA->ya_lex_string_state =VARIABLE;BEGIN(STRING); return DQ; }
 <VARIABLE>show            { return V_SHOW; }
 <VARIABLE>range           { return V_RANGE; }

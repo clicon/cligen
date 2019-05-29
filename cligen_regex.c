@@ -64,6 +64,12 @@
 /*-------------------------- POSIX -------------------------*/
 
 /*! Compile a regexp according to posix regexps
+ * It is implicitly assumed that the match should be done at the beginning and
+ * the end,
+ * therefore, the pattern is prefixed with a ^, and postfixed with a $.
+ * So, a match is made if <pattern> matches the beginning of <string>.
+ * For example <pattern> "foobar" will not match <string> "foo".
+ *
  * @param[in]   regexp  Regular expression string in XSD regex format
  * @param[out]  recomp  Compiled regular expression (malloc:d, should be freed)
  * @retval      1       OK
@@ -221,20 +227,20 @@ cligen_regex_exec(cligen_handle h,
 }
 
 /*! Makes a regexp check of <string> with <pattern>.
- * It is implicitly assumed that the match should be done at the beginning and
- * the end,
- * therefore, the pattern is prefixed with a ^, and postfixed with a $.
- * So, a match is made if <pattern> matches the beginning of <string>.
- * For example <pattern> "foobar" will not match <string> "foo".
  *
- * @retval  -1   Error, 
- * @retval   0   No match
- * @retval   1   Match
+ * @param[in] h       Clicon handle
+ * @param[in] string  Content string to match
+ * @param[in] pattern Pattern string to match
+ * @param[in] invert  Invert match
+ * @retval   -1       Error, 
+ * @retval    0       No match
+ * @retval    1       Match
  */
 int 
 match_regexp(cligen_handle h,
 	     char         *string, 
-	     char         *pattern)
+	     char         *pattern,
+	     int           invert)
 {
     int retval = -1;
     int ret;
@@ -250,6 +256,8 @@ match_regexp(cligen_handle h,
 	goto fail;
     if ((ret = cligen_regex_exec(h, re, string)) < 0)
 	goto done;
+    if (invert)
+	ret = !ret;
     if (ret == 0)
 	goto fail;
     retval = 1;
