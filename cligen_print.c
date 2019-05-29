@@ -123,8 +123,9 @@ cov2cbuf(cbuf   *cb,
 		    cvec2cbuf(cb, co->co_expand_fn_vec);
 		cprintf(cb, "\")");
 	    }
-	    if (co->co_regex)
-		cprintf(cb, " regexp:\"%s\"", co->co_regex);
+	    cv1 = NULL;
+	    while ((cv1 = cvec_each(co->co_regex, cv1)) != NULL)
+		cprintf(cb, " regexp:\"%s\"", cv_string_get(cv1));		
 	    if (co->co_translate_fn_str)
 		cprintf(cb, " translate:%s()", co->co_translate_fn_str);
 	    cprintf(cb, "%c", VARIABLE_POST);

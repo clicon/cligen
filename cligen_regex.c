@@ -233,8 +233,8 @@ cligen_regex_exec(cligen_handle h,
  */
 int 
 match_regexp(cligen_handle h,
-	     char *string, 
-	     char *pattern0)
+	     char         *string, 
+	     char         *pattern0)
 {
     int retval = -1;
     int ret;

@@ -50,7 +50,7 @@
  * Prototypes
  */
 int pt_expand_treeref(cligen_handle h, cg_obj *coprev, parse_tree *pt);
-int pt_expand_2(cligen_handle h, parse_tree *pt, cvec *cvec, parse_tree *ptn, int hide);
+int pt_expand_2(cligen_handle h, parse_tree *pt, cvec *cvec, int hide, int expandv, parse_tree *ptn);
 int pt_expand_treeref_cleanup(parse_tree *pt);
 int pt_expand_cleanup_2(parse_tree pt);
 int pt_expand_add(cg_obj *co, parse_tree ptn);
