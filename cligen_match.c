@@ -85,9 +85,9 @@ int _match_cgvar_same = 0;
  */
 static int
 match_variable(cligen_handle h,
-	       cg_obj *co, 
-	       char   *str, 
-	       char  **reason)
+	       cg_obj       *co, 
+	       char         *str, 
+	       char        **reason)
 {
     int         retval = -1;
     cg_var     *cv; /* Just a temporary cv for validation */
@@ -125,10 +125,10 @@ match_variable(cligen_handle h,
  */
 static int 
 match_object(cligen_handle h,
-	     char   *string,
-	     cg_obj *co, 
-	     int    *exact,
-	     char  **reason)
+	     char         *string,
+	     cg_obj       *co, 
+	     int          *exact,
+	     char        **reason)
 {
   int match = 0;
 

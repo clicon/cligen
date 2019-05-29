@@ -234,13 +234,17 @@ cligen_regex_exec(cligen_handle h,
 int 
 match_regexp(cligen_handle h,
 	     char         *string, 
-	     char         *pattern0)
+	     char         *pattern)
 {
     int retval = -1;
     int ret;
     void *re = NULL;
 
-    if ((ret = cligen_regex_compile(h, pattern0, &re)) < 0)
+    if (string == NULL || pattern == NULL){
+	errno = EINVAL;
+	goto done;
+    }
+    if ((ret = cligen_regex_compile(h, pattern, &re)) < 0)
 	goto done;
     if (ret == 0)
 	goto fail;
