@@ -3478,6 +3478,7 @@ cv_reset(cg_var *cv)
 	    free(cv->var_urlpasswd);
 	break;
     case CGV_VOID: /* XXX: freeit ? */
+	break;
     case CGV_EMPTY: 
 	break;
     default:

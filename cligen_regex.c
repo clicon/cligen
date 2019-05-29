@@ -91,9 +91,9 @@ cligen_regex_posix_compile(char  *regexp,
     strncpy(pattern, "^(", 2);
     strncpy(pattern+2, regexp, sizeof(pattern)-2);
     strncat(pattern, ")$",  sizeof(pattern)-len0-1);
-    if ((re = malloc(sizeof(*re))) == NULL) /* XXX there is a leak here */
+    if ((re = malloc(sizeof(regex_t))) == NULL)
 	goto done;
-    memset(re, 0, sizeof(*re));
+    memset(re, 0, sizeof(regex_t));
     if (regcomp(re, pattern, REG_NOSUB|REG_EXTENDED) != 0) 
 	goto fail;
     *recomp = re;
@@ -139,7 +139,7 @@ int
 cligen_regex_posix_free(void *recomp)
 {
     if (recomp){
-	//regfree(recomp);
+	regfree(recomp);
     }
     return 0;
 }
