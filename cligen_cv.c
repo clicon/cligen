@@ -3269,9 +3269,11 @@ cv_validate(cligen_handle h,
 			*reason = cligen_reason("regexp match fail: %s does not match %s",
 						str, regexp);
 		    retval = 0;
-		    break;
+		    break; /* from the while */
 		}
 	    }
+	    if (retval == 0)
+		break; /* from the switch */
 	}
 
 	if (!cs->cgs_rangelen)	/* Skip range check */

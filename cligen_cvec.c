@@ -219,6 +219,8 @@ cvec_next(cvec   *cvv,
  *
  * @param[in] cvv   Cligen variable vector
  * @param[in] type  Append a new cv to the vector with this type
+ * @retval    NULL  Error
+ * @retval    cv    The new cligen variable
  * @see also cv_new, but this is allocated contiguosly as a part of a cvec.
  */
 cg_var *
@@ -228,10 +230,10 @@ cvec_add(cvec        *cvv,
     int     len;
     cg_var *cv;
 
-	if (!cvv) {
-		return 0;
-	}
-
+    if (cvv == NULL){
+	errno = EINVAL;
+	return NULL;
+    }
     len = cvv->vr_len + 1;
 
     if ((cvv->vr_vec = realloc(cvv->vr_vec, len*sizeof(cg_var))) == NULL)
