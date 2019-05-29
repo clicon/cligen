@@ -728,6 +728,29 @@ cv_time_set(cg_var        *cv,
     return t;
 }
 
+/*! Returns a void pointer
+ * @param[in] cv     CLIgen variable
+ */
+void *
+cv_void_get(cg_var *cv)
+{
+    if (cv == NULL)
+	return NULL;
+    return cv->var_void;
+}
+
+/*! Set void pointer
+ * @param[in] cv     CLIgen variable
+ */
+int
+cv_void_set(cg_var   *cv, 
+	    void     *p)
+{
+    if (cv)
+	cv->var_void = p;
+    return 0;
+}
+
 /*! Get pointer to URL proto string. 
  *
  * @param[in] cv     CLIgen variable

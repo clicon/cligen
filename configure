@@ -3660,6 +3660,8 @@ _ACEOF
 
   LIBS="-lxml2 $LIBS"
 
+else
+  as_fn_error $? "libxml2 not found" "$LINENO" 5
 fi
 
 
@@ -3674,6 +3676,8 @@ if test "x$ac_cv_header_libxml_xmlregexp_h" = xyes; then :
 #define HAVE_LIBXML_XMLREGEXP_H 1
 _ACEOF
 
+else
+  as_fn_error $? "libxml2 header files not found / install libxml2-dev?" "$LINENO" 5
 fi
 
 done

@@ -83,6 +83,7 @@ struct cg_var {
 	} varu_url;
 	uuid_t	            varu_uuid;
 	struct timeval      varu_time;
+	void               *varu_void;
     } u;
 };
 
@@ -101,7 +102,7 @@ struct cg_var {
 #define var_dec64_i	u.varu_dec64.vardec64_i
 #define var_dec64_n	u.varu_dec64.vardec64_n
 #define var_string	u.varu_string
-#define var_void	u.varu_string
+#define var_void	u.varu_void
 #define var_rest	u.varu_string
 #define var_interface	u.varu_string
 #define var_macaddr	u.varu_macaddr
