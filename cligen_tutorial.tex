@@ -663,7 +663,20 @@ ac
 abc
 abbbbbbbbbc
 \end{verbatim}
-CLIgen uses POSIX Extended regular expression syntax.
+
+You can also add multiple regexps, in which case the string must match ALL regexps. You can also specify an inverted regex, meaning that a string should NOT match the regex.
+
+In the following example, all strings are matched that do not start with "cli"
+\begin{verbatim}
+    <name:string regexp:"[a-zA-Z]+" regexp:!"cli.*">;
+\end{verbatim}
+
+CLIgen by default uses POSIX Extended regular expression syntax.
+However, XML schema regexps can be used instead by configuring CLIgen with libxml2 as follows:
+\begin{verbatim}
+   ./configure --with-libxml2     # At configure time
+   cligen_regexp_xsd\_set(h, 1);  # In C init code
+\end{verbatim}
 
 \subsection{Variable translation}
 

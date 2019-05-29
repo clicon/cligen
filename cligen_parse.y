@@ -866,17 +866,19 @@ ctx_pop(cliyacc *ya)
  */
 static int
 cg_regexp(cliyacc *ya,
-	  char    *rx)
+	  char    *rx,
+    	  int      invert)
 {
     int     retval = -1;
     cg_var *cv;
     
-    if (ya->ya_var->co_regex == NULL){
-	if ((ya->ya_var->co_regex = cvec_new(0)) == NULL)
-	    goto done;
-    }
+    if (ya->ya_var->co_regex == NULL &&
+	(ya->ya_var->co_regex = cvec_new(0)) == NULL)
+	goto done;
     if ((cv = cvec_add(ya->ya_var->co_regex, CGV_STRING)) == NULL)
 	goto done;
+    if (invert)
+	cv_flag_set(cv, V_INVERT);
     cv_string_set(cv, rx);
     if (ya->ya_var->co_vtype != CGV_STRING && ya->ya_var->co_vtype != CGV_REST)
 	ya->ya_var->co_vtype = CGV_STRING;
@@ -1237,7 +1239,8 @@ keypair     : NAME '(' ')' { expand_fn(_ya, $1); }
 		_YA->ya_var->co_keyword = $3;  
 		_YA->ya_var->co_vtype=CGV_STRING; 
 	      }
-            | V_REGEXP  ':' DQ charseq DQ { if (cg_regexp(_ya, $4) < 0) YYERROR; }
+            | V_REGEXP  ':' DQ charseq DQ { if (cg_regexp(_ya, $4, 0) < 0) YYERROR; free($4); }
+            | V_REGEXP  ':' '!'  DQ charseq DQ { if (cg_regexp(_ya, $5, 1) < 0) YYERROR; free($5);}
             | V_TRANSLATE ':' NAME '(' ')' { cg_translate(_ya, $3); }
             ;
 
