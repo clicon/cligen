@@ -135,8 +135,8 @@ co_expand_sub(cg_obj  *co,
 		return -1;
 	    }
 	if (co->co_regex)
-	    if ((con->co_regex = strdup(co->co_regex)) == NULL){
-		fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
+	    if ((con->co_regex = cvec_dup(co->co_regex)) == NULL){
+		fprintf(stderr, "%s: cvec_dup: %s\n", __FUNCTION__, strerror(errno));
 		return -1;
 	    }
     } /* CO_VARIABLE */
@@ -196,7 +196,7 @@ transform_var_to_cmd(cg_obj *co,
 	co->co_choice = NULL;
     }
     if (co->co_regex){
-	free(co->co_regex);
+	cvec_free(co->co_regex);
 	co->co_regex = NULL;
     }
     co->co_type = CO_COMMAND;
@@ -465,15 +465,17 @@ pt_expand_choice(cg_obj       *co,
  * with a reference point back to the original.
  * @param[in]  h       cligen handle
  * @param[in]  ptr     original parse-tree consisting of a vector of cligen objects
- * @param[in]  parent  parent of original co object
+ * @param[in]  hide    Respect hide setting of commands (dont show)
+ * @param[in]  expandvar Set if VARS should be expanded, eg ? <tab>
  * @param[out] ptn     shadow parse-tree initially an empty pointer, its value is returned.
  */
 int
 pt_expand_2(cligen_handle h, 
 	    parse_tree   *ptr, 
 	    cvec         *cvv,
-	    parse_tree   *ptn, 
-	    int           hide) 
+	    int           hide,
+	    int           expandvar,
+	    parse_tree   *ptn)
 {
     int          i;
     cg_obj      *co;
@@ -503,8 +505,19 @@ pt_expand_2(cligen_handle h,
 	     */
 	    else if (co->co_type == CO_VARIABLE && 
 		     co->co_expandv_fn != NULL){
-		if (pt_expand_fnv(h, co, cvv, ptn, parent) < 0)
-		    goto done;
+#ifdef EXPAND_ONLY_INTERACTIVE
+		/* If I add conditional here, you need to explicitly have a
+		 * a "free" variable expression, not just expands.
+		 * eg (<v:int expand_dbvar()>|<v:int>)
+		 * If I put the conditional in the if-statement above you
+		 * may then get two variables and ambiguous command
+		 * MAYBE you could see if there are any other same variables on
+		 * this iteration and if not add it?
+		 */
+		if (expandvar)
+#endif
+		    if (pt_expand_fnv(h, co, cvv, ptn, parent) < 0)
+			goto done;
 	    }
 	    else{
 		/* Copy vector element */

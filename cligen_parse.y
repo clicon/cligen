@@ -868,7 +868,11 @@ static int
 cg_regexp(cliyacc *ya,
 	  char    *rx)
 {
-    ya->ya_var->co_regex = rx;  
+    cg_var *cv;
+    
+    if ((cv = cvec_add(ya->ya_var->co_regex, CGV_STRING)) == NULL)
+	return -1;
+    cv_string_set(cv, rx);
     if (ya->ya_var->co_vtype != CGV_STRING && ya->ya_var->co_vtype != CGV_REST)
 	ya->ya_var->co_vtype=CGV_STRING;
     return 0;

@@ -637,6 +637,8 @@ add_cov_to_cvec(cg_obj *co,
  *                       between matches. It is only when you want a final exact 
  *                       match (not completion or show options) that you should set
  *                       this.
+ * @param[in]  hide    Respect hide setting of commands (dont show)
+ * @param[in]  expandvar Set if VARS should be expanded, eg ? <tab>
  * @param[out] ptp       Returns the vector at the place of matching
  * @param[out] matchv    A vector of integers containing which 
  * @param[out] matchlen  Length of matchv. That is, # of matches and same as return 
@@ -655,6 +657,7 @@ match_pattern_node(cligen_handle h,
 		   int           level, 
 		   int           use_pref, 
 		   int           hide,
+		   int           expandvar,
 		   pt_vec       *ptp, 
 		   int          *matchv[], 
 		   int          *matchlen,
@@ -762,7 +765,7 @@ match_pattern_node(cligen_handle h,
     if (matches != 1) {
 #ifdef notneeded
 	if (matches == 0){
-	    cligen_nomatch_set(h, "Unrecognized command");
+	    cligen_nomatch_set(h, "Unknown command");
 	}
 	else
 	    cligen_nomatch_set(h, "Ambigious command");
@@ -807,8 +810,9 @@ match_pattern_node(cligen_handle h,
 	if (co_match->co_type == CO_COMMAND && co_orig->co_type == CO_VARIABLE)
 	    if ((cv = add_cov_to_cvec(co_orig, co_match->co_command, cvec)) == NULL)
 		goto error;
-    if (pt_expand_2(h, &co_match->co_pt, cvec, &ptn, hide) < 0) /* expand/choice variables */
+    if (pt_expand_2(h, &co_match->co_pt, cvec, hide, expandvar, &ptn) < 0) /* expand/choice variables */
 	goto error;
+
     if (level+1 == cmd_levels)
 	retval = match_pattern_terminal(h,
 					string0, ptn, 
@@ -818,6 +822,7 @@ match_pattern_node(cligen_handle h,
 	retval = match_pattern_node(h, 
 				    string0, ptn,
 				    level+1, use_pref, hide,
+				    expandvar,
 				    ptp, matchv, matchlen, cvec, reason0);
     if (pt_expand_add(co_orig, ptn) < 0) /* add expanded ptn to orig parsetree */
 	goto error;
@@ -853,7 +858,8 @@ match_pattern_node(cligen_handle h,
  *                       between matches. It is only when you want a final exact 
  *                       match (not completion or show options) that you should set 
  *                       this.
- * @param[in]  hide
+ * @param[in]  hide      Respect hide setting of commands (dont show)
+ * @param[in]  expandvar Set if VARS should be expanded, eg ? <tab>
  * @param[out] ptp       Returns the vector at the place of matching
  * @param[out] matchv    A vector of integers containing which matches
  * @param[out] matchlen  Length of matchv. That is, # of matches and same as 
@@ -874,6 +880,7 @@ match_pattern(cligen_handle h,
 	      parse_tree    pt, 
 	      int           use_pref,
 	      int           hide,
+	      int           expandvar,
 	      pt_vec       *ptp, 
 	      int          *matchv[],
 	      int          *matchlen, 
@@ -894,6 +901,7 @@ match_pattern(cligen_handle h,
     else
 	retval = match_pattern_node(h, 
 				    string, pt, 0, use_pref, hide,
+				    expandvar,
 				    ptp, matchv, matchlen, 
 				    cvec,
 				    reason0);
@@ -905,6 +913,7 @@ match_pattern(cligen_handle h,
  * @param[in]  string    Input string to match
  * @param[in]  pt        CLIgen parse tree, vector of cligen objects.
  * @param[in]  exact     Try to find an exact match. if 0 dont bother about errors.
+ * @param[in]  expandvar Set if VARS should be expanded, eg ? <tab>
  * @param[out] cvec      cligen variable vector containing vars/values pair for completion
  * @param[out] match_obj Exact object to return
  * @retval  -1           Error
@@ -920,6 +929,7 @@ match_pattern_exact(cligen_handle h,
 		    char         *string, 
 		    parse_tree    pt, 
 		    int           exact,
+		    int           expandvar,
 		    cvec         *cvec,
 		    cg_obj      **match_obj)
 {
@@ -934,7 +944,9 @@ match_pattern_exact(cligen_handle h,
   /* clear old errors */
   if (exact)
       cligen_nomatch_set(h, NULL); 
-  if ((ret = match_pattern(h, string, pt, 1, 0, &res_pt, 
+  if ((ret = match_pattern(h, string, pt, 1, 0,
+			   expandvar,
+			   &res_pt, 
 			   &matchv, &matchlen, cvec, &reason)) < 0)
       return -1;
   if (ret == 0) {
@@ -1064,7 +1076,9 @@ match_complete(cligen_handle h,
 	    s++;
  again:
     matchlen = 0;
-    if ((nr = match_pattern(h, s, pt, 0, 1, &pt1, &matchv, &matchlen, cvec, NULL)) < 0)
+    if ((nr = match_pattern(h, s, pt, 0, 1,
+			    1, /* XXX must be one for interactive TAB to work*/
+			    &pt1, &matchv, &matchlen, cvec, NULL)) < 0)
 	goto done;
     if (nr==0){
 	retval = 0;

@@ -3235,14 +3235,19 @@ cv_validate(cligen_handle h,
     case CGV_STRING:
 	str = cv_string_get(cv);
 	if (cs->cgs_regex != NULL){
-	    if ((retval = match_regexp(h, str, cs->cgs_regex)) < 0)
-		break;
-	    if (retval == 0){
-		if (reason)
-		    *reason = cligen_reason("regexp match fail: %s does not match %s",
-					    str, cs->cgs_regex);
-		retval = 0;
-		break;
+	    char *regexp;
+	    cv1 = NULL;
+	    while ((cv1 = cvec_each(cs->cgs_regex, cv1)) != NULL){
+		regexp = cv_string_get(cv1);
+		if ((retval = match_regexp(h, str, regexp)) < 0)
+		    break;
+		if (retval == 0){
+		    if (reason)
+			*reason = cligen_reason("regexp match fail: %s does not match %s",
+						str, regexp);
+		    retval = 0;
+		    break;
+		}
 	    }
 	}
 

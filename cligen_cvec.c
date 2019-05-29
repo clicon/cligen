@@ -85,27 +85,27 @@ static int excludekeys = 0;
 
 /*! Create and initialize a new cligen variable vector (cvec)
  *
- * See also cvec_init()
  * Each individual cv initialized with CGV_ERR and no value.
  * Returned cvec needs to be freed with cvec_free().
  *
  * @param[in] len    Number of cv elements. Can be zero and elements added incrementally.
  * @retval    NULL   errno set
- * @retval    cv     allocated cligen var
+ * @retval    cvv    allocated cligen var vector
+ * @see cvec_init
  */
 cvec *
 cvec_new(int len)
 {
-    cvec *vr;
+    cvec *cvv;
 
-    if ((vr = malloc(sizeof(*vr))) == NULL)
+    if ((cvv = malloc(sizeof(*cvv))) == NULL)
 	return NULL;
-    memset(vr, 0, sizeof(*vr));
-    if (cvec_init(vr, len) < 0){
-	free(vr);
+    memset(cvv, 0, sizeof(*cvv));
+    if (cvec_init(cvv, len) < 0){
+	free(cvv);
 	return NULL;
     }
-    return vr;
+    return cvv;
 }
 
 /*! Create a new vector, initialize the first element to the contents of 'var'
@@ -147,7 +147,6 @@ cvec_free(cvec *cvv)
 
 /*! Initialize a cligen variable vector (cvec) with 'len' numbers of variables.
  *
-
  * Each individual cv initialized with CGV_ERR and no value.
  *
  * @param[in] cvv  Cligen variable vector

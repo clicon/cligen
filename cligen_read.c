@@ -99,6 +99,7 @@ cli_qmark_hook(cligen_handle h,
     parse_tree    ptn={0,};    /* Expanded */
     cvec         *cvec = NULL;
 
+
     fputs("\n", stdout);
     if ((pt = cligen_tree_active_get(h)) == NULL)
 	goto ok;
@@ -106,13 +107,14 @@ cli_qmark_hook(cligen_handle h,
 	goto done; 
     if ((cvec = cvec_start(string)) == NULL)
 	goto done;
-    if (pt_expand_2(h, pt, cvec, &ptn, 1) < 0)      /* expansion */
+    if (pt_expand_2(h, pt, cvec, 1, 0, &ptn) < 0)      /* expansion */
 	return -1;
     if (show_help_line(h, stdout, string, ptn, cvec) <0)
 	goto done;
  ok:
     retval = 0;
   done:
+
     if (cvec)
 	cvec_free(cvec);
     if (cligen_parsetree_free(ptn, 0) < 0)
@@ -152,7 +154,7 @@ cli_tab_hook(cligen_handle h,
 	goto done;
     if ((cvec = cvec_start(cligen_buf(h))) == NULL)
 	goto done; 
-    if (pt_expand_2(h, pt, cvec, &ptn, 1) < 0)      /* expansion */
+    if (pt_expand_2(h, pt, cvec, 1, 0, &ptn) < 0)      /* expansion */
 	goto done;
     /* Note, can change cligen buf pointer (append and increase) */
     if (complete(h, cursorp, ptn, cvec) < 0)
@@ -271,7 +273,7 @@ show_help_columns(cligen_handle h,
 	return -1;
     }
     if (string != NULL){
-	if ((nr = match_pattern(h, string, pt, 0, 1,
+	if ((nr = match_pattern(h, string, pt, 0, 1, 1 /* show help columns*/,
 				&pt1, &matchvec, &matchlen, cvec, NULL)) < 0)
 	    goto done;
     }
@@ -388,7 +390,7 @@ show_help_line(cligen_handle h,
 
     /* Build match vector, but why would string ever be NULL? */
     if (string != NULL){
-	if ((nr = match_pattern(h, string, pt, 0, 1, &pt1, &matchvec, &matchlen, cvec, NULL)) < 0)
+	if ((nr = match_pattern(h, string, pt, 0, 1, 0, &pt1, &matchvec, &matchlen, cvec, NULL)) < 0)
 	    goto done;
     }
     if ((level = command_levels(string)) < 0)
@@ -409,7 +411,8 @@ show_help_line(cligen_handle h,
 	   Example: x [y|z] and we have typed 'x ', then show
 	   help for y and z and a 'cr' for 'x'.
 	*/
-	if ((res = match_pattern_exact(h, tmpp, pt, 0, cvec, NULL))  < 0){
+
+	if ((res = match_pattern_exact(h, tmpp, pt, 0, 1, cvec, NULL))  < 0){
 	    free(tmp);
 	    goto done;
 	}
@@ -431,10 +434,11 @@ show_help_line(cligen_handle h,
 	    matchvec = NULL;
 	}
 #endif
-	if ((nr = match_pattern(h, string, pt, 0, 1, &pt1, &matchvec, &matchlen, cvec, NULL)) < 0)
+	if ((nr = match_pattern(h, string, pt, 0, 1, 1 /* show help line */, &pt1, &matchvec, &matchlen, cvec, NULL)) < 0)
 
 	    goto done;
     }
+
     if (!nr){
 	retval = 0;
 	goto done;
@@ -598,9 +602,10 @@ cliread_parse(cligen_handle h,
 	goto done; 
     if ((cvec = cvec_start(string)) == NULL)
 	goto done;
-    if (pt_expand_2(h, pt, cvec, &ptn, 0) < 0)      /* expansion */
+    if (pt_expand_2(h, pt, cvec, 0, 0, &ptn) < 0)      /* expansion */
 	goto done;
-    if ((retval = match_pattern_exact(h, string, ptn, 1, cvec, &match_obj)) < 0)
+    if ((retval = match_pattern_exact(h, string, ptn, 1, 0, /* XXX cliread_parse */
+				      cvec, &match_obj)) < 0)
 	goto done;
     /* Map from ghost object match_obj to real object */
     if (retval == CG_MATCH){

@@ -143,7 +143,7 @@ struct cg_varspec{
      * it means the min value of the type (eg <a:int32 range[40]> */
     cvec           *cgs_rangecvv_low;  
     cvec           *cgs_rangecvv_upp;  /* array of upper bound of intervals */
-    char           *cgs_regex;         /* regular expression */
+    cvec           *cgs_regex;         /* List of regular expressions */
     uint8_t         cgs_dec64_n;       /* negative decimal exponential 1..18 */
 };
 typedef struct cg_varspec cg_varspec;

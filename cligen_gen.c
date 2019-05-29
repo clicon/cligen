@@ -458,8 +458,8 @@ co_copy(cg_obj  *co,
 	    }
 	}
 	if (co->co_regex){
-	    if ((con->co_regex = strdup(co->co_regex)) == NULL){
-		fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
+	    if ((con->co_regex = cvec_dup(co->co_regex)) == NULL){
+		fprintf(stderr, "%s: cvec_dup: %s\n", __FUNCTION__, strerror(errno));
 		return -1;
 	    }
 	}
@@ -641,8 +641,29 @@ co_eq(cg_obj *co1,
 	}
 	/* Examine regexp, at least one set, and then strcmp */
 	if (co1->co_regex!=NULL || co2->co_regex!=NULL){
-	    eq = str_cmp(co1->co_regex, co2->co_regex);
-	    goto done;
+	    cg_var *cv1, *cv2;
+	    if (co1->co_regex == NULL)
+		eq = -1;
+	    else if (co2->co_regex == NULL)
+		eq = 1;
+	    else{
+		int i, min;
+		min = cvec_len(co1->co_regex)<cvec_len(co2->co_regex)?cvec_len(co1->co_regex):cvec_len(co2->co_regex);
+		for (i=0; i<min; i++){
+		    cv1 = cvec_i(co1->co_regex, i);
+		    cv2 = cvec_i(co2->co_regex, i);
+		    if ((eq = str_cmp(cv_string_get(cv1), cv_string_get(cv2))) != 0)
+			goto done;
+		}
+		if (cvec_len(co1->co_regex) < cvec_len(co2->co_regex))
+		    eq = -1;
+		else if (cvec_len(co1->co_regex) > cvec_len(co2->co_regex))
+		    eq = 1;
+		else
+		    eq = 0;
+	    }
+	    if (eq)
+		goto done;
 	}
 	/* Examine int and range */
 	if (cv_isint(co1->co_vtype) || cv_isstring(co1->co_vtype)) {
@@ -836,7 +857,7 @@ co_free(cg_obj *co,
 	if (co->co_choice)
 	    free(co->co_choice);
 	if (co->co_regex)
-	    free(co->co_regex);
+	    cvec_free(co->co_regex);
 	if (co->co_rangecvv_low)
 	    cvec_free(co->co_rangecvv_low);
 	if (co->co_rangecvv_upp)
