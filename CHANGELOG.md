@@ -1,6 +1,6 @@
 # Cligen Changelog
 
-## 3.10.0 (Upcoming)
+## 4.0.0 (Upcoming)
 
 * Experimental: do not expand on non-interactive operations
   * Set EXPAND_ONLY_INTERACTIVE to enable

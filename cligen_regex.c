@@ -138,8 +138,9 @@ cligen_regex_posix_exec(void *recomp,
 int
 cligen_regex_posix_free(void *recomp)
 {
-    if (recomp)
-	regfree(recomp);
+    if (recomp){
+	//regfree(recomp);
+    }
     return 0;
 }
 
