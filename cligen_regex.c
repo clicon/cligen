@@ -91,7 +91,7 @@ cligen_regex_posix_compile(char  *regexp,
     strncpy(pattern, "^(", 2);
     strncpy(pattern+2, regexp, sizeof(pattern)-2);
     strncat(pattern, ")$",  sizeof(pattern)-len0-1);
-    if ((re = malloc(sizeof(*re))) == NULL)
+    if ((re = malloc(sizeof(*re))) == NULL) /* XXX there is a leak here */
 	goto done;
     memset(re, 0, sizeof(*re));
     if (regcomp(re, pattern, REG_NOSUB|REG_EXTENDED) != 0) 
@@ -130,6 +130,17 @@ cligen_regex_posix_exec(void *recomp,
 	retval = 0;
     }
     return retval;
+}
+
+/*! Free compiled regular expression i
+ * @param[in]   recomp  Compiled regular expression 
+ */
+int
+cligen_regex_posix_free(void *recomp)
+{
+    if (recomp)
+	regfree(recomp);
+    return 0;
 }
 
 /*-------------------------- Libxml2 -----------------------------------*/
@@ -186,7 +197,18 @@ cligen_regex_libxml2_exec(void *recomp,
     return retval;
 }
 
+/*! Free compiled regular expression 
+ * @param[in]   recomp  Compiled regular expression (malloc:d, should be freed)
+ */
+int
+cligen_regex_libxml2_free(void *recomp)
+{
+    if (recomp)
+	free(recomp);
+    return 0;
+}
 
+/*-------------------------- Generic -----------------------------------*/
 /*! Compilation of regular expression / pattern
  * @param[in]   h       Clicon handle
  * @param[in]   regexp  Regular expression string in XSD regex format
@@ -211,6 +233,7 @@ cligen_regex_compile(cligen_handle h,
 
 /*! Execution of (pre-compiled) regular expression / pattern
  * @param[in]  h   Clicon handle
+ * @param[in]  recomp Compiled regexp
  */
 int
 cligen_regex_exec(cligen_handle h,
@@ -223,6 +246,23 @@ cligen_regex_exec(cligen_handle h,
 	retval = cligen_regex_posix_exec(recomp, string);
     else 
 	retval = cligen_regex_libxml2_exec(recomp, string);
+    return retval;
+}
+
+/*! Free compiled regular expression 
+ * @param[in]  h       Clicon handle
+ * @param[in]  recomp  Compiled regular expression 
+ */
+int
+cligen_regex_free(cligen_handle h,
+		  void         *recomp)
+{
+    int   retval = -1;
+
+    if (cligen_regex_xsd(h) == 0) 
+	retval = cligen_regex_posix_free(recomp);
+    else 
+	retval = cligen_regex_libxml2_free(recomp);
     return retval;
 }
 
@@ -242,8 +282,8 @@ match_regexp(cligen_handle h,
 	     char         *pattern,
 	     int           invert)
 {
-    int retval = -1;
-    int ret;
+    int   retval = -1;
+    int   ret;
     void *re = NULL;
 
     if (string == NULL || pattern == NULL){
@@ -262,6 +302,8 @@ match_regexp(cligen_handle h,
 	goto fail;
     retval = 1;
  done:
+    if (re)
+	cligen_regex_free(h, re);
     return retval;
  fail:
     retval = 0;

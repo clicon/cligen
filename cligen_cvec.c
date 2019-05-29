@@ -342,7 +342,7 @@ cvec_i(cvec *cvv,
  * @retval NULL         When end of list reached.
  * @code
  *    cg_var *cv = NULL;
- *       while ((cv = cvec_each(cvv, cv)) != NULL)
+ *    while ((cv = cvec_each(cvv, cv)) != NULL)
  *	     ...
  * @endcode
  */
