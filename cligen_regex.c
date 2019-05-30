@@ -303,8 +303,10 @@ match_regexp(cligen_handle h,
 	goto fail;
     retval = 1;
  done:
-    if (re)
+    if (re){
 	cligen_regex_free(h, re);
+	free(re);
+    }
     return retval;
  fail:
     retval = 0;
