@@ -87,6 +87,8 @@ cligen_gwinsz(cligen_handle h)
 void
 sigwinch_handler(int arg)
 {
+    /* the handle parameter isn't used */
+    cligen_gwinsz(0);
 }
 
 /*! This is the first call the CLIgen API and returns a handle. 
