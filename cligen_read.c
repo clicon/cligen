@@ -783,27 +783,6 @@ cligen_eval(cligen_handle h,
 		cvec_free(argv);
 	    cligen_fn_str_set(h, NULL);
 	}
-#ifdef CALLBACK_SINGLEARG
-	/* Single cv argument to callback (old) */
-    	if (cc->cc_fn){
-	    cg_var             *cv;
-	    argv = cc->cc_cvec ? cvec_dup(cc->cc_cvec) : NULL;
-	    cligen_fn_str_set(h, cc->cc_fn_str);
-	    cv = argv?cvec_i(argv,0):NULL;
-	    if ((retval = (*cc->cc_fn)(
-				       cligen_userhandle(h)?cligen_userhandle(h):h, 
-				       cvv, 
-				       cv)) < 0){
-		if (argv != NULL)
-		    cvec_free(argv);
-		cligen_fn_str_set(h, NULL);
-		break;
-	    }
-	    if (argv != NULL)
-		cvec_free(argv);
-	    cligen_fn_str_set(h, NULL);
-	}
-#endif
     }
     return retval;
 }

@@ -2,6 +2,7 @@
 
 ## 4.0.0 (Upcoming)
 
+* Allow NULL as name in a cvec, for cvec_find and cvec_add
 * Experimental: do not expand on non-interactive operations
   * Set EXPAND_ONLY_INTERACTIVE to enable
 * Added support for the "void" type, so you can assign e.g. pointers.

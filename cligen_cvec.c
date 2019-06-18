@@ -635,7 +635,7 @@ cvec2cbuf(cbuf *cb,
  * Given an CLIgen variable vector cvec, and the name of a variable, return the
  * first matching entry.
  * @param[in]  cvv   Cligen variable vector
- * @param[in]  name  Name to match
+ * @param[in]  name  Name to match (can be NULL)
  * @retval     cv    Element matching name. NULL
  * @retval     NULL  Not found
  * @see cvec_find_keyword
@@ -646,9 +646,14 @@ cvec_find(cvec *cvv,
 {
     cg_var *cv = NULL;
 
-    while ((cv = cvec_each(cvv, cv)) != NULL)
-	if (cv->var_name && strcmp(cv->var_name, name) == 0)
+    while ((cv = cvec_each(cvv, cv)) != NULL){
+	if (cv->var_name){
+	    if (name != NULL && strcmp(cv->var_name, name) == 0)
+		return cv;
+	}
+	else if (name == NULL)
 	    return cv;
+    }
     return NULL;
 }
 

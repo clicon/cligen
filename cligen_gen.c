@@ -346,9 +346,6 @@ co_callback_copy(struct cg_callback  *cc0,
 	    return -1;
 	}
 	memset(cc1, 0, sizeof(*cc1));
-#ifdef CALLBACK_SINGLEARG
-	cc1->cc_fn = cc->cc_fn;
-#endif
 	cc1->cc_fn_vec = cc->cc_fn_vec;
 	if (cc->cc_fn_str)
 	    if ((cc1->cc_fn_str = strdup(cc->cc_fn_str)) == NULL){
