@@ -194,66 +194,6 @@ cligen_parse_file(cligen_handle h,
     return retval;
 }
 
-#ifdef CALLBACK_SINGLEARG
-/*! Assign functions for callbacks (end of line) using a mapper function
- *
- * The mapping is done from string to C-function. This is done recursively.
- * Example: Assume a CLIgen syntax:
- *   a <b:string>, fn();
- * where
- *    fn() is called when "a 42 <CR>" is entered.
- * In the CLIgen spec syntax, "fn" is a string and needs to be translated to actual 
- * function (pointer).
- * This function goes through a complete parse-tree (pt) and applies the translator
- * functions str2fn, if existring, to callback strings (eg "fn") 
- * in the parse-tree to produce function pointers (eg fn) which is stored in the
- * parse-tree nodes. Later, at evaluation time, the actual function (fn) is
- * called when evaluating/interpreting the syntax.
- *
- * @param[in]  pt      Parse-tree. Recursively loop through and call str2fn
- * @param[in]  str2fn  Translator function from strings to function pointers for command 
- *                     callbacks. Call this function to translate callback functions
- *                     for all nodes in the parse-tree.
- * @param[in]  arg     Argument to call str2fn with
- * @retval     0       OK
- * @retval    -1       Error and statement written on stderr
- * @see cligen_expand_str2fn    For expansion/completion callbacks
- * @see cligen_callbackv_str2fnv Same but for callback vector argument
- * @note str2fn may return NULL on error and should then supply a (static) error string 
- * @note Try to use cligen_callbackv_str2fnv instead
- */
-int
-cligen_callback_str2fn(parse_tree pt, cg_str2fn_t *str2fn, void *arg)
-{
-    int                 retval = -1;
-    cg_obj             *co;
-    char               *callback_err = NULL;   /* Error from str2fn callback */
-    struct cg_callback *cc;
-    int                 i;
-
-    for (i=0; i<pt.pt_len; i++)
-	if ((co = pt.pt_vec[i]) != NULL){
-	    for (cc = co->co_callbacks; cc; cc=cc->cc_next){
-		if (cc->cc_fn_str != NULL && cc->cc_fn == NULL){
-		    /* Note str2fn is a function pointer */
-		    cc->cc_fn = str2fn(cc->cc_fn_str, arg, &callback_err);
-		    if (callback_err != NULL){
-			fprintf(stderr, "%s: error: No such function: %s (%s)\n",
-				__FUNCTION__, cc->cc_fn_str, callback_err);
-			goto done;
-		    }
-		}
-	    }
-	    /* recursive call to next level */
-	    if (cligen_callback_str2fn(co->co_pt, str2fn, arg) < 0)
-		goto done;
-	}
-    retval = 0;
-  done:
-    return retval;
-}
-#endif
-
 /*! Assign functions for variable completion using a mapper function
  *
  * The mapping is done from string to C-function. This is done recursively.

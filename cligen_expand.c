@@ -217,6 +217,8 @@ transform_var_to_cmd(cg_obj *co,
  * Somewhat strange semantics though:
  * - Always replace (or add if empty) original callback in co0
  * - Use local argument-list _unless_ there is none, then use callback list from cc0
+ * The effect of this is that the generated trees argument are first (eg api-path)
+ * and the ones in the @ref cal are appended.
  */
 static int
 pt_callback_reference(parse_tree          pt, 
@@ -241,9 +243,6 @@ pt_callback_reference(parse_tree          pt,
 		    return -1;
 	    }
 	    else {
-#ifdef CALLBACK_SINGLEARG
-		cc->cc_fn = cc0->cc_fn; /* iterate */
-#endif
 		cc->cc_fn_vec = cc0->cc_fn_vec; /*  */
 		if (cc0->cc_fn_str){
 		    if (cc->cc_fn_str)
