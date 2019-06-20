@@ -2,6 +2,12 @@
 
 ## 4.0.0 (Upcoming)
 
+* Error messages for invalid number ranges and string lengths have been uniformed and changed.
+  * Error messages for invalid ranges are now on the form:
+  ```
+    Number 23 out of range: 1-10
+    String length 23 out of range: 1-10
+  ```
 * Allow NULL as name in a cvec, for cvec_find and cvec_add
 * Experimental: do not expand on non-interactive operations
   * Set EXPAND_ONLY_INTERACTIVE to enable
