@@ -2169,9 +2169,10 @@ cv_dec64_print(cg_var *cv,
 /*! Print value of CLIgen variable to CLIgen buf using printf style formats.
  * @param[in]   cv   CLIgen variable
  * @param[out]  cb   Value printed 
+ * The params shuld be switched cb<->cv
 */
 int
-cv2cbuf(cg_var *cv, 
+cv2cbuf(cg_var *cv,
 	cbuf   *cb)
 {
     char straddr[INET6_ADDRSTRLEN];
@@ -2979,6 +2980,74 @@ cv_parse(char   *str,
     (((i) >= cv_##type##_get(cvlow)) && \
      ((i) <= cv_##type##_get(cvupp)))
 
+/*! Error messsage for int violating ranges */
+static int
+outofrange(cg_var     *cv0,
+	   cg_varspec *cs,
+	   char      **reason)
+{
+    int     retval = -1;
+    cbuf   *cb = NULL;
+    cg_var *cv1;
+    cg_var *cv2;
+    int     i;
+
+    if ((cb = cbuf_new()) == NULL)
+	goto done;
+    cprintf(cb, "Number ");
+    cv2cbuf(cv0, cb);
+    cprintf(cb, " out of range: ");
+    for (i=0; i<cs->cgs_rangelen; i++){
+	cv1 = cvec_i(cs->cgs_rangecvv_low, i);
+	cv2 = cvec_i(cs->cgs_rangecvv_upp, i);
+	if (i)
+	    cprintf(cb, ", ");
+	cv2cbuf(cv1, cb);
+	cprintf(cb, "-");
+	cv2cbuf(cv2, cb);
+    }
+    if (reason && (*reason = strdup(cbuf_get(cb))) == NULL)
+	goto done;
+    if (cb)
+	cbuf_free(cb);
+    retval = 0;
+ done:
+    return retval;
+}
+
+/*! Error messsage for string violating string limits */
+static int
+outoflength(uint64_t    u64,
+	    cg_varspec *cs,
+	    char      **reason)
+{
+    int     retval = -1;
+    cbuf   *cb = NULL;
+    cg_var *cv1;
+    cg_var *cv2;
+    int     i;
+
+    if ((cb = cbuf_new()) == NULL)
+	goto done;
+    cprintf(cb, "String length %" PRIu64 " out of range: ", u64);
+    for (i=0; i<cs->cgs_rangelen; i++){
+	cv1 = cvec_i(cs->cgs_rangecvv_low, i);
+	cv2 = cvec_i(cs->cgs_rangecvv_upp, i);
+	if (i)
+	    cprintf(cb, ", ");
+	cv2cbuf(cv1, cb);
+	cprintf(cb, "-");
+	cv2cbuf(cv2, cb);
+    }
+    if (reason && (*reason = strdup(cbuf_get(cb))) == NULL)
+	goto done;
+    if (cb)
+	cbuf_free(cb);
+    retval = 0;
+ done:
+    return retval;
+}
+
 /*! Validate cligen variable cv using the spec in cs.
  *
  * @param[in]  cv      A cligen variable to validate. This is a correctly parsed cv.
@@ -3003,7 +3072,8 @@ cv_validate(cligen_handle h,
     char    *str;
     int      ok;
     int      j;
-    cg_var  *cv1, *cv2;
+    cg_var  *cv1;
+    cg_var  *cv2;
     
     switch (cs->cgs_vtype){
     case CGV_INT8:
@@ -3018,8 +3088,8 @@ cv_validate(cligen_handle h,
 		break;
 	}
 	if (!ok){
-	    if (reason)
-		*reason = cligen_reason("Number out of range: %d", i);
+	    if (outofrange(cv, cs, reason) < 0)
+		goto done;
 	    retval = 0; /* No match */
 	}
 	break;
@@ -3035,8 +3105,8 @@ cv_validate(cligen_handle h,
 		break;
 	}
 	if (!ok){
-	    if (reason)
-		*reason = cligen_reason("Number out of range: %d", i);
+	    if (outofrange(cv, cs, reason) < 0)
+		goto done;
 	    retval = 0; /* No match */
 	}
 	break;
@@ -3052,8 +3122,8 @@ cv_validate(cligen_handle h,
 		break;
 	}
 	if (!ok){
-	    if (reason)
-		*reason = cligen_reason("Number out of range: %d", i);
+	    if (outofrange(cv, cs, reason) < 0)
+		goto done;
 	    retval = 0; /* No match */
 	}
 	break;
@@ -3069,8 +3139,8 @@ cv_validate(cligen_handle h,
 		break;
 	}
 	if (!ok){
-	    if (reason)
-		*reason = cligen_reason("Number out of range: %" PRId64, i64);
+	    if (outofrange(cv, cs, reason) < 0)
+		goto done;
 	    retval = 0; /* No match */
 	}
 	break;
@@ -3086,8 +3156,8 @@ cv_validate(cligen_handle h,
 		break;
 	}
 	if (!ok){
-	    if (reason)
-		*reason = cligen_reason("Number out of range: %u", u);
+	    if (outofrange(cv, cs, reason) < 0)
+		goto done;
 	    retval = 0; /* No match */
 	}
 	break;
@@ -3103,8 +3173,8 @@ cv_validate(cligen_handle h,
 		break;
 	}
 	if (!ok){
-	    if (reason)
-		*reason = cligen_reason("Number out of range: %u", u);
+	    if (outofrange(cv, cs, reason) < 0)
+		goto done;
 	    retval = 0; /* No match */
 	}
 	break;
@@ -3120,8 +3190,8 @@ cv_validate(cligen_handle h,
 		break;
 	}
 	if (!ok){
-	    if (reason)
-		*reason = cligen_reason("Number out of range: %u", u);
+	    if (outofrange(cv, cs, reason) < 0)
+		goto done;
 	    retval = 0; /* No match */
 	}
 	break;
@@ -3137,8 +3207,8 @@ cv_validate(cligen_handle h,
 		break;
 	}
 	if (!ok){
-	    if (reason)
-		*reason = cligen_reason("Number out of range: %" PRIu64, u64);
+	    if (outofrange(cv, cs, reason) < 0)
+		goto done;
 	    retval = 0; /* No match */
 	}
 	break;
@@ -3161,9 +3231,8 @@ cv_validate(cligen_handle h,
 	}
 	if (!ok){
 	    if (reason){
-		char *s = cv2str_dup(cv);
-		*reason = cligen_reason("Number out of range: %s", s);
-		free(s);
+		if (outofrange(cv, cs, reason) < 0)
+		    goto done;
 	    }
 	    retval = 0; /* No match */
 	}
@@ -3201,8 +3270,8 @@ cv_validate(cligen_handle h,
 		break;
 	}
 	if (!ok){
-	    if (reason)
-		*reason = cligen_reason("String length not within limits: %" PRIu64, u64);
+	    if (outoflength(u64, cs, reason) < 0)
+		goto done;
 	    retval = 0; /* No match */
 	}
 	break;
@@ -3228,6 +3297,7 @@ cv_validate(cligen_handle h,
     }
     if (reason && *reason)
 	assert(retval == 0);
+ done:
     return retval;
 }
 
