@@ -507,7 +507,9 @@ match_pattern_terminal(cligen_handle h,
     cg_obj *co_orig;
     int     exact;
     char   *reason;
-    int     findreason;
+    int     onlyvars = 0; /* 1: >0 elements, only variables alternatives 
+			   * (or commands derived from variables)
+			   * 0 :empty or contains at least one command (non-var) */
 
     co_match = NULL;
     if (level > command_levels(string0)){
@@ -515,17 +517,21 @@ match_pattern_terminal(cligen_handle h,
 		__FUNCTION__, string0);
 	return -1;
     }
-    /* If there are only variables in the list, then keep track of variable match errors */
-    findreason = 0;
+    /* This is logic to hinder error message to relate to variable mismatch
+     * if there is a commands on same level with higher prio to match.
+     * If all match fails, it is more interesting to understand the match fails
+     * on commands, not variables.
+     */
+    onlyvars = 0;
     if (reason0)
 	for (i=0; i<pt.pt_len; i++){ 
 	    if ((co = pt.pt_vec[i]) == NULL)
 		continue;
-	    if (co->co_type != CO_VARIABLE){
-		findreason = 0;
+	    if (co->co_type != CO_VARIABLE && co->co_ref == NULL){
+		onlyvars = 0;
 		break;
 	    }
-	    findreason++;
+	    onlyvars=1;
 	}
     if (extract_substring(string0, level, &string1) < 0)
 	goto done;
@@ -539,7 +545,7 @@ match_pattern_terminal(cligen_handle h,
 	    str = reststring;
 	else
 	    str = string1;
-	if ((match = match_object(h, str, co, &exact, findreason?&reason:NULL)) < 0)
+	if ((match = match_object(h, str, co, &exact, onlyvars?&reason:NULL)) < 0)
 	    goto error;
 	if (match){
 	    assert(reason==NULL);
@@ -560,16 +566,16 @@ match_pattern_terminal(cligen_handle h,
 	    co_match = co;
 	    (*matchv)[matches++] = i; 
 	}
-	/* match == 0, co type is variable and findreason, then reason is set 
-	   this may not be the best preference, we just set the first
+	/* match == 0, co type is variable and onlyvars, then reason is set once
+	 * this may not be the best preference, we just set the first
 	 */
 	if (reason){
 	    if (*reason0 == NULL)
 		*reason0 = reason;
 	    reason = NULL;
-	    findreason = 0;
+	    onlyvars = 0;
 	}
-    }
+    } /* for pt.pt_len */
     if (matches){
 	*ptp = pt.pt_vec;
 	if (reason0 && *reason0){
