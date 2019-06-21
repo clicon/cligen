@@ -8,6 +8,7 @@
     Number 23 out of range: 1-10
     String length 23 out of range: 1-10
   ```
+  * Bug fix so that the above message is shown instead of "Unknown command" in several places
 * Allow NULL as name in a cvec, for cvec_find and cvec_add
 * Experimental: do not expand on non-interactive operations
   * Set EXPAND_ONLY_INTERACTIVE to enable
