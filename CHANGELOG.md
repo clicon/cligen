@@ -2,6 +2,9 @@
 
 ## 4.0.0 (Upcoming)
 
+* Added enable/disable as alternative boolean truth values on input
+  * On request by dave@netgate.
+  * Added header constants to enable disable on/off and enable/disable as alternatives
 * Error messages for invalid number ranges and string lengths have been uniformed and changed.
   * Error messages for invalid ranges are now on the form:
   ```

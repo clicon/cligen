@@ -39,6 +39,18 @@
 #define _CLIGEN_CV_INTERNAL_H_
 
 /*
+ * Constants
+ */
+/* Allow use of on/off as alternative truth values to true/false */
+#define BOOL_TRUTH_ON_OFF
+
+/* Allow use of enable/disable as alternative truth values to true/false */
+#define BOOL_TRUTH_ENABLE_DISABLE
+
+/*
+ * Types
+ */
+/*
  * Cligen Variable structure
  * cg_var / cv
  * Note that a cv holds a value. The specification of a cv is a cg_varspec

@@ -1305,20 +1305,31 @@ parse_bool(char    *str,
     int i;
     int retval = 1;
 
-    if (strcmp(str, "true") == 0 || strcmp(str, "on") == 0)
+    if (strcmp(str, "true") == 0)
 	i = 1;
-    else
-	if (strcmp(str, "false") == 0 || strcmp(str, "off") == 0)
-	    i = 0;
-	else{
-	    if (reason)
-		if ((*reason = cligen_reason("'%s' is not a boolean value", str)) == NULL){
-		    retval = -1;
-		    goto done;
-		}
-	    retval = 0;
-	    goto done;
-	}
+    else if (strcmp(str, "false") == 0)
+	i = 0;
+#ifdef BOOL_TRUTH_ON_OFF
+    else if (strcmp(str, "on") == 0)
+	i = 1;
+    else if (strcmp(str, "off") == 0)
+	i = 0;
+#endif
+#ifdef BOOL_TRUTH_ENABLE_DISABLE
+    else if (strcmp(str, "enable") == 0)
+	i = 1;
+    else if (strcmp(str, "disable") == 0)
+	i = 0;
+#endif    
+    else{
+	if (reason)
+	    if ((*reason = cligen_reason("'%s' is not a boolean value", str)) == NULL){
+		retval = -1;
+		goto done;
+	    }
+	retval = 0;
+	goto done;
+    }
     *val = i;
   done:
     return retval;
