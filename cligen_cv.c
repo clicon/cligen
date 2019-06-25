@@ -887,7 +887,7 @@ parse_int8(char   *str,
 	goto done;
     if (i > 127 || i < -128){
 	if (reason != NULL)
-	    if ((*reason = cligen_reason("%s is out of range(type is int8)", str)) == NULL){
+	    if ((*reason = cligen_reason("Number %s out of range: -128 - 127", str)) == NULL){
 		retval = -1; /* malloc */
 		goto done;
 	    }
@@ -917,9 +917,9 @@ parse_int16(char    *str,
     
     if ((retval = parse_int64(str, &i, reason)) != 1)
 	goto done;
-    if (i > 32676 || i < -32768){
+    if (i > 32767 || i < -32768){
 	if (reason != NULL)
-	    if ((*reason = cligen_reason("%s is out of range(type is int16)", str)) == NULL){
+	    if ((*reason = cligen_reason("Number %s out of range: -32768 - 32767", str)) == NULL){
 		retval = -1;
 		goto done;
 	    }
@@ -951,7 +951,7 @@ parse_int32(char    *str,
 	goto done;
     if (i > INT_MAX || i < INT_MIN){
 	if (reason != NULL)
-	    if ((*reason = cligen_reason("%s is out of range(type is int32)", str)) == NULL){
+	    if ((*reason = cligen_reason("Number %s out of range: %" PRId32 " - %" PRId32, str, INT_MIN, INT_MAX)) == NULL){
 		retval = -1; /* malloc */
 		goto done;
 	    }
@@ -1000,7 +1000,7 @@ parse_int64_base(char    *str,
 	if ((i == INT64_MIN || i == INT64_MAX) && errno == ERANGE){ 
 	    errno = 0;
 	    if (reason != NULL)
-		if ((*reason = cligen_reason("%s is out of range (type is int64)", str)) == NULL){
+		if ((*reason = cligen_reason("Number %s out of range: %" PRId64 " - %" PRId64, str, INT64_MIN, INT64_MAX)) == NULL){
 		    retval = -1; /* malloc */
 		    goto done;
 		}
@@ -1038,7 +1038,6 @@ parse_int64(char    *str,
     return parse_int64_base(str, 0, val, reason);
 }
 
-
 /*! Parse an uint8 number and check for errors
  * @param[in]  str     String containing number to parse
  * @param[out] val     Value on success
@@ -1059,7 +1058,7 @@ parse_uint8(char    *str,
 	goto done;
     if (i > 255){
 	if (reason != NULL)
-	    if ((*reason = cligen_reason("%s is out of range(type is uint8)", str)) == NULL){
+	    if ((*reason = cligen_reason("Number %s out of range: 0 - 255", str)) == NULL){
 		retval = -1; /* malloc */
 		goto done;
 	    }
@@ -1091,7 +1090,7 @@ parse_uint16(char     *str,
 	goto done;
     if (i > 65535){
 	if (reason != NULL)
-	    if ((*reason = cligen_reason("%s is out of range(type is uint16)", str)) == NULL){
+	    if ((*reason = cligen_reason("Number %s out of range: 0 - 65535", str)) == NULL){
 		retval = -1; /* malloc */
 		goto done;
 	    }
@@ -1123,7 +1122,7 @@ parse_uint32(char     *str,
 	goto done;
     if (i > UINT_MAX){
 	if (reason != NULL)
-	    if ((*reason = cligen_reason("%s is out of range(type is uint32)", str)) == NULL){
+	    if ((*reason = cligen_reason("Number %s out of range: 0 - %" PRIu32, str, UINT_MAX)) == NULL){
 		retval = -1; /* malloc */
 		goto done;
 	    }
@@ -1168,7 +1167,7 @@ parse_uint64(char     *str,
     if (errno != 0){
 	if (i == UINT64_MAX && errno == ERANGE){ 
 	    if (reason != NULL)
-		if ((*reason = cligen_reason("%s is out of range (type is uint64)", str)) == NULL){
+		if ((*reason = cligen_reason("Number %s out of range: 0 - %" PRIu64, str, UINT64_MAX)) == NULL){
 		    retval = -1; /* malloc */
 		    goto done;
 		}
@@ -1187,7 +1186,7 @@ parse_uint64(char     *str,
     /* strtoull does _not_ detect negative numbers,... */
     if (strchr(str, '-') != NULL){
 	if (reason != NULL)
-	    if ((*reason = cligen_reason("%s is out of range (type is uint64)", str)) == NULL){
+	    if ((*reason = cligen_reason("Number %s out of range: 0 - %" PRIu64, str, UINT64_MAX)) == NULL){
 		retval = -1; /* malloc */
 		goto done;
 	    }
@@ -2867,7 +2866,7 @@ cv_parse1(char   *str0,
 	if (masklen > 32 || masklen < 0) {
 	    retval = 0;
 	    if (reason) 
-		if ((*reason = cligen_reason("Mask-length out of range: %s", mask)) == NULL)
+		if ((*reason = cligen_reason("Mask-length %s out of range:0 - 32", mask)) == NULL)
 		    retval = -1;
 	    goto done;
 	}
@@ -2888,7 +2887,7 @@ cv_parse1(char   *str0,
 	if (masklen > 128 || masklen < 0) {
 	    retval = 0;
 	    if (reason &&
-		(*reason = cligen_reason("Mask-length out of range: %s", mask))==NULL)
+		(*reason = cligen_reason("Mask-length %s out of range: 0 - 128", mask))==NULL)
 		retval = -1;
 	    goto done;
 	}
@@ -3014,7 +3013,7 @@ outofrange(cg_var     *cv0,
 	if (i)
 	    cprintf(cb, ", ");
 	cv2cbuf(cv1, cb);
-	cprintf(cb, "-");
+	cprintf(cb, " - ");
 	cv2cbuf(cv2, cb);
     }
     if (reason && (*reason = strdup(cbuf_get(cb))) == NULL)
@@ -3047,7 +3046,7 @@ outoflength(uint64_t    u64,
 	if (i)
 	    cprintf(cb, ", ");
 	cv2cbuf(cv1, cb);
-	cprintf(cb, "-");
+	cprintf(cb, " - ");
 	cv2cbuf(cv2, cb);
     }
     if (reason && (*reason = strdup(cbuf_get(cb))) == NULL)
