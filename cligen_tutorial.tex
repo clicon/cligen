@@ -1450,6 +1450,9 @@ This appendix contains a list of cligen API functions. There are several more wh
 {\tt int cligen\_expand\_str2fn(parse\_tree pt, expand\_str2fn\_t *str2fn, void *fnarg)}\\*
 \emph{  Register functions for variable completion in parse-tree using translator}
 
+{\tt const char* cligen\_escape(const char* s)}\\*
+\emph{  Escape special characters in a string, if necessary (SPC, TAB, ?, \textbackslash)}
+
 {\tt char *cv\_name\_get(cg\_var *cv)}\\*
 \emph{ Get name of cligen variable cv}
 
