@@ -1,6 +1,6 @@
 # Cligen Changelog
 
-## 4.0.0 (Upcoming)
+## 4.0.0 (13 July 2019)
 
 * Added enable/disable as alternative boolean truth values on input
   * On request by dave@netgate.
