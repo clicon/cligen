@@ -54,7 +54,6 @@
 #include <assert.h>
 #include <string.h>
 #include <errno.h>
-#include <math.h>
 
 #include "cligen_buf.h"
 #include "cligen_cv.h"
