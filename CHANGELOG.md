@@ -1,4 +1,7 @@
 # Cligen Changelog
+	
+## 4.0.1 (18 August 2019)
+No new functionality, just a release number bump to synchronize with Clixon
 
 ## 4.0.0 (13 July 2019)
 
