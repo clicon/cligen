@@ -372,7 +372,6 @@ pt_expand_treeref(cligen_handle h,
 
 /*! Call expand callback and insert expanded commands in place of variable
  * variable argument callback variant
- * @see pt_expand_fn
  */
 static int
 pt_expand_fnv(cligen_handle h, 
