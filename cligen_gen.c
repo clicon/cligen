@@ -481,6 +481,7 @@ pt_copy(parse_tree  pt,
 	cg_obj     *parent, 
 	parse_tree *ptnp)
 {
+    int        retval = -1;
     int        i;
     int        j;
     parse_tree ptn = {0,};
@@ -488,7 +489,7 @@ pt_copy(parse_tree  pt,
 
     if (pt.pt_vec == NULL){
 	*ptnp = ptn;
-	return 0;
+	goto ok;
     }
     /* subtract treereferences, which are instances of other trees */
     for (i=0; i<pt.pt_len; i++){
@@ -500,14 +501,14 @@ pt_copy(parse_tree  pt,
 
     if ((ptn.pt_vec = (cg_obj **)malloc(ptn.pt_len*sizeof(cg_obj *))) == NULL){
 	fprintf(stderr, "%s: malloc: %s\n", __FUNCTION__, strerror(errno));
-	return -1;
+	goto done;
     }
     j=0;
     for (i=0; i<pt.pt_len; i++){
 	if ((co = pt.pt_vec[i]) != NULL){
 	    if (!co->co_treeref)
 		if (co_copy(co, parent, &ptn.pt_vec[j++]) < 0)
-		    return -1;
+		    goto done;
 	}
 	else
 	    ptn.pt_vec[j++] = NULL;
@@ -518,8 +519,11 @@ pt_copy(parse_tree  pt,
 	    assert(co->co_mark == 0);
 	}
     }
+ ok:
     *ptnp = ptn;
-    return 0;
+    retval = 0;
+ done:
+    return retval;
 }
 
 /*! Compare two strings, extends strcmp 
