@@ -316,8 +316,8 @@ cligen_tree_add(cligen_handle h,
 }
 
 /*! Delete a parsetree list entry not parsetree itself
- * @param[in] h       CLIgen handle
-
+ * @param[in] h    CLIgen handle
+ * @param[in] name 
  */
 int 
 cligen_tree_del(cligen_handle h, 
