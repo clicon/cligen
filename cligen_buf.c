@@ -156,6 +156,32 @@ cbuf_reset(cbuf *cb)
     cb->cb_buffer[0] = '\0'; 
 }
 
+/*! Internal buffer reallocator, Ensure buffer is large enough
+ * use quadratic expansion (2* size)
+ * @param[in] cb   CLIgen buffer
+ * @param[in] len  Extra length added
+ */
+static int
+cbuf_realloc(cbuf *cb,
+	     int   len)
+{
+    int retval = -1;
+    int diff;
+    
+    diff = cb->cb_buflen - (cb->cb_strlen + len + 1);
+    if (diff <= 0){
+	while (diff <= 0){
+	    cb->cb_buflen *= 2; /* Double the space - alt linear growth */
+	    diff = cb->cb_buflen - (cb->cb_strlen + len + 1);
+	}
+	if ((cb->cb_buffer = realloc(cb->cb_buffer, cb->cb_buflen)) == NULL)
+	    goto done;
+    }
+    retval = 0;
+ done:
+    return retval;
+}
+
 /*! Append a cligen buf by printf like semantics
  * 
  * @param [in]  cb      cligen buffer allocated by cbuf_new(), may be reallocated.
@@ -166,56 +192,41 @@ int
 cprintf(cbuf       *cb, 
 	const char *format, ...)
 {
+    int     retval = -1;
     va_list ap;
-    int diff;
-    int retval;
+    int     len;
+    int     ret;
 
-    va_start(ap, format);
-  again:
     if (cb == NULL)
-	return 0;
-    retval = vsnprintf(cb->cb_buffer+cb->cb_strlen, 
-		       cb->cb_buflen-cb->cb_strlen, 
-		       format, ap);
-    if (retval < 0)
-	return -1;
-    diff = cb->cb_buflen - (cb->cb_strlen + retval + 1);
-    if (diff <= 0){
-	cb->cb_buflen *= 2; /* Double the space - alt linear growth */
-	if ((cb->cb_buffer = realloc(cb->cb_buffer, cb->cb_buflen)) == NULL)
-	    return -1;
-	va_end(ap);
-	va_start(ap, format);
-	goto again;
-    }
-    cb->cb_strlen += retval;
-
+	goto ok;
+    va_start(ap, format);
+    if ((len = vsnprintf(NULL, 0, format, ap)) < 0) /* dryrun, just get len */
+	goto done;
+    /* Ensure buffer is large enough */
+    if (cbuf_realloc(cb, len) < 0)
+	goto done;
+    if ((ret = vsnprintf(cb->cb_buffer+cb->cb_strlen, /* str */
+			 cb->cb_buflen-cb->cb_strlen, /* size */
+			 format, ap)) < 0)
+	goto done;
+    cb->cb_strlen += ret;
     va_end(ap);
+ ok:
+    retval = 0;
+ done:
     return retval;
 }
 
 /*! Append a character to a cbuf
   *
-  * @param [in]  cb      cligen buffer allocated by cbuf_new(), may be reallocated.
-  * @param [in]  c       character to append
+  * @param [in]  cb  cligen buffer allocated by cbuf_new(), may be reallocated.
+  * @param [in]  c   character to append
+  * @see cbuf_append_str, use that function instead
   */
 int
 cbuf_append(cbuf       *cb,
             int        c)
 {
-    int diff;
-
-    /* make sure we have enough space */
-    diff = cb->cb_buflen - (cb->cb_strlen + 1);
-    if (diff <= 0) {
-	cb->cb_buflen *= 2;
-	if ((cb->cb_buffer = realloc(cb->cb_buffer, cb->cb_buflen)) == NULL) {
-	    return -1;
-	}
-    }
-
-    cb->cb_buffer[cb->cb_strlen++] = c;
-    cb->cb_buffer[cb->cb_strlen] = 0;
-
-    return 0;
+    return cprintf(cb, "%c", c);
 }
+
