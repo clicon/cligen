@@ -652,7 +652,6 @@ cgy_terminal(cliyacc *ya)
     
     for (cl = ya->ya_list; cl; cl = cl->cl_next){
 	co  = cl->cl_obj;
-		
 	if (ya->ya_callbacks){ /* callbacks */
 	    ccp = &co->co_callbacks;
 	    while (*ccp != NULL)
@@ -660,7 +659,7 @@ cgy_terminal(cliyacc *ya)
 	    if (co_callback_copy(ya->ya_callbacks, ccp) < 0)
 		goto done;
 	}
-	/* variables: special case hide, auth */
+	/* variables: special case "hide" */
 	if (ya->ya_cvec){
 	    if (cvec_find(ya->ya_cvec, "hide") != NULL)
 		co->co_hide = 1;
@@ -701,8 +700,9 @@ cgy_terminal(cliyacc *ya)
 static int
 ctx_push(cliyacc *ya)
 {
-    struct cgy_list *cl; 
-    struct cgy_stack *cs; 
+    struct cgy_list  *cl;
+    struct cgy_stack *cs;
+    cg_obj           *co; 
 
     if (debug)
 	fprintf(stderr, "%s\n", __FUNCTION__);
@@ -714,6 +714,9 @@ ctx_push(cliyacc *ya)
     cs->cs_next = ya->ya_stack;
     ya->ya_stack = cs;
     for (cl = ya->ya_list; cl; cl = cl->cl_next){
+	co = cl->cl_obj;
+	if (cvec_find(ya->ya_cvec, "hide") != NULL)
+	    co->co_hide = 1;
     	if (cgy_list_push(cl->cl_obj, &cs->cs_list) < 0) 
 	    return -1;
     }
