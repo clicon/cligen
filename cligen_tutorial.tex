@@ -7,7 +7,7 @@
 %
 % Title
 %
-\title {CLIgen Manual\\ {\small CLIgen version 3.9}}
+\title {CLIgen Manual\\ {\small CLIgen version 4.3}}
 
 \author{Olof Hagsand}
 %
@@ -86,8 +86,7 @@ by a user. You may specify an argument to a callback. Callbacks
 are a part of the API described in Section~\ref{sec:api}.
 \item
 \emph{Assignments} are used to set properties of the CLI and its
-commands, such as prompts, modes authorization, visibility,
-etc. Assignments are either global or per-command.
+commands, such as prompts, visibility, etc. Assignments are either global or per-command.
 \item
 \emph{Help text} provides help text for individual commands.
 \item
@@ -274,27 +273,21 @@ You can assign values to \emph{global} and \emph{local}
 variables. Global variables are valid for the whole syntax, while
 local variables only apply to a single command.
 
-In the current release, there are two pre-defined local variables: 
+In the current release, there is one pre-defined local variable: 
 \begin{itemize}
 \item
 {\tt hide} specifies that a command is not visible when listing or
 completing commands with '?' and 'TAB'.  Still, the command is
 selectable and may be selected if you type it. This can be useful if there are
 commands that should be known only by expert users.
-\item
-{\tt auth}.  defines authorization level the user should have to be
-able to use the command.
 \end{itemize}
 
-In the following example, {\tt aa bb ca} is not visible,
-whereas {\tt aa bb cb} and {\tt aa bb cb dd} are only shown if the
-user has {\tt show commands} priviligies.
+In the following example, {\tt aa bb ca} is not visible:
 \begin{verbatim}
   aa bb{
     ca,hide;
-    cb,auth="show";{
-      dd,auth="show";
-      ee;
+    cb;{
+      dd;
     }
   }
 \end{verbatim}

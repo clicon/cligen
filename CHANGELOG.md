@@ -1,5 +1,12 @@
 # Cligen Changelog
 	
+## 4.3.0 (Expected: December 2019)
+Bumped version to match with clixon 4.3
+
+* Fixed: [Is it possible to hide non-terminal commands? #31](https://github.com/olofhagsand/cligen/issues/31)
+* Removed "auth" as a local variable in docs, since it is not implemented
+
+
 ## 4.0.1 (18 August 2019)
 No new functionality, just a release number bump to synchronize with Clixon
 
