@@ -199,18 +199,20 @@ cprintf(cbuf       *cb,
 
     if (cb == NULL)
 	goto ok;
-    va_start(ap, format);
+    va_start(ap, format); /* dryrun */
     if ((len = vsnprintf(NULL, 0, format, ap)) < 0) /* dryrun, just get len */
 	goto done;
+    va_end(ap);
     /* Ensure buffer is large enough */
     if (cbuf_realloc(cb, len) < 0)
-	goto done;
+    	goto done;
+    va_start(ap, format); /* real */
     if ((ret = vsnprintf(cb->cb_buffer+cb->cb_strlen, /* str */
 			 cb->cb_buflen-cb->cb_strlen, /* size */
 			 format, ap)) < 0)
 	goto done;
-    cb->cb_strlen += ret;
     va_end(ap);
+    cb->cb_strlen += ret;
  ok:
     retval = 0;
  done:

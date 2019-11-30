@@ -249,9 +249,6 @@ co_new(char   *cmd,
     co->co_max = 0;                  /* pt len */
     co->co_next = NULL;
     co->co_delimiter = ' ';
-#ifdef notyet
-    co->co_cv = cv_new(CGV_ERR);
-#endif
     return co;
 }
 
@@ -284,9 +281,7 @@ cov_new(enum cv_type cvtype,
     co->co_next = NULL;
     co->co_delimiter = ' ';
     co->co_dec64_n = CGV_DEC64_N_DEFAULT;
-#ifdef notyet
-    co->co_cv = cv_new(CGV_ERR);
-#endif
+
     return co;
 }
 
@@ -864,10 +859,6 @@ co_free(cg_obj *co,
 	if (co->co_rangecvv_upp)
 	    cvec_free(co->co_rangecvv_upp);
     }
-#ifdef notyet
-    if (co->co_cv)
-	cv_free(co->co_cv);
-#endif
     free(co);
     return 0;
 }
@@ -1092,11 +1083,11 @@ cligen_reason(const char *fmt, ...)
 	return NULL;
     }
     va_start(ap, fmt);
-
     if ((res = vsnprintf(reason, len, fmt, ap)) < 0){
 	free(reason);
 	reason = NULL;
     }
+    va_end(ap);
     return reason;	
 }
 

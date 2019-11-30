@@ -93,10 +93,11 @@ cov2cbuf(cbuf   *cb,
 	    cprintf(cb, "%s", co->co_choice);
     }
     else{
-	if (brief)
+	if (brief){
 	    cprintf(cb, "%c%s%c", VARIABLE_PRE, 
-		    co->co_show ? co->co_show : co->co_command, 
-		    VARIABLE_POST);   
+		    co->co_show!=NULL ? co->co_show : co->co_command, 
+		    VARIABLE_POST);
+	}
 	else{
 	    cprintf(cb, "%c%s:%s", VARIABLE_PRE, co->co_command, cv_type2str(co->co_vtype));
 
