@@ -279,10 +279,6 @@ pt_reference_trunc(parse_tree pt)
     for (i=0; i<pt.pt_len; i++){    
 	if ((co = pt.pt_vec[i]) == NULL)
 	    continue;
-	if (co->co_nonterminal)
-	    if (co->co_max && co->co_next[0] != NULL){ /* Add empty sub */
-		co_insert(&co->co_pt, NULL);
-	    }
 	if (pt_reference_trunc(co->co_pt) < 0)
 	    goto done;
     }

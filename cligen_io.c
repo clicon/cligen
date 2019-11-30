@@ -98,8 +98,8 @@ cligen_output(FILE *f, char *template, ... )
 
     va_start(args, template);
     len = vsnprintf(NULL, 0, template, args);
-    len++;
     va_end(args);
+    len++;
     if ((buf = malloc(len)) == NULL){
 	fprintf(stderr, "%s: malloc: %s\n", __FUNCTION__, strerror(errno));
 	goto done;

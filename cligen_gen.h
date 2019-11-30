@@ -171,9 +171,6 @@ struct cg_obj{
     cvec             *co_cvec;       /* List of cligen variables (XXX: not visible to callbacks) */
     int               co_mark;      /* Only used internally (for recursion avoidance) */
     char	     *co_help;	    /* Brief helptext */
-#ifdef notused
-    int	              co_top;	    /* Top of syntax tree: use as virtual top */
-#endif
     int	              co_hide;      /* Don't show in help/completion */
     char             *co_mode;      /* Name of other syntax mode */
 
@@ -187,10 +184,6 @@ struct cg_obj{
     void             *co_userdata;  /* User-specific data, malloced and defined by
 				       the user. Will be freed by cligen on exit */
     size_t            co_userlen;   /* Length of the userdata (need copying) */
-
-#ifdef notyet
-    struct cg_var    *co_cv;        /* Store value directly at matching */
-#endif
     int               co_treeref;   /* This node is top of expanded sub-tree */
     int               co_refdone;   /* This reference has already been expanded */
     /* Experiment to make the junos edit style work. When we graft the tree,
