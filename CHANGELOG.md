@@ -3,6 +3,7 @@
 ## 4.3.0 (Expected: December 2019)
 Bumped version to match with clixon 4.3
 
+* Fixed [Ability to use show attribute to display a multiword string #33](https://github.com/olofhagsand/cligen/issues/33)
 * Fixed: [Is it possible to hide non-terminal commands? #31](https://github.com/olofhagsand/cligen/issues/31)
 * Removed "auth" as a local variable in docs, since it is not implemented
 

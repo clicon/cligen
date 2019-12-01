@@ -1213,14 +1213,17 @@ keypairs    : keypair
             | keypairs ' ' keypair
             ;
 
-numdec     : NUMBER { $$ = $1; }
-           | DECIMAL 
-           ;
+numdec      : NUMBER { $$ = $1; }
+            | DECIMAL 
+            ;
 
 keypair     : NAME '(' ')' { expand_fn(_ya, $1); }
             | NAME '(' exparglist ')' { expand_fn(_ya, $1); }
             | V_SHOW ':' NAME { 
 		 _YA->ya_var->co_show = $3; 
+	      }
+            | V_SHOW ':' DQ charseq DQ {
+		 _YA->ya_var->co_show = $4; 
 	      }
             | V_RANGE '[' numdec ':' numdec ']' { 
 		if (cg_range(_ya, $3, $5) < 0) YYERROR; free($3); free($5); 
