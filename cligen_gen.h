@@ -186,10 +186,6 @@ struct cg_obj{
     size_t            co_userlen;   /* Length of the userdata (need copying) */
     int               co_treeref;   /* This node is top of expanded sub-tree */
     int               co_refdone;   /* This reference has already been expanded */
-    /* Experiment to make the junos edit style work. When we graft the tree,
-       these places should insert extra NULL child to be able to edit.
-     */
-    int               co_nonterminal; /* Set if we should be able to <CR> here */
 
     /* Ugly application code */
     struct parse_tree co_pt_push;   /* Saved orig of parse-tree (ugly user code) */
