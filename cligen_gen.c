@@ -63,6 +63,27 @@
 /* Internal functions */
 static int pt_free1(parse_tree, int recursive);
 
+void
+co_flags_set(cg_obj  *co,
+	     uint32_t flag)
+{
+    co->co_flags |= flag;
+}
+
+void
+co_flags_reset(cg_obj  *co,
+	       uint32_t flag)
+{
+    co->co_flags &= ~flag;
+}
+
+int
+co_flags_get(cg_obj  *co,
+	     uint32_t flag)
+{
+    return (co->co_flags & flag) ? 1 : 0;
+}
+
 /*! Assign a preference to a cligen variable object
  * Prefer more specific commands/variables  if you have to choose from several. 
  * @param[in] co   Cligen obe
@@ -248,7 +269,6 @@ co_new(char   *cmd,
     co_up_set(co, parent);
     co->co_max = 0;                  /* pt len */
     co->co_next = NULL;
-    co->co_delimiter = ' ';
     return co;
 }
 
@@ -279,7 +299,6 @@ cov_new(enum cv_type cvtype,
 	co_up_set(co, parent);
     co->co_max = 0;                  /* pt len */
     co->co_next = NULL;
-    co->co_delimiter = ' ';
     co->co_dec64_n = CGV_DEC64_N_DEFAULT;
 
     return co;
@@ -376,11 +395,10 @@ co_copy(cg_obj  *co,
 	return -1;
     }
     memcpy(con, co, sizeof(cg_obj));
-    memset(&con->co_pt_push, 0, sizeof(struct parse_tree));
     memset(&con->co_pt_exp, 0, sizeof(struct parse_tree));
     con->co_ref  = NULL;
-    con->co_mark = 0;
-    con->co_refdone = 0;
+    co_flags_reset(con, CO_FLAGS_MARK);
+    co_flags_reset(con, CO_FLAGS_REFDONE);
     /* Replace all pointers */
     co_up_set(con, parent);
     if (co->co_command)
@@ -392,14 +410,6 @@ co_copy(cg_obj  *co,
 	return -1;
     if (co->co_cvec)
 	con->co_cvec = cvec_dup(co->co_cvec);
-    if (co->co_userdata && co->co_userlen){
-	if ((con->co_userdata = malloc(co->co_userlen)) == NULL){
-	    fprintf(stderr, "%s: malloc: %s\n", __FUNCTION__, strerror(errno));
-	    return -1;
-	}
-	memcpy(con->co_userdata, co->co_userdata, co->co_userlen);
-    }
-
     if (co->co_next)
 	if (pt_copy(co->co_pt, con, &con->co_pt) < 0)
 	    return -1;
@@ -408,12 +418,6 @@ co_copy(cg_obj  *co,
 	    fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
 	    return -1;
 	}
-    if (co->co_mode){
-	if ((con->co_mode = strdup(co->co_mode)) == NULL){
-	    fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
-	    return -1;
-	}
-    }
     if (co_value_set(con, co->co_value) < 0) /* XXX: free på co->co_value? */
 	return -1;
 
@@ -488,12 +492,11 @@ pt_copy(parse_tree  pt,
     }
     /* subtract treereferences, which are instances of other trees */
     for (i=0; i<pt.pt_len; i++){
-	if ((co = pt.pt_vec[i]) && co->co_treeref)
+	if ((co = pt.pt_vec[i]) && co_flags_get(co, CO_FLAGS_TREEREF))
 	    ;
 	else
 	    ptn.pt_len++;
     }
-
     if ((ptn.pt_vec = (cg_obj **)malloc(ptn.pt_len*sizeof(cg_obj *))) == NULL){
 	fprintf(stderr, "%s: malloc: %s\n", __FUNCTION__, strerror(errno));
 	goto done;
@@ -501,18 +504,12 @@ pt_copy(parse_tree  pt,
     j=0;
     for (i=0; i<pt.pt_len; i++){
 	if ((co = pt.pt_vec[i]) != NULL){
-	    if (!co->co_treeref)
+	    if (!co_flags_get(co, CO_FLAGS_TREEREF))
 		if (co_copy(co, parent, &ptn.pt_vec[j++]) < 0)
 		    goto done;
 	}
 	else
 	    ptn.pt_vec[j++] = NULL;
-    }
-    for (i=0; i<ptn.pt_len; i++){
-	if ((co = ptn.pt_vec[i]) != NULL){
-	    assert(co->co_treeref == 0);
-	    assert(co->co_mark == 0);
-	}
     }
  ok:
     *ptnp = ptn;
@@ -576,7 +573,7 @@ str_cmp(char *s1,
  * @retval >0  if co1 is greater than co2
  * @see str_cmp
  */
-static int 
+int 
 co_eq(cg_obj *co1,
       cg_obj *co2)
 {
@@ -794,11 +791,11 @@ cligen_parsetree_sort(parse_tree pt,
     for (i=0; i<pt.pt_len; i++){
 	if ((co = pt.pt_vec[i]) == NULL)
 	    continue;
-	if (co->co_mark == 0){ /* not recursive */
-	    co->co_mark = 1;
+	if (co_flags_get(co, CO_FLAGS_MARK) == 0){ /* not recursive */
+	    co_flags_set(co, CO_FLAGS_MARK);
 	    if (co->co_next && recursive)
 		cligen_parsetree_sort(co->co_pt, 1);
-	    co->co_mark = 0;
+	    co_flags_reset(co, CO_FLAGS_MARK);
 	}
     }
 }
@@ -825,12 +822,8 @@ co_free(cg_obj *co,
 	free(co->co_help);
     if (co->co_command)
 	free(co->co_command);
-    if (co->co_mode)
-	free(co->co_mode);
     if (co->co_value)
 	free(co->co_value);
-    if (co->co_userdata)
-	free(co->co_userdata);
     if (co->co_cvec)
 	cvec_free(co->co_cvec);
     while ((cc = co->co_callbacks) != NULL){

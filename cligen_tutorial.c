@@ -329,7 +329,7 @@ main(int argc, char *argv[])
     pt = NULL;
     while ((pt = cligen_tree_each(h, pt)) != NULL) {
 	printf("Syntax:\n");
-	cligen_print(stdout, *pt, 0);
+	pt_print(stdout, *pt, 0);
     }
     fflush(stdout);
 

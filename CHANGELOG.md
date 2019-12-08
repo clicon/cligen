@@ -1,12 +1,19 @@
 # Cligen Changelog
 	
 ## 4.3.0 (Expected: December 2019)
-Bumped version to match with clixon 4.3
+Bugfixes and internal struct reorganizing. Bumped version to match with clixon 4.3
 
 * Fixed [Ability to use show attribute to display a multiword string #33](https://github.com/olofhagsand/cligen/issues/33)
 * Fixed: [Is it possible to hide non-terminal commands? #31](https://github.com/olofhagsand/cligen/issues/31)
 * Removed "auth" as a local variable in docs, since it is not implemented
-
+* C-API change:
+  * `cligen_print()` renamed to `pt_print()`
+  * `cligen_print_obj()` renamed to `co_print()`
+* C Restructure of cligen-object (cg_obj) struct, for simplicity and smaller footprint:
+  * Moved `co_delimiter` to cligen_handle
+  * Added a generic `co_flags` field with `CO_FLAGS_*` constants
+  * Moved `co_hide`, `co_mark`, `co_treeref`, and `co_refdone` to `co_flags`
+  * Removed `co_userdata` since it is not used.
 
 ## 4.0.1 (18 August 2019)
 No new functionality, just a release number bump to synchronize with Clixon

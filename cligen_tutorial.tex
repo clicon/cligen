@@ -418,7 +418,7 @@ The variable syntax has several forms:
 \begin{verbatim}
   <int32>;                
   <a:int32>;              
-  <a:int32 show:number>("A 32-bit number")
+  <a:int32 show:"a number">("A 32-bit number")
 \end{verbatim}
 
 In the first form, both name, type and show is {\tt int32}. In the
@@ -428,7 +428,7 @@ In the last form, all fields are explicitly given, and there is also a help-text
 An example of the last, most explicit form in a CLI:
 \begin{verbatim}
   cli> '?'
-     <number>          A 32-bit number
+     <a number>        A 32-bit number
 \end{verbatim}
 
 \subsection{String}
@@ -687,7 +687,7 @@ In this example, {\tt incstr} simply increments every character in the variable.
     variables:        1 name:var type:string value:IBM
 \end{verbatim}
 
-In the same way, a clear text password could e translated to an encrypted string.
+In the same way, a clear text password could be translated to an encrypted string.
 For information on how to implement a translator function, see Section~\ref{sec:translate}.
 
 \section{Operators}
@@ -783,17 +783,17 @@ example.
 
 As an assistant, you can use the {\tt -p} option to {\tt cligen\_file} to see which basic syntax is generated:
 \begin{verbatim}
-$ echo "[a][b][c];" | ./cligen_file -p
-a;{
+   $ echo "[a][b][c];" | ./cligen_file -p
+   a;{
+      b;{
+         c;
+      }
+      c;
+   }
    b;{
       c;
    }
    c;
-}
-b;{
-   c;
-}
-c;
 \end{verbatim}
 
 \section{API}
@@ -1228,361 +1228,14 @@ only) using {\tt make install-lib} (or {\tt make install-include}).
 \section*{Appendix A: Tutorial command syntax}
 \label{app:syntax}
 
-This appendix contains an example command syntax. Most of it has
-appeared in the tutorial. This example is found in the file {\tt
-  tutorial.cli} in the source release.
+For example command syntax, please see the {\tt tutorial.cli} file in the source release.
 
-\small
-\begin{verbatim}
-  # This file is part of CLIgen.
-  # $Id: cligen_tutorial.tex,v 1.33 2014/11/09 19:58:30 olof Exp $
-  # Copyright (C) 2011-2013 Olof Hagsand
-
-  prompt="hello> ";            # Assignment of prompt
-  comment="#";                 # Same comment as in syntax
-  treename="tutorial";               # Name of syntax (used when referencing)
-  hello("Greet the world"){    # 'hello' command with help text
-    world, hello("Hello World!"); # 'world' command with callback
-  }
-  # Nested command using callback arguments to differentiate
-  ip("The IP protocol"){       
-    tcp("The TCP protocol") <uint16>("Port number"), cb("tcp");
-    udp("The UDP protocol") <ipaddr>("IPv4 address"), cb("udp");
-  }
-  # Example of commands on several levels
-  aa bb,cb();{              
-    ff,cb();
-  }
-  # Example of complex variable matching
-  values (<int8> | <string> | <int64> | aa), cb();
-  # Complex syntax and callback argument handling
-  aa bb (ca("help ca") <int32>|cb("help cb")) [dd|ee], letters();
-  # Expand example
-  interface {
-    <ifname:string interface()>,cb(); 
-  }
-  # Example of hidden command
-  secret,hide,secret("message");        
-  # Example of changing prompt
-  change prompt <new:string>("New prompt"),setprompt(); 
-  
-  # Example of sub-tree reference (here recursion).
-  recurse @tutorial;
-
-   # Quit CLI
-  quit("quit the CLI"),quit(); 
-\end{verbatim}
-\normalsize
 
 \newpage
 \section*{Appendix B: API functions}
 \label{app:functions}
 
-This appendix contains a list of cligen API functions. There are several more which may be found in examples and include files.
-\small
-
-{\tt cvec cvec\-\_\-new (int len)}\\*
-\emph{Create and initialize a new cligen variable vector (cvec)}
-
-{\tt cligen\_handle cligen\_init(void)}\\*
-\emph{This is the first call the CLIgen API and returns a handle. }
-
-{\tt int cligen\_exit(cligen\_handle h)}\\*
-\emph{ This is the last call to the CLIgen API}
-
-{\tt int cligen\_comment\_set(cligen\_handle h, char c)}\\*
-\emph{ Set comment character.}
-
-{\tt int cligen\_prompt\_set(cligen\_handle h, char *prompt)}\\*
-\emph{ Set CLIgen prompt string.}
-
-{\tt parse\_tree *cligen\_tree(cligen\_handle h, char *name)}\\*
-\emph{ Get a parsetree, if name==NULL, return first parse-tree}
-
-{\tt int cligen\_tree\_add(cligen\_handle h, char *name, parse\_tree pt)}\\*
-\emph{ Add a new parsetree}
-
-{\tt char* cligen\_tree\_active(cligen\_handle h)}\\*
-\emph{ Get name of currently active parsetree.}
-
-{\tt int cligen\_tree\_active\_set(cligen\_handle h, char *treename)}\\*
-\emph{ Set currently active parsetree by name.}
-
-{\tt int cligen\_completion(cligen\_handle h)}\\*
-\emph{ Get completion mode. 0: complete 1 level. 1: complete all}
-
-{\tt int cligen\_completion\_set(cligen\_handle h, int mode)}\\*
-\emph{ Set completion mode. 0: complete 1 level. 1: complete all}
-
-{\tt int cligen\_terminalrows(cligen\_handle h)}\\*
-\emph{ Get number of displayed terminal rows.}
-
-{\tt int  cligen\_terminalrows\_set(cligen\_handle h, int rows)}\\*
-\emph{ Set number of displayed terminal rows.}
-
-{\tt int cligen\_terminal\_length(cligen\_handle h)}\\*
-\emph{ Get length of lines (number of 'columns' in a line).}
-
-{\tt int  cligen\_terminal\_length\_set(cligen\_handle h, int length)}\\*
-\emph{ Set length of lines (number of 'columns' in a line).}
-
-{\tt int cligen\_tabmode(cligen\_handle h)}\\*
-\emph{ Get tab-mode. 0 is short/ios mode, 1 is long/junos mode.}
-
-{\tt int cligen\_tabmode\_set(cligen\_handle h, int mode)}\\*
-\emph{ Set tab-mode, 0 is short/ios mode, 1 is long/junos mode.}
-
-{\tt int cligen\_lexicalorder(cligen\_handle h)}\\*
-\emph{ Get lexical matching order: strcmp (0) or strverscmp (1).}
-
-{\tt int cligen\_lexicalorder\_set(cligen\_handle h, int n)/*! }\\*
-\emph{ Set lexical matching order: strcmp (0) or strverscmp (1).}
-
-{\tt int cligen\_ignorecase(cligen\_handle h)}\\*
-\emph{ Ignore uppercase/lowercase or not}
-
-{\tt int cligen\_ignorecase\_set(cligen\_handle h, int n)}\\*
-\emph{ Ignore uppercase/lowercase or not}
-
-{\tt int cligen\_userhandle\_set(cligen\_handle h, void *userhandle);}\\*
-\emph{Set app-spefici handle for callbacks instead of cligen handle}
-
-{\tt int cligen\_logsyntax\_set(cligen\_handle h, int n)}
-\emph{Debug syntax by printing dynamically on stderr. Get function.}
-
-{\tt cvec *cvec\_new(int len)}\\*
-\emph{  Create and initialize a new cligen variable vector (cvec)}
-
-{\tt int cvec\_free(cvec *vr)}\\*
-\emph{ Free a cvec}
-
-{\tt int cvec\_init(cvec *vr, int len)}\\*
-\emph{ Initialize a cligen variable vector (cvec) with 'len' numbers of variables.}
-
-{\tt int cvec\_reset(cvec *vr)}\\*
-\emph{ Like cvec\_free but does not actually free the cvec.}
-
-{\tt cg\_var *cvec\_next(cvec *vr, cg\_var *cv0)\\*
-\emph{  Given an cv in a cligen variable vector (cvec) return the next cv.}
-
-{\tt cg\_var *cvec\_add(cvec *vr, enum cv\_type type)}\\*
-\emph{  Append a new cligen variable (cv) to cligen variable vector (cvec) and return it.}
-
-{\tt int cvec\_del(cvec *vr, cg\_var *del)}\\*
-\emph{  Delete a cv variable from a cvec. Note: cv is not reset and may be stale!}
-
-{\tt int cvec\_len(cvec *vr)}\\*
-\emph{ return length of a cvec.}
-
-{\tt cg\_var *cvec\_i(cvec *vr, int i)}\\*
-\emph{ return i:th element of cligen variable vector cvec.}
-
-{\tt cg\_var *cvec\_each(cvec *vr, cg\_var *prev)/*! }\\*
-\emph{ Iterate through all cligen variables in a cvec list}
-
-{\tt cg\_var *cvec\_each1(cvec *vr, cg\_var *prev)}\\*
-\emph{ Like cvec\_each but skip element 0. }
-
-{\tt cvec *cvec\_dup(cvec *old)}\\*
-\emph{  Create a new cvec by copying from an original}
-
-{\tt int cvec\_match(cg\_obj *co\_match, char   *cmd, cvec   *vr)}\\*
-\emph{ Create cv list by matching a CLIgen parse-tree and an input string. }
-
-{\tt int cvec\_start(char   *cmd)}\\*
-\emph{ Create a cv list with a single string element. }
-
-{\tt int cvec\_print(FILE *f, cvec *vr)}\\*
-\emph{ Pretty print cligen variable list to a file}
-
-{\tt cg\_var *cvec\_find(cvec *vr, char *name)}\\*
-\emph{ Return first cv in a cvec matching a name}
-
-{\tt cg\_var *cvec\_find\_var(cvec *vr, char *name)}\\*
-\emph{  Like cvec\_find, but only search non-keywords}
-
-{\tt cg\_var *cvec\_find\_keyword(cvec *vr, char *name)}\\*
-\emph{ Like cvec\_find, but only search keywords}
-
-{\tt char *cvec\_find\_str(cvec *vr, char *name)}\\*
-\emph{  Typed version of cvec\_find that returns the string value.}
-
-{\tt int cv\_exclude\_keys(int status)}\\*
-\emph{ Changes cvec find function behaviour, exclude keywords or include them.}
-
-{\tt int cligen\_output(FILE *f, char *template, ... )}\\*
-\emph{ CLIgen output function. All output should be made via this function.}
-
-{\tt void cligen\_susp\_hook(cligen\_handle h, int (*fn)(void *h, char *, int, int *))}\\*
-\emph{ Register a suspend (\^Z) function hook }
-
-{\tt void cligen\_exitchar\_add(cligen\_handle h, char c)}\\*
-\emph{ Register extra exit characters (in addition to ctrl-c)}
-
-{\tt int cligen\_help(FILE *f, parse\_tree pt)}\\*
-\emph{ Print top-level help (all commands) of a parse-tree}
-
-{\tt int cov\_print(cg\_obj *co, char *cmd, int len, int brief)}\\*
-\emph{ Print the syntax specification of a varible syntax spec}
-
-{\tt int cligen\_print(FILE *f, parse\_tree pt, int brief)}\\*
-\emph{  Print CLIgen parse-tree to file, brief or detailed.}
-
-{\tt int cliread\_eval(cligen\_handle h, char **line, int *cb\_retval)}\\*
-\emph{ Read line from terminal, parse the string, and invoke callbacks.}
-
-{\tt int cligen\_parse\_str(cligen\_handle h, char *str, char *name, parse\_tree *pt, cvec *vr)}\\*
-\emph{ Parse a string containing a CLIgen spec into a parse-tree}
-
-{\tt int cligen\_parse\_file(cligen\_handle h, FILE *f, char *name, parse\_tree *pt, cvec *globals)}\\*
-\emph{ Parse a file containing a CLIgen spec into a parse-tree}
-
-{\tt int cligen\_callback\_str2fn(parse\_tree pt, cg\_str2fn\_t *str2fn, void *fnarg)}\\*
-\emph{  Assign functions for callbacks in a parse-tree using a translate function}
-
-{\tt int cligen\_expand\_str2fn(parse\_tree pt, expand\_str2fn\_t *str2fn, void *fnarg)}\\*
-\emph{  Register functions for variable completion in parse-tree using translator}
-
-{\tt const char* cligen\_escape(const char* s)}\\*
-\emph{  Escape special characters in a string, if necessary (SPC, TAB, ?, \textbackslash)}
-
-{\tt char *cv\_name\_get(cg\_var *cv)}\\*
-\emph{ Get name of cligen variable cv}
-
-{\tt char *cv\_name\_set(cg\_var *cv, char *s0)}\\*
-\emph{ allocate new string from original. Free previous string if existing.}
-
-{\tt enum cv\_type cv\_type\_get(cg\_var *cv)}\\*
-\emph{ Get cv type}
-
-{\tt void *cv\_value\_get(cg\_var *cv)}\\*
-\emph{ Get value of cv without specific type set}
-
-<{\tt char cv\_bool\_get(cg\_var *cv)}\\*
-\emph{ Get boolean value of cv}
-
-{\tt int8\_t cv\_int8\_get(cg\_var *cv)}\\*
-\emph{ Get 8-bit integer value of cv}
-
-{\tt int16\_t cv\_int16\_get(cg\_var *cv)}\\*
-\emph{ Get 16-bit integer value of cv}
-
-{\tt int32\_t cv\_int32\_get(cg\_var *cv)}\\*
-\emph{ Get 32-bit integer value of cv}
-
-{\tt int64\_t cv\_int64\_get(cg\_var *cv)}\\*
-\emph{ Get 64-bit integer value of cv}
-
-{\tt uint8\_t cv\_uint8\_get(cg\_var *cv)}\\*
-\emph{ Get 8-bit unsigned integer value of cv}
-
-{\tt uint16\_t cv\_uint16\_get(cg\_var *cv)}\\*
-\emph{ Get 16-bit unsigned  integer value of cv}
-
-{\tt uint32\_t cv\_uint32\_get(cg\_var *cv)}\\*
-\emph{ Get 32-bit unsigned integer value of cv}
-
-{\tt uint64\_t cv\_uint64\_get(cg\_var *cv)}\\*
-\emph{ Get 64-bit unsigned integer value of cv}
-
-{\tt char *cv\_string\_get(cg\_var *cv)}\\*
-\emph{ Get pointer to cv string. }
-
-{\tt char *cv\_string\_set(cg\_var *cv, char *s0)}\\*
-\emph{ allocate new string from original. Free previous string if existing.}
-
-{\tt struct in\_addr *cv\_ipv4addr\_get(cg\_var *cv)}\\*
-\emph{ Get ipv4addr, pointer returned, can be used to set value.}
-
-{\tt uint8\_t cv\_ipv4masklen\_get(cg\_var *cv)}\\*
-\emph{ Get ipv4addr length of cv}
-
-{\tt struct in6\_addr *cv\_ipv6addr\_get(cg\_var *cv)}\\*
-\emph{ Get ipv6addr, pointer returned, can be used to set value.}
-
-{\tt uint8\_t cv\_ipv6masklen\_get(cg\_var *cv)}\\*
-\emph{ Get ipv6addr length of cv}
-
-{\tt char *cv\_mac\_get(cg\_var *cv)}\\*
-\emph{  Returns a pointer to 6-byte mac-address array. }
-
-{\tt unsigned char *cv\_uuid\_get(cg\_var *cv)}\\*
-\emph{ Returns a pointer to uuid byte array. }
-
-{\tt struct timeval cv\_time\_get(cg\_var *cv)}\\*
-\emph{ Returns a struct timeval by value.}
-
-{\tt char *cv\_urlproto\_get(cg\_var *cv)}\\*
-\emph{  Get pointer to URL proto string. }
-
-{\tt char *cv\_urladdr\_get(cg\_var *cv)}\\*
-\emph{  Get pointer to URL address string. }
-
-{\tt char *cv\_urlpath\_get(cg\_var *cv)}\\*
-\emph{  Get pointer to URL path string. }
-
-{\tt char *cv\_urluser\_get(cg\_var *cv)}\\*
-\emph{  Get pointer to URL user string. }
-
-{\tt char *cv\_urlpasswd\_get(cg\_var *cv)}\\*
-\emph{  Get pointer to URL passwd string. }
-
-{\tt char *cv\_flag(cg\_var *cv)}\\*
-\emph{  Get application-specific cv flag. }
-
-{\tt char *cv\_flag\_clr(cg\_var *cv)}\\*
-\emph{  Clear application-specific cv flag. }
-
-{\tt char *cv\_flag\_set(cg\_var *cv)}\\*
-\emph{  Set application-specific cv flag. }
-
-{\tt enum cv\_type cv\_str2type(char *str)}\\*
-\emph{ Translate (parse) a string to a CV type.}
-
-{\tt char *cv\_type2str(enum cv\_type type)/*! }\\*
-\emph{ Translate (print) a cv type to a static string.}
-
-{\tt int cv\_len(cg\_var *cv)}\\*
-\emph{  Return length of cligen variable value (as encoded in binary)}
-
-{\tt int cv2str(cg\_var *cv, char *str, size\_t size)}\\*
-\emph{ Print value of CLIgen variable using printf style formats.}
-
-{\tt char *cv2str\_dup(cg\_var *cv)}\\*
-\emph{ Like cv2str, but allocate a string with right length.}
-
-{\tt int cv\_print(FILE *f, cg\_var *cv)}\\*
-\emph{ Pretty print cligen variable value to a file}
-
-{\tt int cv\_parse1(char *str0, cg\_var *cv, char **reason)/*! }\\*
-\emph{ parse cv from string. }
-
-{\tt cv\_validate(cg\_var *cv, cg\_varspec *cs, char **reason)}\\*
-\emph{  Validate cligen variable cv using the spec in cs.}
-
-{\tt int cv\_cmp(cg\_var *cgv1, cg\_var *cgv2)}\\*
-\emph{ Compare two cv:s}
-
-{\tt int cv\_cp(cg\_var *new, cg\_var *old)}\\*
-\emph{ Copy from one cv to a new cv.}
-
-{\tt cg\_var *cv\_dup(cg\_var *old)}\\*
-\emph{ Create a new cgv and copy the contents from the original. }
-
-{\tt cg\_var *cv\_new(enum cv\_type type)}\\*
-\emph{ Create new cligen variable. }
-
-{\tt int cv\_reset(cg\_var *cgv)}\\*
-\emph{ Free pointers and resets a single CLIgen variable cv}
-
-{\tt int cv\_free(cg\_var *cv)}\\*
-\emph{ Free a single CLIgen variable (cv) AND frees the cv itself}
-
-{\tt int pt\_apply(parse\_tree pt, cg\_applyfn\_t fn, void *arg)}\\*
-\emph{ Apply a function call recursively on all cg\_obj:s in a parse-tree.}
-
-\normalsize
-
+Reference documentation is referred to doxygen. To generate a doxygen manual, please use {\tt make doc} in the cligen directory.
 
 \newpage
 \section*{Appendix C: Control sequences}

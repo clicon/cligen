@@ -141,4 +141,7 @@ int cligen_userhandle_set(cligen_handle h, void *userhandle);
 int cligen_regex_xsd(cligen_handle h);
 int cligen_regex_xsd_set(cligen_handle h, int mode);
 
+char cligen_delimiter(cligen_handle h);
+int  cligen_delimiter_set(cligen_handle h, char delimiter);
+
 #endif /* _CLIGEN_HANDLE_H_ */

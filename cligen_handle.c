@@ -110,6 +110,7 @@ cligen_init(void)
     memset(ch, 0, sizeof(*ch));
     ch->ch_magic = CLIGEN_MAGIC;
     ch->ch_tabmode = 0x0; /* see CLIGEN_TABMODE_* */
+    ch->ch_delimiter = ' ';
     h = (cligen_handle)ch;
     cligen_prompt_set(h, CLIGEN_PROMPT_DEFAULT);
     /* Only if stdin and stdout refers to a terminal make win size check */
@@ -1055,3 +1056,19 @@ cligen_buf_cleanup(cligen_handle h)
     return 0;
 }
 
+char
+cligen_delimiter(cligen_handle h)
+{
+    struct cligen_handle *ch = handle(h);
+    return ch->ch_delimiter;
+}
+
+int
+cligen_delimiter_set(cligen_handle h,
+		     char          delimiter)
+{
+    struct cligen_handle *ch = handle(h);
+
+    ch->ch_delimiter = delimiter;
+    return 0;
+}

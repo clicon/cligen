@@ -85,13 +85,6 @@ co_expand_sub(cg_obj  *co,
 	}
     if (co->co_cvec)
 	con->co_cvec = cvec_dup(co->co_cvec);
-    if (co->co_userdata && co->co_userlen){
-	if ((con->co_userdata = malloc(co->co_userlen)) == NULL){
-	    fprintf(stderr, "%s: malloc: %s\n", __FUNCTION__, strerror(errno));
-	    return -1;
-	}
-	memcpy(con->co_userdata, co->co_userdata, co->co_userlen);
-    }
     if (co_callback_copy(co->co_callbacks, &con->co_callbacks) < 0)
 	return -1;
     if (co->co_help)
@@ -99,12 +92,6 @@ co_expand_sub(cg_obj  *co,
 	    fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
 	    return -1;
 	}
-    if (co->co_mode){
-	if ((con->co_mode = strdup(co->co_mode)) == NULL){
-	    fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
-	    return -1;
-	}
-    }
     if (co->co_type == CO_VARIABLE){
 	if (co->co_expand_fn_str)
 	    if ((con->co_expand_fn_str = strdup(co->co_expand_fn_str)) == NULL){
@@ -291,9 +278,9 @@ pt_reference_trunc(parse_tree pt)
  * 
  * One level only. Parse-tree is expanded itself (not copy).
  *
- * @param[in]     h       Handle needed to resolve tree-references (\@tree)
- * @param[in]     coprev  Parent, if any
- * @param[in,out] pt0     parse-tree to expand. In: original, out: expanded
+ * @param[in]     h     Handle needed to resolve tree-references (\@tree)
+ * @param[in]     co0   Parent, if any
+ * @param[in,out] pt0   parse-tree to expand. In: original, out: expanded
  * @note The loop may need to suboptimal iterations since after every time you
  *       find a tree reference, you add new elements to the list and re-iterates
  *       from start. Since the expanded elements may be references,... 
@@ -301,25 +288,76 @@ pt_reference_trunc(parse_tree pt)
  */
 int
 pt_expand_treeref(cligen_handle h, 
-		  cg_obj       *coprev, 
+		  cg_obj       *co0, 
 		  parse_tree   *pt0)
 {
-    int              i, k;
+    int              i;
+    int              j;
     cg_obj          *co;
-    parse_tree      *ptref;           /* tree referenced by pt0 orig */
+    parse_tree      *ptref = 0;       /* tree referenced by pt0 orig */
     parse_tree       pt1ref = {0, };  /* tree referenced by pt0 resolved */
     cg_obj          *cot;             /* treeref object */
     char            *treename;
-    cg_obj          *coprev2;
+    cg_obj          *co02;
+#ifdef USE_SETS
+    parse_tree       ptc = {0, };
+    parse_tree      *ptcp = NULL;
+    parse_tree       ptc2 = {0, };
+    cg_obj          *coc;
+#endif	    
 
     if (pt0->pt_vec == NULL)
 	return 0;
+#ifdef USE_SETS
+    for (i=0; i<pt0->pt_len; i++){ /*  */
+	if ((co = pt0->pt_vec[i]) == NULL)
+	    continue;
+	if (co0){
+	    /* Mark all direct children of a SET as SUBS, Could be done at parsing? */
+	    if (co_flags_get(co0, CO_FLAGS_SETS) && !co_flags_get(co, CO_FLAGS_SETS_SUB))
+		co_flags_set(co, CO_FLAGS_SETS_SUB);
+	}
+    }
+#endif
  again:
     for (i=0; i<pt0->pt_len; i++){ /*  */
 	if ((co = pt0->pt_vec[i]) == NULL)
 	    continue;
-	/* XXX remove reference */
-	if (co->co_type == CO_REFERENCE && !co->co_refdone){
+#ifdef USE_SETS
+	if (co0){
+	    /* If co0 is a SUB or GEN, and co is not already expanded, expand co with new
+	       subs */
+	    if (co_flags_get(co, CO_FLAGS_SETS_SUB|CO_FLAGS_SETS_GEN) &&
+		!co_flags_get(co, CO_FLAGS_SETS_EXP)){
+		if (ptcp == NULL){
+		    if (pt_copy(*pt0, co, &ptc) < 0){ /* Make a copy of co children */
+			fprintf(stderr, "%s: Copying parse-tree\n", __FUNCTION__);
+			return -1;
+		    }
+		    ptcp = &ptc;
+		}
+		if (pt_copy(*ptcp, co, &ptc2) < 0){ /* Make a copy of co children */
+		    fprintf(stderr, "%s: Copying parse-tree\n", __FUNCTION__);
+		    return -1;
+		}
+		for (j=0; j<ptc2.pt_len; j++){
+		    if ((coc = ptc2.pt_vec[j]) != NULL){
+			if (co_eq(coc, co)==0)
+			    continue;
+			if (co_flags_get(coc, CO_FLAGS_SETS_SUB|CO_FLAGS_SETS_GEN) == 0)
+			    continue;
+			co_flags_set(coc, CO_FLAGS_SETS_GEN);
+			if (co_insert(&co->co_pt, coc) == NULL) /* XXX alphabetically */
+			    return -1;
+			ptc2.pt_vec[j] = NULL;
+		    }
+		}
+		cligen_parsetree_free(ptc2, 1);
+		co_flags_set(co, CO_FLAGS_SETS_EXP); /* This node is expanded */
+	    }
+	}
+#endif
+	if (co->co_type == CO_REFERENCE && !co_flags_get(co, CO_FLAGS_REFDONE)){
 	    /* Expansion is made in-line so we need to know if already 
 	       expanded */
 	    treename = co->co_command;
@@ -332,14 +370,14 @@ pt_expand_treeref(cligen_handle h,
 	    }
 
 	    /* make a copy of ptref -> pt1ref */
-	    coprev2 = co_up(co);
+	    co02 = co_up(co);
 
-	    if (pt_copy(*ptref, coprev2, &pt1ref) < 0){ /* From ptref -> pt1ref */
+	    if (pt_copy(*ptref, co02, &pt1ref) < 0){ /* From ptref -> pt1ref */
 		fprintf(stderr, "%s: Copying parse-tree\n", __FUNCTION__);
 		return -1;
 	    }
 	    /* Recursively add extra NULLs in non-terminals */
-	    if (co->co_hide && /* XXX: hide to trunk? */
+	    if (co_flags_get(co, CO_FLAGS_HIDE) && /* XXX: hide to trunk? */
 		pt_reference_trunc(pt1ref) < 0)
 		return -1;
 	    /* Recursively install callback all through the referenced tree */
@@ -347,22 +385,26 @@ pt_expand_treeref(cligen_handle h,
 		pt_callback_reference(pt1ref, co->co_callbacks) < 0)
 		return -1;
 	    /* Copy top-levels into original parse-tree */
-	    for (k=0; k<pt1ref.pt_len; k++)
-		if ((cot = pt1ref.pt_vec[k]) != NULL){
-		    cot->co_treeref++; /* Mark as expanded referenced tree */
+	    for (j=0; j<pt1ref.pt_len; j++)
+		if ((cot = pt1ref.pt_vec[j]) != NULL){
+		    co_flags_set(cot, CO_FLAGS_TREEREF); /* Mark expanded refd tree */
 		    if (co_insert(pt0, cot) == NULL) /* XXX alphabetically */
 			return -1;
 		}
 	    /* Due to loop above, all co in vec should be moved, it should
 	       be safe to remove */
 	    free(pt1ref.pt_vec);
-	    if (coprev && coprev->co_ref) /* coprev2 ? */
-		coprev->co_ref->co_pt = coprev->co_pt;
+	    if (co0 && co0->co_ref) /* co02 ? */
+		co0->co_ref->co_pt = co0->co_pt;
 
-	    co->co_refdone = 1;
+	    co_flags_set(co, CO_FLAGS_REFDONE);
 	    goto again; 
 	}
     }
+#ifdef USE_SETS
+    if (ptcp)
+	cligen_parsetree_free(*ptcp, 1);
+#endif
     return 0;
 }
 
@@ -490,7 +532,7 @@ pt_expand_2(cligen_handle h,
 	if ((co = ptr->pt_vec[i]) != NULL){
 	    if (co_value_set(co, NULL) < 0)
 		goto done;
-	    if (hide && co->co_hide)
+	    if (hide && co_flags_get(co, CO_FLAGS_HIDE))
 		continue;
 	    /*
 	     * Choice variable - Insert the static choices as commands in place
@@ -538,7 +580,7 @@ pt_expand_2(cligen_handle h,
     cligen_parsetree_sort(*ptn, 1);
     if (cligen_logsyntax(h) > 0){
 	fprintf(stderr, "%s:\n", __FUNCTION__);
-	cligen_print(stderr, *ptn, 0);
+	pt_print(stderr, *ptn, 0);
     }
     retval = 0;
  done:
@@ -560,9 +602,9 @@ pt_expand_treeref_cleanup(parse_tree *pt)
     for (i=0; i<pt->pt_len; i++){
       again:
 	if ((co = pt->pt_vec[i]) != NULL){
-	    if (co->co_refdone)
-		co->co_refdone = 0;
-	    if (co->co_treeref){
+	    if (co_flags_get(co, CO_FLAGS_REFDONE))
+		co_flags_reset(co, CO_FLAGS_REFDONE);
+	    if (co_flags_get(co, CO_FLAGS_TREEREF)){
 		pt->pt_vec[i] = NULL;
 		co_free(co, 1);
 		for (j=i; j<pt->pt_len-1; j++)
@@ -650,7 +692,7 @@ reference_path_match(cg_obj    *co1,
 
     if (co1 == NULL)
 	return -1;
-    if (co1->co_treeref){ /* at top */
+    if (co_flags_get(co1, CO_FLAGS_TREEREF)){ /* at top */
 	if ((co0 = co_find_one(pt0, co1->co_command)) == NULL)
 	    return -1;
 	*co0p = co0;

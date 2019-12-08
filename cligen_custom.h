@@ -45,3 +45,7 @@ typedef void *cligen_handle; /* API */
  * So, only expand on interactive CLI operations
  */
 #undef EXPAND_ONLY_INTERACTIVE
+
+/* New SETS functionality: @{ ... }. This is prototypish.
+ */
+#undef USE_SETS

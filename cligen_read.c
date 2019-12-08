@@ -595,7 +595,7 @@ cliread_parse(cligen_handle h,
 
     if (cligen_logsyntax(h) > 0){
 	fprintf(stderr, "%s:\n", __FUNCTION__);
-	cligen_print(stderr, *pt, 0);
+	pt_print(stderr, *pt, 0);
     }
     cli_trim(&string, cligen_comment(h));
     if (pt_expand_treeref(h, NULL, pt) < 0) /* sub-tree expansion, ie @ */

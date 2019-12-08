@@ -83,8 +83,6 @@ typedef int (cligen_susp_cb_t)(void *h, char *, int, int *);
  */
 typedef int (cligen_interrupt_cb_t)(cligen_handle h);
 
-
-
 /*! A parse tree is a top object containing a vector of parse-tree nodes 
  *
  * @code
@@ -148,6 +146,19 @@ typedef struct cg_varspec cg_varspec;
 /* Default number of fraction digits if type is DEC64 */
 #define CGV_DEC64_N_DEFAULT 2
 
+/* General purpose flags for cg_obj co_flags type 
+ */
+#define CO_FLAGS_HIDE      0x01  /* Don't show in help/completion */
+#define CO_FLAGS_MARK      0x02  /* Only used internally (for recursion avoidance) */
+#define CO_FLAGS_TREEREF   0x04  /* This node is top of expanded sub-tree */
+#define CO_FLAGS_REFDONE   0x08  /* This reference has already been expanded */
+#ifdef USE_SETS
+#define CO_FLAGS_SETS      0x10  /* Children are a set */
+#define CO_FLAGS_SETS_SUB  0x20  /* Parent is SETS, ie direct child of set */
+#define CO_FLAGS_SETS_GEN  0x40  /* Parent is SUBS or GEN,  */
+#define CO_FLAGS_SETS_EXP  0x80  /* Child set is generated */
+#endif
+
 /*! cligen gen object is a parse-tree node. A cg_obj is either a command or a variable
  * A cg_obj 
  * @code
@@ -162,36 +173,23 @@ typedef struct cg_varspec cg_varspec;
  * @endcode
  */
 struct cg_obj{
-    parse_tree        co_pt;        /* Child parse-tree (see co_next macro below) */
-    struct cg_obj    *co_prev;
-    enum cg_objtype   co_type;      /* Type of object */
-    char              co_delimiter; /* Delimiter (after this obj) */
-    char             *co_command;   /* malloc:ed matching string / name or type */
-    struct cg_callback *co_callbacks;/* linked list of callbacks and arguments */
-    cvec             *co_cvec;       /* List of cligen variables (XXX: not visible to callbacks) */
-    int               co_mark;      /* Only used internally (for recursion avoidance) */
-    char	     *co_help;	    /* Brief helptext */
-    int	              co_hide;      /* Don't show in help/completion */
-    char             *co_mode;      /* Name of other syntax mode */
-
+    parse_tree          co_pt;        /* Child parse-tree (see co_next macro below) */
+    struct cg_obj      *co_prev;
+    enum cg_objtype     co_type;      /* Type of object: command, variable or tree
+					 reference */
+    char               *co_command;   /* malloc:ed matching string / name or type */
+    struct cg_callback *co_callbacks; /* linked list of callbacks and arguments */
+    cvec               *co_cvec;      /* List of cligen variables (XXX: not visible to
+					 callbacks) */
+    char	       *co_help;      /* Helptext */
+    uint32_t            co_flags;     /* General purpose flags, see */
     /* Expand data: expand, choice temporarily replaces the original parse-tree
        with one where expand and choice is replaced by string constants. */
-    struct parse_tree co_pt_exp;   /* Expanded parse-trees (why > 1?) */
-    struct cg_obj    *co_ref;       /* Ref to original (if this is expanded) */
-    char             *co_value;     /* Expanded value can be a string with a 
-				       constant. Store the constant in the original
-				       variable. */
-    void             *co_userdata;  /* User-specific data, malloced and defined by
-				       the user. Will be freed by cligen on exit */
-    size_t            co_userlen;   /* Length of the userdata (need copying) */
-    int               co_treeref;   /* This node is top of expanded sub-tree */
-    int               co_refdone;   /* This reference has already been expanded */
-
-    /* Ugly application code */
-    struct parse_tree co_pt_push;   /* Saved orig of parse-tree (ugly user code) */
-    int               co_pushed;    /* if pushed contains data */
-
-
+    struct parse_tree   co_pt_exp;    /* Expanded parse-trees (why > 1?) */
+    struct cg_obj      *co_ref;       /* Ref to original (if this is expanded) */
+    char               *co_value;     /* Expanded value can be a string with a 
+				         constant. Store the constant in the original
+				         variable. */
     union {
 	struct {        } cou_cmd;
 	struct cg_varspec cou_var;
@@ -227,7 +225,6 @@ typedef int (cg_applyfn_t)(cg_obj *co, void *arg);
 
 #define iskeyword(CV) 0
 
-
 /* Access macro */
 static inline cg_obj* 
 co_up(cg_obj *co) 
@@ -257,6 +254,9 @@ co_top(cg_obj *co0)
 /*
  * Prototypes
  */
+void    co_flags_set(cg_obj *co, uint32_t flag);
+void    co_flags_reset(cg_obj *co, uint32_t flag);
+int     co_flags_get(cg_obj *co, uint32_t flag);
 void    cligen_parsetree_sort(parse_tree pt, int recursive);
 cg_obj *co_new(char *cmd, cg_obj *prev);
 cg_obj *cov_new(enum cv_type cvtype, cg_obj *prev);
@@ -265,6 +265,7 @@ int     pt_realloc(parse_tree *);
 int     co_callback_copy(struct cg_callback *cc0, struct cg_callback **ccn);
 int     co_copy(cg_obj *co, cg_obj *parent, cg_obj **conp);
 int     pt_copy(parse_tree pt, cg_obj *parent, parse_tree *ptn);
+int     co_eq(cg_obj *co1, cg_obj *co2);
 int     cligen_parsetree_merge(parse_tree *pt0, cg_obj *parent0, parse_tree pt1);
 int     cligen_parsetree_free(parse_tree pt, int recurse);
 int     co_free(cg_obj *co, int recursive);
