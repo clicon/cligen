@@ -1143,7 +1143,7 @@ match_complete(cligen_handle h,
     append = append || minmatch-slen;
     if (equal){ /* add space */
 	string[strlen(string)+1] = '\0';
-	string[strlen(string)] = co1?co1->co_delimiter:' ';
+	string[strlen(string)] = cligen_delimiter(h);
 	level++;
 	slen = 0;
 	co1 = NULL;

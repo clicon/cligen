@@ -174,7 +174,7 @@ co2cbuf(cbuf   *cb,
     if (brief == 0){
 	if (co->co_help)
 	    cprintf(cb, "(\"%s\")", co->co_help);
-	if (co->co_hide)
+	if (co_flags_get(co, CO_FLAGS_HIDE))
 	    cprintf(cb, ", hide");
 	for (cc = co->co_callbacks; cc; cc=cc->cc_next){
 	    if (cc->cc_fn_str){
@@ -247,12 +247,12 @@ pt2cbuf(cbuf      *cb,
  * Brief output omits help-strings and variable options except names. Eg:
  * brief=0:  a("help string") <x:int32>("variable"), cb();
  * brief=1:  a <x>;
- * @see cligen_print_obj which prints an individual CLIgen syntax object, not vector
+ * @see co_print which prints an individual CLIgen syntax object, not vector
  */
 int 
-cligen_print(FILE      *f,
-	     parse_tree pt,
-	     int        brief)
+pt_print(FILE      *f,
+	 parse_tree pt,
+	 int        brief)
 {
     int   retval = -1;
     cbuf *cb = NULL;
@@ -277,12 +277,12 @@ cligen_print(FILE      *f,
  * @param[in] co     Cligen object
  * @param[in] brief  Print brief output, otherwise clispec parsable format
  *
- * @see cligen_print  which prints a vector of cligen objects "parse-tree"
+ * @see pt_print  which prints a vector of cligen objects "parse-tree"
  */
 int 
-cligen_print_obj(FILE    *f,
-		 cg_obj  *co,
-		 int      brief)
+co_print(FILE    *f,
+	 cg_obj  *co,
+	 int      brief)
 {
     int   retval = -1;
     cbuf *cb = NULL;
@@ -307,7 +307,7 @@ cligen_print_obj(FILE    *f,
  * @param[in] co     Cligen object
  * @param[in] brief  Print brief output, otherwise clispec parsable format
  *
- * @see cligen_print  which prints a vector of cligen objects "parse-tree"
+ * @see pt_print  which prints a vector of cligen objects "parse-tree"
  */
 int 
 cligen_print_trees(FILE         *f,
@@ -319,7 +319,7 @@ cligen_print_trees(FILE         *f,
 
     while ((pt = cligen_tree_each(h, pt)) != NULL) {
 	fprintf(stderr, "%s\n", pt->pt_name);
-	if (!brief && cligen_print(f, *pt, brief) < 0)
+	if (!brief && pt_print(f, *pt, brief) < 0)
 	    goto done;
     }
     retval = 0;

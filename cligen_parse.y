@@ -48,6 +48,7 @@
 %token DQ           /* " */
 %token DQP          /* ") */
 %token PDQ          /* (" */
+%token SETS         /* @{ - see USE_SETS */
 
 %token <string> NAME    /* in variables: <NAME type:NAME> */
 %token <string> NUMBER  /* In variables */
@@ -59,6 +60,7 @@
 %type <string> numdec
 %type <string> arg1
 %type <string> typecast
+%type <intval> preline
 
 %lex-param     {void *_ya} /* Add this argument to parse() and lex() function */
 %parse-param   {void *_ya}
@@ -104,7 +106,6 @@ cligen_parse_debug(int d)
     debug = d;
     return 0;
 }
-
 
 /*! CLIGEN parse error routine
  * Also called from yacc generated code *
@@ -662,7 +663,7 @@ cgy_terminal(cliyacc *ya)
 	/* variables: special case "hide" */
 	if (ya->ya_cvec){
 	    if (cvec_find(ya->ya_cvec, "hide") != NULL)
-		co->co_hide = 1;
+		co_flags_set(co, CO_FLAGS_HIDE);
 	    /* generic variables */
 	    if ((co->co_cvec = cvec_dup(ya->ya_cvec)) == NULL){
 		fprintf(stderr, "%s: cvec_dup: %s\n", __FUNCTION__, strerror(errno));
@@ -698,14 +699,15 @@ cgy_terminal(cliyacc *ya)
  * @param[in]  ya  CLIgen yacc parse struct
  */
 static int
-ctx_push(cliyacc *ya)
+ctx_push(cliyacc *ya,
+	 int      sets)
 {
     struct cgy_list  *cl;
     struct cgy_stack *cs;
     cg_obj           *co; 
 
     if (debug)
-	fprintf(stderr, "%s\n", __FUNCTION__);
+	fprintf(stderr, "%s sets:%d\n", __FUNCTION__, sets);
     if ((cs = malloc(sizeof(*cs))) == NULL) {
 	fprintf(stderr, "%s: malloc: %s\n", __FUNCTION__, strerror(errno));
 	return -1;
@@ -716,7 +718,11 @@ ctx_push(cliyacc *ya)
     for (cl = ya->ya_list; cl; cl = cl->cl_next){
 	co = cl->cl_obj;
 	if (cvec_find(ya->ya_cvec, "hide") != NULL)
-	    co->co_hide = 1;
+	    co_flags_set(co, CO_FLAGS_HIDE);
+#ifdef USE_SETS
+	if (sets)
+	    co_flags_set(co, CO_FLAGS_SETS);
+#endif
     	if (cgy_list_push(cl->cl_obj, &cs->cs_list) < 0) 
 	    return -1;
     }
@@ -870,7 +876,7 @@ ctx_pop(cliyacc *ya)
 static int
 cg_regexp(cliyacc *ya,
 	  char    *rx,
-    	  int      invert)
+	  int      invert)
 {
     int     retval = -1;
     cg_var *cv;
@@ -1069,7 +1075,7 @@ cgy_init(cliyacc *ya,
     /* Add top-level object */
     if (cgy_list_push(co_top, &ya->ya_list) < 0)
 	return -1;
-    if (ctx_push(ya) < 0)
+    if (ctx_push(ya, 0) < 0)
 	return -1;
     return 0;
 }
@@ -1105,90 +1111,106 @@ cgy_exit(cliyacc *ya)
  
 %%
 
-file          : lines MY_EOF{if(debug)printf("file->lines\n"); YYACCEPT;} 
-              ;
+file        : lines MY_EOF{if(debug)printf("file->lines\n"); YYACCEPT;} 
+            ;
 
-lines        : lines line {
+lines       : lines line {
                   if(debug)printf("lines->lines line\n");
-                 } 
-              |   { if(debug)printf("lines->\n"); } 
-              ;
+                } 
+            |   { if(debug)printf("lines->\n"); } 
+            ;
 
-line          : decltop line1	{ if (debug) printf("line->decltop line1\n"); }	
-              | assignment ';'  { if (debug) fprintf(stderr, "line->assignment ;\n"); }
+line        : decltop line1	{ if (debug) printf("line->decltop line1\n"); }	
+            | assignment ';'  { if (debug) fprintf(stderr, "line->assignment ;\n"); }
+            ;
 
-              ;
+line1       :  line2  { if (debug) printf("line1->line2\n"); }
+            |  ',' options line2 { if (debug) printf("line1->',' options line2\n"); }
+            ;
 
-line1        :  line2  { if (debug) printf("line1->line2\n"); }
-              |  ',' options line2 { if (debug) printf("line1->',' options line2\n"); }
-              ;
+preline     : '{'  { $$ = 0; }
+/*            | SETS { $$ = 1; }  USE_SETS */
+            ;
 
-line2        : ';' { if (debug) printf("line2->';'\n"); if (cgy_terminal(_ya) < 0) YYERROR;if (ctx_peek_swap2(_ya) < 0) YYERROR; } 
-              | '{' {if (ctx_push(_ya) < 0) YYERROR; } 
-                lines 
-                '}' { if (debug) printf("line2->'{' lines '}'\n");if (ctx_pop(_ya) < 0) YYERROR;if (ctx_peek_swap2(_ya) < 0) YYERROR; }
-              | ';' { if (cgy_terminal(_ya) < 0) YYERROR; } 
-                '{' { if (ctx_push(_ya) < 0) YYERROR; }
-                lines
-                '}' { if (debug) printf("line2->';' '{' lines '}'\n");if (ctx_pop(_ya) < 0) YYERROR;if (ctx_peek_swap2(_ya) < 0) YYERROR; }
-              ;
+line2       : ';' {
+                    if (debug) printf("line2->';'\n");
+		    if (cgy_terminal(_ya) < 0) YYERROR;
+		    if (ctx_peek_swap2(_ya) < 0) YYERROR;
+                  } 
+            | preline {
+		     if (ctx_push(_ya, $1) < 0) YYERROR;
+	          } 
+              lines
+	      '}' {
+		    if (debug) printf("line2->'{' lines '}'\n");
+		    if (ctx_pop(_ya) < 0) YYERROR;
+		    if (ctx_peek_swap2(_ya) < 0) YYERROR;
+	         }
+            | ';' 
+              preline {
+		    if (cgy_terminal(_ya) < 0) YYERROR;
+ 		    if (ctx_push(_ya, $2) < 0) YYERROR;
+	          }
+              lines
+              '}' { if (debug) printf("line2->';' '{' lines '}'\n");if (ctx_pop(_ya) < 0) YYERROR;if (ctx_peek_swap2(_ya) < 0) YYERROR; }
+            ;
 
-options       : options ',' option {if (debug)printf("options->options , option\n");} 
-              | option             {if (debug)printf("options->option\n");} 
-              ;
-option        : callback    {if (debug)printf("option->callback\n");} 
-              | flag        {if (debug)printf("option->flag\n");} 
-              | assignment  {if (debug)printf("option->assignment\n");} 
-              ;
+options     : options ',' option {if (debug)printf("options->options , option\n");} 
+            | option             {if (debug)printf("options->option\n");} 
+            ;
+option      : callback    {if (debug)printf("option->callback\n");} 
+            | flag        {if (debug)printf("option->flag\n");} 
+            | assignment  {if (debug)printf("option->assignment\n");} 
+            ;
 
 
-assignment    : NAME '=' DQ charseq DQ {cgy_assignment(_ya, $1,$4);free($1); free($4);}
-              ; 
+assignment  : NAME '=' DQ charseq DQ {cgy_assignment(_ya, $1,$4);free($1); free($4);}
+            ; 
 
-flag          : NAME {cgy_flag(_ya, $1);free($1);}
-              ; 
+flag        : NAME {cgy_flag(_ya, $1);free($1);}
+            ; 
 
-callback   : NAME  {if (cgy_callback(_ya, $1) < 0) YYERROR;} '(' arglist ')'
-           ;
+callback    : NAME  {if (cgy_callback(_ya, $1) < 0) YYERROR;} '(' arglist ')'
+            ;
 
-arglist    : arglist1
-           | 
-           ;
+arglist     : arglist1
+            | 
+            ;
 
-arglist1   : arglist1 ',' arg
-           | arg
-           ;
+arglist1    : arglist1 ',' arg
+            | arg
+            ;
 
-arg        : typecast arg1 {
+arg         : typecast arg1 {
                     if ($2 && cgy_callback_arg(_ya, $1, $2) < 0) YYERROR;
 		    if ($1 != NULL) free($1);
 		    if ($2 != NULL) free($2);
               }
-           ;
+            ;
 
-arg1       : DQ DQ { $$=NULL; }
-           | DQ charseq DQ { $$=$2; }
-           | NAME  { $$=$1; }
-           ;
+arg1        : DQ DQ { $$=NULL; }
+            | DQ charseq DQ { $$=$2; }
+            | NAME  { $$=$1; }
+            ;
 
-typecast   : '(' NAME ')' { $$ = $2; }
-           | { $$ = NULL; }
-           ;
+typecast    : '(' NAME ')' { $$ = $2; }
+            | { $$ = NULL; }
+            ;
 
-decltop        : decllist  {if (debug)fprintf(stderr, "decltop->decllist\n");}
-               | declcomp  {if (debug)fprintf(stderr, "decltop->declcomp\n");}
-               ;
+decltop     : decllist  {if (debug)fprintf(stderr, "decltop->decllist\n");}
+            | declcomp  {if (debug)fprintf(stderr, "decltop->declcomp\n");}
+            ;
 
-decllist      : decltop 
-                declcomp  {if (debug)fprintf(stderr, "decllist->decltop declcomp\n");}
-              | decltop '|' { if (ctx_peek_swap(_ya) < 0) YYERROR;} 
-                declcomp  {if (debug)fprintf(stderr, "decllist->decltop | declcomp\n");}
-              ;
+decllist    : decltop 
+              declcomp  {if (debug)fprintf(stderr, "decllist->decltop declcomp\n");}
+            | decltop '|' { if (ctx_peek_swap(_ya) < 0) YYERROR;} 
+              declcomp  {if (debug)fprintf(stderr, "decllist->decltop | declcomp\n");}
+            ;
 
-declcomp      : '(' { if (ctx_push(_ya) < 0) YYERROR; } decltop ')' { if (ctx_pop(_ya) < 0) YYERROR; if (debug)fprintf(stderr, "declcomp->(decltop)\n");}
-              | '[' { if (ctx_push(_ya) < 0) YYERROR; } decltop ']' { if (ctx_pop_add(_ya) < 0) YYERROR; }  {if (debug)fprintf(stderr, "declcomp->[decltop]\n");}
-              | decl  {if (debug)fprintf(stderr, "declcomp->decl\n");}
-              ;
+declcomp    : '(' { if (ctx_push(_ya, 0) < 0) YYERROR; } decltop ')' { if (ctx_pop(_ya) < 0) YYERROR; if (debug)fprintf(stderr, "declcomp->(decltop)\n");}
+            | '[' { if (ctx_push(_ya, 0) < 0) YYERROR; } decltop ']' { if (ctx_pop_add(_ya) < 0) YYERROR; }  {if (debug)fprintf(stderr, "declcomp->[decltop]\n");}
+            | decl  {if (debug)fprintf(stderr, "declcomp->decl\n");}
+            ;
 
 decl        : cmd {if (debug)fprintf(stderr, "decl->cmd\n");}
             | cmd PDQ charseq DQP { if (debug)fprintf(stderr, "decl->cmd (\" comment \")\n");if (cgy_comment(_ya, $3) < 0) YYERROR; free($3);}

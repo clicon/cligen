@@ -216,7 +216,7 @@ main(int argc, char *argv[])
     cvec_free(globals);
 
     if (print_syntax){
-	cligen_print(stdout, *pt, 0);
+	pt_print(stdout, *pt, 0);
 	fflush(stdout);
     }
     if (quit)
