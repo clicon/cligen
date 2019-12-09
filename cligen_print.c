@@ -301,65 +301,6 @@ co_print(FILE    *f,
     return retval;
 }
 
-static int 
-co_dump1(FILE    *f,
-	 cg_obj  *co,
-	 int      margin)
-{
-    int         retval = -1;
-    parse_tree *pt;
-    int         i;
-    cg_obj     *coc;
-
-    fprintf(f, "%*s %s 0x%lx", margin, "", co->co_command, (intptr_t)co);
-    fprintf(f, " [0x%lx]", (intptr_t)co->co_prev);
-    if (co_flags_get(co, CO_FLAGS_SETS))
-	fprintf(f, " sets");
-    if (co_flags_get(co, CO_FLAGS_SETS_SUB))
-	fprintf(f, " sub");
-    if (co_flags_get(co, CO_FLAGS_SETS_GEN))
-	fprintf(f, " gen");
-    if (co_flags_get(co, CO_FLAGS_SETS_EXP))
-	fprintf(f, " exp");
-    fprintf(f, "\n");
-    pt = &co->co_pt;
-    margin +=3;
-    for (i=0; i<pt->pt_len; i++){
-	coc = pt->pt_vec[i];
-	if (coc == NULL || coc->co_type != CO_COMMAND)
-	    continue;
-	if (co_dump1(f, coc, margin) < 0)
-	    goto done;
-    }
-    retval = 0;
-  done:
-    return retval;
-}
-
-/*! Dump raw tree, object pointers, etc, of a cligen object
- * @param[in] f      Output file
- * @param[in] co     Cligen object
- */
-int 
-co_dump(FILE    *f,
-	cg_obj  *co)
-{
-    return co_dump1(f, co, 0);
-}
-
-int 
-pt_dump(FILE       *f,
-	parse_tree *pt)
-{
-    int i;
-
-    for (i=0; i<pt->pt_len; i++){
-	if (co_dump(f, pt->pt_vec[i]) < 0)
-	    return -1;
-    }
-    return 0;
-}
-
 /*! Print list of CLIgen parse-trees
  *
  * @param[in] f      File to print to
