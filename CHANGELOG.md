@@ -3,6 +3,15 @@
 ## 4.3.0 (Expected: December 2019)
 Bugfixes and internal struct reorganizing. Bumped version to match with clixon 4.3
 
+* New syntax `@{}` for expressing _sets_ of commands, as opposed to alternative commands.
+  * Example: `@{a;b;c;}` where a, b, and c can occur at most once in any order, as opposed to either a, b, or c.
+  * This feature is EXPERIMENTAL since even if base cases work, there may be combinations with other usages that are not been fully understood.
+  * This was only possible previously by workarounds or by full command expansion consuming quadratric memory.
+  * This feature has been a root of many issues, including the following:
+    * [Syntax to enter commands regardless of order #32](https://github.com/olofhagsand/cligen/issues/32)
+    * [CLIgen code stuck in recursion at the time of parsing #23](https://github.com/olofhagsand/cligen/issues/23)
+    * [CLI syntax help #22](https://github.com/olofhagsand/cligen/issues/22)
+* Added parse tree dump functions, for pointer debugging (`pt_dump` and `co_dump`).
 * Fixed [Ability to use show attribute to display a multiword string #33](https://github.com/olofhagsand/cligen/issues/33)
 * Fixed: [Is it possible to hide non-terminal commands? #31](https://github.com/olofhagsand/cligen/issues/31)
 * Removed "auth" as a local variable in docs, since it is not implemented

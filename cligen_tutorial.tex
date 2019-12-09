@@ -18,7 +18,7 @@
 
 % If you want a logo
 % \lhead{\includegraphics[height=9mm]{../../doc/logga_crop.png}}
-\date{Feb, 2019}
+\date{Dec, 2019}
 \maketitle
 \setcounter{tocdepth}{2}
 \tableofcontents
@@ -309,7 +309,7 @@ semantics for a global variable.
 
 CLIgen can handle multiple syntax trees. A user can switch between
 trees (i.e., change CLI mode), or extend a tree with a sub-tree (using
-tree-references).
+tree-references). 
 
 A tree is named using a special global {\tt treename} assignment. The
 following example shows two syntax trees: {\tt tree1} and {\tt tree2}.
@@ -335,6 +335,8 @@ Note that the {\tt changetree} callback needs to be implemented as a
 callback function in C to actually change the syntax mode. Such a
 callback is implemented in the tutorial and is also described in more
 detail in Section~\ref{sec:api}.
+
+Note, the {\tt treename} feature is not available in Clixon, only in stand-alone CLIgen.
 
 \subsubsection{Tree references}
 
@@ -397,6 +399,36 @@ data (x y) is the same but the operation(add/del) is different.
 In the example, the 'treename' variable is used to define a new CLIgen
 tree. It is possible using the C-API to change this keyword to
 something else by using the API function {\tt cligen\_treename\_keyword}.
+
+\section{Sets}
+
+By default, listing several commands within {\tt \{\}} gives a choice of commands, but if instead commands are within the set operator {\tt @\{\}}, the commands can be given on any order, and at least once. For example:
+\begin{verbatim}
+  x @{
+    a;
+    b;
+    c;
+  }
+\end{verbatim}
+
+gives exactly the following allowed CLI commands, and no others:
+\begin{verbatim}
+  x a
+  x a b
+  x a b c
+  x a c
+  x a c b
+  x b
+  x b a
+  x b a c
+  x b c
+  x b c a
+  x c
+  x c a
+  x c a b
+  x c b
+  x c b a
+\end{verbatim}
 
 \section{Variables}
 \label{sec:variables}
@@ -1228,14 +1260,14 @@ only) using {\tt make install-lib} (or {\tt make install-include}).
 \section*{Appendix A: Tutorial command syntax}
 \label{app:syntax}
 
-For example command syntax, please see the {\tt tutorial.cli} file in the source release.
+Please see the {\tt tutorial.cli} file in the source release.
 
 
 \newpage
 \section*{Appendix B: API functions}
 \label{app:functions}
 
-Reference documentation is referred to doxygen. To generate a doxygen manual, please use {\tt make doc} in the cligen directory.
+To generate CLIgen reference manual, please do {\tt make doc} in the cligen directory.
 
 \newpage
 \section*{Appendix C: Control sequences}
@@ -1302,7 +1334,5 @@ ESC + F & Move one word forward & \\
 ESC + B & Move one word backward & \\
 \hline
 \end{tabular}
-
-
 
 \end{document}

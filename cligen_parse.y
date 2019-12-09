@@ -1129,7 +1129,7 @@ line1       :  line2  { if (debug) printf("line1->line2\n"); }
             ;
 
 preline     : '{'  { $$ = 0; }
-/*            | SETS { $$ = 1; }  USE_SETS */
+            | SETS { $$ = 1; }  /* USE_SETS */
             ;
 
 line2       : ';' {

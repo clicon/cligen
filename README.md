@@ -1,5 +1,4 @@
-CLIgen
-======
+# CLIgen
 
 CLIgen is a Command-Line Interface generator.
 
@@ -12,8 +11,11 @@ write callback functions where you call the right library
 routines. The callback functions add the semantics, that is, what the
 commands in the CLI are supposed to do. 
 
-Presentations and tutorial is found on the [CLIgen project
-page](http://www.cligen.se)
+I try to keep thi [cligen tutorial](cligen_tutorial.pdf) up to date
+and is probably the best way to understand CLIgen.
+
+Some background material can be found on the [CLIgen project
+page](http://www.cligen.se).
 
 CLIgen is _not_ a system in itself, you need to build your own
 'backend'.  We have started another project: 'clixon' which is
@@ -30,23 +32,24 @@ The source code here is built and installed using:
   sudo make install.
 ```
 
-
-
 The source builds a single library. If you build applications, you should include cligen.h and link with the library.
 
 There are several example applications:
 * cligen_hello Simplest possible. Just builds a 'hello world' greeting by in-line C
 * cligen_file Read a syntax specification from file. You must supply the file.
-* cligen_tutorial Samples of techniques used in cligen_tutorial.pdf.
+* cligen_tutorial Samples of techniques used in [cligen_tutorial.pdf](cligen_tutorial.pdf)
 
 See also [Changelog](CHANGELOG.md).
+
+For building the C reference documentation using doxygen, do: `make doc` and place your browser at `doc/index.html`.
 
 CLIgen is dual license. Either Apache License, Version 2.0 or GNU
 General Public License Version 2. You choose.
 
 I can be found at olof@hagsand.se.
 
-getline
+## getline
+
 
 CLIgen uses getline with the following copyright:
 
