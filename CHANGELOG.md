@@ -11,7 +11,6 @@ Bugfixes and internal struct reorganizing. Bumped version to match with clixon 4
     * [Syntax to enter commands regardless of order #32](https://github.com/olofhagsand/cligen/issues/32)
     * [CLIgen code stuck in recursion at the time of parsing #23](https://github.com/olofhagsand/cligen/issues/23)
     * [CLI syntax help #22](https://github.com/olofhagsand/cligen/issues/22)
-* Added parse tree dump functions, for pointer debugging (`pt_dump` and `co_dump`).
 * Fixed [Ability to use show attribute to display a multiword string #33](https://github.com/olofhagsand/cligen/issues/33)
 * Fixed: [Is it possible to hide non-terminal commands? #31](https://github.com/olofhagsand/cligen/issues/31)
 * Removed "auth" as a local variable in docs, since it is not implemented
