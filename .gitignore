@@ -1,4 +1,5 @@
 # Generated files
+doc
 build.c
 cligen_parse.tab.c
 cligen_parse.tab.h

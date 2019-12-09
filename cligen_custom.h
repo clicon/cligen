@@ -48,4 +48,4 @@ typedef void *cligen_handle; /* API */
 
 /* New SETS functionality: @{ ... }. This is prototypish.
  */
-#undef USE_SETS
+#define USE_SETS

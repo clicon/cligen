@@ -48,7 +48,6 @@ LDFLAGS		= @LDFLAGS@
 LIBS		= @LIBS@
 INCLUDES	= -I. -I@srcdir@ @INCLUDES@
 SH_SUFFIX	= @SH_SUFFIX@
-pdflatex	= pdflatex
 HOST_VENDOR     = @host_vendor@
 
 INSTALL         = @INSTALL@
