@@ -400,7 +400,7 @@ In the example, the 'treename' variable is used to define a new CLIgen
 tree. It is possible using the C-API to change this keyword to
 something else by using the API function {\tt cligen\_treename\_keyword}.
 
-\section{Sets}
+\subsection{Sets}
 
 By default, listing several commands within {\tt \{\}} gives a choice of commands, but if instead commands are within the set operator {\tt @\{\}}, the commands can be given on any order, and at least once. For example:
 \begin{verbatim}
@@ -429,6 +429,8 @@ gives exactly the following allowed CLI commands, and no others:
   x c b
   x c b a
 \end{verbatim}
+
+Note that the sets implementation is EXPERIMENTAL in the current release.
 
 \section{Variables}
 \label{sec:variables}
@@ -569,8 +571,8 @@ fraction-digits) and -23.0 (one fraction-digit).
 
 Examples of decimal64 specification is:
 \begin{verbatim}
-  <d:decimal64 fraction-digits 4>;
-  <d:decimal64 fraction-digits 4 range[0.1:10]>;
+  <d:decimal64 fraction-digits:4>;
+  <d:decimal64 fraction-digits:4 range[0.1:10]>;
 \end{verbatim}
 which allows numbers with four decimals. The econd example limits the numbers to be between 0.1000 and 10.0000.
 
