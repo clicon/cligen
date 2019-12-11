@@ -153,8 +153,8 @@ typedef struct cg_varspec cg_varspec;
 #define CO_FLAGS_TREEREF   0x04  /* This node is top of expanded sub-tree */
 #define CO_FLAGS_REFDONE   0x08  /* This reference has already been expanded */
 #ifdef USE_SETS
-#define CO_FLAGS_SETS      0x10  /* Children are a set */
-#define CO_FLAGS_SETS_SUB  0x20  /* Parent is SETS, ie direct child of set */
+#define CO_FLAGS_SETS      0x10  /* Children are a set (transient during parsing) */
+#define CO_FLAGS_SETS_SUB  0x20  /* Parent is SETS, ie direct child of set (static) */
 #define CO_FLAGS_SETS_GEN  0x40  /* Parent is SUBS or GEN,  */
 #define CO_FLAGS_SETS_EXP  0x80  /* Child set is generated */
 #endif
