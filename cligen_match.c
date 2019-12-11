@@ -624,6 +624,8 @@ add_cov_to_cvec(cg_obj *co,
 	return NULL;
     cv_name_set(cv, co->co_command);
     cv_const_set(cv, iskeyword(co));
+	if (co->co_vtype == CGV_DEC64) /* XXX: Seems misplaced? / too specific */
+		cv_dec64_n_set(cv, co->co_dec64_n);
     if (cv_parse(cmd, cv) < 0) {
 	cv_reset(cv);
 	cvec_del(cvec, cv);
