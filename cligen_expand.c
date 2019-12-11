@@ -358,17 +358,6 @@ pt_expand_treeref(cligen_handle h,
 
     if (pt0->pt_vec == NULL)
 	return 0;
-#ifdef USE_SETS
-    if (co0){
-	for (i=0; i<pt0->pt_len; i++){ /*  */
-	    if ((co = pt0->pt_vec[i]) == NULL)
-		continue;
-	    /* Mark all direct children of a SET as SUBS, Could be done at parsing? */
-	    if (co_flags_get(co0, CO_FLAGS_SETS) && !co_flags_get(co, CO_FLAGS_SETS_SUB))
-		co_flags_set(co, CO_FLAGS_SETS_SUB);
-	}
-    }
-#endif
  again:
     for (i=0; i<pt0->pt_len; i++){ /*  */
 	if ((co = pt0->pt_vec[i]) == NULL)

@@ -519,6 +519,10 @@ cgy_var_post(cliyacc *ya)
 	else
 	    coc = coy; /* Dont copy if last in list */
 	co_up_set(coc, coparent);
+#ifdef USE_SETS
+	if (co_flags_get(coparent, CO_FLAGS_SETS))
+	    co_flags_set(coc, CO_FLAGS_SETS_SUB);
+#endif
 	if ((co = co_insert(&coparent->co_pt, coc)) == NULL) /* coc may be deleted */
 	    return -1;
 	cl->cl_obj = co;
@@ -552,6 +556,10 @@ cgy_cmd(cliyacc *ya,
 	    cligen_parseerror1(ya, "Allocating cligen object"); 
 	    return -1;
 	}
+#ifdef USE_SETS
+	if (co_flags_get(cop, CO_FLAGS_SETS))
+	    co_flags_set(conew, CO_FLAGS_SETS_SUB);
+#endif
 	if ((co = co_insert(&cop->co_pt, conew)) == NULL)  /* co_new may be deleted */
 	    return -1;
 	cl->cl_obj = co; /* Replace parent in cgy_list */
@@ -859,6 +867,13 @@ ctx_pop(cliyacc *ya)
     if ((cs = ya->ya_stack) == NULL){
 	fprintf(stderr, "%s: cgy_stack empty\n", __FUNCTION__);
 	return -1; /* shouldnt happen */
+    }
+    for (cl = cs->cs_list; cl; cl = cl->cl_next){
+	co = cl->cl_obj;
+#ifdef USE_SETS
+	if (co_flags_get(co, CO_FLAGS_SETS))
+	    co_flags_reset(co, CO_FLAGS_SETS);
+#endif
     }
     ya->ya_stack = cs->cs_next;
     for (cl = cs->cs_saved; cl; cl = cl->cl_next){
