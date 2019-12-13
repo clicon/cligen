@@ -46,6 +46,8 @@ typedef void *cligen_handle; /* API */
  */
 #undef EXPAND_ONLY_INTERACTIVE
 
-/* New SETS functionality: @{ ... }. This is prototypish.
+/* New EXPERIMENTAL SETS functionality. 
+ * Example; a @{b;c;d;}
+ * allows strings with b,c,d at most once in any order.
  */
-#define USE_SETS
+#undef USE_SETS

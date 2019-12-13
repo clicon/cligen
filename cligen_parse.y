@@ -835,6 +835,13 @@ ctx_pop_add(cliyacc *ya)
 	fprintf(stderr, "%s: cgy_stack empty\n", __FUNCTION__);
 	return -1; /* shouldnt happen */
     }
+    for (cl = cs->cs_list; cl; cl = cl->cl_next){
+	co = cl->cl_obj;
+#ifdef USE_SETS
+	if (co_flags_get(co, CO_FLAGS_SETS))
+	    co_flags_reset(co, CO_FLAGS_SETS);
+#endif
+    }
     ya->ya_stack = cs->cs_next;
     /* We could have saved some heap work by moving the cs_list,... */
     for (cl = cs->cs_list; cl; cl = cl->cl_next){

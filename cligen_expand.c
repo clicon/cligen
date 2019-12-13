@@ -412,11 +412,11 @@ pt_expand_treeref(cligen_handle h,
 	    goto again; 
 	}
     }
+    retval = 0;
 #ifdef USE_SETS
+ done:
     cligen_parsetree_free(*ptcp, 1);
 #endif
-    retval = 0;
- done:
     return retval;
 }
 
