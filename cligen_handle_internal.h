@@ -39,9 +39,8 @@
 #define _CLIGEN_HANDLE_INTERNAL_H_
 
 /* With sanity check */
-#define handle(h) (assert(cligen_check(h)==0),(struct cligen_handle *)(h))
-
-//#define handle(h) ((struct cligen_handle *)(h))
+//#define handle(h) (assert(cligen_check(h)==0),(struct cligen_handle *)(h))
+#define handle(h) ((struct cligen_handle *)(h))
 
 /*
  * CLIgen handle code.
