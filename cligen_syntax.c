@@ -37,7 +37,6 @@
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
-#include <assert.h>
 #include <netinet/in.h>
 
 #include "cligen_buf.h"

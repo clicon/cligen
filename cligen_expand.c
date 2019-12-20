@@ -40,7 +40,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include <assert.h>
 #include <netinet/in.h>
 
 #include "cligen_buf.h"

@@ -46,7 +46,6 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <assert.h>
 #include <string.h>
 #include <errno.h>
 
@@ -134,6 +133,7 @@ cvec_from_var(cg_var *cv)
  * Reset and free a cligen vector as previously created by cvec_new(). this includes
  * freeing all cv:s that the cvec consists of.
  * @param[in]  cvv   Cligen variable vector
+ * @see cvec_new
  */
 int
 cvec_free(cvec *cvv)
@@ -730,9 +730,9 @@ cvec_name_get(cvec *cvv)
 }
 
 /*! Allocate and set name of cligen variable vector, including NULL
- * @param[in]  cvv     A cligen variable vector
+ * @param[in]  cvv    A cligen variable vector
  * @param[in]  name   A string that is copied and used as a cvec name, or NULL
- * @retval str    The name of the cvec.
+ * @retval     str    The name of the cvec.
  * The existing name, if any, is freed
  */
 char *

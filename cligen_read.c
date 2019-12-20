@@ -55,7 +55,6 @@
 #endif /* WIN32 */
 #define __USE_GNU /* isblank() */
 #include <ctype.h>
-#include <assert.h>
 
 #ifndef isblank
 #define isblank(c) (c==' ')
