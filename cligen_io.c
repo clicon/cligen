@@ -39,7 +39,6 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <sys/types.h>
-#include <assert.h>
 #include <string.h>
 #ifndef WIN32
 #include <unistd.h>

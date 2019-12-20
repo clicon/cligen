@@ -60,7 +60,6 @@
 #include <ctype.h>
 #include <errno.h>
 #include <signal.h>
-#include <assert.h>
 
 #include "cligen_buf.h"
 #include "cligen_cv.h"

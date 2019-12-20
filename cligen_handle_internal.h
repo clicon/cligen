@@ -38,9 +38,11 @@
 #ifndef _CLIGEN_HANDLE_INTERNAL_H_
 #define _CLIGEN_HANDLE_INTERNAL_H_
 
-/* With sanity check */
-//#define handle(h) (assert(cligen_check(h)==0),(struct cligen_handle *)(h))
+#if 1
 #define handle(h) ((struct cligen_handle *)(h))
+#else /* Sanity test but requires assert all over */
+#define handle(h) (assert(cligen_check(h)==0),(struct cligen_handle *)(h))
+#endif
 
 /*
  * CLIgen handle code.

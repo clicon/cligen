@@ -44,7 +44,6 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <assert.h>
 #include <ctype.h>
 #define __USE_GNU /* strverscmp */
 #include <string.h>
@@ -558,7 +557,7 @@ str_cmp(char *s1,
 #endif /* HAVE_STRVERSCMP */
 }
 
-/*! Examine equality between two cligen objects (cg_obj)
+/*! Check if two cligen objects (cg_obj) ar equal
  *
  * Two cligen objects are equal if they have:
  * - same type (variable or command)

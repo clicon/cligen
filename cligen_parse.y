@@ -82,7 +82,6 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <limits.h>
-#include <assert.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -1184,7 +1183,6 @@ option      : callback    {if (debug)printf("option->callback\n");}
             | flag        {if (debug)printf("option->flag\n");} 
             | assignment  {if (debug)printf("option->assignment\n");} 
             ;
-
 
 assignment  : NAME '=' DQ charseq DQ {cgy_assignment(_ya, $1,$4);free($1); free($4);}
             ; 
