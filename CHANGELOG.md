@@ -1,12 +1,12 @@
 # Cligen Changelog
 	
-## 4.3.0 (Expected: December 2019)
+## 4.3.0 (1 January 2020)
 Bugfixes and internal struct reorganizing. Bumped version to match with clixon 4.3
 
-* New syntax `@{}` for expressing _sets_ of commands, as opposed to alternative commands.
+* Experimental syntax `@{}` for expressing _sets_ of commands, as opposed to alternative commands.
+  * Not enabled by default. Enable by defining `USE_SETS` in cligen_custom.h
   * Example: `@{a;b;c;}` where a, b, and c can occur at most once in any order, as opposed to either a, b, or c.
-  * This feature is EXPERIMENTAL since even if base cases work, there may be combinations with other usages that are not been fully understood.
-    * Enable by defining `USE_SETS` in cligen_custom.h
+  * Note that subtrees are not sets aware, ie `@{a;b;c;} d;` means the set a,b,c OR d, not the set a,b,c FOLLOWED by d.
   * This was only possible previously by workarounds or by full command expansion consuming quadratric memory.
   * This feature has been a root of many issues, including the following:
     * [Syntax to enter commands regardless of order #32](https://github.com/olofhagsand/cligen/issues/32)
