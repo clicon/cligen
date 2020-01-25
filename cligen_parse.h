@@ -50,18 +50,16 @@
  * The list keeps track of the list of objects that are currently affected. Every choice and 
  * option extends the list. Operations apply to all objects on the list..
  */
-struct cgy_list{
-    struct cgy_list *cl_next;
-    cg_obj *cl_obj;
-};
-
 struct cgy_stack{
     struct cgy_stack *cs_next;
-    struct cgy_list *cs_list;  /* Pointer to a list (saved state)*/
-    struct cgy_list *cs_saved; /* Saved state for options (used in pop_add) */
-
+    struct cgy_list  *cs_list;   /* Pointer to a list (saved state)*/
+    struct cgy_list  *cs_saved;  /* Saved state for options (used in pop_add) */
 };
 
+struct cgy_list{
+    struct cgy_list *cl_next;
+    cg_obj          *cl_obj;
+};
 
 /*! CLIgen yacc parse structure, with all accumulated state of a parse session */
 struct cligen_parse_yacc{
@@ -71,10 +69,10 @@ struct cligen_parse_yacc{
     int                   ya_linenum;      /* Number of \n in parsed buffer */
     char                 *ya_parse_string; /* original (copy of) parse string */
     void                 *ya_lexbuf;       /* internal parse buffer from lex */
-    cvec                 *ya_globals;     /* global variables after parsing */
-    cvec                 *ya_cvec;     /* local variables (per-command) */
-    struct cgy_stack     *ya_stack;     /* Stack of levels: push/pop on () and [] */
-    struct cgy_list      *ya_list;      /* (Parallel) List of objects currently 'active' */
+    cvec                 *ya_globals;      /* global variables after parsing */
+    cvec                 *ya_cvec;         /* local variables (per-command) */
+    struct cgy_stack     *ya_stack;        /* Stack of levels: push/pop on () and [] */
+    struct cgy_list      *ya_list;         /* (Parallel) List of objects currently 'active' */
     cg_obj               *ya_var;
     struct cg_callback   *ya_callbacks; 
     int                   ya_lex_state;  /* lex start condition (ESCAPE/COMMENT) */

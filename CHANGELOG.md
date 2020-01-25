@@ -1,5 +1,7 @@
 # Cligen Changelog
 	
+## 4.4.0 (Forthcoming)
+
 ## 4.3.0 (1 January 2020)
 Bugfixes and internal struct reorganizing. Bumped version to match with clixon 4.3
 

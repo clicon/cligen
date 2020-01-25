@@ -1131,7 +1131,6 @@ parse_uint32(char     *str,
     *val = (uint32_t)i;
   done:
     return retval;
-
 }
 
 /*! Parse an uint64 number and check for errors
@@ -1142,6 +1141,7 @@ parse_uint32(char     *str,
  * @retval  0 : Validation not OK, malloced reason is returned
  * @retval  1 : Validation OK, value returned in val parameter
  * @note: we have to detect a minus sign ourselves,....
+ * XXX range 64 in error message but this function is used also by u32/16/8
  */
 int
 parse_uint64(char     *str, 

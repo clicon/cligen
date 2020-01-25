@@ -127,7 +127,6 @@ cvec_from_var(cg_var *cv)
     return newvec;
 }
 
-
 /*! Free a cligen  variable vector (cvec)
  *
  * Reset and free a cligen vector as previously created by cvec_new(). this includes
