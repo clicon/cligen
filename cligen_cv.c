@@ -866,118 +866,26 @@ cv_urlpasswd_set(cg_var *cv,
     return s1; 
 }
 
-/*! Parse an int8 number and check for errors
- * @param[in]  str     String containing number to parse
- * @param[out] val     Value on success
- * @param[out] reason  Error string on failure
- * @retval -1 : Error (fatal), with errno set to indicate error
- * @retval  0 : Validation not OK, malloced reason is returned
- * @retval  1 : Validation OK, value returned in val parameter
- */
-int
-parse_int8(char   *str, 
-	   int8_t *val,
-	   char  **reason)
-{
-    int64_t  i;
-    int      retval;
-    
-    if ((retval = parse_int64(str, &i, reason)) != 1)
-	goto done;
-    if (i > 127 || i < -128){
-	if (reason != NULL)
-	    if ((*reason = cligen_reason("Number %s out of range: -128 - 127", str)) == NULL){
-		retval = -1; /* malloc */
-		goto done;
-	    }
-	retval = 0;
-	goto done;
-    }
-    *val = (int8_t)i;
-  done:
-    return retval;
-}
-
-/*! Parse an int16 number and check for errors
- * @param[in]  str     String containing number to parse
- * @param[out] val     Value on success
- * @param[out] reason  Error string on failure
- * @retval -1 : Error (fatal), with errno set to indicate error
- * @retval  0 : Validation not OK, malloced reason is returned
- * @retval  1 : Validation OK, value returned in val parameter
- */
-int
-parse_int16(char    *str, 
-	    int16_t *val, 
-	    char   **reason)
-{
-    int64_t i;
-    int      retval;
-    
-    if ((retval = parse_int64(str, &i, reason)) != 1)
-	goto done;
-    if (i > 32767 || i < -32768){
-	if (reason != NULL)
-	    if ((*reason = cligen_reason("Number %s out of range: -32768 - 32767", str)) == NULL){
-		retval = -1;
-		goto done;
-	    }
-	retval = 0;
-	goto done;
-    }
-    *val = (int16_t)i;
-  done:
-    return retval;
-}
-
-/*! Parse an int32 number and check for errors
- * @param[in]  str     String containing number to parse
- * @param[out] val     Value on success
- * @param[out] reason  Error string on failure
- * @retval -1 : Error (fatal), with errno set to indicate error
- * @retval  0 : Validation not OK, malloced reason is returned
- * @retval  1 : Validation OK, value returned in val parameter
- */
-int
-parse_int32(char    *str, 
-	    int32_t *val, 
-	    char   **reason)
-{
-    int64_t  i;
-    int      retval;
-    
-    if ((retval = parse_int64(str, &i, reason)) != 1)
-	goto done;
-    if (i > INT_MAX || i < INT_MIN){
-	if (reason != NULL)
-	    if ((*reason = cligen_reason("Number %s out of range: %" PRId32 " - %" PRId32, str, INT_MIN, INT_MAX)) == NULL){
-		retval = -1; /* malloc */
-		goto done;
-	    }
-	retval = 0;
-	goto done;
-    }
-    *val = (int32_t)i;
-  done:
-    return retval;
-}
-
 /*! Parse an int64 number with explicit base and check for errors
  * @param[in]  str     String containing number to parse
- * @parame[in] base    If base is zero or 16, the string may include a "0x" prefix,
+ * @parame[in] base    If base is 0 or 16, the string may include a "0x" prefix,
  *                     the number will be read in base 16; otherwise, a zero base
  *                     is taken  as 10 (decimal) unless the next character is '0',
  *                     in which case it is taken as 8 (octal).
+ * @param[in]  imin    Min range (set INT64_MIN for default)    
+ * @param[in]  imax    Max range (set INT64_MAX for default)
  * @param[out] val     Value on success
  * @param[out] reason  Error string on failure
  * @retval -1 : Error (fatal), with errno set to indicate error
  * @retval  0 : Validation not OK, malloced reason is returned
  * @retval  1 : Validation OK, value returned in val parameter
  */
-int
+static int
 parse_int64_base(char    *str, 
 		 int      base,
-		 int64_t *val, 
+		 int64_t  imin,
+		 int64_t  imax, 
+		 int64_t *val,
 		 char   **reason)
 {
     int64_t i;
@@ -999,7 +907,7 @@ parse_int64_base(char    *str,
 	if ((i == INT64_MIN || i == INT64_MAX) && errno == ERANGE){ 
 	    errno = 0;
 	    if (reason != NULL)
-		if ((*reason = cligen_reason("Number %s out of range: %" PRId64 " - %" PRId64, str, INT64_MIN, INT64_MAX)) == NULL){
+		if ((*reason = cligen_reason("Number %s out of range: %" PRId64 " - %" PRId64, str, imin, imax)) == NULL){
 		    retval = -1; /* malloc */
 		    goto done;
 		}
@@ -1015,8 +923,86 @@ parse_int64_base(char    *str,
 	}
 	errno = 0;
     } /* if errno */
+    else if (i < imin || i > imax){
+	if (reason != NULL)
+	    if ((*reason = cligen_reason("Number %s out of range: %" PRId64 " - %" PRId64, str, imin, imax)) == NULL){
+		retval = -1;
+		goto done;
+	    }
+	retval = 0;
+	goto done;
+    }
     *val = i;
     retval = 1; /* OK */
+  done:
+    return retval;
+}
+
+/*! Parse an int8 number and check for errors
+ * @param[in]  str     String containing number to parse
+ * @param[out] val     Value on success
+ * @param[out] reason  Error string on failure
+ * @retval -1 : Error (fatal), with errno set to indicate error
+ * @retval  0 : Validation not OK, malloced reason is returned
+ * @retval  1 : Validation OK, value returned in val parameter
+ */
+int
+parse_int8(char   *str, 
+	   int8_t *val,
+	   char  **reason)
+{
+    int64_t  i;
+    int      retval;
+    
+    if ((retval = parse_int64_base(str, 0, -128, 127, &i, reason)) != 1)
+	goto done;
+    *val = (int8_t)i;
+  done:
+    return retval;
+}
+
+/*! Parse an int16 number and check for errors
+ * @param[in]  str     String containing number to parse
+ * @param[out] val     Value on success
+ * @param[out] reason  Error string on failure
+ * @retval -1 : Error (fatal), with errno set to indicate error
+ * @retval  0 : Validation not OK, malloced reason is returned
+ * @retval  1 : Validation OK, value returned in val parameter
+ */
+int
+parse_int16(char    *str, 
+	    int16_t *val, 
+	    char   **reason)
+{
+    int64_t i;
+    int      retval;
+    
+    if ((retval = parse_int64_base(str, 0, -32768, 32767, &i, reason)) != 1)
+	goto done;
+    *val = (int16_t)i;
+  done:
+    return retval;
+}
+
+/*! Parse an int32 number and check for errors
+ * @param[in]  str     String containing number to parse
+ * @param[out] val     Value on success
+ * @param[out] reason  Error string on failure
+ * @retval -1 : Error (fatal), with errno set to indicate error
+ * @retval  0 : Validation not OK, malloced reason is returned
+ * @retval  1 : Validation OK, value returned in val parameter
+ */
+int
+parse_int32(char    *str, 
+	    int32_t *val, 
+	    char   **reason)
+{
+    int64_t  i;
+    int      retval;
+    
+    if ((retval = parse_int64_base(str, 0, INT_MIN, INT_MAX, &i, reason)) != 1)
+	goto done;
+    *val = (int32_t)i;
   done:
     return retval;
 }
@@ -1034,7 +1020,89 @@ parse_int64(char    *str,
 	    int64_t *val,
 	    char   **reason)
 {
-    return parse_int64_base(str, 0, val, reason);
+    return parse_int64_base(str, 0, INT64_MIN, INT64_MAX, val, reason);
+}
+
+/*! Parse an uint64 number and check for errors
+ * @param[in]  str     String containing number to parse
+ * @parame[in] base    If base is 0 or 16, the string may include a "0x" prefix,
+ *                     the number will be read in base 16; otherwise, a zero base
+ *                     is taken  as 10 (decimal) unless the next character is '0',
+ *                     in which case it is taken as 8 (octal).
+ * @param[in]  umin    Min range (set UINT64_MIN for default)    
+ * @param[in]  umax    Max range (set UINT64_MAX for default)
+ * @param[out] val     Value on success
+ * @param[out] reason  Error string on failure (if given)
+ * @retval -1 : Error (fatal), with errno set to indicate error
+ * @retval  0 : Validation not OK, malloced reason is returned
+ * @retval  1 : Validation OK, value returned in val parameter
+ * @note: we have to detect a minus sign ourselves,....
+ */
+static int
+parse_uint64_base(char     *str, 
+		  int       base,
+		  uint64_t  umin,
+		  uint64_t  umax, 
+		  uint64_t *val, 
+		  char    **reason)
+{
+    uint64_t i;
+    char    *ep;
+    int      retval = -1;
+
+    errno = 0;
+    i = strtoull(str, &ep, base);
+    if (str[0] == '\0' || *ep != '\0'){
+	if (reason != NULL)
+	    if ((*reason = cligen_reason("'%s' is not a number", str)) == NULL){
+		retval = -1; /* malloc */
+		goto done;
+	    }
+	retval = 0;
+	goto done;
+    }
+    if (errno != 0){
+	if (i == UINT64_MAX && errno == ERANGE){ 
+	    if (reason != NULL)
+		if ((*reason = cligen_reason("Number %s out of range: 0 - %" PRIu64, str, umax)) == NULL){
+		    retval = -1; /* malloc */
+		    goto done;
+		}
+	    retval = 0;
+	    goto done;
+	}
+	else{
+	    if ((*reason = cligen_reason("%s: %s", str, strerror(errno))) == NULL){
+		retval = -1; /* malloc */
+		goto done;
+	    }
+	    retval = 0;
+	    goto done;
+	}
+    }
+    else if (i > umax){
+	if (reason != NULL)
+	    if ((*reason = cligen_reason("Number %s out of range: %" PRIu64 " - %" PRIu64, str, umin, umax)) == NULL){
+		retval = -1;
+		goto done;
+	    }
+	retval = 0;
+	goto done;
+    }
+    /* strtoull does _not_ detect negative numbers,... */
+    if (strchr(str, '-') != NULL){
+	if (reason != NULL)
+	    if ((*reason = cligen_reason("Number %s out of range: 0 - %" PRIu64, str, umax)) == NULL){
+		retval = -1; /* malloc */
+		goto done;
+	    }
+	retval = 0;
+	goto done;
+    }
+    *val = i;
+    retval = 1; /* OK */
+  done:
+    return retval;
 }
 
 /*! Parse an uint8 number and check for errors
@@ -1053,17 +1121,8 @@ parse_uint8(char    *str,
     uint64_t i;
     int      retval;
     
-    if ((retval = parse_uint64(str, &i, reason)) != 1)
+    if ((retval = parse_uint64_base(str, 0, 0, 255, &i, reason)) != 1)
 	goto done;
-    if (i > 255){
-	if (reason != NULL)
-	    if ((*reason = cligen_reason("Number %s out of range: 0 - 255", str)) == NULL){
-		retval = -1; /* malloc */
-		goto done;
-	    }
-	retval = 0;
-	goto done;
-    }
     *val = (uint8_t)i;
   done:
     return retval;
@@ -1085,17 +1144,8 @@ parse_uint16(char     *str,
     uint64_t i;
     int      retval;
     
-    if ((retval = parse_uint64(str, &i, reason)) != 1)
+    if ((retval = parse_uint64_base(str, 0, 0, 65535, &i, reason)) != 1)
 	goto done;
-    if (i > 65535){
-	if (reason != NULL)
-	    if ((*reason = cligen_reason("Number %s out of range: 0 - 65535", str)) == NULL){
-		retval = -1; /* malloc */
-		goto done;
-	    }
-	retval = 0;
-	goto done;
-    }
     *val = (uint16_t)i;
   done:
     return retval;
@@ -1117,17 +1167,8 @@ parse_uint32(char     *str,
     uint64_t i;
     int      retval;
     
-    if ((retval = parse_uint64(str, &i, reason)) != 1)
+    if ((retval = parse_uint64_base(str, 0, 0, UINT_MAX, &i, reason)) != 1)
 	goto done;
-    if (i > UINT_MAX){
-	if (reason != NULL)
-	    if ((*reason = cligen_reason("Number %s out of range: 0 - %" PRIu32, str, UINT_MAX)) == NULL){
-		retval = -1; /* malloc */
-		goto done;
-	    }
-	retval = 0;
-	goto done;
-    }
     *val = (uint32_t)i;
   done:
     return retval;
@@ -1141,61 +1182,13 @@ parse_uint32(char     *str,
  * @retval  0 : Validation not OK, malloced reason is returned
  * @retval  1 : Validation OK, value returned in val parameter
  * @note: we have to detect a minus sign ourselves,....
- * XXX range 64 in error message but this function is used also by u32/16/8
  */
 int
 parse_uint64(char     *str, 
-	     uint64_t *val, 
-	     char    **reason)
+	     uint64_t *val,
+	     char   **reason)
 {
-    uint64_t i;
-    char    *ep;
-    int      retval = -1;
-
-    errno = 0;
-    i = strtoull(str, &ep, 0);
-    if (str[0] == '\0' || *ep != '\0'){
-	if (reason != NULL)
-	    if ((*reason = cligen_reason("'%s' is not a number", str)) == NULL){
-		retval = -1; /* malloc */
-		goto done;
-	    }
-	retval = 0;
-	goto done;
-    }
-    if (errno != 0){
-	if (i == UINT64_MAX && errno == ERANGE){ 
-	    if (reason != NULL)
-		if ((*reason = cligen_reason("Number %s out of range: 0 - %" PRIu64, str, UINT64_MAX)) == NULL){
-		    retval = -1; /* malloc */
-		    goto done;
-		}
-	    retval = 0;
-	    goto done;
-	}
-	else{
-	    if ((*reason = cligen_reason("%s: %s", str, strerror(errno))) == NULL){
-		retval = -1; /* malloc */
-		goto done;
-	    }
-	    retval = 0;
-	    goto done;
-	}
-    }
-    /* strtoull does _not_ detect negative numbers,... */
-    if (strchr(str, '-') != NULL){
-	if (reason != NULL)
-	    if ((*reason = cligen_reason("Number %s out of range: 0 - %" PRIu64, str, UINT64_MAX)) == NULL){
-		retval = -1; /* malloc */
-		goto done;
-	    }
-	retval = 0;
-	goto done;
-    }
-    *val = i;
-    retval = 1; /* OK */
-  done:
-    return retval;
+    return parse_uint64_base(str, 0, 0, UINT64_MAX, val, reason);
 }
 
 /*! Parse a decimal64 value
@@ -1277,7 +1270,7 @@ parse_dec64(char    *str,
 	ss[i] = '0';
     ss[len1+n] = '\0'; /* trailing zero */
     /* XXX: remove any beginning zeros */
-    if ((retval = parse_int64_base(ss, 10, dec64_i, reason)) != 1)
+    if ((retval = parse_int64_base(ss, 10, INT64_MIN, INT64_MAX, dec64_i, reason)) != 1)
 	goto done;
   done:
     if (s0)

@@ -1,6 +1,7 @@
 # Cligen Changelog
 	
 ## 4.4.0 (Forthcoming)
+* Fixed: Negative uint:s get parse error messages as if they are uint64, such as when uint8 parses -1.
 
 ## 4.3.0 (1 January 2020)
 Bugfixes and internal struct reorganizing. Bumped version to match with clixon 4.3
