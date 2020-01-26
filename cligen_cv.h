@@ -192,7 +192,6 @@ int parse_int8(char *str, int8_t *val, char **reason);
 int parse_int16(char *str, int16_t *val, char **reason);
 int parse_int32(char *str, int32_t *val, char **reason);
 int parse_int64(char *str, int64_t *val, char **reason);
-int parse_int64_base(char *str, int base, int64_t *val, char **reason);
 int parse_uint8(char *str, uint8_t *val, char **reason);
 int parse_uint16(char *str, uint16_t *val, char **reason);
 int parse_uint32(char *str, uint32_t *val, char **reason);
