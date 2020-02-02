@@ -2765,10 +2765,15 @@ cv_parse1(char   *str0,
     int    i, j;
 
     if (reason && (*reason != NULL)){
-	fprintf(stderr, "reason must be NULL on calling");
+	fprintf(stderr, "reason must be NULL on calling\n");
 	return -1;
     }
-    if ((str = strdup(str0)) == NULL)
+    if (str0 == NULL){
+	if ((str = strdup("")) == NULL)
+	    goto done;
+    }
+    else
+	if ((str = strdup(str0)) == NULL)
 	goto done;
     switch (cv->var_type) {
     case CGV_INT8:
