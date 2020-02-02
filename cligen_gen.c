@@ -45,10 +45,16 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <ctype.h>
-#define __USE_GNU /* strverscmp */
+#ifdef HAVE_STRVERSCMP
+#define _GNU_SOURCE
+#define __USE_GNU
 #include <string.h>
+#undef _GNU_SOURCE
+#undef __USE_GNU
+#else /* HAVE_STRVERSCMP */
+#include <string.h>
+#endif /* HAVE_STRVERSCMP */
 #include <errno.h>
-
 #include "cligen_buf.h"
 #include "cligen_cv.h"
 #include "cligen_cvec.h"
