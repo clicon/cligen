@@ -43,8 +43,9 @@
 /*
  * Constants
  */
-#define CBUFLEN_DEFAULT 1024   /* Start alloc mem length 1K */
-
+/* Initial alloc mem length of a cbuf, then grows exponetially, with 2*, 4*, etc
+ * 1K could be a bit much for large syntaxes and small entries */
+#define CBUFLEN_DEFAULT 1024
 
 #include <stdio.h>
 #include <stdlib.h>

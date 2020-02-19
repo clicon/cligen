@@ -44,9 +44,9 @@
 /*! Internal CLIgen buffer. 
  */
 struct cbuf {
-    char  *cb_buffer;     
-    size_t cb_buflen;  
-    size_t cb_strlen;  
+    char  *cb_buffer;   /* pointer to buffer */
+    size_t cb_buflen;   /* allocated bytes of buffer */
+    size_t cb_strlen;   /* length of string in buffer (< buflen) */
 };
 
 #endif /* _CLIGEN_BUF_INTERNAL_H */

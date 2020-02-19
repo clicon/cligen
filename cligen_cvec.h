@@ -74,6 +74,7 @@ char   *cvec_find_str(cvec *vr, char *name);
 char   *cvec_name_get(cvec *vr);
 char   *cvec_name_set(cvec *vr, char *name);
 int     cv_exclude_keys(int status);
+size_t  cvec_size(cvec *cvv);
 
 #endif /* _CLIGEN_CVEC_H_ */
 

@@ -715,13 +715,14 @@ ctx_push(cliyacc *ya,
 
     if (debug)
 	fprintf(stderr, "%s sets:%d\n", __FUNCTION__, sets);
+    /* Create new stack element */
     if ((cs = malloc(sizeof(*cs))) == NULL) {
 	fprintf(stderr, "%s: malloc: %s\n", __FUNCTION__, strerror(errno));
 	return -1;
     }
     memset(cs, 0, sizeof(*cs));
     cs->cs_next = ya->ya_stack;
-    ya->ya_stack = cs;
+    ya->ya_stack = cs; /* Push the new stack element */
     for (cl = ya->ya_list; cl; cl = cl->cl_next){
 	co = cl->cl_obj;
 	if (cvec_find(ya->ya_cvec, "hide") != NULL)
@@ -730,7 +731,7 @@ ctx_push(cliyacc *ya,
 	if (sets)
 	    co_flags_set(co, CO_FLAGS_SETS);
 #endif
-    	if (cgy_list_push(cl->cl_obj, &cs->cs_list) < 0) 
+    	if (cgy_list_push(co, &cs->cs_list) < 0) 
 	    return -1;
     }
     return 0;
@@ -740,6 +741,7 @@ ctx_push(cliyacc *ya,
  * Typically done in a choice, eg "(c1|c2)" at c2.
  * Dont pop context
  * @param[in]  ya  CLIgen yacc parse struct
+ * @see ctx_peek_swap2
  */
 static int
 ctx_peek_swap(cliyacc *ya)
@@ -761,6 +763,7 @@ ctx_peek_swap(cliyacc *ya)
     }
     for (cl = ya->ya_list; cl; cl = cl->cl_next){
 	co = cl->cl_obj;
+	co_flags_set(co, CO_FLAGS_OPTION);
 	if (cgy_list_push(co, &cs->cs_saved) < 0)
 	    return -1;
     }
@@ -777,6 +780,7 @@ ctx_peek_swap(cliyacc *ya)
  * Typically done in a choice, eg "(c1|c2)" at c2.
  * Dont pop context
  * @param[in]  ya  CLIgen yacc parse struct
+ * @see ctx_peek_swap
  */
 static int
 ctx_peek_swap2(cliyacc *ya)
@@ -816,7 +820,7 @@ delete_stack_element(struct cgy_stack *cs)
 }
 
 /*! Pop context from stack and add it to object list
- * Typically done after an option, eg "cmd [opt]"
+ * Done after an option, eg "cmd [opt]"
  * "cmd <push> [opt] <pop>". At pop, all objects saved at push
  * are added to the object list.
  * @param[in]  ya  CLIgen yacc parse struct
@@ -830,6 +834,10 @@ ctx_pop_add(cliyacc *ya)
 
     if (debug)
 	fprintf(stderr, "%s\n", __FUNCTION__);
+    for (cl = ya->ya_list; cl; cl = cl->cl_next){
+	co = cl->cl_obj;
+	co_flags_set(co, CO_FLAGS_OPTION);
+    }
     if ((cs = ya->ya_stack) == NULL){
 	fprintf(stderr, "%s: cgy_stack empty\n", __FUNCTION__);
 	return -1; /* shouldnt happen */
@@ -1159,7 +1167,7 @@ line2       : ';' {
 		    if (ctx_peek_swap2(_ya) < 0) YYERROR;
                   } 
             | preline {
-		     if (ctx_push(_ya, $1) < 0) YYERROR;
+   		      if (ctx_push(_ya, $1) < 0) YYERROR;
 	          } 
               lines
 	      '}' {
