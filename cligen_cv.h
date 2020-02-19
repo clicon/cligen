@@ -230,5 +230,7 @@ int     cv_reset(cg_var *cgv); /* not free cgv itself */ /* XXX: free_only */
 int     cv_free(cg_var *cv);   /* free cgv itself */
 cg_var *cv_new(enum cv_type type);
 
+size_t  cv_size(cg_var *cv);
+
 #endif /* _CLIGEN_CV_H_ */
 

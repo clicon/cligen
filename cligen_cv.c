@@ -3311,10 +3311,9 @@ cv_validate(cligen_handle h,
 /*! Compare two CLIgen variables as strcmp(3)
  * @param[in]  cv1   CLIgen variable #1
  * @param[in]  cv2   CLIgen variable #2
- * @retval 0   equal
- * @retval !0  not equal, as strcmp(3): an integer less than, equal
- * to, or greater than zero if cv1 (or the first n bytes thereof) is found,
- * respectively, to be less than, to match, or be greater than cv2
+ * @retval     0     equal
+ * @retval    <0     cv1 is less than cv2
+ * @retval    >0     cv1 is greater than cv2
  * XXX assume dec64_n are equal 
  */
 int 
@@ -3581,3 +3580,20 @@ cv_free(cg_var *cv)
     return 0;
 }
 
+/*! Return the alloced memory of a CLIgen variable
+ */
+size_t
+cv_size(cg_var *cv)
+{
+    size_t sz = 0;
+
+    sz += sizeof(struct cg_var);
+    if (cv->var_name)
+	sz += strlen(cv->var_name)+1;
+    if (cv->var_show)
+	sz += strlen(cv->var_show)+1;
+    if (cv_isstring(cv->var_type))
+	sz += strlen(cv->var_string)+1;
+    sz += sizeof(struct cg_var);
+    return sz;
+}

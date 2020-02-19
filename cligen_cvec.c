@@ -762,3 +762,19 @@ cv_exclude_keys(int status)
     return 0;
 }
 
+/*! Return the alloced memory of a CLIgen variable vector
+ */
+size_t
+cvec_size(cvec *cvv)
+{
+    size_t  sz = 0;
+    cg_var *cv = NULL;
+
+    sz += sizeof(struct cvec);
+    if (cvv->vr_name)
+	sz += strlen(cvv->vr_name)+1;
+    cv = NULL;
+    while ((cv = cvec_each(cvv, cv)) != NULL)
+	sz += cv_size(cv);
+    return sz;
+}

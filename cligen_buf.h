@@ -58,18 +58,18 @@ typedef struct cbuf cbuf; /* cligen buffer type is fully defined in c-file */
  * Prototypes
  */
 uint32_t cbuf_alloc_get(void);
-int cbuf_alloc_set(uint32_t alloc);
-cbuf *cbuf_new(void);
-void  cbuf_free(cbuf *cb);
-char *cbuf_get(cbuf *cb);
-int   cbuf_len(cbuf *cb);
-int   cbuf_buflen(cbuf *cb);
+int      cbuf_alloc_set(uint32_t alloc);
+cbuf    *cbuf_new(void);
+void     cbuf_free(cbuf *cb);
+char    *cbuf_get(cbuf *cb);
+int      cbuf_len(cbuf *cb);
+int      cbuf_buflen(cbuf *cb);
 #if defined(__GNUC__) && __GNUC__ >= 3
-int   cprintf(cbuf *cb, const char *format, ...) __attribute__ ((format (printf, 2, 3)));
+int      cprintf(cbuf *cb, const char *format, ...) __attribute__ ((format (printf, 2, 3)));
 #else
-int   cprintf(cbuf *cb, const char *format, ...);
+int      cprintf(cbuf *cb, const char *format, ...);
 #endif
-void  cbuf_reset(cbuf *cb);
-int   cbuf_append(cbuf *cb, int c);
+void     cbuf_reset(cbuf *cb);
+int      cbuf_append(cbuf *cb, int c);
 
 #endif /* _CLIGEN_BUF_H */

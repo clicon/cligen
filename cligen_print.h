@@ -42,9 +42,8 @@ int pt_print(FILE *f, parse_tree pt, int brief);
 int co_print(FILE *f, cg_obj *co, int brief);
 int cligen_print_trees(FILE *f, cligen_handle h, int brief);
 
-/* obsolete */
-#define cligen_print(f, pt, b) pt_print((f), (pt), (b))
-#define cligen_print_obj(f, co, b) co_print((f), (co), (b))
+/* Backward compatible */
+#define cligen_print(f, h, b) pt_print((f), (h), (b))
 
 #endif /* _CLIGEN_PRINT_H_ */
 

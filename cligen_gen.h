@@ -101,10 +101,6 @@ struct parse_tree{
     int                 pt_len;    /**< length of vector */
     struct parse_tree  *pt_up;     /**< parent cligen object, if any */
     char               *pt_name;
-#if 0
-    int                 pt_obj;    /**< if this parse-tree is a part of a cg_obj (can be 
-				      typecast to (cg_obj*). See co_up() below */
-#endif
 };
 typedef struct parse_tree parse_tree;
 
@@ -158,6 +154,7 @@ typedef struct cg_varspec cg_varspec;
 #define CO_FLAGS_SETS_GEN  0x40  /* Parent is SUBS or GEN,  */
 #define CO_FLAGS_SETS_EXP  0x80  /* Child set is generated */
 #endif
+#define CO_FLAGS_OPTION   0x100  /* Generated from optional [] */
 
 /*! cligen gen object is a parse-tree node. A cg_obj is either a command or a variable
  * A cg_obj 
@@ -182,14 +179,13 @@ struct cg_obj{
     cvec               *co_cvec;      /* List of cligen variables (XXX: not visible to
 					 callbacks) */
     char	       *co_help;      /* Helptext */
-    uint32_t            co_flags;     /* General purpose flags, see */
+    uint32_t            co_flags;     /* General purpose flags, see CO_FLAGS_ above*/
     /* Expand data: expand, choice temporarily replaces the original parse-tree
        with one where expand and choice is replaced by string constants. */
-    struct parse_tree   co_pt_exp;    /* Expanded parse-trees (why > 1?) */
+    struct parse_tree   co_pt_exp;    
     struct cg_obj      *co_ref;       /* Ref to original (if this is expanded) */
-    char               *co_value;     /* Expanded value can be a string with a 
-				         constant. Store the constant in the original
-				         variable. */
+    char               *co_value;     /* Expanded value can be a string with a constant. 
+					 Store the constant in the original variable. */
     union {
 	struct {        } cou_cmd;
 	struct cg_varspec cou_var;

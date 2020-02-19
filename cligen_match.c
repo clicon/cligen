@@ -941,102 +941,101 @@ match_pattern_exact(cligen_handle h,
 		    cvec         *cvec,
 		    cg_obj      **match_obj)
 {
-  pt_vec  res_pt;
-  cg_obj *co;
-  int     matchlen = 0;
-  int     *matchv = NULL;
-  int     i;
-  int     ret;
-  char   *reason = NULL;
+    pt_vec  res_pt;
+    cg_obj *co;
+    int     matchlen = 0;
+    int     *matchv = NULL;
+    int     i;
+    int     ret;
+    char   *reason = NULL;
 
-  /* clear old errors */
-  if (exact)
-      cligen_nomatch_set(h, NULL); 
-  if ((ret = match_pattern(h, string, pt, 1, 0,
-			   expandvar,
-			   &res_pt, 
-			   &matchv, &matchlen, cvec, &reason)) < 0)
-      return -1;
-  if (ret == 0) {
-      if (exact){
-	  if (reason != NULL){
-	      cligen_nomatch_set(h, "%s", reason);
-	      free(reason);
-	  }
-	  else
-	      cligen_nomatch_set(h, "Unknown command");
-      }
-  }
-  else{
-      if (ret > 1){
-	  /* Special case: command and exact-> use that */
-	  int j;
-	  char *string1;
-	  char allvars=1;
+    /* clear old errors */
+    if (exact)
+	cligen_nomatch_set(h, NULL); 
+    if ((ret = match_pattern(h, string, pt, 1, 0,
+			     expandvar,
+			     &res_pt, 
+			     &matchv, &matchlen, cvec, &reason)) < 0)
+	return -1;
+    if (ret == 0) {
+	if (exact){
+	    if (reason != NULL){
+		cligen_nomatch_set(h, "%s", reason);
+		free(reason);
+	    }
+	    else
+		cligen_nomatch_set(h, "Unknown command");
+	}
+    }
+    else{
+	if (ret > 1){
+	    /* Special case: command and exact-> use that */
+	    int j;
+	    char *string1;
+	    char allvars=1;
 
-	  extract_substring(string, command_levels(string), &string1);
-	  for (j=0; j<ret; j++){
-	      co = res_pt[matchv[j]];
-	      /* XXX If variable dont compare co_command */
-	      if (co->co_type == CO_COMMAND && string1 && 
-		  strcmp(string1, co->co_command)==0){
-		  ret = 1;
-		  matchv[0] = matchv[j];
-		  break;
-              }
-	      if (co->co_type != CO_VARIABLE)
-		  allvars = 0;
-          }
-	  /* If set, if multiple cligen variables match use the first one */
-	  if (_match_cgvar_same && allvars)
-	      ret = 1; /* choose matchv[0] */
-	  if (string1)
-	      free(string1);
-      }
-  }
-  if (ret != 1){
-      if (matchv)
-	  free(matchv);
-      return ret;
-  }
-  /* Here we have an obj (res_pt[]) that is unique so far.
-     We need to see if there is only one sibling to it. */
-  co = res_pt[*matchv];
-  free(matchv);
-  matchv = NULL;
-  /*
-   * Special case: if matching object has a NULL child,
-   * we match.
-   */
-  if (co->co_max == 0)
-      goto done;
-  for (i=0; i< co->co_max; i++)
-      if (co->co_next[i] == NULL)
-	  goto done;
-
+	    extract_substring(string, command_levels(string), &string1);
+	    for (j=0; j<ret; j++){
+		co = res_pt[matchv[j]];
+		/* XXX If variable dont compare co_command */
+		if (co->co_type == CO_COMMAND && string1 && 
+		    strcmp(string1, co->co_command)==0){
+		    ret = 1;
+		    matchv[0] = matchv[j];
+		    break;
+		}
+		if (co->co_type != CO_VARIABLE)
+		    allvars = 0;
+	    }
+	    /* If set, if multiple cligen variables match use the first one */
+	    if (_match_cgvar_same && allvars)
+		ret = 1; /* choose matchv[0] */
+	    if (string1)
+		free(string1);
+	}
+    }
+    if (ret != 1){
+	if (matchv)
+	    free(matchv);
+	return ret;
+    }
+    /* Here we have an obj (res_pt[]) that is unique so far.
+       We need to see if there is only one sibling to it. */
+    co = res_pt[*matchv];
+    free(matchv);
+    matchv = NULL;
+    /*
+     * Special case: if matching object has a NULL child,
+     * we match.
+     */
+    if (co->co_max == 0)
+	goto done;
+    for (i=0; i< co->co_max; i++)
+	if (co->co_next[i] == NULL)
+	    goto done;
 #if 0
-  {
-  int variable = 0;
-  /* The last object should be unique */
-  while (co->co_max == 1){
-      co = co->co_next[0];
-      if (co->co_type == CO_VARIABLE && co->co_vtype != CGV_REST)
-	  variable++;
-  }
-  if (co->co_max)
-      return 0;
-  if (variable) 
-      return 0;
-  }
+    {
+	int variable = 0;
+	/* The last object should be unique */
+	while (co->co_max == 1){
+	    co = co->co_next[0];
+	    if (co->co_type == CO_VARIABLE && co->co_vtype != CGV_REST)
+		variable++;
+	}
+	if (co->co_max)
+	    return 0;
+	if (variable) 
+	    return 0;
+    }
 #else
-  if (exact)
-      cligen_nomatch_set(h, "Incomplete command");
-  return 0;
+    if (exact)
+	cligen_nomatch_set(h, "Incomplete command");
+    return 0;
 #endif
  done:
-  if (match_obj)
-      *match_obj = co;
-  return 1;
+    if (match_obj)
+	*match_obj = co;
+    return 1;
 }
 
 /*! Try to complete a string as far as possible using the syntax.
