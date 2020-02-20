@@ -44,7 +44,7 @@ typedef void *cligen_handle; /* API */
  * contact a remote backend.
  * So, only expand on interactive CLI operations
  */
-#undef EXPAND_ONLY_INTERACTIVE
+#define EXPAND_ONLY_INTERACTIVE
 
 /* New EXPERIMENTAL SETS functionality. 
  * Example; a @{b;c;d;}
