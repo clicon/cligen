@@ -1,6 +1,10 @@
 # Cligen Changelog
 	
 ## 4.4.0 (Forthcoming)
+* API-change
+  * `cligen_print()` replaced by `pt_print()`
+  * `cligen_print_obj()` replaced by `co_print()`
+  * Size functions for memory analysis of cv and cvecs: `cv_size()` and `cvec_size()`.
 * Fixed: Negative uint:s get parse error messages as if they are uint64, such as when uint8 parses -1.
 
 ## 4.3.0 (1 January 2020)
