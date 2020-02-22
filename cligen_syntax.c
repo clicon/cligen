@@ -78,35 +78,35 @@ cligen_parse_str(cligen_handle h,
 {
     int                retval = -1;
     int                i;
-    cliyacc            ya = {0,};
+    cligen_yacc        cy = {0,};
     cg_obj            *co;
     cg_obj             co0; /* tmp top object: NOT malloced */
     cg_obj            *co_top = &co0;
 
     memset(&co0, 0, sizeof(co0));
-    ya.ya_handle       = h; /* cligen_handle */
-    ya.ya_name         = name;
-    ya.ya_treename     = strdup(name); /* Use name as default tree name */
-    ya.ya_linenum      = 1;
-    ya.ya_parse_string = str;
-    ya.ya_stack        = NULL;
+    cy.cy_handle       = h; /* cligen_handle */
+    cy.cy_name         = name;
+    cy.cy_treename     = strdup(name); /* Use name as default tree name */
+    cy.cy_linenum      = 1;
+    cy.cy_parse_string = str;
+    cy.cy_stack        = NULL;
     if (pt)
 	co_top->co_pt      = *pt;
     if (vr)
-	ya.ya_globals       = vr; 
+	cy.cy_globals       = vr; 
     else
-	if ((ya.ya_globals = cvec_new(0)) == NULL){
+	if ((cy.cy_globals = cvec_new(0)) == NULL){
 	    fprintf(stderr, "%s: malloc: %s\n", __FUNCTION__, strerror(errno)); 
 	    goto done;
 	}
     if (strlen(str)){ /* Not empty */
-	if (cgl_init(&ya) < 0)
+	if (cgl_init(&cy) < 0)
 	    goto done;
-	if (cgy_init(&ya, co_top) < 0)
+	if (cgy_init(&cy, co_top) < 0)
 	    goto done;
-	if (cligen_parseparse(&ya) != 0) { /* yacc returns 1 on error */
-	    cgy_exit(&ya);
-	    cgl_exit(&ya);
+	if (cligen_parseparse(&cy) != 0) { /* yacc returns 1 on error */
+	    cgy_exit(&cy);
+	    cgl_exit(&cy);
 	    goto done;
 	}
 	/* Add final tree (but only with new API) */
@@ -115,19 +115,19 @@ cligen_parse_str(cligen_handle h,
 		if ((co=co_top->co_next[i]) != NULL)
 		    co_up_set(co, NULL);
 	    }
-	    if (cligen_tree_add(ya.ya_handle, ya.ya_treename, co_top->co_pt) < 0)
+	    if (cligen_tree_add(cy.cy_handle, cy.cy_treename, co_top->co_pt) < 0)
 		goto done;
 	    memset(&co_top->co_pt, 0, sizeof(parse_tree));
 	}
-	if (cgy_exit(&ya) < 0)
+	if (cgy_exit(&cy) < 0)
 	    goto done;		
-	if (cgl_exit(&ya) < 0)
+	if (cgl_exit(&cy) < 0)
 	    goto done;		
     }
     if (vr)
-	vr= ya.ya_globals;
+	vr= cy.cy_globals;
     else
-	cvec_free(ya.ya_globals);
+	cvec_free(cy.cy_globals);
     /*
      * Remove the fake top level object and remove references to it.
      */
@@ -140,8 +140,8 @@ cligen_parse_str(cligen_handle h,
     }
     retval = 0;
   done:
-    if (ya.ya_treename)
-	free (ya.ya_treename);
+    if (cy.cy_treename)
+	free (cy.cy_treename);
     return retval;
 
 }
