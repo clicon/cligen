@@ -63,23 +63,22 @@ struct cgy_list{
 
 /*! CLIgen yacc parse structure, with all accumulated state of a parse session */
 struct cligen_parse_yacc{
-    cligen_handle         ya_handle;       /* cligen_handle */
-    char                 *ya_name;         /* Name of syntax (for error string) */
-    char                 *ya_treename;     /* Name of syntax (for error string) */
-    int                   ya_linenum;      /* Number of \n in parsed buffer */
-    char                 *ya_parse_string; /* original (copy of) parse string */
-    void                 *ya_lexbuf;       /* internal parse buffer from lex */
-    cvec                 *ya_globals;      /* global variables after parsing */
-    cvec                 *ya_cvec;         /* local variables (per-command) */
-    struct cgy_stack     *ya_stack;        /* Stack of levels: push/pop on () and [] */
-    struct cgy_list      *ya_list;         /* (Parallel) List of objects currently 'active' */
-    cg_obj               *ya_var;
-    struct cg_callback   *ya_callbacks; 
-    int                   ya_lex_state;  /* lex start condition (ESCAPE/COMMENT) */
-    int                   ya_lex_string_state; /* lex start condition (STRING) */
-
+    cligen_handle         cy_handle;       /* cligen_handle */
+    char                 *cy_name;         /* Name of syntax (for error string) */
+    char                 *cy_treename;     /* Name of syntax (for error string) */
+    int                   cy_linenum;      /* Number of \n in parsed buffer */
+    char                 *cy_parse_string; /* original (copy of) parse string */
+    void                 *cy_lexbuf;       /* internal parse buffer from lex */
+    cvec                 *cy_globals;      /* global variables after parsing */
+    cvec                 *cy_cvec;         /* local variables (per-command) */
+    struct cgy_stack     *cy_stack;        /* Stack of levels: push/pop on () and [] */
+    struct cgy_list      *cy_list;         /* (Parallel) List of objects currently 'active' */
+    cg_obj               *cy_var;
+    struct cg_callback   *cy_callbacks; 
+    int                   cy_lex_state;  /* lex start condition (ESCAPE/COMMENT) */
+    int                   cy_lex_string_state; /* lex start condition (STRING) */
 };
-typedef struct cligen_parse_yacc cliyacc;
+typedef struct cligen_parse_yacc cligen_yacc;
 
 /*
  * Variables
@@ -90,11 +89,11 @@ extern char *cligen_parsetext;
  * Prototypes
  */
 
-int cgl_init(cliyacc *ya);
-int cgl_exit(cliyacc *ya);
+int cgl_init(cligen_yacc *cy);
+int cgl_exit(cligen_yacc *cy);
 
-int cgy_init(cliyacc *ya, cg_obj *co_top);
-int cgy_exit(cliyacc *ya);
+int cgy_init(cligen_yacc *cy, cg_obj *co_top);
+int cgy_exit(cligen_yacc *cy);
 
 int cligen_parselex(void *_ya);
 int cligen_parseparse(void *);
