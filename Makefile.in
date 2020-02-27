@@ -77,6 +77,7 @@ INCS		= cligen_cv.h cligen_cvec.h cligen_gen.h cligen_handle.h \
 		  cligen_print.h cligen_read.h cligen_io.h cligen_expand.h \
 		  cligen_syntax.h cligen_buf.h cligen_util.h cligen_history.h \
 		  cligen_regex.h cligen.h
+SRCDIR_INCS	= $(addprefix $(srcdir)/,$(INCS))
 
 OBJS		= $(SRC:.c=.o) 
 APPS		= cligen_hello cligen_file cligen_tutorial
@@ -143,6 +144,8 @@ pkg-rpm: dist
 pkg-srpm: dist
 	make -C extras/rpm srpm
 
+%.o : $(srcdir)/%.c
+	$(CC) $(INCLUDES) $(CFLAGS) -c $<
 .c.o:
 	$(CC) $(INCLUDES) $(CFLAGS) -c $<
 
@@ -167,9 +170,9 @@ install-lib: $(MYLIB)
 
 # Installs include files in subdir called 'cligen'. Applications should include
 # <cligen/cligen.h>
-install-include: $(INCS)
+install-include: $(SRCDIR_INCS)
 	install -m 0755 -d $(DESTDIR)$(includedir)
-	$(INSTALL_DATA) $(INCS) $(DESTDIR)$(includedir)
+	$(INSTALL_DATA) $(SRCDIR_INCS) $(DESTDIR)$(includedir)
 
 uninstall: 
 	rm -f $(DESTDIR)$(libdir)/$(MYLIB)
@@ -192,11 +195,11 @@ clean:
 %.c : %.l  # cancel implicit lex rule
 
 # top file parse
-lex.cligen_parse.c : cligen_parse.l cligen_parse.tab.h
-	$(LEX) -Pcligen_parse cligen_parse.l # -d is debug 
+lex.cligen_parse.c : $(srcdir)/cligen_parse.l cligen_parse.tab.h
+	$(LEX) -Pcligen_parse $(srcdir)/cligen_parse.l # -d is debug 
 
-cligen_parse.tab.h: cligen_parse.y
-	$(YACC) -l -d -b cligen_parse -p cligen_parse cligen_parse.y # -t is debug
+cligen_parse.tab.h: $(srcdir)/cligen_parse.y
+	$(YACC) -l -d -b cligen_parse -p cligen_parse $(srcdir)/cligen_parse.y # -t is debug
 
 cligen_parse.tab.c: cligen_parse.tab.h
 
@@ -204,13 +207,13 @@ lex.cligen_parse.o : lex.cligen_parse.c cligen_parse.tab.h
 	$(CC) $(INCLUDES) -DYY_NO_INPUT $(CFLAGS) -c $<
 
 # Applications
-cligen_hello : cligen_hello.c cligen $(MYLIB) 
+cligen_hello : $(srcdir)/cligen_hello.c cligen $(MYLIB) 
 	$(CC) $(CFLAGS) $(INCLUDES) $< $(LDFLAGS) $(LIBS) -o $@ $(MYLIB)
 
-cligen_file :	cligen_file.c cligen $(MYLIB) 
+cligen_file :	$(srcdir)/cligen_file.c cligen $(MYLIB) 
 	$(CC) $(CFLAGS) $(INCLUDES) $< $(LDFLAGS) $(LIBS) -o $@ $(MYLIB)
 
-cligen_tutorial :cligen_tutorial.c cligen $(MYLIB) 
+cligen_tutorial :$(srcdir)/cligen_tutorial.c cligen $(MYLIB) 
 	$(CC) $(CFLAGS) $(INCLUDES) $< $(LDFLAGS) $(LIBS) -o $@ $(MYLIB)
 
 $(MYLIB) : $(OBJS) $(YACCOBJS)
@@ -229,7 +232,7 @@ $(MYLIBLINK) : $(MYLIB)
 # recursive link to handle application include files, if you have not installed
 # .h files in $(includefile)
 cligen : 
-	ln -sf . $@
+	cd $(srcdir) && rm -rf $@ && ln -sf . $@
 
 
 .PHONY: doc
