@@ -43,9 +43,12 @@
 /*
  * Constants
  */
-/* Initial alloc mem length of a cbuf, then grows exponetially, with 2*, 4*, etc
- * 1K could be a bit much for large syntaxes and small entries */
-#define CBUFLEN_DEFAULT 1024
+/* Initial alloc mem length of a cbuf, then grows exponentially, with 2*, 4*, etc
+ * 1K could be a bit much for large syntaxes and small entries 
+ * @see cbuf_alloc_set
+ */
+#define CBUFLEN_START 1024
+#define CBUFLEN_THRESHOLD 65536
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -58,51 +61,80 @@
 /*
  * Variables
  */
-/* This is how large a cbuf is after calling cbuf_new. Note that the cbuf 
- * may grow after calls to cprintf or cbuf_alloc */
-static uint32_t cbuflen_alloc = CBUFLEN_DEFAULT;
-
-/*! Get cbuf initial memory allocation size
- * This is how large a cbuf is after calling cbuf_new. Note that the cbuf 
- * may grow after calls to cprintf or cbuf_alloc
+/* This is how large an initial cbuf is after calling cbuf_new. Note that the cbuf 
+ * may grow after calls to cprintf or cbuf_alloc 
  */
-uint32_t
-cbuf_alloc_get(void)
-{
-    return cbuflen_alloc;
-}
+static size_t cbuflen_start     = CBUFLEN_START;
 
-/*! Set cbuf initial memory allocation size
+/* Threshold to where a cbuf grows exponentially, thereafter it grows linearly
+ * If 0 continue with exponential growth
+ */
+static size_t cbuflen_threshold = CBUFLEN_THRESHOLD;
+
+/*! Get global cbuf initial memory allocation size
  * This is how large a cbuf is after calling cbuf_new. Note that the cbuf 
  * may grow after calls to cprintf or cbuf_alloc
+ * @param[out]  default   Initial default cbuf size
+ * @param[out]  threshold Threshold where cbuf grows linearly instead of exponentially
  */
 int
-cbuf_alloc_set(uint32_t alloc)
+cbuf_alloc_get(size_t *start,
+	       size_t *threshold)
 {
-    cbuflen_alloc = alloc;
+    *start = cbuflen_start;
+    *threshold = cbuflen_threshold;
     return 0;
 }
 
-/*! Allocate cligen buffer. The handle returned can be used in  successive sprintf calls
+/*! Set global cbuf initial memory allocation size
+ * This is how large a cbuf is after calling cbuf_new. Note that the cbuf 
+ * may grow after calls to cprintf or cbuf_alloc
+ * If 0 continue with exponential growth
+ */
+int
+cbuf_alloc_set(size_t start,
+	       size_t threshold)
+{
+    cbuflen_start = start;
+    cbuflen_threshold = threshold;
+    return 0;
+}
+
+/*! Allocate cligen buffer. Returned handle can be used in sprintf calls
  * which dynamically print a string.
  * The handle should be freed by cbuf_free()
+ * @param[in]   How much buffer space for initial allocation
  * @retval cb   The allocated objecyt handle on success.
  * @retval NULL Error.
+ * @see cbuf_new  with auto buffer allocation
  */
 cbuf *
-cbuf_new(void)
+cbuf_new_alloc(size_t sz)
 {
     cbuf *cb;
 
     if ((cb = (cbuf*)malloc(sizeof(*cb))) == NULL)
 	return NULL;
     memset(cb, 0, sizeof(*cb));
-    if ((cb->cb_buffer = malloc(cbuflen_alloc)) == NULL)
+    cb->cb_buflen = sz;
+    if ((cb->cb_buffer = malloc(cb->cb_buflen)) == NULL)
 	return NULL;
-    cb->cb_buflen = cbuflen_alloc;
     memset(cb->cb_buffer, 0, cb->cb_buflen);
     cb->cb_strlen = 0;
     return cb;
+}
+
+/*! Allocate cligen buffer with auto buffer allocation. Returned handle can be used in sprintf calls
+ * which dynamically print a string.
+ * The handle should be freed by cbuf_free()
+ * @retval cb   The allocated objecyt handle on success.
+ * @retval NULL Error.
+ * @see cbuf_new_alloc  with explicit buffer allocation
+ */
+cbuf *
+cbuf_new(void)
+{
+    return cbuf_new_alloc(cbuflen_start);
 }
 
 /*! Free cligen buffer previously allocated with cbuf_new
@@ -163,17 +195,20 @@ cbuf_reset(cbuf *cb)
  * @param[in] len  Extra length added
  */
 static int
-cbuf_realloc(cbuf *cb,
-	     int   len)
+cbuf_realloc(cbuf  *cb,
+	     size_t sz)
 {
     int retval = -1;
     int diff;
     
-    diff = cb->cb_buflen - (cb->cb_strlen + len + 1);
+    diff = cb->cb_buflen - (cb->cb_strlen + sz + 1);
     if (diff <= 0){
 	while (diff <= 0){
-	    cb->cb_buflen *= 2; /* Double the space - alt linear growth */
-	    diff = cb->cb_buflen - (cb->cb_strlen + len + 1);
+	    if (cbuflen_threshold == 0 || cb->cb_buflen < cbuflen_threshold)
+		cb->cb_buflen *= 2; /* Double the space - exponential */
+	    else
+		cb->cb_buflen += cbuflen_threshold; /* Add - linear growth*/
+	    diff = cb->cb_buflen - (cb->cb_strlen + sz + 1);
 	}
 	if ((cb->cb_buffer = realloc(cb->cb_buffer, cb->cb_buflen)) == NULL)
 	    goto done;

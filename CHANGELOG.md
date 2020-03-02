@@ -1,8 +1,12 @@
 # Cligen Changelog
 	
 ## 4.4.0 (Forthcoming)
+* CLIgen buffer functiona and API changes
+  * A CLIgen buffer now starts at a "start" size and grows quadratic (2x) up to a "threshold" after it grows linearly with "threshold".
+  * Global start and threshold limit can be set and read with `cbuf_alloc_set()` and `cbuf_alloc_get()`, (signature changed).
+  * New function `cbuf_new_alloc()` to start from another (individual) buffer size.
 * API-change
-  * `cligen_print()` replaced by `pt_print()`
+  * `cligen_print()` replaced by `pt_print()` 
   * `cligen_print_obj()` replaced by `co_print()`
   * Size functions for memory analysis of cv and cvecs: `cv_size()` and `cvec_size()`.
 * Fixed: Negative uint:s get parse error messages as if they are uint64, such as when uint8 parses -1.

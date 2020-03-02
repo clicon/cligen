@@ -57,9 +57,11 @@ typedef struct cbuf cbuf; /* cligen buffer type is fully defined in c-file */
 /*
  * Prototypes
  */
-uint32_t cbuf_alloc_get(void);
-int      cbuf_alloc_set(uint32_t alloc);
+int      cbuf_alloc_get(size_t *start, size_t *threshold);
+int      cbuf_alloc_set(size_t start, size_t threshold);
 cbuf    *cbuf_new(void);
+cbuf    *cbuf_new_alloc(size_t sz);
+
 void     cbuf_free(cbuf *cb);
 char    *cbuf_get(cbuf *cb);
 int      cbuf_len(cbuf *cb);
