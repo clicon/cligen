@@ -40,6 +40,9 @@ AC_INIT(cligen.h)
 : ${CFLAGS="-O2 -Wall"}
 : ${INSTALLFLAGS="-s"}
 
+# where autotool scripts are: install-sh, config.sub, config.guess
+AC_CONFIG_AUX_DIR(aux)
+
 AC_CONFIG_HEADER(cligen_config.h)
 
 # cligen versions spread to Makefile's (.so files)
