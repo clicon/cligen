@@ -89,6 +89,20 @@ co_flags_get(cg_obj  *co,
     return (co->co_flags & flag) ? 1 : 0;
 }
 
+int
+co_sets_get(cg_obj *co)
+{
+    return co->co_set;
+}
+
+void
+co_sets_set(cg_obj *co,
+	    int     sets)
+
+{
+    co->co_set = sets;
+}
+
 /*! Assign a preference to a cligen variable object
  * Prefer more specific commands/variables  if you have to choose from several. 
  * @param[in] co   Cligen obe

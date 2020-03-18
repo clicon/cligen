@@ -143,7 +143,6 @@ cligen_parse_str(cligen_handle h,
     if (cy.cy_treename)
 	free (cy.cy_treename);
     return retval;
-
 }
 
 /*! Parse a file containing a CLIgen spec into a parse-tree
