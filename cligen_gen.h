@@ -86,21 +86,17 @@ typedef int (cligen_interrupt_cb_t)(cligen_handle h);
 /*! A parse tree is a top object containing a vector of parse-tree nodes 
  *
  * @code
- *      o
- *      ^
- *      |
- *      up
- *   [0 1..n] <--- parse-tree
+ *   [0 1..n]
  *    | |  |
  *    v v  v
- *    o o  o
+ *    o o  o  cg_obj:s
  * @endcode
  */
 struct parse_tree{
-    struct cg_obj     **pt_vec;    /**< vector of pointers to parse-tree nodes */
-    int                 pt_len;    /**< length of vector */
-    struct parse_tree  *pt_up;     /**< parent cligen object, if any */
+    struct cg_obj     **pt_vec;    /* vector of pointers to parse-tree nodes */
+    int                 pt_len;    /* length of vector */
     char               *pt_name;
+    char                pt_set;    /* Parse-tree is a SET */ 
 };
 typedef struct parse_tree parse_tree;
 
@@ -149,7 +145,6 @@ typedef struct cg_varspec cg_varspec;
 #define CO_FLAGS_TREEREF   0x04  /* This node is top of expanded sub-tree */
 #define CO_FLAGS_REFDONE   0x08  /* This reference has already been expanded */
 #ifdef USE_SETS
-#define CO_FLAGS_SETS      0x10  /* Children are a set (transient during parsing) */
 #define CO_FLAGS_SETS_SUB  0x20  /* Parent is SETS, ie direct child of set (static) */
 #define CO_FLAGS_SETS_GEN  0x40  /* Parent is SUBS or GEN,  */
 #define CO_FLAGS_SETS_EXP  0x80  /* Child set is generated */
@@ -204,6 +199,7 @@ typedef int (cg_applyfn_t)(cg_obj *co, void *arg);
 /* Access fields for code traversing parse tree */
 #define co_next          co_pt.pt_vec
 #define co_max           co_pt.pt_len
+#define co_set           co_pt.pt_set
 #define co_vtype         u.cou_var.cgs_vtype
 #define co_show          u.cou_var.cgs_show
 #define co_expand_fn_str u.cou_var.cgs_expand_fn_str
@@ -253,6 +249,8 @@ co_top(cg_obj *co0)
 void    co_flags_set(cg_obj *co, uint32_t flag);
 void    co_flags_reset(cg_obj *co, uint32_t flag);
 int     co_flags_get(cg_obj *co, uint32_t flag);
+int     co_sets_get(cg_obj *co);
+void    co_sets_set(cg_obj *co, int sets);
 void    cligen_parsetree_sort(parse_tree pt, int recursive);
 cg_obj *co_new(char *cmd, cg_obj *prev);
 cg_obj *cov_new(enum cv_type cvtype, cg_obj *prev);

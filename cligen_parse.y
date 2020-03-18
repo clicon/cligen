@@ -48,7 +48,7 @@
 %token DQ           /* " */
 %token DQP          /* ") */
 %token PDQ          /* (" */
-%token SETS         /* @{ - see USE_SETS */
+%token SETS         /* @{ SETS */
 
 %token <string> NAME    /* in variables: <NAME type:NAME> */
 %token <string> NUMBER  /* In variables */
@@ -518,10 +518,6 @@ cgy_var_post(cligen_yacc *cy)
 	else
 	    coc = coy; /* Dont copy if last in list */
 	co_up_set(coc, coparent);
-#ifdef USE_SETS
-	if (co_flags_get(coparent, CO_FLAGS_SETS))
-	    co_flags_set(coc, CO_FLAGS_SETS_SUB);
-#endif
 	if ((co = co_insert(&coparent->co_pt, coc)) == NULL) /* coc may be deleted */
 	    return -1;
 	cl->cl_obj = co;
@@ -555,10 +551,6 @@ cgy_cmd(cligen_yacc *cy,
 	    cligen_parseerror1(cy, "Allocating cligen object"); 
 	    return -1;
 	}
-#ifdef USE_SETS
-	if (co_flags_get(cop, CO_FLAGS_SETS))
-	    co_flags_set(conew, CO_FLAGS_SETS_SUB);
-#endif
 	if ((co = co_insert(&cop->co_pt, conew)) == NULL)  /* co_new may be deleted */
 	    return -1;
 	cl->cl_obj = co; /* Replace parent in cgy_list */
@@ -727,10 +719,8 @@ ctx_push(cligen_yacc *cy,
 	co = cl->cl_obj;
 	if (cvec_find(cy->cy_cvec, "hide") != NULL)
 	    co_flags_set(co, CO_FLAGS_HIDE);
-#ifdef USE_SETS
 	if (sets)
-	    co_flags_set(co, CO_FLAGS_SETS);
-#endif
+	    co_sets_set(co, 1);
     	if (cgy_list_push(co, &cs->cs_list) < 0) 
 	    return -1;
     }
@@ -844,10 +834,6 @@ ctx_pop_add(cligen_yacc *cy)
     }
     for (cl = cs->cs_list; cl; cl = cl->cl_next){
 	co = cl->cl_obj;
-#ifdef USE_SETS
-	if (co_flags_get(co, CO_FLAGS_SETS))
-	    co_flags_reset(co, CO_FLAGS_SETS);
-#endif
     }
     cy->cy_stack = cs->cs_next;
     /* We could have saved some heap work by moving the cs_list,... */
@@ -882,13 +868,8 @@ ctx_pop(cligen_yacc *cy)
 	fprintf(stderr, "%s: cgy_stack empty\n", __FUNCTION__);
 	return -1; /* shouldnt happen */
     }
-    for (cl = cs->cs_list; cl; cl = cl->cl_next){
+    for (cl = cs->cs_list; cl; cl = cl->cl_next)
 	co = cl->cl_obj;
-#ifdef USE_SETS
-	if (co_flags_get(co, CO_FLAGS_SETS))
-	    co_flags_reset(co, CO_FLAGS_SETS);
-#endif
-    }
     cy->cy_stack = cs->cs_next;
     for (cl = cs->cs_saved; cl; cl = cl->cl_next){
 	co = cl->cl_obj;
@@ -1158,7 +1139,7 @@ line1       :  line2  { if (debug) printf("line1->line2\n"); }
             ;
 
 preline     : '{'  { $$ = 0; }
-            | SETS { $$ = 1; }  /* USE_SETS */
+            | SETS { $$ = 1; }  /* SETS */
             ;
 
 line2       : ';' {
