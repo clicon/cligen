@@ -603,7 +603,7 @@ cliread_parse(cligen_handle h,
 	goto done;
     if (pt_expand_2(h, pt, cvec, 0, 0, &ptn) < 0)      /* expansion */
 	goto done;
-    if ((retval = match_pattern_exact(h, string, ptn, 1, 0, /* XXX cliread_parse */
+    if ((retval = match_pattern_exact(h, string, ptn, 1, 1, /* XXX cliread_parse */
 				      cvec, &match_obj)) < 0)
 	goto done;
     /* Map from ghost object match_obj to real object */
