@@ -43,8 +43,9 @@ typedef void *cligen_handle; /* API */
  * pressed. CLIgen otherwise calls the expand callback that may, for example,
  * contact a remote backend.
  * So, only expand on interactive CLI operations
+ * Warning, dont enable this, it gives "Unknown command" in expand cases, such as tutorial interface eth0
  */
-#define EXPAND_ONLY_INTERACTIVE
+#undef EXPAND_ONLY_INTERACTIVE
 
 /* New EXPERIMENTAL SETS functionality. 
  * Example; a @{b;c;d;}
