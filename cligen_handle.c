@@ -389,7 +389,8 @@ cligen_tree_i(cligen_handle h,
     int                   i;
 
     for (ptl = ch->ch_tree, i=0; ptl; ptl = ptl->ptl_next, i++)
-	return &ptl->ptl_parsetree;
+	if (i==i0)
+	    return &ptl->ptl_parsetree;
     return NULL;
 }
 
