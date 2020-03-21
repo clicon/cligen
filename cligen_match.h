@@ -50,13 +50,14 @@ extern int _match_cgvar_same;
 /*
  * Function Prototypes
  */
-int match_pattern(cligen_handle h, char *, parse_tree , int, int, int,
+int match_pattern(cligen_handle h, cvec *cvt, cvec *cvr, 
+		  parse_tree pt, int use_pref, int hide, int expandvar,
 		  pt_vec *, int **, int *, cvec *, char **);
-int match_pattern_exact(cligen_handle h, char *, parse_tree, int exact, int expandvar,
-			cvec *, cg_obj **);
-int command_levels(char *string);
-int extract_substring(char *string0, int level, char **sp);
-int extract_substring_rest(char *string0, int level, char **sp);
+int match_pattern_exact(cligen_handle h, cvec *cvt, cvec *cvr, 
+			parse_tree pt, int exact, int expandvar,
+			cvec *cvv, cg_obj **match_obj);
+int cligen_str2cvv(char *string, cvec **cvp, cvec **cvr);
+int cligen_cvv_levels(cvec *cvv);
 int match_complete(cligen_handle h, parse_tree pt,
 		   char **stringp, size_t *slen, cvec *cvec);
 

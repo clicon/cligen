@@ -145,7 +145,7 @@ match_object(cligen_handle h,
       }
     break;
   case CO_VARIABLE:
-      if (string == NULL)
+      if (string == NULL || strlen(string)==0)
 	  match++;
       else
 	  if ((match = match_variable(h, co, string, reason)) < 0)
@@ -177,282 +177,226 @@ match_perfect(char   *string,
  * If empty token found, s0 is NULL
  * @param[in]  s0       String, the string is modified like strtok
  * @param[out] token0   A malloced token.  NOTE: token must be freed after use.
+ * @param[out] rest0    A remaining (rest) string.  NOTE: NOT malloced.
  * @param[out] leading0 If leading delimiters eg " thisisatoken"
  * Example:
  *   s0 = "  foo bar"
  * results in token="foo", leading=1
-
  */
 static int
 next_token(char **s0, 
-	   char **token0, 
+	   char **token0,
+	   char **rest0, 
 	   int   *leading0)
 {
-  char  *s;
-  char  *st;
-  char  *token = NULL;
-  size_t len;
-  int    quote=0;
-  int    leading=0;
-  int    escape = 0;
+    char  *s;
+    char  *st;
+    char  *token = NULL;
+    size_t len;
+    int    quote=0;
+    int    leading=0;
+    int    escape = 0;
 
-  s = *s0;
-  if (s==NULL){
-    fprintf(stderr, "%s: null string\n", __FUNCTION__);
-    return -1;
-  }
-  for (s=*s0; *s; s++){ /* First iterate through delimiters */
-    if (index(CLIGEN_DELIMITERS, *s) == NULL)
-      break;
-    leading++;
-  }
-  if (*s && index(CLIGEN_QUOTES, *s) != NULL){
-    quote++;
-    s++;
-  }
-  st=s; /* token starts */
-  escape = 0;
-  for (; *s; s++){ /* Then find token */
-    if (quote){
-      if (index(CLIGEN_QUOTES, *s) != NULL)
-	break;
-    }
-    else{ /* backspace tokens for escaping delimiters */
-	if (escape)
-	    escape = 0;
-	else{
-	    if (*s == '\\')
-		escape++;
-	    else
-		if (index(CLIGEN_DELIMITERS, *s) != NULL)
-		    break;
-	}
-    }
-  }
-  if (quote && *s){
-    s++;
-    // fprintf(stderr, "s=\"%s\" %d %s\n", s, *s, index(CLIGEN_DELIMITERS, *s));
-    if (*s && index(CLIGEN_DELIMITERS, *s) == NULL){
-	;//	cligen_reason("Quote token error");
-    }
-    len = (s-st)-1;
-  }
-  else{
-      if (quote){ /* Here we signalled error before but it is removed */
-	  st--;
-      }
-    len = (s-st);
-    if (!len){
-      token = NULL;
-      *s0 = NULL;
-      goto done;
-    }
-  }
-  if ((token=malloc(len+1)) == NULL){
-    fprintf(stderr, "%s: malloc: %s\n", __FUNCTION__, strerror(errno));
-    return -1;
-  }
-  memcpy(token, st, len);
-  token[len] = '\0';
-  *s0 = s;
- done:
-  *leading0 = leading;
-  *token0 = token;
-  return 0;
-}
-
-/*! Returns the number of "levels" of a command.
- * A level is an atomic command delimetered by space or tab.
- * Eg: "", "a", "abcd" has level 0
- *     "abcd ", "vb fg" has level 1
- *     "abcd gh ", "vb fg hjsa" has level 2
- * @param[in] string  The command to test
- * @retval    0-n     Number of levels
- * @retval    -1      Error (XXX: not checked)
- * XXX: Use " and escape characters to group strings with space.
- */
-int
-command_levels(char *string)
-{
-    int   i = 0;
-    char *ss = strdup(string);
-    char *ss0;
-    char *t;
-    int   trail;
-
-    ss0=ss;
-    if (next_token(&ss, &t, &trail) < 0)
+    s = *s0;
+    if (s==NULL){
+	fprintf(stderr, "%s: null string\n", __FUNCTION__);
 	return -1;
-    while (t){
-	free(t);
-	if (next_token(&ss, &t, &trail) < 0)
-	    return -1;
-	if (t == NULL){
-	    if (trail)
-		i++;
-	    break;
-	}
-	i++;
     }
-    free(ss0);
-#if 0
-    {
-	int trail;
-	char *s0 = strdup(string);  
-	char *s = s0;
-	int len = strlen(s0);
-
-	i = 0;
-	if (s0 == NULL){
-	    fprintf(stderr, "%s strdup: %s\n", __FUNCTION__, strerror(errno));
-	    return -1;
-	}
-	s = strtok(s0, CLIGEN_DELIMITERS);
-	while (s){
-	    /* Check for extra trailing delimiters */
-	    if (strlen(s)){
-		if (s[0] == '\"'){
-		    if (strlen(s)>1 && s[strlen(s)-1] == '\"')
-			; /* single */
-		    else
-			; /* find quote in s0 */
-		}
-	    }
-	    trail = ((s + strlen(s) ) < (s0 + len)); 
-	    s = strtok(NULL, CLIGEN_DELIMITERS);
-	    if (s == NULL){
-		if (trail)
-		    i++;
+    for (s=*s0; *s; s++){ /* First iterate through delimiters */
+	if (index(CLIGEN_DELIMITERS, *s) == NULL)
+	    break;
+	leading++;
+    }
+    if (rest0)
+	*rest0 = s;
+    if (*s && index(CLIGEN_QUOTES, *s) != NULL){
+	quote++;
+	s++;
+    }
+    st=s; /* token starts */
+    escape = 0;
+    for (; *s; s++){ /* Then find token */
+	if (quote){
+	    if (index(CLIGEN_QUOTES, *s) != NULL)
 		break;
+	}
+	else{ /* backspace tokens for escaping delimiters */
+	    if (escape)
+		escape = 0;
+	    else{
+		if (*s == '\\')
+		    escape++;
+		else
+		    if (index(CLIGEN_DELIMITERS, *s) != NULL)
+			break;
 	    }
-	    i++;
 	}
-	free(s0);
-	fprintf(stderr, "Should be i=%d\n", i);
     }
-#endif
-    return i;
-}
-
-
-/*! Given a string and a position, return token at that level
- * Returns substrings of a command at a specific level
- * @param[in]  string0  Input string to match
- * @param[in]  level    Position of substring to extract
- * @param[out] sp       If given, contains malloc:d single token sub-string.
- * @retval     0        OK
- * @retval     -1       Error
- * @code
- *     extract_substring("abcd gh foo", 1, &s, &srest)
- *     # s contains a pointer to the (malloc:d) string "gh".
- * @endcode
- * @note Use " and escape characters to group strings with space.
- */
-int
-extract_substring(char  *string0,
-		  int    level, 
-		  char **sp)
-{
-    int   retval = -1;
-    char *ss;  
-    int   i = 0;
-    int   trail;
-    char *ss0 = NULL;
-    char *t;
-
-    if (string0 == NULL){
-	fprintf(stderr, "%s string is NULL", __FUNCTION__);
-	goto done;
+    if (quote && *s){
+	s++;
+	// fprintf(stderr, "s=\"%s\" %d %s\n", s, *s, index(CLIGEN_DELIMITERS, *s));
+	if (*s && index(CLIGEN_DELIMITERS, *s) == NULL){
+	    ;//	cligen_reason("Quote token error");
+	}
+	len = (s-st)-1;
     }
-    if (sp == NULL){
-	fprintf(stderr, "%s return string pointer is NULL", __FUNCTION__);
-	goto done;
+    else{
+	if (quote){ /* Here we signalled error before but it is removed */
+	    st--;
+	}
+	len = (s-st);
+	if (!len){
+	    token = NULL;
+	    *s0 = NULL;
+	    goto done;
+	}
     }
-    *sp = NULL;
-    if ((ss = strdup(string0)) == NULL){
-	fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
+    if ((token=malloc(len+1)) == NULL){
+	fprintf(stderr, "%s: malloc: %s\n", __FUNCTION__, strerror(errno));
 	return -1;
     }
-    ss0=ss;
-    if (next_token(&ss, &t, &trail) < 0)
-	return -1;
-    while (t){
-	if (i==level){
-	    *sp = strdup(t);
-	    free(t);
-	    break;
-	}
-	free(t);
-	if (next_token(&ss, &t, &trail) < 0)
-	    return -1;
-	if (t == NULL){
-	    if (trail)
-		i++;
-	    break;
-	}
-	i++;
-    }
-
-    retval = 0;
+    memcpy(token, st, len);
+    token[len] = '\0';
+    *s0 = s;
  done:
-    if (ss0)
-	free(ss0);
-    return retval;
+    *leading0 = leading;
+    *token0 = token;
+    return 0;
 }
 
-/*! Given a string and a position, return rest of line
+/*! Split a CLIgen command string into a cligen variable vector using delimeters and escape quotes
  *
- * @param[in]  string0  Input string to match
- * @param[in]  level    Position of where to return end-of-line
- * @param[out] sprest   If given, contains malloc:d rest-of-line sub-string. 
- * Eg:     extract_substring_rest("abcd gh foo", 1, &s)
- * returns a pointer to the (malloc:d) string "gh foo".
- * @note  caller must free the pointer after use.
- * @see extract_substring  which returns next token
+ * @param[in]  string String to split
+ * @param[out] cvtp   CLIgen variable vector, containing all tokens. 
+ * @param[out] cvrp   CLIgen variable vector, containing the remaining strings. 
+ * @retval     0      OK
+ * @retval    -1      Error
+ * @code
+ *   cvec  *cvt = NULL;
+ *   cvec  *cvr = NULL;
+ *   if (cligen_str2cvv("a=b&c=d", " \t", "\"", &cvt, &cvt) < 0)
+ *     err;
+ *   ...
+ *   cvec_free(cvt);
+ *   cvec_free(cvr);
+ * @endcode
+ * Example, input string "aa bb cc" (0th element is always whole string)
+ *   cvp : ["aa bb cc", "aa", "bb", "cc"]
+ *   cvr : ["aa bb cc", "aa bb cc", "bb cc", "cc"]
+ * @note both out cvv:s should be freed with cvec_free()
  */
 int
-extract_substring_rest(char  *string0, 
-		       int    level, 
-		       char **sp)
+cligen_str2cvv(char  *string, 
+	       cvec **cvtp,
+    	       cvec **cvrp)
 {
-    int   retval = -1;
-    char *string = NULL;  
-    int   len = strlen(string0);
-    int   i = 0;
-    char *s;
-    int   trail;
+    int     retval = -1;
+    char   *s;
+    char   *sr;
+    char   *s0 = NULL;;
+    cvec   *cvt = NULL; /* token vector */
+    cvec   *cvr = NULL; /* rest vector */
+    cg_var *cv;
+    char   *t;
+    int     trail;
+    int     i;
 
-    if (string0 == NULL){
-	fprintf(stderr, "%s string is NULL", __FUNCTION__);
+    if ((s0 = strdup(string)) == NULL)
 	goto done;
-    }
-    if (sp == NULL){
-	fprintf(stderr, "%s return string pointer is NULL", __FUNCTION__);
+    s = s0;
+    if ((cvt = cvec_start(string)) ==NULL)
 	goto done;
-    }
-    *sp = NULL;
-    string = strdup(string0);
-    s = strtok(string, CLIGEN_DELIMITERS);
-    while (s){
-	if (i==level){
-	    *sp = strdup(string0 + (s-string));
+    if ((cvr = cvec_start(string)) ==NULL)
+	goto done;
+    i = 0;
+    while (s != NULL) {
+	if (next_token(&s, &t, &sr, &trail) < 0)
+	    goto done;
+	/* If there is no token, stop, 
+	 * unless it is the intial token (empty string) OR there are trailing whitespace
+	 * In these cases insert an empty "" token.
+	 */
+	if (t == NULL && !trail && i > 0)
 	    break;
-	}
-	/* Check for extra trailing delimiters */
-	trail = ((s + strlen(s) ) < (string + len)); 
-	s = strtok(NULL, CLIGEN_DELIMITERS);
-	if (s == NULL){
-	    if (trail)
-		i++;
-	    break;
-	}
+	if ((cv = cvec_add(cvr, CGV_STRING)) == NULL)
+	    goto done;
+	if (cv_string_set(cv, sr?sr:"") == NULL)
+	    goto done;
+	if ((cv = cvec_add(cvt, CGV_STRING)) == NULL)
+	    goto done;
+	if (cv_string_set(cv, t?t:"") == NULL)
+	    goto done;
+	if (t)
+	    free(t);
 	i++;
     }
     retval = 0;
+    assert(cvec_len(cvt)>1); /* XXX */
+    assert(cvec_len(cvr)>1); /* XXX */
+    if (cvtp){
+	*cvtp = cvt;
+	cvt = NULL;
+    }
+    if (cvrp){
+	*cvrp = cvr;
+	cvr = NULL;
+    }
  done:
-    if (string)
-	free(string);
+    if (s0)
+	free(s0);
+    if (cvt)
+	cvec_free(cvt);
+    if (cvr)
+	cvec_free(cvr);
     return retval;
+}
+
+/*! Returns the total number of "levels" of a CLIgen command string
+ *
+ * A level is an atomic command delimetered by space or tab.
+ * Example: "", "a", "abcd" has level 0
+ *          "abcd ", "vb fg" has level 1
+ *          "abcd gh ", "vb fg hjsa" has level 2
+ *
+ * @param[in] cv    CLIgen variable vector, containing all tokens. 
+ * @retval    0-n   Number of levels
+ * @retval    -1    Error
+ */
+int
+cligen_cvv_levels(cvec *cvv)
+{
+    size_t sz;
+    
+    if (cvv == NULL)
+	return -1;
+    sz = cvec_len(cvv);
+    if (sz == 0)
+	return -1;
+    else return sz - 2;
+}
+
+/*! Return if the parse-tree is aonly variables, or if there is at least one non-variable
+ * @param[in] pt  Parse-tree
+ * @retval    0   Empty or contains at least one command (non-var) 
+ * @retval    1   0 elements, only variables alternatives (or commands derived from variables)
+ */
+static int
+pt_onlyvars(parse_tree pt)
+{
+    int     i;
+    cg_obj *co;
+    int     onlyvars = 0;
+    
+    for (i=0; i<pt.pt_len; i++){ 
+	if ((co = pt.pt_vec[i]) == NULL)
+	    continue;
+	if (co->co_type != CO_VARIABLE && co->co_ref == NULL){
+	    onlyvars = 0;
+	    break;
+	}
+	onlyvars = 1;
+    }
+    return onlyvars;
 }
 
 /*! Match terminal/leaf cligen objects. Multiple matches is used for completion.
@@ -466,9 +410,12 @@ extract_substring_rest(char  *string0,
  * index is the index of the first such match.
  * @param[in]  h        CLIgen handle
  * @param[in]  string0  Input string to match
+ * @param[in]  cvt      Tokenized string: vector of tokens
+ * @param[in]  cvr      Rest variant,  eg remaining string in each step
  * @param[in]  pt       Vector of commands (array of cligen object pointers (cg_obj)
  * @param[in]  pt_max   Length of the pt array
- * @param[in]  level    How many levels (words) into string0
+ * @param[in]  level    Current command level
+ * @param[in]  levels   Total nr of command levels
  * @param[in]  use_pref Set this flag value if you want to use the preferences
  *                      between matches. It is only when you want a final exact 
  *                      match (not completion or show options) that you should set 
@@ -481,12 +428,15 @@ extract_substring_rest(char  *string0,
  *                      notmatching variables, if given. Neeed to be free:d
  * @retval     0-n      The number of matches in pt . See param matchlen.
  * @retval     -1       Error
+ * @see match_pattern_node
  */
 static int 
 match_pattern_terminal(cligen_handle h, 
-		       char         *string0, 
+		       cvec         *cvt,
+		       cvec         *cvr,
 		       parse_tree    pt,
 		       int           level, 
+		       int           levels,
 		       int           use_pref,
 		       pt_vec       *ptp, 
 		       int          *matchv[], 
@@ -494,8 +444,6 @@ match_pattern_terminal(cligen_handle h,
 		       char        **reason0
 		       )
 {
-    char   *string1 = NULL;
-    char   *reststring = NULL;
     char   *str;
     int     i;
     int     match;
@@ -507,47 +455,26 @@ match_pattern_terminal(cligen_handle h,
     cg_obj *co_orig;
     int     exact;
     char   *reason;
-    int     onlyvars = 0; /* 1: >0 elements, only variables alternatives 
-			   * (or commands derived from variables)
-			   * 0 :empty or contains at least one command (non-var) */
+    int     onlyvars = 0; 
 
     co_match = NULL;
-    if (level > command_levels(string0)){
-	fprintf(stderr, "%s: level > command_level in %s\n",
-		__FUNCTION__, string0);
-	return -1;
-    }
-    /* This is logic to hinder error message to relate to variable mismatch
+    /* If there are only variables in the list, then keep track of variable match errors 
+     * This is logic to hinder error message to relate to variable mismatch
      * if there is a commands on same level with higher prio to match.
      * If all match fails, it is more interesting to understand the match fails
      * on commands, not variables.
      */
-    onlyvars = 0;
-    if (reason0)
-	for (i=0; i<pt.pt_len; i++){ 
-	    if ((co = pt.pt_vec[i]) == NULL)
-		continue;
-	    if (co->co_type != CO_VARIABLE && co->co_ref == NULL){
-		onlyvars = 0;
-		break;
-	    }
-	    onlyvars=1;
-	}
-    if (extract_substring(string0, level, &string1) < 0)
-	goto done;
-    if (extract_substring_rest(string0, level, &reststring) < 0)
-	goto done;
+    onlyvars = (reason0==NULL)?0:pt_onlyvars(pt);
+
     for (i=0; i<pt.pt_len; i++){
 	if ((co = pt.pt_vec[i]) == NULL)
 	    continue;
 	reason = NULL;
-	if (ISREST(co))
-	    str = reststring;
-	else
-	    str = string1;
+	/* Either individual token or rest-of-string */
+	str = cvec_i_str(ISREST(co)?cvr:cvt, level+1);
 	if ((match = match_object(h, str, co, &exact, onlyvars?&reason:NULL)) < 0)
 	    goto error;
-	if (match){
+	if (match){ /* XXX DIFFERS from match_pattern_node */
 	    assert(reason==NULL);
 	    if (use_pref){
 		p = co_pref(co, exact);
@@ -595,10 +522,6 @@ match_pattern_terminal(cligen_handle h,
     }
     *matchlen = matches;
  done:
-    if (string1)
-	free(string1);
-    if (reststring)
-	free(reststring);
     return matches;
   error:
     matches = -1;
@@ -608,7 +531,7 @@ match_pattern_terminal(cligen_handle h,
 /*! Help function to append a cv to a cvec. For expansion cvec passed to pt_expand_2
  * @param[in]  co     A cligen variable that has a matching value
  * @param[in]  cmd    Value in string of the variable
- * @param[out] cvec   The cligen variable vector to push a cv with name of co and
+ * @param[out] cvv   The cligen variable vector to push a cv with name of co and
  *                    value in cmd
  * @retval     cv     Cligen variable
  * @retval     NULL   Error
@@ -616,11 +539,11 @@ match_pattern_terminal(cligen_handle h,
 static cg_var *
 add_cov_to_cvec(cg_obj *co, 
 		char   *cmd, 
-		cvec   *cvec)
+		cvec   *cvv)
 {
     cg_var *cv = NULL;
 
-    if ((cv = cvec_add(cvec, co->co_vtype)) == NULL)
+    if ((cv = cvec_add(cvv, co->co_vtype)) == NULL)
 	return NULL;
     cv_name_set(cv, co->co_command);
     cv_const_set(cv, iskeyword(co));
@@ -628,7 +551,7 @@ add_cov_to_cvec(cg_obj *co,
 		cv_dec64_n_set(cv, co->co_dec64_n);
     if (cv_parse(cmd, cv) < 0) {
 	cv_reset(cv);
-	cvec_del(cvec, cv);
+	cvec_del(cvv, cv);
 	return NULL;
     }
     return cv;
@@ -638,9 +561,12 @@ add_cov_to_cvec(cg_obj *co,
  *
  * @param[in]  h         CLIgen handle
  * @param[in]  string0   Input string to match
+ * @param[in]  cvt      Tokenized string: vector of tokens
+ * @param[in]  cvr      Rest variant,  eg remaining string in each step
  * @param[in]  pt        Vector of commands. Array of cligen object pointers
  * @param[in]  pt_max    Length of the pt array
- * @param[in]  level     How many levels (words) into string0
+ * @param[in]  level    Current command level
+ * @param[in]  levels   Total nr of command levels
  * @param[in]  use_pref  Set this flag value if you want to use the preferences 
  *                       between matches. It is only when you want a final exact 
  *                       match (not completion or show options) that you should set
@@ -651,7 +577,7 @@ add_cov_to_cvec(cg_obj *co,
  * @param[out] matchv    A vector of integers containing which 
  * @param[out] matchlen  Length of matchv. That is, # of matches and same as return 
  *                       value (if 0-n)
- * @param[out] cvec      cligen variable vector containing vars/values pair for 
+ * @param[out] cvv      cligen variable vector containing vars/values pair for 
  *                       completion
  * @param[out] reason0   If retval = 0, this may be malloced to indicate reason for
  *                       not matching variables, if given. Need to be free:d
@@ -660,22 +586,22 @@ add_cov_to_cvec(cg_obj *co,
  */
 static int 
 match_pattern_node(cligen_handle h, 
-		   char         *string0, 
+		   cvec         *cvt,
+		   cvec         *cvr,
 		   parse_tree    pt,
 		   int           level, 
+		   int           levels,
 		   int           use_pref, 
 		   int           hide,
 		   int           expandvar,
 		   pt_vec       *ptp, 
 		   int          *matchv[], 
 		   int          *matchlen,
-		   cvec         *cvec,
+		   cvec         *cvv,
 		   char        **reason0
 		   )
 {
     int        retval = -1;
-    char      *string1 = NULL;
-    char      *reststring = NULL;
     char      *str;
     int        i;
     int        match;
@@ -685,49 +611,32 @@ match_pattern_node(cligen_handle h,
     cg_obj    *co_match;
     cg_obj    *co_orig;
     int        rest_match = -1;
-    int        cmd_levels;
     int        p;
     int        preference = 0;
     int        exact;
     char      *reason;
-    int        findreason;
     parse_tree ptn={0,};     /* Expanded */
     cg_var    *cv = NULL;
+    int        onlyvars = 0; 
 
     co_match = NULL;
-    if (level > command_levels(string0)){
-	fprintf(stderr, "%s: level > command_level in %s\n",
-		__FUNCTION__, string0);
-	goto done;
-    }
-    /* If there are only variables in the list, then keep track of variable match errors */
-    findreason = 0;
-    if (reason0)
-	for (i=0; i<pt.pt_len; i++){ 
-	    if ((co = pt.pt_vec[i]) == NULL)
-		continue;
-	    if (co->co_type != CO_VARIABLE){
-		findreason = 0;
-		break;
-	    }
-	    findreason++;
-	}
-    /* String1 contains next token and reststring to end of line */
-    if (extract_substring(string0, level, &string1) < 0)
-	goto done;
-    if (extract_substring_rest(string0, level, &reststring) < 0)
-	goto done;
+    /* If there are only variables in the list, then keep track of variable match errors 
+     * This is logic to hinder error message to relate to variable mismatch
+     * if there is a commands on same level with higher prio to match.
+     * If all match fails, it is more interesting to understand the match fails
+     * on commands, not variables.
+     */
+    onlyvars = (reason0==NULL)?0:pt_onlyvars(pt);
+
     for (i=0; i<pt.pt_len; i++){
 	if ((co = pt.pt_vec[i]) == NULL)
 	    continue;
 	reason = NULL;
-	if (ISREST(co))
-	    str = reststring;
-	else
-	    str = string1;
-	if ((match = match_object(h, str, co, &exact, findreason?&reason:NULL)) < 0)
+	/* Either individual token or rest-of-string */
+	str = cvec_i_str(ISREST(co)?cvr:cvt, level+1);
+	if ((match = match_object(h, str, co, &exact, onlyvars?&reason:NULL)) < 0)
 	    goto error;
-	if (match){
+	if (match){ /* XXX DIFFERS from match_pattern_terminal */
 	    assert(reason==NULL);
 	    /* Special case to catch rest variable and space delimited
 	       arguments after it */
@@ -755,14 +664,14 @@ match_pattern_node(cligen_handle h,
 	    co_match = co;
 	    matches++;
 	}
-	/* match == 0, co type is variable and findreason, then reason is set 
-	   this may not be the best preference, we just set the first
-	*/
+	/* match == 0, co type is variable and onlyvars, then reason is set once
+	 * this may not be the best preference, we just set the first
+	 */
 	if (reason){
 	    if (*reason0 == NULL)
 		*reason0 = reason;
 	    reason = NULL;
-	    findreason = 0;
+	    onlyvars = 0;
 	}
     } /* for */
     if (matches != 0 && reason0 && *reason0){
@@ -782,8 +691,6 @@ match_pattern_node(cligen_handle h,
 	goto done;
     }
     assert(co_match);
-    if ((cmd_levels = command_levels(string0)) < 0)
-	goto error;
 
     /* co_orig is original object in case of expansion */
     co_orig = co_match->co_ref?co_match->co_ref: co_match;
@@ -791,7 +698,7 @@ match_pattern_node(cligen_handle h,
 	goto error; 
 
     if (co_match->co_type == CO_VARIABLE){
-	if ((cv = add_cov_to_cvec(co_match, str, cvec)) == NULL)
+	if ((cv = add_cov_to_cvec(co_match, str, cvv)) == NULL)
 	    goto error;
 	/* 
 	 * Special case: we have matched a REST variable (anything) and
@@ -816,22 +723,20 @@ match_pattern_node(cligen_handle h,
     }
     else
 	if (co_match->co_type == CO_COMMAND && co_orig->co_type == CO_VARIABLE)
-	    if ((cv = add_cov_to_cvec(co_orig, co_match->co_command, cvec)) == NULL)
+	    if ((cv = add_cov_to_cvec(co_orig, co_match->co_command, cvv)) == NULL)
 		goto error;
-    if (pt_expand_2(h, &co_match->co_pt, cvec, hide, expandvar, &ptn) < 0) /* expand/choice variables */
+    if (pt_expand_2(h, &co_match->co_pt, cvv, hide, expandvar, &ptn) < 0) /* expand/choice variables */
 	goto error;
 
-    if (level+1 == cmd_levels)
-	retval = match_pattern_terminal(h,
-					string0, ptn, 
-					level+1, use_pref,
+    if (level+1 == levels)
+	retval = match_pattern_terminal(h, cvt, cvr, ptn, 
+					level+1, levels, use_pref,
 					ptp, matchv, matchlen, reason0);
     else
-	retval = match_pattern_node(h, 
-				    string0, ptn,
-				    level+1, use_pref, hide,
+	retval = match_pattern_node(h, cvt, cvr, ptn,
+				    level+1, levels, use_pref, hide,
 				    expandvar,
-				    ptp, matchv, matchlen, cvec, reason0);
+				    ptp, matchv, matchlen, cvv, reason0);
     if (pt_expand_add(co_orig, ptn) < 0) /* add expanded ptn to orig parsetree */
 	goto error;
     /* From here ptn is not used (but ptp may be inside ptn) */
@@ -842,15 +747,11 @@ match_pattern_node(cligen_handle h,
     /* Cleanup made on top-level */
   done:
     if (cv){ /* cv may be stale */
-	cv = cvec_i(cvec, cvec_len(cvec)-1);
+	cv = cvec_i(cvv, cvec_len(cvv)-1);
 	cv_reset(cv);
-	cvec_del(cvec, cv);
+	cvec_del(cvv, cv);
     }
     /* Only the last level may have multiple matches */
-    if (string1)
-	free(string1);
-    if (reststring)
-	free(reststring);
     return retval;
   error:
     retval = -1;
@@ -860,8 +761,9 @@ match_pattern_node(cligen_handle h,
 /*! CLiIgen object matching function
  * @param[in]  h         CLIgen handle
  * @param[in]  string    Input string to match
+ * @param[in]  cvt      Tokenized string: vector of tokens
+ * @param[in]  cvr      Rest variant,  eg remaining string in each step
  * @param[in]  pt        Vector of commands (array of cligen object pointers (cg_obj)
- * @param[in]  pt_max    Length of the pt array
  * @param[in]  use_pref  Set this flag value if you want to use the preferences 
  *                       between matches. It is only when you want a final exact 
  *                       match (not completion or show options) that you should set 
@@ -872,7 +774,7 @@ match_pattern_node(cligen_handle h,
  * @param[out] matchv    A vector of integers containing which matches
  * @param[out] matchlen  Length of matchv. That is, # of matches and same as 
  *                       return value (if 0-n)
- * @param[out] cvec      cligen variable vector containing vars/values pair for completion
+ * @param[out] cvv      cligen variable vector containing vars/values pair for completion
  * @param[out] reason0   If retval = 0, this may be malloced to indicate reason for 
  *                       not matching variables, if given. Neeed to be free:d
  *
@@ -884,7 +786,8 @@ match_pattern_node(cligen_handle h,
  */
 int 
 match_pattern(cligen_handle h,
-	      char         *string, 
+	      cvec         *cvt,
+	      cvec         *cvr,
 	      parse_tree    pt, 
 	      int           use_pref,
 	      int           hide,
@@ -892,37 +795,51 @@ match_pattern(cligen_handle h,
 	      pt_vec       *ptp, 
 	      int          *matchv[],
 	      int          *matchlen, 
-	      cvec         *cvec,
+	      cvec         *cvv,
 	      char        **reason0)
 {
-    int retval;
+    int retval = -1;
     int levels;
+    int n; /* nr matches */
 
-    assert(ptp);
-    if ((levels = command_levels(string)) < 0)
-	return -1;
-    if (levels == 0)
-	retval = match_pattern_terminal(h, 
-					string, pt, 0, use_pref,
+    assert(ptp && cvt && cvr); /* XXX */
+
+    /* Get total number of command levels */
+    if ((levels = cligen_cvv_levels(cvt)) < 0)
+	goto done;
+    if (levels == 0){
+	if ((n = match_pattern_terminal(h, cvt, cvr,
+					pt,
+					0, levels,
+					use_pref,
 					ptp, matchv, matchlen, 
-					reason0);
+					reason0)) < 0)
+	    goto done;
+    }
     else
-	retval = match_pattern_node(h, 
-				    string, pt, 0, use_pref, hide,
+	if ((n = match_pattern_node(h, cvt, cvr,
+				    pt,
+				    0, levels,
+				    use_pref, hide,
 				    expandvar,
 				    ptp, matchv, matchlen, 
-				    cvec,
-				    reason0);
+				    cvv,
+				    reason0)) < 0)
+	    goto done;
+    retval = n; /* nr matches */
+ done:
     return retval;
 }
 
 /*! CLIgen object matching function for perfect match
  * @param[in]  h         CLIgen handle
  * @param[in]  string    Input string to match
+ * @param[in]  cvt       Tokenized string: vector of tokens
+ * @param[in]  cvr       Rest variant,  eg remaining string in each step
  * @param[in]  pt        CLIgen parse tree, vector of cligen objects.
  * @param[in]  exact     Try to find an exact match. if 0 dont bother about errors.
  * @param[in]  expandvar Set if VARS should be expanded, eg ? <tab>
- * @param[out] cvec      cligen variable vector containing vars/values pair for completion
+ * @param[out] cvv       CLIgen variable vector containing vars/values pair for completion
  * @param[out] match_obj Exact object to return
  * @retval  -1           Error
  * @retval   0           No match
@@ -934,11 +851,12 @@ match_pattern(cligen_handle h,
  */
 int 
 match_pattern_exact(cligen_handle h, 
-		    char         *string, 
+		    cvec         *cvt,
+		    cvec         *cvr,
 		    parse_tree    pt, 
 		    int           exact,
 		    int           expandvar,
-		    cvec         *cvec,
+		    cvec         *cvv,
 		    cg_obj      **match_obj)
 {
     pt_vec  res_pt;
@@ -948,14 +866,18 @@ match_pattern_exact(cligen_handle h,
     int     i;
     int     ret;
     char   *reason = NULL;
+    int    j;
+    char   *string1;
+    char    allvars=1;
 
     /* clear old errors */
     if (exact)
 	cligen_nomatch_set(h, NULL); 
-    if ((ret = match_pattern(h, string, pt, 1, 0,
+    if ((ret = match_pattern(h, cvt, cvr,
+			     pt, 1, 0,
 			     expandvar,
 			     &res_pt, 
-			     &matchv, &matchlen, cvec, &reason)) < 0)
+			     &matchv, &matchlen, cvv, &reason)) < 0)
 	return -1;
     if (ret == 0) {
 	if (exact){
@@ -970,11 +892,9 @@ match_pattern_exact(cligen_handle h,
     else{
 	if (ret > 1){
 	    /* Special case: command and exact-> use that */
-	    int j;
-	    char *string1;
-	    char allvars=1;
 
-	    extract_substring(string, command_levels(string), &string1);
+	    string1 = cvec_i_str(cvt, cvec_len(cvt)-1);
+
 	    for (j=0; j<ret; j++){
 		co = res_pt[matchv[j]];
 		/* XXX If variable dont compare co_command */
@@ -990,8 +910,6 @@ match_pattern_exact(cligen_handle h,
 	    /* If set, if multiple cligen variables match use the first one */
 	    if (_match_cgvar_same && allvars)
 		ret = 1; /* choose matchv[0] */
-	    if (string1)
-		free(string1);
 	}
     }
     if (ret != 1){
@@ -1013,25 +931,9 @@ match_pattern_exact(cligen_handle h,
     for (i=0; i< co->co_max; i++)
 	if (co->co_next[i] == NULL)
 	    goto done;
-#if 0
-    {
-	int variable = 0;
-	/* The last object should be unique */
-	while (co->co_max == 1){
-	    co = co->co_next[0];
-	    if (co->co_type == CO_VARIABLE && co->co_vtype != CGV_REST)
-		variable++;
-	}
-	if (co->co_max)
-	    return 0;
-	if (variable) 
-	    return 0;
-    }
-#else
     if (exact)
 	cligen_nomatch_set(h, "Incomplete command");
     return 0;
-#endif
  done:
     if (match_obj)
 	*match_obj = co;
@@ -1042,9 +944,9 @@ match_pattern_exact(cligen_handle h,
  * 
  * @param[in]     h       cligen handle
  * @param[in]     pt      Vector of commands (array of cligen object pointers)
- * @param[in,out] string  Input string to match and to complete (append to)
+ * @param[in,out] stringp Input string to match and to complete (append to)
  * @param[in,out] slen    Current string length 
- * @param[out]    cvec    cligen variable vector containing vars/values pair for
+ * @param[out]    cvv    cligen variable vector containing vars/values pair for
  *                        completion
  * @retval    -1   Error 
  * @retval     0   No matches, no completions made
@@ -1055,7 +957,7 @@ match_complete(cligen_handle h,
 	       parse_tree    pt, 
 	       char        **stringp, 
 	       size_t       *slenp, 
-	       cvec         *cvec)
+	       cvec         *cvv)
 {
     int     level;
     int     slen;
@@ -1065,6 +967,8 @@ match_complete(cligen_handle h,
     int     minmatch;
     cg_obj *co;
     cg_obj *co1 = NULL;
+    cvec   *cvt = NULL;      /* Tokenized string: vector of tokens */
+    cvec   *cvr = NULL;      /* Rest variant,  eg remaining string in each step */
     char   *string;
     char   *s;
     char   *ss;
@@ -1078,26 +982,27 @@ match_complete(cligen_handle h,
 
     /* ignore any leading whitespace */
     string = *stringp;
+    /* Tokenize the string and transform it into two CLIgen vectors: tokens and rests */
+    if (cligen_str2cvv(string, &cvt, &cvr) < 0)
+	goto done;
     s = string;
     while ((strlen(s) > 0) && isblank(*s))
-	    s++;
+	s++;
  again:
     matchlen = 0;
-    if ((nr = match_pattern(h, s, pt, 0, 1,
-			    1, /* XXX must be one for interactive TAB to work*/
-			    &pt1, &matchv, &matchlen, cvec, NULL)) < 0)
+    if ((nr = match_pattern(h, cvt, cvr,
+			    pt, 0, 1,
+			    1, /* Must be one for interactive TAB to work*/
+			    &pt1, &matchv, &matchlen, cvv, NULL)) < 0)
 	goto done;
     if (nr==0){
 	retval = 0;
 	goto done; /*  No matches */
     }
-    if ((level = command_levels(s)) < 0)
+    if ((level = cligen_cvv_levels(cvt)) < 0)
 	goto done;
-    if (extract_substring(s, level, &ss) < 0)
-	goto done;
+    ss = cvec_i_str(cvt, level+1);
     slen = ss?strlen(ss):0;
-    if (ss)
-	free(ss);
 
     minmatch = slen;
     equal = 1;
@@ -1157,6 +1062,10 @@ match_complete(cligen_handle h,
     }
     retval = append?1:0;
   done:
+    if (cvt)
+	cvec_free(cvt);
+    if (cvr)
+	cvec_free(cvr);
     if (matchv)
 	free(matchv);
     return retval;
