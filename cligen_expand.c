@@ -454,6 +454,7 @@ pt_expand_choice(cg_obj       *co,
  * with a reference point back to the original.
  * @param[in]  h       cligen handle
  * @param[in]  ptr     original parse-tree consisting of a vector of cligen objects
+ * @param[out] cvv     Cligen variable vector containing vars/values pair for completion
  * @param[in]  hide    Respect hide setting of commands (dont show)
  * @param[in]  expandvar Set if VARS should be expanded, eg ? <tab>
  * @param[out] ptn     shadow parse-tree initially an empty pointer, its value is returned.
@@ -598,7 +599,6 @@ pt_expand_cleanup_2(parse_tree pt)
     }
     return 0;
 }
-
 
 /*! Help functions to delete hanging memory
  * It is allocated in match_pattern_node, and deallocated 
