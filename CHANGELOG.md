@@ -1,7 +1,8 @@
 # Cligen Changelog
 	
 ## 4.4.0 (Forthcoming)
-* CLIgen buffer functiona and API changes
+* Renamed `cligen_match_cgvar_same(int flag)` to `cligen_preference_mode_set(cligen_handle h, int flag)`
+* CLIgen buffer functions and API changes
   * A CLIgen buffer now starts at a "start" size and grows quadratic (2x) up to a "threshold" after it grows linearly with "threshold".
   * Global start and threshold limit can be set and read with `cbuf_alloc_set()` and `cbuf_alloc_get()`, (signature changed).
   * New function `cbuf_new_alloc()` to start from another (individual) buffer size.

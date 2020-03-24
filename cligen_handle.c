@@ -1073,3 +1073,57 @@ cligen_delimiter_set(cligen_handle h,
     ch->ch_delimiter = delimiter;
     return 0;
 }
+
+#if 1 /* Backward compatible, remove in 4.5 */
+/* if several cligen object variables match with same preference, select first */
+static int _match_cgvar_same = 0;
+
+int 
+cligen_match_cgvar_same(int flag)
+{
+    int oldval = _match_cgvar_same;
+
+    _match_cgvar_same = flag;
+    return oldval;
+}
+#endif
+
+/*! Get cligen variable preference mode 
+ * More specifically, if several cligen object variables match with same preference,
+ * select the first, do not match all.
+ * Example:
+ * key (<a:string length[4]> | <a:string length[40]>);
+ * @param[in] h   CLIgen handle
+ * @retval    1   If many matching variables with same preference, choose first
+ * @retval    0   Error if many variable with same pref matches
+ */
+int 
+cligen_preference_mode(cligen_handle h)
+{
+#if 1 /* Backward compatible, remove in 4.5 */
+    return _match_cgvar_same;
+#else
+    struct cligen_handle *ch = handle(h);
+
+    return ch->ch_preference_mode;
+#endif
+}
+
+/*! Set cligen variable preference mode 
+ *
+ * @param[in] h   CLIgen handle
+ * @param[in] flag   Set to 1 choose first variable
+ * @retval    0      OK
+ */
+int 
+cligen_preference_mode_set(cligen_handle h,
+			    int           flag)
+{
+#if 1 /* Backward compatible, remove in 4.5 */
+    cligen_match_cgvar_same(flag);
+#else
+    struct cligen_handle *ch = handle(h);
+    ch->ch_preference_mode = flag;
+#endif
+    return 0;
+}
