@@ -68,9 +68,6 @@
 
 #define ISREST(co) ((co)->co_type == CO_VARIABLE && (co)->co_vtype == CGV_REST)
 
-/* if several cligen object variables match with same preference, select first */
-int _match_cgvar_same = 0;
-
 /*! Match variable against input string
  * 
  * @param[in]  string  Input string to match
@@ -988,7 +985,7 @@ match_pattern_exact(cligen_handle h,
 		    allvars = 0;
 	    }
 	    /* If set, if multiple cligen variables match use the first one */
-	    if (_match_cgvar_same && allvars)
+	    if (cligen_preference_mode(h) && allvars)
 		ret = 1; /* choose matchv[0] */
 	    if (string1)
 		free(string1);

@@ -42,12 +42,6 @@
 #define MATCHVECTORLEN 1024
 
 /*
- * Internally exported variables
- */
-/* if several cligen object variables match with same preference, select first */
-extern int _match_cgvar_same;
-
-/*
  * Function Prototypes
  */
 int match_pattern(cligen_handle h, char *, parse_tree , int, int, int,

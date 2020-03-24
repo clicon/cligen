@@ -809,21 +809,3 @@ cligen_echo_on(void)
     tcsetattr(0,TCSANOW,&settings);
     return;
 }
-
-/*! Set relaxed handling of cligen variable matching 
- * More specifically, if several cligen object variables match with same preference,
- * select the first, do not match all.
- * Example:
- * key (<a:string length[4]> | <a:string length[40]>);
- * @param[in] flag   Set to 1 to enable relaxed handling, 0 if not
- * @retval    flag   Previous value
- */
-int 
-cligen_match_cgvar_same(int flag)
-{
-    int oldval = _match_cgvar_same;
-
-    _match_cgvar_same = flag;
-    return oldval;
-}
-
