@@ -103,7 +103,7 @@ cligen_loop(cligen_handle h)
 	ret = cliread_eval(h, &line, &callback_ret);
 	switch (ret){
 	case CG_EOF: /* eof */
-	    goto done;
+	    cligen_exiting_set(h, 1);
 	    break;
 	case CG_ERROR: /* cligen match errors */
 	    printf("CLI read error\n");

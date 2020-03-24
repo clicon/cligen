@@ -44,17 +44,17 @@
 /*
  * Internally exported variables
  */
-/* if several cligen object variables match with same preference, select first */
-extern int _match_cgvar_same;
 
 /*
  * Function Prototypes
  */
 int match_pattern(cligen_handle h, cvec *cvt, cvec *cvr, 
-		  parse_tree pt, int use_pref, int hide, int expandvar,
+		  parse_tree pt,
+		  int hide, int expandvar,
 		  pt_vec *, int **, int *, cvec *, char **);
 int match_pattern_exact(cligen_handle h, cvec *cvt, cvec *cvr, 
-			parse_tree pt, int exact, int expandvar,
+			parse_tree pt,
+			int expandvar,
 			cvec *cvv, cg_obj **match_obj);
 int cligen_str2cvv(char *string, cvec **cvp, cvec **cvr);
 int cligen_cvv_levels(cvec *cvv);

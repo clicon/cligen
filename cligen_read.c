@@ -279,7 +279,8 @@ show_help_columns(cligen_handle h,
     if (cligen_str2cvv(string, &cvt, &cvr) < 0)
 	goto done;
     if ((nr = match_pattern(h, cvt, cvr,
-			    pt, 0, 1, 1 /* show help columns*/,
+			    pt,
+			    1, 1,
 			    &pt1, &matchvec, &matchlen, cvv, NULL)) < 0)
 	goto done;
     if ((level = cligen_cvv_levels(cvt)) < 0)
@@ -393,7 +394,7 @@ show_help_line(cligen_handle h,
     pt_vec pt1;
     int    matchlen = 0;
     int   *matchvec = NULL;
-    int    res;
+    int    ret;
     cvec  *cvt = NULL;      /* Tokenized string: vector of tokens */
     cvec  *cvr = NULL;      /* Rest variant,  eg remaining string in each step */
     cg_var *cvlast;         /* last element */
@@ -406,9 +407,7 @@ show_help_line(cligen_handle h,
     if ((nr = match_pattern(h,
 			    cvt, cvr, /* token string */
 			    pt,       /* command vector */
-			    0,        /* use_pref */
-			    1,        /* hide */
-			    1,        /* expandvar */
+			    1, 1,
 			    &pt1, &matchvec, &matchlen, cvv, NULL)) < 0)
 	goto done;
     if ((level =  cligen_cvv_levels(cvt)) < 0)
@@ -432,17 +431,17 @@ show_help_line(cligen_handle h,
 	/* Tokenize the string and transform it into two CLIgen vectors: tokens and rests */
 	cvec_del_i(cvt, cvec_len(cvt)-1); /* We really just want to truncate len-1 */
 	cvec_del_i(cvr, cvec_len(cvr)-1);
-	/* XXX string = "recurse" cvt: recurse, recurse, pt is 13 after*/
-	if ((res = match_pattern_exact(h, cvt, cvr, pt, 0, 1, cvv1, NULL))  < 0){
-	    //	    free(tmp);
+
+	if ((ret = match_pattern_exact(h, cvt, cvr, pt,
+				       1,
+				       cvv1, NULL)) < 0)
 	    goto done;
-	}
-	if (res) {
+	if (ret > 0) {
 	    fprintf(fout, "  <cr>\n");
 	    fflush(fout);
 	}
     }
-    if (!nr){
+    if (nr == 0){
 	retval = 0;
 	goto done;
     }
@@ -601,12 +600,13 @@ cliread_parse(cligen_handle h,
 	      cg_obj      **co_orig,
 	      cvec         *cvv)
 {
-    int           retval = -1;
-    cg_obj       *match_obj;
-    parse_tree    ptn={0,};        /* Expanded */
-    cvec         *cvt = NULL;      /* Tokenized string: vector of tokens */
-    cvec         *cvr = NULL;      /* Rest variant,  eg remaining string in each step */
-    cvec         *cvv0 = NULL;     /* Top-level vars/val vector with just command as 0th element */
+    int        retval = -1;
+    int        ret;
+    cg_obj    *match_obj;
+    parse_tree ptn={0,};        /* Expanded */
+    cvec      *cvt = NULL;      /* Tokenized string: vector of tokens */
+    cvec      *cvr = NULL;      /* Rest variant,  eg remaining string in each step */
+    cvec      *cvv0 = NULL;     /* Top-level vars/val vector with just command as 0th element */
 
     if (cvv == NULL || cvec_len(cvv) != 0){
 	errno = EINVAL;
@@ -626,21 +626,20 @@ cliread_parse(cligen_handle h,
 	goto done;
     if (pt_expand_2(h, pt, cvv0, 0, 0, &ptn) < 0)      /* expansion */
 	goto done;
-    if ((retval = match_pattern_exact(h, cvt, cvr,
-				      ptn, 1, 1,
-				      cvv0, &match_obj)) < 0)
+    if ((ret = match_pattern_exact(h, cvt, cvr,
+				   ptn, 0,
+				   cvv0, &match_obj)) < 0)
 	goto done;
     /* Map from ghost object match_obj to real object */
-    if (retval == CG_MATCH){
-	if (match_obj && match_obj->co_ref)
-	    *co_orig = match_obj->co_ref;
-	else
-	    *co_orig = match_obj;
-	if (cvec_match(h, *co_orig, cvt, cvr, cvv) < 0){
-	    retval = CG_ERROR;
-	    goto done;
-	}
+    if (match_obj && match_obj->co_ref)
+	*co_orig = match_obj->co_ref;
+    else
+	*co_orig = match_obj;
+    if (cvec_match(h, *co_orig, cvt, cvr, cvv) < 0){
+	retval = CG_ERROR;
+	goto done;
     }
+    retval = ret;
   done:
     if (cvt)
 	cvec_free(cvt);
@@ -838,20 +837,4 @@ cligen_echo_on(void)
     return;
 }
 
-/*! Set relaxed handling of cligen variable matching 
- * More specifically, if several cligen object variables match with same preference,
- * select the first, do not match all.
- * Example:
- * key (<a:string length[4]> | <a:string length[40]>);
- * @param[in] flag   Set to 1 to enable relaxed handling, 0 if not
- * @retval    flag   Previous value
- */
-int 
-cligen_match_cgvar_same(int flag)
-{
-    int oldval = _match_cgvar_same;
-
-    _match_cgvar_same = flag;
-    return oldval;
-}
 
