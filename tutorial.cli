@@ -48,7 +48,7 @@ ex <a:int32 show:number>("A number");
   aa bb,cb();{              
     ff,cb();
   }
-  # Example of complex variable matching
+  # Example of variable preferences
   values (<int32> | <string> | <int64> | aa), cb();
   # Complex syntax and callback argument handling
   aa bb (ca("help ca") <int32>|cb("help cb")) [dd|ee], letters();

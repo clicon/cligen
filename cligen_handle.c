@@ -1073,3 +1073,29 @@ cligen_delimiter_set(cligen_handle h,
     ch->ch_delimiter = delimiter;
     return 0;
 }
+
+int 
+cligen_preference_mode(cligen_handle h)
+{
+    struct cligen_handle *ch = handle(h);
+
+    return ch->ch_preference_mode;
+}
+
+/*! Set relaxed handling of cligen variable matching 
+ * More specifically, if several cligen object variables match with same preference,
+ * select the first, do not match all.
+ * Example:
+ * key (<a:string length[4]> | <a:string length[40]>);
+ * @param[in] flag   Set to 1 to enable relaxed handling, 0 if not
+ * @retval    0      OK
+ */
+int 
+cligen_preference_mode_set(cligen_handle h,
+			    int           flag)
+{
+    struct cligen_handle *ch = handle(h);
+
+    ch->ch_preference_mode = flag;
+    return 0;
+}

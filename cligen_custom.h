@@ -39,10 +39,3 @@ typedef struct {int a;} *cligen_handle;
 typedef void *cligen_handle; /* API */
 #endif
 
-/*! Experimental support for not expanding variables unless <tab> or <?> is
- * pressed. CLIgen otherwise calls the expand callback that may, for example,
- * contact a remote backend.
- * So, only expand on interactive CLI operations
- */
-#define EXPAND_ONLY_INTERACTIVE
-

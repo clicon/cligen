@@ -68,9 +68,6 @@
 
 #define ISREST(co) ((co)->co_type == CO_VARIABLE && (co)->co_vtype == CGV_REST)
 
-/* if several cligen object variables match with same preference, select first */
-int _match_cgvar_same = 0;
-
 /*! Match variable against input string
  * 
  * @param[in]  string  Input string to match
@@ -399,6 +396,35 @@ pt_onlyvars(parse_tree pt)
     return onlyvars;
 }
 
+/*! Help function to append a cv to a cvec. For expansion cvec passed to pt_expand_2
+ * @param[in]  co     A cligen variable that has a matching value
+ * @param[in]  cmd    Value in string of the variable
+ * @param[out] cvv   The cligen variable vector to push a cv with name of co and
+ *                    value in cmd
+ * @retval     cv     Cligen variable
+ * @retval     NULL   Error
+ */
+static cg_var *
+add_cov_to_cvec(cg_obj *co, 
+		char   *cmd, 
+		cvec   *cvv)
+{
+    cg_var *cv = NULL;
+
+    if ((cv = cvec_add(cvv, co->co_vtype)) == NULL)
+	return NULL;
+    cv_name_set(cv, co->co_command);
+    cv_const_set(cv, iskeyword(co));
+	if (co->co_vtype == CGV_DEC64) /* XXX: Seems misplaced? / too specific */
+		cv_dec64_n_set(cv, co->co_dec64_n);
+    if (cv_parse(cmd, cv) < 0) {
+	cv_reset(cv);
+	cvec_del(cvv, cv);
+	return NULL;
+    }
+    return cv;
+}
+
 /*! Match terminal/leaf cligen objects. Multiple matches is used for completion.
  * We must have a preference when matching when it matches a command
  * and some variables.
@@ -416,10 +442,6 @@ pt_onlyvars(parse_tree pt)
  * @param[in]  pt_max   Length of the pt array
  * @param[in]  level    Current command level
  * @param[in]  levels   Total nr of command levels
- * @param[in]  use_pref Set this flag value if you want to use the preferences
- *                      between matches. It is only when you want a final exact 
- *                      match (not completion or show options) that you should set 
- *                      this.
  * @param[out] ptp      Returns the vector at the place of matching
  * @param[out] matchv   A vector of integers containing which 
  * @param[out] matchlen Length of matchv. That is, # of matches and same as return 
@@ -437,7 +459,6 @@ match_pattern_terminal(cligen_handle h,
 		       parse_tree    pt,
 		       int           level, 
 		       int           levels,
-		       int           use_pref,
 		       pt_vec       *ptp, 
 		       int          *matchv[], 
 		       int          *matchlen,
@@ -448,8 +469,6 @@ match_pattern_terminal(cligen_handle h,
     int     i;
     int     match;
     int     matches = 0;
-    int     preference = 0;
-    int     p;
     cg_obj *co;
     cg_obj *co_match;
     cg_obj *co_orig;
@@ -476,15 +495,6 @@ match_pattern_terminal(cligen_handle h,
 	    goto error;
 	if (match){ /* XXX DIFFERS from match_pattern_node */
 	    assert(reason==NULL);
-	    if (use_pref){
-		p = co_pref(co, exact);
-		if (p < preference)
-		    continue; /* ignore */
-		if (p > preference){
-		    preference = p;
-		    matches = 0; /* Start again at this level */
-		}
-	    }
 	    *matchlen = *matchlen + 1;
 	    if ((*matchv = realloc(*matchv, (*matchlen)*sizeof(int))) == NULL){
 		fprintf(stderr, "%s: realloc: %s\n", __FUNCTION__, strerror(errno));
@@ -528,34 +538,6 @@ match_pattern_terminal(cligen_handle h,
     goto done;
 }
 
-/*! Help function to append a cv to a cvec. For expansion cvec passed to pt_expand_2
- * @param[in]  co     A cligen variable that has a matching value
- * @param[in]  cmd    Value in string of the variable
- * @param[out] cvv   The cligen variable vector to push a cv with name of co and
- *                    value in cmd
- * @retval     cv     Cligen variable
- * @retval     NULL   Error
- */
-static cg_var *
-add_cov_to_cvec(cg_obj *co, 
-		char   *cmd, 
-		cvec   *cvv)
-{
-    cg_var *cv = NULL;
-
-    if ((cv = cvec_add(cvv, co->co_vtype)) == NULL)
-	return NULL;
-    cv_name_set(cv, co->co_command);
-    cv_const_set(cv, iskeyword(co));
-	if (co->co_vtype == CGV_DEC64) /* XXX: Seems misplaced? / too specific */
-		cv_dec64_n_set(cv, co->co_dec64_n);
-    if (cv_parse(cmd, cv) < 0) {
-	cv_reset(cv);
-	cvec_del(cvv, cv);
-	return NULL;
-    }
-    return cv;
-}
 
 /*! Match non-terminal cligen object. Need to match exact.
  *
@@ -567,10 +549,6 @@ add_cov_to_cvec(cg_obj *co,
  * @param[in]  pt_max    Length of the pt array
  * @param[in]  level    Current command level
  * @param[in]  levels   Total nr of command levels
- * @param[in]  use_pref  Set this flag value if you want to use the preferences 
- *                       between matches. It is only when you want a final exact 
- *                       match (not completion or show options) that you should set
- *                       this.
  * @param[in]  hide    Respect hide setting of commands (dont show)
  * @param[in]  expandvar Set if VARS should be expanded, eg ? <tab>
  * @param[out] ptp       Returns the vector at the place of matching
@@ -591,7 +569,6 @@ match_pattern_node(cligen_handle h,
 		   parse_tree    pt,
 		   int           level, 
 		   int           levels,
-		   int           use_pref, 
 		   int           hide,
 		   int           expandvar,
 		   pt_vec       *ptp, 
@@ -651,14 +628,12 @@ match_pattern_node(cligen_handle h,
 	    else{
 		if (perfect)
 		    break;
- 		if (1 || use_pref){
-		    p = co_pref(co, exact);
-		    if (p < preference)
-			continue; /* ignore */
-		    if (p > preference){
-			preference = p;
-			matches = 0; /* Start again at this level */
-		    }
+		p = co_pref(co, exact);
+		if (p < preference)
+		    continue; /* ignore */
+		if (p > preference){
+		    preference = p;
+		    matches = 0; /* Start again at this level */
 		}
 	    }
 	    co_match = co;
@@ -730,12 +705,12 @@ match_pattern_node(cligen_handle h,
 
     if (level+1 == levels)
 	retval = match_pattern_terminal(h, cvt, cvr, ptn, 
-					level+1, levels, use_pref,
+					level+1, levels, 
 					ptp, matchv, matchlen, reason0);
     else
 	retval = match_pattern_node(h, cvt, cvr, ptn,
-				    level+1, levels, use_pref, hide,
-				    expandvar,
+				    level+1, levels,
+				    hide, expandvar,
 				    ptp, matchv, matchlen, cvv, reason0);
     if (pt_expand_add(co_orig, ptn) < 0) /* add expanded ptn to orig parsetree */
 	goto error;
@@ -764,10 +739,6 @@ match_pattern_node(cligen_handle h,
  * @param[in]  cvt      Tokenized string: vector of tokens
  * @param[in]  cvr      Rest variant,  eg remaining string in each step
  * @param[in]  pt        Vector of commands (array of cligen object pointers (cg_obj)
- * @param[in]  use_pref  Set this flag value if you want to use the preferences 
- *                       between matches. It is only when you want a final exact 
- *                       match (not completion or show options) that you should set 
- *                       this.
  * @param[in]  hide      Respect hide setting of commands (dont show)
  * @param[in]  expandvar Set if VARS should be expanded, eg ? <tab>
  * @param[out] ptp       Returns the vector at the place of matching
@@ -789,7 +760,6 @@ match_pattern(cligen_handle h,
 	      cvec         *cvt,
 	      cvec         *cvr,
 	      parse_tree    pt, 
-	      int           use_pref,
 	      int           hide,
 	      int           expandvar,
 	      pt_vec       *ptp, 
@@ -811,17 +781,14 @@ match_pattern(cligen_handle h,
 	if ((n = match_pattern_terminal(h, cvt, cvr,
 					pt,
 					0, levels,
-					use_pref,
 					ptp, matchv, matchlen, 
 					reason0)) < 0)
 	    goto done;
     }
-    else
-	if ((n = match_pattern_node(h, cvt, cvr,
+    else if ((n = match_pattern_node(h, cvt, cvr,
 				    pt,
 				    0, levels,
-				    use_pref, hide,
-				    expandvar,
+				    hide, expandvar,
 				    ptp, matchv, matchlen, 
 				    cvv,
 				    reason0)) < 0)
@@ -831,20 +798,55 @@ match_pattern(cligen_handle h,
     return retval;
 }
 
+static int
+match_multiple(cligen_handle h,
+	       pt_vec        pt,
+	       int           matchv[],
+	       int          *matchlen)
+{
+    int     retval = -1;
+    int     i;
+    cg_obj *co;
+    int     preference;
+    int     p;
+    int     j;
+
+    /* Use preference as tie breaker (can replace above??) */
+    j = 0;
+    for (i=0; i<*matchlen; i++){
+	co = pt[matchv[i]];
+	p = co_pref(co, 1);
+	if (p < preference)
+	    continue; /* ignore */
+	if (p > preference){
+	    preference = p;
+	    j = 0; /* Start again at this level */
+	}
+	matchv[j++] = matchv[i];
+    }
+    *matchlen = j;
+    /* If set, if multiple cligen variables match use the first one */
+    if (cligen_preference_mode(h) && *matchlen>1)
+	*matchlen = 1;
+    retval = 0;
+    //done:
+    return retval;
+}
+
 /*! CLIgen object matching function for perfect match
  * @param[in]  h         CLIgen handle
  * @param[in]  string    Input string to match
  * @param[in]  cvt       Tokenized string: vector of tokens
  * @param[in]  cvr       Rest variant,  eg remaining string in each step
  * @param[in]  pt        CLIgen parse tree, vector of cligen objects.
- * @param[in]  exact     Try to find an exact match. if 0 dont bother about errors.
  * @param[in]  expandvar Set if VARS should be expanded, eg ? <tab>
+
  * @param[out] cvv       CLIgen variable vector containing vars/values pair for completion
  * @param[out] match_obj Exact object to return
  * @retval  -1           Error
  * @retval   0           No match
- * @retval   1           Exactly one match
- * @retval   2+          Multiple matches
+ * @retval   1           Exactly one match and match_obj set
+ * @retval   n           More than one match
  * 
  * Only if retval == 0 _AND> exact == 1 then cligen_nomatch() is set, otherwise not.
  * @see match_pattern
@@ -854,90 +856,69 @@ match_pattern_exact(cligen_handle h,
 		    cvec         *cvt,
 		    cvec         *cvr,
 		    parse_tree    pt, 
-		    int           exact,
 		    int           expandvar,
 		    cvec         *cvv,
 		    cg_obj      **match_obj)
 {
+    int     retval = -1;
     pt_vec  res_pt;
     cg_obj *co;
     int     matchlen = 0;
     int     *matchv = NULL;
-    int     i;
-    int     ret;
     char   *reason = NULL;
-    int    j;
-    char   *string1;
-    char    allvars=1;
+    int     i;
 
-    /* clear old errors */
-    if (exact)
-	cligen_nomatch_set(h, NULL); 
-    if ((ret = match_pattern(h, cvt, cvr,
-			     pt, 1, 0,
-			     expandvar,
-			     &res_pt, 
-			     &matchv, &matchlen, cvv, &reason)) < 0)
-	return -1;
-    if (ret == 0) {
-	if (exact){
-	    if (reason != NULL){
-		cligen_nomatch_set(h, "%s", reason);
-		free(reason);
-	    }
-	    else
-		cligen_nomatch_set(h, "Unknown command");
+        /* clear old errors */
+    cligen_nomatch_set(h, NULL); 
+    if ((match_pattern(h, cvt, cvr,
+		       pt,
+		       0, 1,
+		       &res_pt, 
+		       &matchv, &matchlen,
+		       cvv, &reason)) < 0)
+	goto done;
+    /* Initial match interval */
+    switch (matchlen){
+    case 0:
+	if (reason != NULL){
+	    cligen_nomatch_set(h, "%s", reason);
+	    free(reason);
 	}
+	else
+	    cligen_nomatch_set(h, "Unknown command");
+	break;
+    case 1:
+	break;
+    default: /* Multiple matches, nr > 1 */
+	if (match_multiple(h, res_pt, matchv, &matchlen) < 0)
+	    goto done;
+	break;
     }
-    else{
-	if (ret > 1){
-	    /* Special case: command and exact-> use that */
-
-	    string1 = cvec_i_str(cvt, cvec_len(cvt)-1);
-
-	    for (j=0; j<ret; j++){
-		co = res_pt[matchv[j]];
-		/* XXX If variable dont compare co_command */
-		if (co->co_type == CO_COMMAND && string1 && 
-		    strcmp(string1, co->co_command)==0){
-		    ret = 1;
-		    matchv[0] = matchv[j];
-		    break;
-		}
-		if (co->co_type != CO_VARIABLE)
-		    allvars = 0;
-	    }
-	    /* If set, if multiple cligen variables match use the first one */
-	    if (_match_cgvar_same && allvars)
-		ret = 1; /* choose matchv[0] */
-	}
-    }
-    if (ret != 1){
-	if (matchv)
-	    free(matchv);
-	return ret;
+    if (matchlen != 1){
+	retval = matchlen;
+	goto done;
     }
     /* Here we have an obj (res_pt[]) that is unique so far.
        We need to see if there is only one sibling to it. */
     co = res_pt[*matchv];
-    free(matchv);
-    matchv = NULL;
     /*
      * Special case: if matching object has a NULL child,
      * we match.
      */
-    if (co->co_max == 0)
-	goto done;
-    for (i=0; i< co->co_max; i++)
+    for (i=0; i < co->co_max; i++)
 	if (co->co_next[i] == NULL)
-	    goto done;
-    if (exact)
+	    break;
+    if (co->co_max!=0 && i==co->co_max){
+	co = NULL;
 	cligen_nomatch_set(h, "Incomplete command");
-    return 0;
+	retval = 0;
+	goto done;
+    }
+    retval = 1;
  done:
     if (match_obj)
 	*match_obj = co;
-    return 1;
+    return retval;
 }
 
 /*! Try to complete a string as far as possible using the syntax.
@@ -991,8 +972,8 @@ match_complete(cligen_handle h,
  again:
     matchlen = 0;
     if ((nr = match_pattern(h, cvt, cvr,
-			    pt, 0, 1,
-			    1, /* Must be one for interactive TAB to work*/
+			    pt,
+			    1, 1, /* Must be one for interactive TAB to work*/
 			    &pt1, &matchv, &matchlen, cvv, NULL)) < 0)
 	goto done;
     if (nr==0){

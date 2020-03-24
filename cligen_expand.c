@@ -496,7 +496,6 @@ pt_expand_2(cligen_handle h,
 	     */
 	    else if (co->co_type == CO_VARIABLE && 
 		     co->co_expandv_fn != NULL){
-#ifdef EXPAND_ONLY_INTERACTIVE
 		/* If I add conditional here, you need to explicitly have a
 		 * a "free" variable expression, not just expands.
 		 * eg (<v:int expand_dbvar()>|<v:int>)
@@ -506,7 +505,6 @@ pt_expand_2(cligen_handle h,
 		 * this iteration and if not add it?
 		 */
 		if (expandvar)
-#endif
 		    if (pt_expand_fnv(h, co, cvv, ptn, parent) < 0)
 			goto done;
 	    }
