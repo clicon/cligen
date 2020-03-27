@@ -249,10 +249,9 @@ show_help_columns(cligen_handle h,
 		  cvec         *cvv)
 {
     int              retval = -1;
-    int              nr = 0;
     int              level;
     pt_vec           pt1;
-    int              matchlen = 0;
+    int              matches = 0;
     int             *matchvec = NULL;
     int              vi;
     int              i;
@@ -278,21 +277,22 @@ show_help_columns(cligen_handle h,
     /* Tokenize the string and transform it into two CLIgen vectors: tokens and rests */
     if (cligen_str2cvv(string, &cvt, &cvr) < 0)
 	goto done;
-    if ((nr = match_pattern(h, cvt, cvr,
-			    pt,
-			    1, 1,
-			    &pt1, &matchvec, &matchlen, cvv, NULL)) < 0)
+    if (match_pattern(h, cvt, cvr,
+		      pt,
+		      0, /* best: Return all options, not only best */
+		      1, 1,
+		      &pt1, &matchvec, &matches, cvv, NULL) < 0)
 	goto done;
     if ((level = cligen_cvv_levels(cvt)) < 0)
 	goto done;
-    if (nr>0){ /* min, max only defined if nr > 0 */
+    if (matches > 0){ /* min, max only defined if matches > 0 */
 	/* Go through match vector and collect commands and helps */
-	if ((chvec = calloc(matchlen, sizeof(struct cmd_help))) ==NULL){
+	if ((chvec = calloc(matches, sizeof(struct cmd_help))) ==NULL){
 	    fprintf(stderr, "%s calloc: %s\n", __FUNCTION__, strerror(errno));
 	    goto done;
 	}
 	nrcmd = 0;
-	for (i = 0; i<matchlen; i++){ // nr-1?
+	for (i = 0; i<matches; i++){ // nr-1?
 	    vi=matchvec[i];
 	    if ((co = pt1[vi]) == NULL)
 		continue;
@@ -389,10 +389,9 @@ show_help_line(cligen_handle h,
 	       cvec         *cvv)
 {
     int    retval = -1;
-    int    nr = 0;
     int    level;
     pt_vec pt1;
-    int    matchlen = 0;
+    int    matches = 0;
     int   *matchvec = NULL;
     int    ret;
     cvec  *cvt = NULL;      /* Tokenized string: vector of tokens */
@@ -404,11 +403,12 @@ show_help_line(cligen_handle h,
     /* Tokenize the string and transform it into two CLIgen vectors: tokens and rests */
     if (cligen_str2cvv(string, &cvt, &cvr) < 0)
 	goto done;
-    if ((nr = match_pattern(h,
-			    cvt, cvr, /* token string */
-			    pt,       /* command vector */
-			    1, 1,
-			    &pt1, &matchvec, &matchlen, cvv, NULL)) < 0)
+    if (match_pattern(h,
+		      cvt, cvr, /* token string */
+		      pt,       /* command vector */
+		      0,        /* best: Return all options, not only best */
+		      1, 1,
+		      &pt1, &matchvec, &matches, cvv, NULL) < 0)
 	goto done;
     if ((level =  cligen_cvv_levels(cvt)) < 0)
 	goto done;
@@ -441,11 +441,11 @@ show_help_line(cligen_handle h,
 	    fflush(fout);
 	}
     }
-    if (nr == 0){
+    if (matches == 0){
 	retval = 0;
 	goto done;
     }
-    if (print_help_lines(fout, pt1, matchvec, matchlen) < 0)
+    if (print_help_lines(fout, pt1, matchvec, matches) < 0)
 	goto done;
     retval = 0;
   done:

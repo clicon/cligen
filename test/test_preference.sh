@@ -16,7 +16,7 @@ cat > $fspec <<EOF
   values (<int32> | <string regexp:"[a-z][0-9]*"> | <int64> | aa), callback();
 EOF
 
-new "CLIgen variable preference tests: $cligen_file -f $fspec"
+new "$cligen_file -f $fspec"
 
 new "cligen query all"
 expectpart "$(echo "values ? aa" | $cligen_file -f $fspec 2>&1)" 0 "cli> values" "aa" "<int32>" "<int64>" "<string>" "1 name:values type:string value:values" "2 name:aa type:string value:aa"
