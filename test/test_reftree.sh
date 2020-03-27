@@ -22,7 +22,7 @@ cat > $fspec <<EOF
 
 EOF
 
-new "CLIgen variable preference tests: $cligen_file -f $fspec"
+new "$cligen_file -f $fspec"
 
 new "cligen ref 42"
 expectpart "$(echo "values ? 42" | $cligen_file -f $fspec 2>&1)" 0 "cli> values" "<int64>" "xx" "2 name:int64 type:int64 value:42"

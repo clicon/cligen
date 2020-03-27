@@ -20,7 +20,7 @@ cat > $fspec <<EOF
 
 EOF
 
-new "CLIgen completion tests: $cligen_file -f $fspec"
+new "$cligen_file -f $fspec"
 
 new "cligen empty expand single tab"
 expectpart "$(echo "	  " | $cligen_file -f $fspec )" 0 "cli> v  " "Ambigous command"
