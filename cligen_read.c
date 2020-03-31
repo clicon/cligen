@@ -68,9 +68,9 @@
 #include "cligen_handle.h"
 #include "cligen_print.h"
 #include "cligen_io.h"
+#include "cligen_read.h"
 #include "cligen_match.h"
 #include "cligen_expand.h"
-#include "cligen_read.h"
 #include "cligen_history_internal.h"
 #include "cligen_getline.h"
 
@@ -388,16 +388,16 @@ show_help_line(cligen_handle h,
 	       parse_tree    pt, 
 	       cvec         *cvv)
 {
-    int    retval = -1;
-    int    level;
-    pt_vec pt1;
-    int    matches = 0;
-    int   *matchvec = NULL;
-    int    ret;
-    cvec  *cvt = NULL;      /* Tokenized string: vector of tokens */
-    cvec  *cvr = NULL;      /* Rest variant,  eg remaining string in each step */
-    cg_var *cvlast;         /* last element */
-    cvec  *cvv1 = NULL;     /* Rest variant,  eg remaining string in each step */
+    int           retval = -1;
+    int           level;
+    pt_vec        pt1;
+    int           matches = 0;
+    int          *matchvec = NULL;
+    cvec         *cvt = NULL;      /* Tokenized string: vector of tokens */
+    cvec         *cvr = NULL;      /* Rest variant,  eg remaining string in each step */
+    cg_var       *cvlast;         /* last element */
+    cvec         *cvv1 = NULL;     /* Rest variant,  eg remaining string in each step */
+    cligen_result result2;
     
     assert(string != NULL);
     /* Tokenize the string and transform it into two CLIgen vectors: tokens and rests */
@@ -432,11 +432,11 @@ show_help_line(cligen_handle h,
 	cvec_del_i(cvt, cvec_len(cvt)-1); /* We really just want to truncate len-1 */
 	cvec_del_i(cvr, cvec_len(cvr)-1);
 
-	if ((ret = match_pattern_exact(h, cvt, cvr, pt,
-				       1,
-				       cvv1, NULL)) < 0)
+	if (match_pattern_exact(h, cvt, cvr, pt,
+				1,
+				cvv1, NULL, &result2, NULL) < 0)
 	    goto done;
-	if (ret > 0) {
+	if (result2 == CG_NOMATCH || result2 == CG_MULTIPLE){
 	    fprintf(fout, "  <cr>\n");
 	    fflush(fout);
 	}
@@ -580,11 +580,10 @@ cli_trim(char **line,
  * @param[in]  pt        Parse-tree
  * @param[out] co_orig   Object that matches (if retval == 1).
  * @param[out] cvv       Variable vector (if retval == 1).
- * @retval  -2             Eof               CG_EOF
- * @retval -1              Error             CG_ERROR
- * @retval  0              No match          CG_NOMATCH
- * @retval  1              Exactly one match CG_MATCH
- * @retval  2+             Multiple matches
+ * @param[out] result    Result, < 0: errors, >=0 number of matches
+ * @param[out] reason    Error reason if result is nomatch. Need to be free:d 
+ * @retval     0         OK
+ * @retval    -1         Error
  *
  * cvv should be created but empty on entry
  * On exit it contains the command string as 0th element, and one entry per element
@@ -594,14 +593,15 @@ cli_trim(char **line,
  *   2 : bb = 22     # variable
  */
 int 
-cliread_parse(cligen_handle h, 
-	      char         *string,
-	      parse_tree   *pt,     /* Orig */
-	      cg_obj      **co_orig,
-	      cvec         *cvv)
+cliread_parse(cligen_handle  h, 
+	      char          *string,
+	      parse_tree    *pt,     /* Orig */
+	      cg_obj       **co_orig,
+	      cvec          *cvv,
+	      cligen_result *result,
+	      char         **reason)
 {
     int        retval = -1;
-    int        ret;
     cg_obj    *match_obj;
     parse_tree ptn={0,};        /* Expanded */
     cvec      *cvt = NULL;      /* Tokenized string: vector of tokens */
@@ -626,20 +626,18 @@ cliread_parse(cligen_handle h,
 	goto done;
     if (pt_expand_2(h, pt, cvv0, 0, 0, &ptn) < 0)      /* expansion */
 	goto done;
-    if ((ret = match_pattern_exact(h, cvt, cvr,
-				   ptn, 0,
-				   cvv0, &match_obj)) < 0)
+    if (match_pattern_exact(h, cvt, cvr,
+			    ptn, 0,
+			    cvv0, &match_obj, result, reason) < 0)
 	goto done;
     /* Map from ghost object match_obj to real object */
     if (match_obj && match_obj->co_ref)
 	*co_orig = match_obj->co_ref;
     else
 	*co_orig = match_obj;
-    if (cvec_match(h, *co_orig, cvt, cvr, cvv) < 0){
-	retval = CG_ERROR;
+    if (cvec_match(h, *co_orig, cvt, cvr, cvv) < 0)
 	goto done;
-    }
-    retval = ret;
+    retval = 0;
   done:
     if (cvt)
 	cvec_free(cvt);
@@ -650,7 +648,7 @@ cliread_parse(cligen_handle h,
     if (cligen_parsetree_free(ptn, 0) < 0)
 	return -1;
     if (pt_expand_cleanup_2(*pt) < 0)
-	return CG_ERROR;
+	return -1;
     return retval;
 }
 
@@ -721,23 +719,23 @@ cliread_getline(cligen_handle h,
  * from callback (if function return =1).
  * Use this function if you want the whole enchilada without special operation
  *
- * @param[in]  h       CLIgen handle
- * @param[out] line     Pointer to new string input from terminal
- * @param[out] cb_retval  Retval of callback (only if functions return value is 1)
- *
- * @retval  -2      EOF
- * @retval  -1      Error
- * @retval   0      No match
- * @retval   1      Exactly one match
- * @retval   2+     Multiple matches
+ * @param[in]  h         CLIgen handle
+ * @param[out] line      Pointer to new string input from terminal
+ * @param[out] cb_retval Retval of callback (only if functions return value is 1)
+ * @param[out] result   Number of matches
+ * @param[out] reason    Error reason if result is nomatch. Need to be free:d 
+ * @retval     0         OK
+ * @retval    -1         Error
  */
 int
-cliread_eval(cligen_handle     h,
-	     char            **line,
-	     int              *cb_retval)
+cliread_eval(cligen_handle  h,
+	     char         **line,
+	     int           *cb_retval,
+	     cligen_result *result,
+	     char         **reason)
 {
-    cg_obj     *match;    /* matching syntax node */
-    int         retval = CG_ERROR;
+    int         retval = -1;
+    cg_obj     *matchobj;    /* matching syntax node */
     cvec       *cvv;
     parse_tree *pt = NULL;     /* Orig */
 
@@ -746,8 +744,8 @@ cliread_eval(cligen_handle     h,
 	goto done;
     }
     if ((*line = cliread(h)) == NULL){ /* EOF */
-	retval = CG_EOF; 
-	goto done;
+	*result = CG_EOF; 
+	goto ok;
     }
     if ((pt = cligen_tree_active_get(h)) == NULL){
 	fprintf(stderr, "No active parse-tree found\n");
@@ -757,10 +755,14 @@ cliread_eval(cligen_handle     h,
 	fprintf(stderr, "%s: cvec_new: %s\n", __FUNCTION__, strerror(errno));
 	goto done;;
     }
-    if ((retval = cliread_parse(h, *line, pt, &match, cvv)) == CG_MATCH)
-	*cb_retval = cligen_eval(h, match, cvv);
+    if (cliread_parse(h, *line, pt, &matchobj, cvv, result, reason) < 0)
+	goto done;
+    if (*result == CG_MATCH)
+	*cb_retval = cligen_eval(h, matchobj, cvv);
     cvec_free(cvv);	
-  done:
+ ok:
+    retval = 0;
+ done:
     /* XXX: Get parse-tree */
     if (pt && pt_expand_treeref_cleanup(pt) < 0) 
 	retval = -1;

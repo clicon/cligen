@@ -1,5 +1,10 @@
 # Cligen Changelog
 	
+## 4.5.0 (Forthcoming)
+* C API changes
+  * `cligen_nomatch()` replaced by `reason` function parameter.
+  * `cligenread_parse()` and `cliread_eval()` added `reason` and `result` parameter. The latter replaces the return values
+
 ## 4.4.0 (Forthcoming)
 * CLIgen buffer functiona and API changes
   * A CLIgen buffer now starts at a "start" size and grows quadratic (2x) up to a "threshold" after it grows linearly with "threshold".

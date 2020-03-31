@@ -43,23 +43,13 @@
  */
 
 /*
- * Types
- */
-enum cligen_result{
-    CG_EOF     = -2,
-    CG_ERROR   = -1,
-    CG_NOMATCH = 0,
-    CG_MATCH   = 1,
-};
-
-/*
  * Function Prototypes
  */
 void cliread_init(cligen_handle h);
 char *cliread(cligen_handle h);
 void cli_trim (char **line, char comment);
-int cliread_parse(cligen_handle h, char *, parse_tree *pt, cg_obj **, cvec *vr);
-int cliread_eval(cligen_handle h, char **line, int *cb_ret);
+int cliread_parse(cligen_handle h, char *, parse_tree *pt, cg_obj **, cvec *cvv, cligen_result *result, char **reason);
+int cliread_eval(cligen_handle h, char **line, int *cb_ret, cligen_result *result, char **reason);
 int cligen_eval(cligen_handle h, cg_obj *co_match, cvec *vr);
 void cligen_echo_on(void);
 void cligen_echo_off(void);

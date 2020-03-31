@@ -50,6 +50,18 @@ enum cg_objtype{
 };
 
 /*
+ * Types
+ */
+enum cligen_result{
+    CG_EOF      = -2,
+    CG_ERROR    = -1,
+    CG_NOMATCH  =  0,
+    CG_MATCH    =  1,
+    CG_MULTIPLE =  2,
+};
+typedef enum cligen_result cligen_result;
+
+/*
  * Callback function type. Is called after a specific syntax node has been identified.,
  *   arg is an optionalargument
  *   argc is number of variables (1...)

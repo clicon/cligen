@@ -93,12 +93,6 @@ int cligen_co_match_set(cligen_handle h, cg_obj *co);
 char *cligen_fn_str_get(cligen_handle h);
 int cligen_fn_str_set(cligen_handle h, char *fn_str);
 
-char *cligen_nomatch(cligen_handle h);
-#if defined(__GNUC__) && __GNUC__ >= 3
-int cligen_nomatch_set(cligen_handle h, const char *fmt, ...)__attribute__ ((format (printf, 2, 3)));
-#else
-int cligen_nomatch_set(cligen_handle h, const char *fmt, ...);
-#endif
 int cligen_terminal_rows(cligen_handle h);
 int cligen_terminal_rows_set(cligen_handle h, int rows);
 
