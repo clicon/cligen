@@ -60,6 +60,7 @@
 #include "cligen_gen.h"
 #include "cligen_handle.h"
 #include "cligen_expand.h"
+#include "cligen_read.h"
 #include "cligen_match.h"
 
 #ifndef MIN
@@ -171,16 +172,6 @@ match_object(cligen_handle h,
   }
   else
       return 1;
-}
-
-/*! Check if "perfect" match, ie a command and matches whole command
- */
-static int
-match_perfect(char   *string, 
-	      cg_obj *co)
-{
-  return  ((co->co_type==CO_COMMAND) &&
-	   (strcmp(string, co->co_command)==0));
 }
 
 /*! Given a string (s0), return the next token. 
@@ -444,6 +435,128 @@ add_cov_to_cvec(cg_obj *co,
     return cv;
 }
 
+static int
+matchv_append(int  i,
+	      int *matchvec[],
+	      int *matches,
+	      int *matchlen)
+{
+    int retval = -1;
+
+    if ((*matches)+1 > *matchlen){
+	(*matchlen)++;
+	if ((*matchvec = realloc(*matchvec, (*matchlen)*sizeof(int))) == NULL){
+	    fprintf(stderr, "%s: realloc: %s\n", __FUNCTION__, strerror(errno));
+	    goto done;
+	}
+    }
+    (*matchvec)[(*matches)++] = i;
+    retval = 0;
+ done:
+    return retval;
+}
+
+/*! Match a parse-tree (pt) with a command vector (cvt/cvr)
+ * @param[in]  h        CLIgen handle
+ * @param[in]  cvt      Tokenized string: vector of tokens
+ * @param[in]  cvr      Rest variant,  eg remaining string in each step
+ * @param[in]  pt       Vector of commands (array of cligen object pointers (cg_obj)
+ * @param[in]  level    Current command level
+ * @param[in]  best      Only return best match (for command evaluation) instead of 
+ *                       all possible options
+ * @param[out] matchvec A vector of indexes into ptp
+ * @param[out] matchesp Number of matches in matchv, (if retval is 0)
+ * @param[out] reason   If matches = 0, this may be malloced to indicate reason for 
+ *                      not matching variables, if given. Neeed to be free:d
+ * @retval     0        OK. Number of matches returned in matchesp
+ * @retval    -1        Error
+ */
+static int
+match_vec(cligen_handle h,
+	  cvec         *cvt,
+	  cvec         *cvr,
+	  parse_tree    pt,
+	  int           level, 
+	  int           best,
+	  int          *matchvec[],
+	  int          *matchesp,
+	  char        **reason)
+{
+    int     retval = -1;
+    int     matchlen = 0; /* Length of matchvec */
+    int32_t pref_lower = INT32_MAX; /* Preference lower bound */
+    int32_t pref_upper = 0;         /* Preference upper bound */
+    int     p;             /* If all fails, save lowest(widest) preference error message */
+    int     exact;
+    char   *rtmp;
+    int     i;
+    char   *strtoken;
+    char   *strrest;
+    cg_obj *co;
+    int     match;
+
+    /* Either individual token or rest-of-string */
+    strtoken = cvec_i_str(cvt, level+1);
+    strrest  = cvec_i_str(cvr, level+1);
+
+    /* Loop through parse-tree at this level to find matches */
+    for (i=0; i<pt.pt_len; i++){
+	if ((co = pt.pt_vec[i]) == NULL)
+	    continue;
+	/* Return -1: error, 0: nomatch, 1: match */
+	rtmp = NULL;
+	if ((match = match_object(h,
+				  ISREST(co)?strrest:strtoken,
+				  co, &exact,
+				  &rtmp      /* if match == 0 */
+				  )) < 0)
+	    goto done;
+	p = co_pref(co, exact); /* get match preferences (higher is better match) */
+	if (match == 0){ /* No match */
+	    assert(rtmp != NULL);
+	    /* If all fails, save lowest(widest) preference error message,
+	     * for variables only
+	     */
+	    if (p < pref_lower && co->co_type == CO_VARIABLE){
+		pref_lower = p;
+		if (*reason)
+		    free(*reason);
+		*reason = rtmp;
+		rtmp = NULL;
+	    }
+	    if (rtmp){
+		free(rtmp);
+		rtmp = NULL;
+	    }
+	}
+	else { /* Match: if best compare and save highest preference */
+	    assert(rtmp == NULL);
+	    if (best){ /* only save best match */
+		if (p == pref_upper){
+		    if (matchv_append(i, matchvec, matchesp, &matchlen) < 0)
+			goto done;
+		}
+		else if (p > pref_upper){ /* Start again at this level */
+		    pref_upper = p;
+		    *matchesp = 0;
+		    if (matchv_append(i, matchvec, matchesp, &matchlen) < 0)
+			goto done;
+		}
+		else{ /* p < pref_upper : skip */
+		}
+	    } /* if best */
+	    else {
+		if (matchv_append(i, matchvec, matchesp, &matchlen) < 0)
+		    goto done;
+	    }
+	} /* switch match */
+	assert(rtmp == NULL);
+    } /* for pt.pt_len */
+    retval = 0;
+ done:
+    return retval;
+}
+
 /*! Match terminal/leaf cligen objects. Multiple matches is used for completion.
  * We must have a preference when matching when it matches a command
  * and some variables.
@@ -454,11 +567,9 @@ add_cov_to_cvec(cg_obj *co,
  * return value is the number of matches on return (also returned in matchlen)
  * index is the index of the first such match.
  * @param[in]  h        CLIgen handle
- * @param[in]  string0  Input string to match
  * @param[in]  cvt      Tokenized string: vector of tokens
  * @param[in]  cvr      Rest variant,  eg remaining string in each step
  * @param[in]  pt       Vector of commands (array of cligen object pointers (cg_obj)
- * @param[in]  pt_max   Length of the pt array
  * @param[in]  levels   Total nr of command levels
  * @param[in]  level    Current command level
  * @param[in]  best      Only return best match (for command evaluation) instead of 
@@ -466,8 +577,8 @@ add_cov_to_cvec(cg_obj *co,
  * @param[out] ptp      Returns the vector at the place of matching
  * @param[out] matchvec A vector of indexes into ptp
  * @param[out] matchesp Number of matches in matchv, (if retval is 0)
- * @param[out] reason0  If retval = 0, this may be malloced to indicate reason for 
- *                      notmatching variables, if given. Neeed to be free:d
+ * @param[out] reasonp  If *matchesp = 0, this may be malloced to indicate reason for 
+ *                      not matching variables, if given. Neeed to be free:d
  * @retval     0        OK. Number of matches returned in matchesp
  * @retval    -1        Error
  * @see match_pattern_node
@@ -483,109 +594,17 @@ match_pattern_terminal(cligen_handle h,
 		       pt_vec       *ptp, 
 		       int          *matchvec[], 
 		       int          *matchesp,
-		       char        **reason0
+		       char        **reasonp
 		       )
 {
     int     retval = -1;
-    int     i;
-    int     match;
     int     matches = 0;
-    size_t  matchlen = 0; /* Length of matchvec */
-    cg_obj *co;
     cg_obj *co_match;
     cg_obj *co_orig;
-    int     exact;
     char   *reason = NULL;
-    char   *rtmp;
-    char   *strtoken;
-    char   *strrest;
-    int32_t pref_lower = INT32_MAX; /* Preference lower bound */
-    int32_t pref_upper = 0;         /* Preference upper bound */
-    int     p; /* If all fails, save lowest(widest) preference error message */
 
-    /* Either individual token or rest-of-string */
-    strtoken = cvec_i_str(cvt, level+1);
-    strrest  = cvec_i_str(cvr, level+1);
-    /* Loop through parse-tree at this level to find matches */
-    for (i=0; i<pt.pt_len; i++){
-	if ((co = pt.pt_vec[i]) == NULL)
-	    continue;
-	/* Return -1: error, 0: nomatch, 1: match */
-	rtmp = NULL;
-	if ((match = match_object(h,
-				  ISREST(co)?strrest:strtoken,
-				  co, &exact,
-				  &rtmp      /* if match == 0 */
-				  )) < 0)
-	    goto error;
-	p = co_pref(co, exact); /* get match preferences (higher is better match) */
-	switch (match){
-	case 0: /* No match */
-	    assert(rtmp != NULL);
-	    /* If all fails, save lowest(widest) preference error message,
-	     * for variables only
-	     */
-	    if (p < pref_lower && co->co_type == CO_VARIABLE){
-		pref_lower = p;
-		if (reason)
-		    free(reason);
-		reason = rtmp;
-		rtmp = NULL;
-	    }
-	    if (rtmp){
-		free(rtmp);
-		rtmp = NULL;
-	    }
-	    break;
-	case 1:
-	    /* For matches, if best compare and save highest preference
-	     */
-	    assert(rtmp == NULL);
-	    if (best){ /* only save best match */
-		if (p == pref_upper){
-		    if (matches+1 >  matchlen){
-			matchlen++;
-			if ((*matchvec = realloc(*matchvec, matchlen*sizeof(int))) == NULL){
-			    fprintf(stderr, "%s: realloc: %s\n", __FUNCTION__, strerror(errno));
-			    return -1;
-			}
-		    }
-		    (*matchvec)[matches++] = i;
-		}
-		else if (p > pref_upper){ /* Start again at this level */
-		    pref_upper = p;
-		    if (matches == 0){
-			matchlen++;
-			if ((*matchvec = realloc(*matchvec, matchlen*sizeof(int))) == NULL){
-			    fprintf(stderr, "%s: realloc: %s\n", __FUNCTION__, strerror(errno));
-			    return -1;
-			}
-		    }
-		    matches = 0; 
-		    (*matchvec)[matches++] = i;
-		}
-		else{ /* p < pref_upper : skip */
-		}
-	    }
-	    else {
-		if (matches+1 >  matchlen){
-		    matchlen++;
-		    if ((*matchvec = realloc(*matchvec, matchlen*sizeof(int))) == NULL){
-			fprintf(stderr, "%s: realloc: %s\n", __FUNCTION__, strerror(errno));
-			return -1;
-		    }
-		}
-		(*matchvec)[matches++] = i;
-	    }
-	    break;
-	default:
-	    assert(rtmp == NULL);
-	    fprintf(stderr, "%s: match: %d\n", __FUNCTION__, match);
-	    goto done;
-	    break;
-	} /* switch match */
-	assert(rtmp == NULL);
-    } /* for pt.pt_len */
+    if (match_vec(h, cvt, cvr, pt, level, best, matchvec, &matches, &reason) < 0)
+	goto done;
     /* Number of matches is 0 (no match), 1 (exact) or many */
     switch (matches){
     case 0: /* no matches */
@@ -597,36 +616,38 @@ match_pattern_terminal(cligen_handle h,
 	 * If all match fails, it is more interesting to understand the match fails
 	 * on commands, not variables.
 	 */
-	if (pt_onlyvars(pt) && reason0 && reason){
-	    *reason0 = reason;
+	if (pt_onlyvars(pt) && reasonp && reason){
+	    *reasonp = reason;
 	    reason = NULL;
-	}
-	break;
-    case 1: /* exactly one match */
-	*ptp = pt.pt_vec;
-	co_match = pt.pt_vec[(*matchvec)[0]];
-	co_orig = co_match->co_ref?co_match->co_ref: co_match;
-	if (co_match->co_type == CO_COMMAND && co_orig->co_type == CO_VARIABLE){
-	    if (co_value_set(co_orig, co_match->co_command) < 0)
-		goto error;
 	}
 	break;
     default: /* multiple matches */
 	/* If set, if multiple cligen variables match use the first one */
-	if (cligen_preference_mode(h))
-	    matches = 1;
 	*ptp = pt.pt_vec;
+	if (cligen_preference_mode(h) == 0)
+	    break;
+ 	/* fall through if cligen_preference_mode is set */
+    case 1: /* exactly one match */
+	if (matches == 1)
+	    *ptp = pt.pt_vec; /* not in fallthru */
+	else
+	    matches = 1;
+	co_match = pt.pt_vec[(*matchvec)[0]];
+	co_orig = co_match->co_ref?co_match->co_ref: co_match;
+	if (co_match->co_type == CO_COMMAND && co_orig->co_type == CO_VARIABLE){
+	    if (co_value_set(co_orig, co_match->co_command) < 0)
+		goto done;
+	}
 	break;
+
     } /* switch matches */
-    *matchesp = matches;
+    if (matchesp)
+	*matchesp = matches;
     retval = 0;
  done:
     if (reason)
 	free(reason);
     return retval;
- error:
-    retval = -1;
-    goto done;
 }
 
 /*! Match non-terminal cligen object. Need to match exact.
@@ -648,7 +669,7 @@ match_pattern_terminal(cligen_handle h,
  * @param[out] matchesp Number of matches in matchv, (if retval is 0)
  * @param[out] cvv       cligen variable vector containing vars/values pair for 
  *                       completion
- * @param[out] reason0   If retval = 0, this may be malloced to indicate reason for
+ * @param[out] reasonp   If retval = 0, this may be malloced to indicate reason for
  *                       not matching variables, if given. Need to be free:d
  * @retval     0         OK. Number of matches returned in matchesp
  * @retval    -1         Error
@@ -667,107 +688,26 @@ match_pattern_node(cligen_handle h,
 		   int          *matchvec[], 
 		   int          *matchesp,
 		   cvec         *cvv,
-		   char        **reason0
+		   char        **reasonp
 		   )
 {
     int        retval = -1;
-    int        i;
-    int        match;
     int        matches = 0;
-    int        perfect = 0;
-    cg_obj    *co;
     cg_obj    *co_match;
     cg_obj    *co_orig;
-    int        rest_match = -1;
-    int        p;
-    int        preference = 0;
-    int        exact;
-    char      *reason;
-    char      *rtmp;
-    char      *strtoken;
-    char      *strrest;
+    char      *reason = NULL;
+    char      *str;
     parse_tree ptn={0,};     /* Expanded */
     cg_var    *cv = NULL;
-
     co_match = NULL;
-    /* Either individual token or rest-of-string */
-    strtoken = cvec_i_str(cvt, level+1);
-    strrest  = cvec_i_str(cvr, level+1);
-    /* Loop through parse-tree at this level to find matches */
-    for (i=0; i<pt.pt_len; i++){
-	if ((co = pt.pt_vec[i]) == NULL)
-	    continue;
-	reason = NULL;
-	/* Return -1: error, 0: nomatch, 1: match */
-	rtmp = NULL;
-	if ((match = match_object(h,
-				  ISREST(co)?strrest:strtoken,
-				  co, &exact,
-				  &rtmp
-				  )) < 0)
-	    goto done;
-	switch (match){
-	case 0:
-	    assert(rtmp != NULL);
-	    /* match == 0, co type is variable and onlyvars, then reason is set once
-	     * this may not be the best preference, we just set the first
-	     */
-	    /* If all fails, save lowest(widest) preference error message,
-	     * for variables only
-	     */
-	    p = co_pref(co, exact);
-	    if (p < preference && co->co_type == CO_VARIABLE){
-		preference = p;
-		if (reason)
-		    free(reason);
-		reason = rtmp;
-		rtmp = NULL;
-	    }
-	    if (rtmp){
-		free(rtmp);
-		rtmp = NULL;
-	    }
-	    break;
-	case 1:
-	    assert(rtmp == NULL);
-	    /* Special case to catch rest variable and space delimited
-	       arguments after it */
-	    if (ISREST(co))
-		rest_match = i;
-	    /* Is command and matches whole string */
-	    if (match_perfect(ISREST(co)?strrest:strtoken, co)){
-		if (!perfect){
-		    matches = 0;
-		    perfect = 1;
-		}
-	    }
-	    else{
-		if (perfect)
-		    break;
-		p = co_pref(co, exact);
-		if (p < preference)
-		    continue; /* ignore */
-		if (p > preference){
-		    preference = p;
-		    matches = 0; /* Start again at this level */
-		}
-	    }
-	    co_match = co;
-	    matches++;
-	    break;
-	default:
-	    assert(rtmp == NULL);
-	    fprintf(stderr, "%s: match: %d\n", __FUNCTION__, match);
-	    goto done;
-	    break;
-	} /* switch match */
-	assert(rtmp == NULL);
-    } /* for */
+
+    if (match_vec(h, cvt, cvr, pt, level, best, matchvec, &matches, &reason) < 0)
+	goto done;
     /* Number of matches is 0 (no match), 1 (exact) or many */
     switch (matches){
     case 0: /* no matches */
-	if (pt_onlyvars(pt) && reason0 && reason){
-	    *reason0 = reason;
+	if (pt_onlyvars(pt) && reasonp && reason){
+	    *reasonp = reason;
 	    reason = NULL;
 	}
 	retval = 0;
@@ -782,7 +722,11 @@ match_pattern_node(cligen_handle h,
     } /* switch matches */
     if (matches != 1) 
 	goto ok;
-    assert(matches == 1 && co_match != NULL);
+    co_match =  pt.pt_vec[(*matchvec)[0]];
+    if (ISREST(co_match))
+	str  = cvec_i_str(cvr, level+1);
+    else
+	str  = cvec_i_str(cvt, level+1);
 
     /* co_orig is original object in case of expansion */
     co_orig = co_match->co_ref?co_match->co_ref: co_match;
@@ -790,23 +734,15 @@ match_pattern_node(cligen_handle h,
 	goto done;
 
     if (co_match->co_type == CO_VARIABLE){
-	if ((cv = add_cov_to_cvec(co_match,
-				  ISREST(co_match)?strrest:strtoken,
-				  cvv)) == NULL)
+	if ((cv = add_cov_to_cvec(co_match, str, cvv)) == NULL)
 	    goto done;
 	/* 
 	 * Special case: we have matched a REST variable (anything) and
 	 * there is more text have this word, then we can match REST
 	 * This is "inline" of match_terminal
 	 */
-	if (rest_match != -1){
-	    retval = 1;
-	    if ((*matchvec = realloc(*matchvec, matches*sizeof(int))) == NULL){
-		fprintf(stderr, "%s: realloc: %s\n", __FUNCTION__, strerror(errno));
-		goto done;
-	    }
+	if (ISREST(co_match)){
 	    *ptp = pt.pt_vec;
-	    (*matchvec)[0] = rest_match;
 	    goto ok;
 	}
     }
@@ -821,14 +757,14 @@ match_pattern_node(cligen_handle h,
 	if (match_pattern_terminal(h, cvt, cvr, ptn, 
 				   levels,	level+1, 
 				   best,
-				   ptp, matchvec, &matches, reason0) < 0)
+				   ptp, matchvec, &matches, reasonp) < 0)
 	    goto done;
     }
     else
 	if (match_pattern_node(h, cvt, cvr, ptn,
 			       levels, level+1, 
 			       best, hide, expandvar,
-			       ptp, matchvec, &matches, cvv, reason0) < 0)
+			       ptp, matchvec, &matches, cvv, reasonp) < 0)
 	    goto done;
     if (pt_expand_add(co_orig, ptn) < 0) /* add expanded ptn to orig parsetree */
 	goto done;
@@ -863,7 +799,7 @@ match_pattern_node(cligen_handle h,
  * @param[out] matchv    A vector of integers containing which matches
  * @param[out] matchesp  Number of matches in matchv, (if retval is 0)
  * @param[out] cvv       cligen variable vector containing vars/values pair for completion
- * @param[out] reason0   If retval = 0, this may be malloced to indicate reason for 
+ * @param[out] reasonp   If retval = 0, this may be malloced to indicate reason for 
  *                       not matching variables, if given. Neeed to be free:d
  *
  * @retval -1   error.
@@ -884,7 +820,7 @@ match_pattern(cligen_handle h,
 	      int          *matchvec[],
 	      int          *matchesp, 
 	      cvec         *cvv,
-	      char        **reason0)
+	      char        **reasonp)
 {
     int retval = -1;
     int levels;
@@ -899,7 +835,7 @@ match_pattern(cligen_handle h,
 				   pt,
 				   levels, 0, best,
 				   ptp, matchvec, matchesp, 
-				   reason0) < 0)
+				   reasonp) < 0)
 	    goto done;
     }
     else if (match_pattern_node(h, cvt, cvr,
@@ -908,92 +844,92 @@ match_pattern(cligen_handle h,
 				best, hide, expandvar,
 				ptp, matchvec, matchesp,
 				cvv,
-				reason0) < 0)
+				reasonp) < 0)
 	    goto done;
     retval = 0;
  done:
     return retval;
 }
 
-/*! CLIgen object matching function for perfect match
+/*! CLIgen object matching function for exact match
  * @param[in]  h         CLIgen handle
  * @param[in]  string    Input string to match
  * @param[in]  cvt       Tokenized string: vector of tokens
  * @param[in]  cvr       Rest variant,  eg remaining string in each step
  * @param[in]  pt        CLIgen parse tree, vector of cligen objects.
  * @param[in]  expandvar Set if VARS should be expanded, eg ? <tab>
-
  * @param[out] cvv       CLIgen variable vector containing vars/values pair for completion
  * @param[out] match_obj Exact object to return
+ * @param[out] resultp   Result, < 0: errors, >=0 number of matches
+ * @param[out] reason    If retval is 0 and matchesp != 1, contains reason 
+ *                       for not matching variables, if given. Need to be free:d
  * @retval  -1           Error
- * @retval   0           No match
- * @retval   1           Exactly one match and match_obj set
- * @retval   n           More than one match
- * 
- * Only if retval == 0 _AND> exact == 1 then cligen_nomatch() is set, otherwise not.
- * @see match_pattern
+ * @retval   0           OK
  */
 int 
-match_pattern_exact(cligen_handle h, 
-		    cvec         *cvt,
-		    cvec         *cvr,
-		    parse_tree    pt, 
-		    int           expandvar,
-		    cvec         *cvv,
-		    cg_obj      **match_obj)
+match_pattern_exact(cligen_handle  h, 
+		    cvec          *cvt,
+		    cvec          *cvr,
+		    parse_tree     pt, 
+		    int            expandvar,
+		    cvec          *cvv,
+		    cg_obj       **match_obj,
+		    cligen_result *resultp,
+		    char         **reason)
 {
-    int     retval = -1;
-    pt_vec  res_pt;
-    cg_obj *co = NULL;
-    int     matchlen = 0;
-    int     *matchvec = NULL;
-    char   *reason = NULL;
-    int     i;
+    int           retval = -1;
+    pt_vec        res_pt;
+    cg_obj       *co = NULL;
+    int          *matchvec = NULL;
+    int           i;
+    cligen_result result;
 
-        /* clear old errors */
-    cligen_nomatch_set(h, NULL); 
+    /* clear old errors */
     if ((match_pattern(h, cvt, cvr,
 		       pt,
 		       1, /* best: Return only best option */
 		       0, 1,
 		       &res_pt, 
-		       &matchvec, &matchlen,
-		       cvv, &reason)) < 0)
+		       &matchvec,
+		       &result,
+		       cvv, reason)) < 0)
 	goto done;
     /* If no match fix an error message */
-    if (matchlen == 0){
-	if (reason != NULL){
-	    cligen_nomatch_set(h, "%s", reason);
-	    free(reason);
+    if (result == 0){
+	if (reason && *reason == NULL){
+	    if ((*reason = strdup("Unknown command")) == NULL)
+		goto done;
 	}
-	else
-	    cligen_nomatch_set(h, "Unknown command");
     }
     /* Only a single match at this point */
-    if (matchlen != 1){
-	retval = matchlen;
-	goto done;
-    }
+    if (result != 1)
+	goto ok;
     /* Here we have an obj (res_pt[]) that is unique so far.
        We need to see if there is only one sibling to it. */
     co = res_pt[*matchvec];
     /*
-     * Special case: if matching object has a NULL child,
-     * we match.
+     * Special case: if a NULL child is not found, then we set result == 0
      */
     for (i=0; i < co->co_max; i++)
 	if (co->co_next[i] == NULL)
-	    break;
-    if (co->co_max!=0 && i==co->co_max){
+	    break; /* If we match here it is OK, unless no match */
+    if (co->co_max != 0 && i==co->co_max){
 	co = NULL;
-	cligen_nomatch_set(h, "Incomplete command");
-	retval = 0;
-	goto done;
+	if (reason){
+	    if (*reason != NULL)
+		free(*reason);
+	    if ((*reason = strdup("Incomplete command")) == NULL)
+		goto done;
+	}
+	result = 0;
     }
-    retval = 1;
- done:
+ ok:
+    if (resultp)
+	*resultp = result;
     if (match_obj)
 	*match_obj = co;
+    retval = 0;
+ done:
     return retval;
 }
 

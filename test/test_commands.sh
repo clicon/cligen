@@ -27,6 +27,9 @@ expectpart "$(echo "a" | $cligen_file -f $fspec 2>&1)" 0 "1 name:a type:string v
 new "cligen ab ambiguous"
 expectpart "$(echo "ab" | $cligen_file -f $fspec )" 0 "Ambigous command"
 
+new "cligen ab ambiguous preference mode"
+expectpart "$(echo "ab" | $cligen_file -P -f $fspec 2>&1)" 0 "1 name:abc type:string value:abc"
+
 new "cligen abc ok"
 expectpart "$(echo "abc" | $cligen_file -f $fspec 2>&1)" 0 "1 name:abc type:string value:abc"
 

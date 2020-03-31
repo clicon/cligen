@@ -548,58 +548,6 @@ cligen_fn_str_set(cligen_handle h,
     return 0;
 }
 
-/*! Get Error string explaining why there was no match.
- *
- * Fill error string buffer
- * Why is there no match of an input string in the parse-tree?
- * The call to cliread_parse/getline/eval returns CG_NOMATCH and this is where
- * the reason is stored.
- * @param[in] h       CLIgen handle
- */
-char *
-cligen_nomatch(cligen_handle h)
-{
-    struct cligen_handle *ch = handle(h);
-
-    return ch->ch_nomatch;
-}
-
-/*! Set Error string explaining why there was no match.
- * @param[in] h       CLIgen handle
- * @param[in] fmt     Format string, printf style followed by arguments
- */
-int
-cligen_nomatch_set(cligen_handle h, 
-		   const char   *fmt, ...)
-{
-    struct cligen_handle *ch = handle(h);
-    int res;
-    int len;
-    va_list ap;
-	
-    if (fmt == NULL){
-	if (ch->ch_nomatch){
-	    free(ch->ch_nomatch);
-	    ch->ch_nomatch = NULL;
-	}
-	return 0;
-    }
-    assert(ch->ch_nomatch == NULL);
-    va_start(ap, fmt);
-    len = vsnprintf(NULL, 0, fmt, ap);
-    va_end(ap);
-    len++;
-    if ((ch->ch_nomatch = malloc(len)) == NULL){
-	fprintf(stderr, "%s: malloc: %s\n", __FUNCTION__, strerror(errno));
-	return -1;
-    }
-    va_start(ap, fmt);
-    res = vsnprintf(ch->ch_nomatch, len, fmt, ap);
-    va_end(ap);
-    
-    return res;	
-}
-
 static int _terminalrows; /* XXX: global since cli_output dont take handle */
 
 /*! Get number of displayed terminal rows.
@@ -1074,6 +1022,11 @@ cligen_delimiter_set(cligen_handle h,
     return 0;
 }
 
+/*! Get preference mode, return all with same pref(ambiguos) or first (1)
+ * @param[in] h      CLIgen handle
+ * @retval    1      Preference mode is set (return first)
+ * @retval    0      Preference mode is not set (ambiguous)
+ */
 int 
 cligen_preference_mode(cligen_handle h)
 {
@@ -1082,17 +1035,18 @@ cligen_preference_mode(cligen_handle h)
     return ch->ch_preference_mode;
 }
 
-/*! Set relaxed handling of cligen variable matching 
+/*! Set preference mode, return all with same pref(ambiguous) or first (1)
  * More specifically, if several cligen object variables match with same preference,
  * select the first, do not match all.
  * Example:
  * key (<a:string length[4]> | <a:string length[40]>);
- * @param[in] flag   Set to 1 to enable relaxed handling, 0 if not
+ * @param[in] h      CLIgen handle
+ * @param[in] flag   Set to 1 to return first, 0 if ambiguous
  * @retval    0      OK
  */
 int 
 cligen_preference_mode_set(cligen_handle h,
-			    int           flag)
+			   int           flag)
 {
     struct cligen_handle *ch = handle(h);
 
