@@ -556,7 +556,6 @@ cli_trim(char **line,
     *line = s;    
 }
 
-
 /*! Given an input string, return a parse-tree.
  *
  * Given an input string and a parse-tree, return a matching parse-tree node, a
