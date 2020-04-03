@@ -1,7 +1,6 @@
 # Cligen Changelog
-	
-## 4.4.0 (Forthcoming)
-* Renamed `cligen_match_cgvar_same(int flag)` to `cligen_preference_mode_set(cligen_handle h, int flag)`
+
+## 4.4.0 (3 April 2020)
 * CLIgen buffer functions and API changes
   * A CLIgen buffer now starts at a "start" size and grows quadratic (2x) up to a "threshold" after it grows linearly with "threshold".
   * Global start and threshold limit can be set and read with `cbuf_alloc_set()` and `cbuf_alloc_get()`, (signature changed).
@@ -10,7 +9,8 @@
   * `cligen_print()` replaced by `pt_print()` 
   * `cligen_print_obj()` replaced by `co_print()`
   * Size functions for memory analysis of cv and cvecs: `cv_size()` and `cvec_size()`.
-* Fixed: Negative uint:s get parse error messages as if they are uint64, such as when uint8 parses -1.
+* BugFix: Negative uint:s get parse error messages as if they are uint64, such as when uint8 parses -1.
+* C-API change: Renamed `cligen_match_cgvar_same(int flag)` to `cligen_preference_mode_set(cligen_handle h, int flag)`
 
 ## 4.3.0 (1 January 2020)
 Bugfixes and internal struct reorganizing. Bumped version to match with clixon 4.3
