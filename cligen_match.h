@@ -42,10 +42,6 @@
 #define MATCHVECTORLEN 1024
 
 /*
- * Internally exported variables
- */
-
-/*
  * Function Prototypes
  */
 int match_pattern(cligen_handle h, cvec *cvt, cvec *cvr, 

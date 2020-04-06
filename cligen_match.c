@@ -884,7 +884,6 @@ match_pattern_exact(cligen_handle  h,
     int           i;
     cligen_result result;
 
-    /* clear old errors */
     if ((match_pattern(h, cvt, cvr,
 		       pt,
 		       1, /* best: Return only best option */
