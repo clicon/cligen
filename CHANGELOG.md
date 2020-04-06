@@ -1,5 +1,7 @@
 # Cligen Changelog
 
+## 4.5.0 (Expected: May 2020)
+
 ## 4.4.0 (3 April 2020)
 * CLIgen buffer functions and API changes
   * A CLIgen buffer now starts at a "start" size and grows quadratic (2x) up to a "threshold" after it grows linearly with "threshold".
