@@ -838,5 +838,3 @@ cligen_echo_on(void)
     tcsetattr(0,TCSANOW,&settings);
     return;
 }
-
-
