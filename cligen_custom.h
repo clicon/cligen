@@ -39,16 +39,3 @@ typedef struct {int a;} *cligen_handle;
 typedef void *cligen_handle; /* API */
 #endif
 
-/*! Experimental support for not expanding variables unless <tab> or <?> is
- * pressed. CLIgen otherwise calls the expand callback that may, for example,
- * contact a remote backend.
- * So, only expand on interactive CLI operations
- * Warning, dont enable this, it gives "Unknown command" in expand cases, such as tutorial interface eth0
- */
-#undef EXPAND_ONLY_INTERACTIVE
-
-/* New EXPERIMENTAL SETS functionality. 
- * Example; a @{b;c;d;}
- * allows strings with b,c,d at most once in any order.
- */
-#undef USE_SETS

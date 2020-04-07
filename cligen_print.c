@@ -186,8 +186,11 @@ co2cbuf(cbuf   *cb,
     }
     if (terminal(co))
 	cprintf(cb, ";");
-    if (co->co_pt.pt_len>1)
+    if (co->co_pt.pt_len>1){
+	if (co->co_set)
+	    cprintf(cb, "@");
 	cprintf(cb, "{\n");
+    }
     else
 	if (co->co_pt.pt_len==1 && co->co_pt.pt_vec[0] != NULL)
 	    cprintf(cb, " ");
