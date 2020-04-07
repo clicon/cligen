@@ -52,6 +52,7 @@
 #include <unistd.h>
 #include <termios.h>
 #include <fcntl.h>
+#include <assert.h>
 #endif /* WIN32 */
 #define __USE_GNU /* isblank() */
 #include <ctype.h>
@@ -67,18 +68,18 @@
 #include "cligen_handle.h"
 #include "cligen_print.h"
 #include "cligen_io.h"
+#include "cligen_read.h"
 #include "cligen_match.h"
 #include "cligen_expand.h"
-#include "cligen_read.h"
 #include "cligen_history_internal.h"
 #include "cligen_getline.h"
 
 /*
  * Local prototypes
  */
-static int show_help_columns(cligen_handle h, FILE *fout, char *s, parse_tree pt, cvec *cvec);
+static int show_help_columns(cligen_handle h, FILE *fout, char *s, parse_tree pt, cvec *cvv);
 static int show_help_line(cligen_handle h, FILE *fout, char *s, parse_tree pt, cvec *);
-static int complete(cligen_handle h, int *lenp, parse_tree pt, cvec *cvec);
+static int complete(cligen_handle h, int *lenp, parse_tree pt, cvec *cvv);
 
 /*! Callback from getline: '?' has been typed on command line
  * Just show help by calling long help show function. 
@@ -96,7 +97,7 @@ cli_qmark_hook(cligen_handle h,
     int           retval = -1;
     parse_tree   *pt=NULL;     /* Orig parse-tree */
     parse_tree    ptn={0,};    /* Expanded */
-    cvec         *cvec = NULL;
+    cvec         *cvv = NULL;
 
 
     fputs("\n", stdout);
@@ -104,18 +105,18 @@ cli_qmark_hook(cligen_handle h,
 	goto ok;
     if (pt_expand_treeref(h, NULL, pt) < 0) /* sub-tree expansion */
 	goto done; 
-    if ((cvec = cvec_start(string)) == NULL)
+    if ((cvv = cvec_start(string)) == NULL)
 	goto done;
-    if (pt_expand_2(h, pt, cvec, 1, 0, &ptn) < 0)      /* expansion */
+    if (pt_expand_2(h, pt, cvv, 1, 0, &ptn) < 0)      /* expansion */
 	return -1;
-    if (show_help_line(h, stdout, string, ptn, cvec) <0)
+    if (show_help_line(h, stdout, string, ptn, cvv) <0)
 	goto done;
  ok:
     retval = 0;
   done:
 
-    if (cvec)
-	cvec_free(cvec);
+    if (cvv)
+	cvec_free(cvv);
     if (cligen_parsetree_free(ptn, 0) < 0)
 	return -1;
     if (pt && pt_expand_cleanup_2(*pt) < 0) 
@@ -144,29 +145,29 @@ cli_tab_hook(cligen_handle h,
     int	          old_cursor;
     parse_tree   *pt;     /* Orig */
     parse_tree    ptn={0,};     /* Expanded */
-    cvec         *cvec = NULL;
+    cvec         *cvv = NULL;
 
     old_cursor = *cursorp;  /* Save old location of cursor */
     if ((pt = cligen_tree_active_get(h)) == NULL)
 	goto ok;
     if (pt_expand_treeref(h, NULL, pt) < 0) /* sub-tree expansion */
 	goto done;
-    if ((cvec = cvec_start(cligen_buf(h))) == NULL)
+    if ((cvv = cvec_start(cligen_buf(h))) == NULL)
 	goto done; 
-    if (pt_expand_2(h, pt, cvec, 1, 0, &ptn) < 0)      /* expansion */
+    if (pt_expand_2(h, pt, cvv, 1, 0, &ptn) < 0)      /* expansion */
 	goto done;
     /* Note, can change cligen buf pointer (append and increase) */
-    if (complete(h, cursorp, ptn, cvec) < 0)
+    if (complete(h, cursorp, ptn, cvv) < 0)
 	goto done;
     else {
 	if (old_cursor == *cursorp) { 	/* Cursor hasnt changed */
 	    fputs("\n", stdout);
 	    if (cligen_tabmode(h)&CLIGEN_TABMODE_COLUMNS){
-		if (show_help_line(h, stdout, cligen_buf(h), ptn, cvec) < 0)
+		if (show_help_line(h, stdout, cligen_buf(h), ptn, cvv) < 0)
 		    goto done;
 	    }
 	    else{
-		if (show_help_columns(h, stdout, cligen_buf(h), ptn, cvec) < 0)
+		if (show_help_columns(h, stdout, cligen_buf(h), ptn, cvv) < 0)
 		    goto done;
 	    }
 	}
@@ -174,8 +175,8 @@ cli_tab_hook(cligen_handle h,
  ok:
     retval = 0; 
  done:
-    if (cvec)
-	cvec_free(cvec);
+    if (cvv)
+	cvec_free(cvv);
     if (cligen_parsetree_free(ptn, 0) < 0)
 	return -1;
     if (pt && pt_expand_cleanup_2(*pt) < 0)
@@ -236,7 +237,7 @@ column_print(FILE            *fout,
  * @param[in]  string  Input string to match
  * @param[in]  pt      Vector of commands (array of cligen object pointers (cg_obj)
  * @param[in]  pt_max  Length of the pt array
- * @param[out] cvec    Cligen variable vector containing vars/values pair for completion
+ * @param[out] cvv     Cligen variable vector containing vars/values pair for completion
  * @retval     0       OK
  * @retval     -1      Error
  */
@@ -245,13 +246,12 @@ show_help_columns(cligen_handle h,
 		  FILE         *fout, 
 		  char         *string, 
 		  parse_tree    pt, 
-		  cvec         *cvec)
+		  cvec         *cvv)
 {
     int              retval = -1;
-    int              nr = 0;
     int              level;
     pt_vec           pt1;
-    int              matchlen = 0;
+    int              matches = 0;
     int             *matchvec = NULL;
     int              vi;
     int              i;
@@ -266,26 +266,33 @@ show_help_columns(cligen_handle h,
     int              column_width;
     int              column_nr;
     int              rest;
+    cvec            *cvt = NULL;      /* Tokenized string: vector of tokens */
+    cvec            *cvr = NULL;      /* Rest variant,  eg remaining string in each step */
 
     if ((cb = cbuf_new()) == NULL){
 	fprintf(stderr, "cbuf_new: %s\n", strerror(errno));
 	return -1;
     }
-    if (string != NULL){
-	if ((nr = match_pattern(h, string, pt, 0, 1, 1 /* show help columns*/,
-				&pt1, &matchvec, &matchlen, cvec, NULL)) < 0)
-	    goto done;
-    }
-    if ((level = command_levels(string)) < 0)
+    assert(string != NULL);
+    /* Tokenize the string and transform it into two CLIgen vectors: tokens and rests */
+    if (cligen_str2cvv(string, &cvt, &cvr) < 0)
 	goto done;
-    if (nr>0){ /* min, max only defined if nr > 0 */
+    if (match_pattern(h, cvt, cvr,
+		      pt,
+		      0, /* best: Return all options, not only best */
+		      1, 1,
+		      &pt1, &matchvec, &matches, cvv, NULL) < 0)
+	goto done;
+    if ((level = cligen_cvv_levels(cvt)) < 0)
+	goto done;
+    if (matches > 0){ /* min, max only defined if matches > 0 */
 	/* Go through match vector and collect commands and helps */
-	if ((chvec = calloc(matchlen, sizeof(struct cmd_help))) ==NULL){
+	if ((chvec = calloc(matches, sizeof(struct cmd_help))) ==NULL){
 	    fprintf(stderr, "%s calloc: %s\n", __FUNCTION__, strerror(errno));
 	    goto done;
 	}
 	nrcmd = 0;
-	for (i = 0; i<matchlen; i++){ // nr-1?
+	for (i = 0; i<matches; i++){ // nr-1?
 	    vi=matchvec[i];
 	    if ((co = pt1[vi]) == NULL)
 		continue;
@@ -342,6 +349,10 @@ show_help_columns(cligen_handle h,
 	}
 	free(chvec);
     }
+    if (cvt)
+	cvec_free(cvt);
+    if (cvr)
+	cvec_free(cvr);
     if (cb)
 	cbuf_free(cb);
     if (matchvec)
@@ -355,7 +366,7 @@ show_help_columns(cligen_handle h,
  * @param[in]   fout    This is where the output (help text) is shown.
  * @param[in]   string  Input string to match
  * @param[in]   pt      Parse tree
- * @param[out]  cvec    Cligen variable vector containing vars/values pair for completion
+ * @param[out]  cvv     Cligen variable vector containing vars/values pair for completion
  * @retval      0       OK
  * @retval      -1      Error
  *
@@ -375,77 +386,75 @@ show_help_line(cligen_handle h,
 	       FILE         *fout, 
 	       char         *string, 
 	       parse_tree    pt, 
-	       cvec         *cvec)
+	       cvec         *cvv)
 {
-    int              retval = -1;
-    int              nr = 0;
-    int              level;
-    pt_vec           pt1;
-    char	    *tmp;
-    char	    *tmpp;
-    int              matchlen = 0;
-    int             *matchvec = NULL;
-    int              res;
-
-    /* Build match vector, but why would string ever be NULL? */
-    if (string != NULL){
-	if ((nr = match_pattern(h, string, pt, 0, 1, 0, &pt1, &matchvec, &matchlen, cvec, NULL)) < 0)
-	    goto done;
-    }
-    if ((level = command_levels(string)) < 0)
+    int           retval = -1;
+    int           level;
+    pt_vec        pt1;
+    int           matches = 0;
+    int          *matchvec = NULL;
+    cvec         *cvt = NULL;      /* Tokenized string: vector of tokens */
+    cvec         *cvr = NULL;      /* Rest variant,  eg remaining string in each step */
+    cg_var       *cvlast;         /* last element */
+    cvec         *cvv1 = NULL;     /* Rest variant,  eg remaining string in each step */
+    cligen_result result2;
+    
+    assert(string != NULL);
+    /* Tokenize the string and transform it into two CLIgen vectors: tokens and rests */
+    if (cligen_str2cvv(string, &cvt, &cvr) < 0)
+	goto done;
+    if (match_pattern(h,
+		      cvt, cvr, /* token string */
+		      pt,       /* command vector */
+		      0,        /* best: Return all options, not only best */
+		      1, 1,
+		      &pt1, &matchvec, &matches, cvv, NULL) < 0)
+	goto done;
+    if ((level =  cligen_cvv_levels(cvt)) < 0)
 	goto done;
 
     /* If last char is blank, look for next level in parse-tree 
-       eg, syntax is x (y|z) and we have typed 'x ' then show
-       help for y and z, not x.
-    */
-    if (strlen(string) && isblank(string[strlen(string)-1])){
-	if ((tmpp = tmp = strdup(string)) == NULL){
-	    fprintf(stderr, "%s strdup: %s\n", __FUNCTION__, strerror(errno));
-	    goto done;
-	}
-	cli_trim(&tmpp, cligen_comment(h));
-
+     * eg, syntax is x (y|z) and we have typed 'x ' then show
+     * help for y and z, not x.
+     */
+    /* See if string is not empty and last element is empty/blank 
+     * This means we need to peek in next level and if that provides a unique solution,
+     * then add a <cr>
+     */
+    cvlast = cvec_i(cvt, cvec_len(cvt)-1);
+    if (cvec_len(cvt)>2 && strcmp(cv_string_get(cvlast), "")==0){
 	/* if it is ok to <cr> here (at end of one mode) 
 	   Example: x [y|z] and we have typed 'x ', then show
 	   help for y and z and a 'cr' for 'x'.
 	*/
 
-	if ((res = match_pattern_exact(h, tmpp, pt, 0, 1, cvec, NULL))  < 0){
-	    free(tmp);
-	    goto done;
-	}
+	/* Tokenize the string and transform it into two CLIgen vectors: tokens and rests */
+	cvec_del_i(cvt, cvec_len(cvt)-1); /* We really just want to truncate len-1 */
+	cvec_del_i(cvr, cvec_len(cvr)-1);
 
-	if (res) {
+	if (match_pattern_exact(h, cvt, cvr, pt,
+				1,
+				cvv1, NULL, &result2, NULL) < 0)
+	    goto done;
+	if (result2 == CG_NOMATCH || result2 == CG_MULTIPLE){
 	    fprintf(fout, "  <cr>\n");
 	    fflush(fout);
 	}
-	free(tmp);
-#if 0
-	/* The following is a kludge to correct a memory error triggered by:
-	   a <rest>;
-	   a input a a ?
-	   Just repeat the same command as above,...
-	   1801: This causes a segv for a b c ?
-	*/
-	if (matchvec){
-	    free(matchvec);
-	    matchvec = NULL;
-	}
-#endif
-	if ((nr = match_pattern(h, string, pt, 0, 1, 1 /* show help line */, &pt1, &matchvec, &matchlen, cvec, NULL)) < 0)
-
-	    goto done;
     }
-
-    if (!nr){
+    if (matches == 0){
 	retval = 0;
 	goto done;
     }
-    if (print_help_lines(fout, pt1, matchvec, matchlen) < 0)
+    if (print_help_lines(fout, pt1, matchvec, matches) < 0)
 	goto done;
     retval = 0;
   done:
+    if (cvv1)
+	cvec_free(cvv1);
+    if (cvt)
+	cvec_free(cvt);
+    if (cvr)
+	cvec_free(cvr);
     if (matchvec)
 	free(matchvec);
     return retval;
@@ -456,8 +465,7 @@ show_help_line(cligen_handle h,
  * @param[in]  string  Input string to match
  * @param[in]  cursorp Pointer to the current cursor in string.
  * @param[in]  pt      Vector of commands (array of cligen object pointers)
- * @param[out] cvec    cligen variable vector containing vars/values pair for 
- *                     completion
+ * @param[out] cvv    cligen variable vector containing vars/values pair for completion
  * @retval    -1       Error
  * @retval     0       Success
  */
@@ -465,7 +473,7 @@ static int
 complete(cligen_handle h, 
 	 int          *cursorp, 
 	 parse_tree    pt, 
-	 cvec         *cvec)
+	 cvec         *cvv)
 {
     int     retval = -1;
     char   *string;
@@ -487,7 +495,7 @@ complete(cligen_handle h,
     }
     strncpy(s, string, slen);
     s[cursor] = '\0';
-    if (match_complete(h, pt, &s, &slen, cvec) < 0)
+    if (match_complete(h, pt, &s, &slen, cvv) < 0)
 	goto done;
     extra = strlen(s) - cursor;      /* Extra characters added? */
     if (extra){
@@ -571,58 +579,76 @@ cli_trim(char **line,
  * @param[in]  string    Input string to match
  * @param[in]  pt        Parse-tree
  * @param[out] co_orig   Object that matches (if retval == 1).
- * @param[out] vr        Variable vector (if retval == 1).
+ * @param[out] cvv       Variable vector (if retval == 1).
+ * @param[out] result    Result, < 0: errors, >=0 number of matches
+ * @param[out] reason    Error reason if result is nomatch. Need to be free:d 
+ * @retval     0         OK
+ * @retval    -1         Error
  *
- * @retval  -2             Eof               CG_EOF
- * @retval -1              Error             CG_ERROR
- * @retval  0              No match          CG_NOMATCH
- * @retval  1              Exactly one match CG_MATCH
- * @retval  2+             Multiple matches
+ * cvv should be created but empty on entry
+ * On exit it contains the command string as 0th element, and one entry per element
+ * Example: "aa <bb:str>" and inut string "aa 22" gives:
+ *   0 : "aa 22"     # initial command has no "name"
+ *   1 : aa = "aa"   # string has keyword itself as value
+ *   2 : bb = 22     # variable
  */
 int 
-cliread_parse(cligen_handle h, 
-	      char         *string,
-	      parse_tree   *pt,     /* Orig */
-	      cg_obj      **co_orig,
-	      cvec         *cvv)
+cliread_parse(cligen_handle  h, 
+	      char          *string,
+	      parse_tree    *pt,     /* Orig */
+	      cg_obj       **co_orig,
+	      cvec          *cvv,
+	      cligen_result *result,
+	      char         **reason)
 {
-    int           retval = -1;
-    cg_obj       *match_obj;
-    parse_tree    ptn={0,};     /* Expanded */
-    cvec         *cvec = NULL;
+    int        retval = -1;
+    cg_obj    *match_obj;
+    parse_tree ptn={0,};        /* Expanded */
+    cvec      *cvt = NULL;      /* Tokenized string: vector of tokens */
+    cvec      *cvr = NULL;      /* Rest variant,  eg remaining string in each step */
+    cvec      *cvv0 = NULL;     /* Top-level vars/val vector with just command as 0th element */
 
+    if (cvv == NULL || cvec_len(cvv) != 0){
+	errno = EINVAL;
+	goto done;
+    }
     if (cligen_logsyntax(h) > 0){
 	fprintf(stderr, "%s:\n", __FUNCTION__);
 	pt_print(stderr, *pt, 0);
     }
     cli_trim(&string, cligen_comment(h));
+    /* Tokenize the string and transform it into two CLIgen vectors: tokens and rests */
+    if (cligen_str2cvv(string, &cvt, &cvr) < 0)
+	goto done;
     if (pt_expand_treeref(h, NULL, pt) < 0) /* sub-tree expansion, ie @ */
 	goto done; 
-    if ((cvec = cvec_start(string)) == NULL)
+    if ((cvv0 = cvec_start(string)) == NULL)
 	goto done;
-    if (pt_expand_2(h, pt, cvec, 0, 0, &ptn) < 0)      /* expansion */
+    if (pt_expand_2(h, pt, cvv0, 0, 0, &ptn) < 0)      /* expansion */
 	goto done;
-    if ((retval = match_pattern_exact(h, string, ptn, 1, 0, /* XXX cliread_parse */
-				      cvec, &match_obj)) < 0)
+    if (match_pattern_exact(h, cvt, cvr,
+			    ptn, 0,
+			    cvv0, &match_obj, result, reason) < 0)
 	goto done;
     /* Map from ghost object match_obj to real object */
-    if (retval == CG_MATCH){
-	if (match_obj && match_obj->co_ref)
-	    *co_orig = match_obj->co_ref;
-	else
-	    *co_orig = match_obj;
-	if (cvec_match(h, *co_orig, string, cvv) < 0){
-	    retval = CG_ERROR;
-	    goto done;
-	}
-    }
+    if (match_obj && match_obj->co_ref)
+	*co_orig = match_obj->co_ref;
+    else
+	*co_orig = match_obj;
+    if (cvec_match(h, *co_orig, cvt, cvr, cvv) < 0)
+	goto done;
+    retval = 0;
   done:
-    if (cvec)
-	cvec_free(cvec);
+    if (cvt)
+	cvec_free(cvt);
+    if (cvr)
+	cvec_free(cvr);
+    if (cvv0)
+	cvec_free(cvv0);
     if (cligen_parsetree_free(ptn, 0) < 0)
 	return -1;
     if (pt_expand_cleanup_2(*pt) < 0)
-	return CG_ERROR;
+	return -1;
     return retval;
 }
 
@@ -693,23 +719,23 @@ cliread_getline(cligen_handle h,
  * from callback (if function return =1).
  * Use this function if you want the whole enchilada without special operation
  *
- * @param[in]  h       CLIgen handle
- * @param[out] line     Pointer to new string input from terminal
- * @param[out] cb_retval  Retval of callback (only if functions return value is 1)
- *
- * @retval  -2      EOF
- * @retval  -1      Error
- * @retval   0      No match
- * @retval   1      Exactly one match
- * @retval   2+     Multiple matches
+ * @param[in]  h         CLIgen handle
+ * @param[out] line      Pointer to new string input from terminal
+ * @param[out] cb_retval Retval of callback (only if functions return value is 1)
+ * @param[out] result   Number of matches
+ * @param[out] reason    Error reason if result is nomatch. Need to be free:d 
+ * @retval     0         OK
+ * @retval    -1         Error
  */
 int
-cliread_eval(cligen_handle     h,
-	     char            **line,
-	     int              *cb_retval)
+cliread_eval(cligen_handle  h,
+	     char         **line,
+	     int           *cb_retval,
+	     cligen_result *result,
+	     char         **reason)
 {
-    cg_obj     *match;    /* matching syntax node */
-    int         retval = CG_ERROR;
+    int         retval = -1;
+    cg_obj     *matchobj;    /* matching syntax node */
     cvec       *cvv;
     parse_tree *pt = NULL;     /* Orig */
 
@@ -718,8 +744,8 @@ cliread_eval(cligen_handle     h,
 	goto done;
     }
     if ((*line = cliread(h)) == NULL){ /* EOF */
-	retval = CG_EOF; 
-	goto done;
+	*result = CG_EOF; 
+	goto ok;
     }
     if ((pt = cligen_tree_active_get(h)) == NULL){
 	fprintf(stderr, "No active parse-tree found\n");
@@ -729,10 +755,14 @@ cliread_eval(cligen_handle     h,
 	fprintf(stderr, "%s: cvec_new: %s\n", __FUNCTION__, strerror(errno));
 	goto done;;
     }
-    if ((retval = cliread_parse(h, *line, pt, &match, cvv)) == CG_MATCH)
-	*cb_retval = cligen_eval(h, match, cvv);
+    if (cliread_parse(h, *line, pt, &matchobj, cvv, result, reason) < 0)
+	goto done;
+    if (*result == CG_MATCH)
+	*cb_retval = cligen_eval(h, matchobj, cvv);
     cvec_free(cvv);	
-  done:
+ ok:
+    retval = 0;
+ done:
     /* XXX: Get parse-tree */
     if (pt && pt_expand_treeref_cleanup(pt) < 0) 
 	retval = -1;

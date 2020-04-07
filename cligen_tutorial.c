@@ -262,7 +262,7 @@ str2fn_trans(char  *name,
 static void 
 usage(char *argv)
 {
-    fprintf(stderr, "Usage: %s [-h][-f <filename>]\n", argv);
+    fprintf(stderr, "Usage: %s [-h][-q][-f <filename>]\n", argv);
     exit(0);
 }
 
@@ -278,6 +278,7 @@ main(int argc, char *argv[])
     char           *filename=NULL;
     cvec           *globals;   /* global variables from syntax */
     char           *str;
+    int             quiet = 0;
 
     argv++;argc--;
     for (;(argc>0)&& *argv; argc--, argv++){
@@ -289,6 +290,9 @@ main(int argc, char *argv[])
         switch(**argv) {
         case 'h': /* help */
             usage(argv0); /* usage exits */
+            break;
+        case 'q': /* quiet */
+	    quiet++;
             break;
         case 'f' : 
             argc--;argv++;
@@ -326,12 +330,14 @@ main(int argc, char *argv[])
 	if (strcmp(str,"long") == 0)
 	    cligen_tabmode_set(h, CLIGEN_TABMODE_COLUMNS);
     cvec_free(globals);
-    pt = NULL;
-    while ((pt = cligen_tree_each(h, pt)) != NULL) {
-	printf("Syntax:\n");
-	pt_print(stdout, *pt, 0);
+    if (!quiet){
+	pt = NULL;
+	while ((pt = cligen_tree_each(h, pt)) != NULL) {
+	    printf("Syntax:\n");
+	    pt_print(stdout, *pt, 0);
+	}
+	fflush(stdout);
     }
-    fflush(stdout);
 
     if (cligen_loop(h) < 0)
 	goto done;

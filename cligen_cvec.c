@@ -305,6 +305,32 @@ cvec_del(cvec   *cvv,
     return cvec_len(cvv);
 }
 
+/*! Delete a cv variable from a cvec using index i
+ *
+ * @param[in]  cvv   Cligen variable vector
+ * @param[in]  del   variable to delete
+ *
+ * @note This is a dangerous command since the cv it deletes (such as created by
+ * cvec_add) may have been modified with realloc (eg cvec_add/delete) and
+ * therefore can not be used as a reference.  Safer methods are to use
+ * cvec_find/cvec_i to find a cv and then to immediately remove it.
+ */
+int
+cvec_del_i(cvec *cvv,
+	   int   i)
+{
+    if (cvec_len(cvv) == 0 || cvec_len(cvv) < i)
+	return 0;
+    
+    if (i != cvec_len(cvv)-1) /* If not last entry, move the remaining cv's */
+	memmove(&cvv->vr_vec[i], &cvv->vr_vec[i+1],
+		(cvv->vr_len-i-1) * sizeof(cvv->vr_vec[0]));
+
+    cvv->vr_len--;
+
+    return cvec_len(cvv);
+}
+
 /*! Return allocated length of a cvec.
  * @param[in]  cvv   Cligen variable vector
  */
@@ -331,6 +357,23 @@ cvec_i(cvec *cvv,
     if (i < cvv->vr_len)
 	return &cvv->vr_vec[i];
     return NULL;
+}
+
+/*! Return string value of i:th element of cligen variable vector. Helper function.
+ * @param[in]  cvv   Cligen variable vector
+ * @param[in]  i     Order of element to get
+ * @retval     str   String value of i:th element
+ * @retval     NULL  Element does not exist
+ */
+char *
+cvec_i_str(cvec *cvv,
+	   int   i)
+{
+    cg_var *cv;
+    
+    if ((cv = cvec_i(cvv, i)) == NULL)
+	return NULL;
+    return cv_string_get(cv);
 }
 
 /*! Iterate through all cligen variables in a cvec list
@@ -431,20 +474,22 @@ cvec_dup(cvec *old)
  * one vector of CLIgen variables.
  * Typically called internally from cliread_parse().
  *
- * The variable vr should be freed with cvec_reset()!
+ * The variable cvv should be freed with cvec_reset()!
  *
- * @param[in]     co_match    Leaf CLIgen syntax node
- * @param[in]     cmd         Command string
- * @param[in,out] cvv         Initialized cvec (cvec_new or cvec_reset). CLIgen
- *                              variable record
- * @retval          0           OK
- * @retval          -1          Error
+ * @param[in]     co_match  Leaf CLIgen syntax node
+ * @param[in]     cmd       Command string
+ * @param[in]     cvt       Tokenized string: vector of tokens
+ * @param[in]     cvr       Rest variant,  eg remaining string in each step
+ * @param[in,out] cvv       Initialized cvec (cvec_new or cvec_reset). CLIgen
+ * @retval          0       OK
+ * @retval          -1      Error
  * @see match_variable  where sanity check is made
  */
 int
 cvec_match(cligen_handle h,
 	   cg_obj       *co_match,
-	   char         *cmd,
+	   cvec         *cvt,
+	   cvec         *cvr,
 	   cvec         *cvv)
 {
     cg_obj    *co;
@@ -486,7 +531,6 @@ cvec_match(cligen_handle h,
 	    break;
 	}
     }
-
     /* cvec for each arg + command itself */
     if (cvec_init(cvv, nrargs + 1) < 0){
 	fprintf(stderr, "%s: calloc: %s\n", __FUNCTION__, strerror(errno));
@@ -495,7 +539,7 @@ cvec_match(cligen_handle h,
     /* Historically we put command line here, maybe more logical in keyword? */
     cv = cvec_i(cvv, 0);
     cv->var_type = CGV_REST;
-    cv_string_set(cv, cmd); /* the whole command string */
+    cv_string_set(cv, cvec_i_str(cvt,0)); /* the whole command string */
 
     v = 1; /* first ele)ment is whole string */
     for (level=0; level<=nrlevels; level++){
@@ -506,15 +550,10 @@ cvec_match(cligen_handle h,
 	cv = cvec_i(cvv, v);
 	switch (co->co_type){
 	case CO_VARIABLE: /* Get the value of the variable */
-	    if (co->co_value){
+	    if (co->co_value)
 		val = co->co_value;
-		co->co_value = NULL;
-	    }
 	    else
-		if (co->co_vtype == CGV_REST)
-		    extract_substring_rest(cmd, level, &val);
-		else
-		    extract_substring(cmd, level, &val);
+		val = cvec_i_str((co->co_vtype == CGV_REST)?cvr:cvt, level+1);
 	    cv->var_type = co->co_vtype;
 	    cv->var_name = strdup4(co->co_command);
 	    if (co->co_show)
@@ -525,10 +564,8 @@ cvec_match(cligen_handle h,
 	    /* String value to structured type */
 	    if (cv_parse(val, cv) < 0) {
 		/* This should never happen, since it passes in match_variable() */
-		if (val) free(val);
 		goto done;
 	    }
-	    if (val) free (val);
 	    /* If translator function defined, here translate value */
 	    if (co->co_translate_fn != NULL &&
 		co->co_translate_fn(h, cv) < 0)

@@ -93,23 +93,25 @@ cvec_add_string(cvec *cvv,
 int 
 cligen_loop(cligen_handle h)
 {
-    int         retval = -1;
-    char       *line;
-    int         callback_ret = 0;
-    int         ret;
-
+    int           retval = -1;
+    char         *line;
+    int           callback_ret = 0;
+    char         *reason = NULL;
+    cligen_result result;
+    
     /* Run the CLI command interpreter */
     while (!cligen_exiting(h)){
-	ret = cliread_eval(h, &line, &callback_ret);
-	switch (ret){
-	case CG_EOF: /* eof */
+	if (cliread_eval(h, &line, &callback_ret, &result, &reason) < 0)
 	    goto done;
+	switch (result){
+	case CG_EOF: /* eof */
+	    cligen_exiting_set(h, 1);
 	    break;
 	case CG_ERROR: /* cligen match errors */
 	    printf("CLI read error\n");
 	    goto done;
 	case CG_NOMATCH: /* no match */
-	    printf("CLI syntax error in: \"%s\": %s\n", line, cligen_nomatch(h));
+	    printf("CLI syntax error in: \"%s\": %s\n", line, reason);
 	    break;
 	case CG_MATCH: /* unique match */
 	    if (callback_ret < 0)
@@ -119,8 +121,14 @@ cligen_loop(cligen_handle h)
 	    printf("Ambigous command\n");
 	    break;
 	}
+	if (reason){
+	    free(reason);
+	    reason = NULL;
+	}
     }
     retval = 0;
  done:
+    if (reason)
+	free(reason);
     return retval;
 }

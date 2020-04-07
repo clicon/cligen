@@ -56,14 +56,17 @@ int     cvec_reset(cvec *vr);
 
 int     cvec_len(cvec *vr);
 cg_var *cvec_i(cvec *vr, int i);
+char   *cvec_i_str(cvec *cvv, int i);
+
 cg_var *cvec_next(cvec *vr, cg_var *cv0);
 cg_var *cvec_add(cvec *vr, enum cv_type type);
 cg_var *cvec_append_var(cvec *cvv, cg_var *var);
 int     cvec_del(cvec *vr, cg_var *del);
+int     cvec_del_i(cvec *vr, int ix);
 cg_var *cvec_each(cvec *vr, cg_var *prev);
 cg_var *cvec_each1(cvec *vr, cg_var *prev);
 cvec   *cvec_dup(cvec *old);
-int     cvec_match(cligen_handle h, struct cg_obj *co_match, char *cmd, cvec *vr);
+int     cvec_match(cligen_handle h, struct cg_obj *co_match, cvec *cvt, cvec *cvr, cvec *vr);
 cvec   *cvec_start(char *cmd);
 int     cvec_print(FILE *f, cvec *vr);
 int     cvec2cbuf(cbuf *cb, cvec *cvv);

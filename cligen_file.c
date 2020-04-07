@@ -141,7 +141,7 @@ str2fn(char *name, void *arg, char **error)
 static void 
 usage(char *argv)
 {
-    fprintf(stderr, "Usage: %s [-h][-f <filename>][-q][-p]\n", argv);
+    fprintf(stderr, "Usage: %s [-h][-f <filename>][-1][-p][-P]\n", argv);
     exit(0);
 }
 
@@ -157,8 +157,9 @@ main(int argc, char *argv[])
     cvec       *globals;   /* global variables from syntax */
     cligen_handle  h;
     char       *str;
-    int         quit = 0;
+    int         once = 0;
     int         print_syntax = 0;
+    int         set_preference = 0;
 
     argv++;argc--;
     for (;(argc>0)&& *argv; argc--, argv++){
@@ -171,11 +172,14 @@ main(int argc, char *argv[])
 	case 'h': /* help */
 	    usage(argv0); /* usage exits */
 	    break;
-	case 'q': /* quit directly */
-	    quit++;
+	case '1': /* quit directly */
+	    once++;
 	    break;
 	case 'p': /* print syntax */
 	    print_syntax++;
+	    break;
+	case 'P': /* Set preference mode to 1, ie return first if several have same pref */
+	    set_preference++;
 	    break;
 	case 'f' : 
 	    argc--;argv++;
@@ -194,6 +198,8 @@ main(int argc, char *argv[])
 	goto done;    
     cligen_lexicalorder_set(h, 1);
     cligen_ignorecase_set(h, 1);
+    if (set_preference)
+	cligen_preference_mode_set(h, 1);
 //    cligen_parse_debug(1);
     if ((globals = cvec_new(0)) == NULL)
 	goto done;
@@ -219,7 +225,7 @@ main(int argc, char *argv[])
 	pt_print(stdout, *pt, 0);
 	fflush(stdout);
     }
-    if (quit)
+    if (once)
 	goto done;
     if (cligen_loop(h) < 0)
 	goto done;
