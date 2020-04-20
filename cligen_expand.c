@@ -374,6 +374,10 @@ pt_expand_fnv(cligen_handle h,
     int     i;
     const char *value, *escaped;
 
+    if (cvv == NULL){
+	errno = EINVAL;
+	goto done;
+    }
     if ((*co->co_expandv_fn)(
 			     cligen_userhandle(h)?cligen_userhandle(h):h, 
 			     co->co_expand_fn_str, 

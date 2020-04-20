@@ -262,7 +262,12 @@ str2fn_trans(char  *name,
 static void 
 usage(char *argv)
 {
-    fprintf(stderr, "Usage: %s [-h][-q][-f <filename>]\n", argv);
+    fprintf(stderr, "Usage:%s [-h][-f <filename>][-q], where the options have the following meaning:\n"
+	    "\t-h \t\tHelp\n"
+	    "\t-f <file> \tConfig-file (or stdin) Example use: tutorial.cli for \n"
+	    "\t-q \t\tQuiet\n"
+	    ,
+	    argv);
     exit(0);
 }
 

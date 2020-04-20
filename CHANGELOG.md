@@ -1,20 +1,14 @@
 # Cligen Changelog
-<<<<<<< HEAD
 	
-## 4.5.0 (Forthcoming)
+## 4.5.0 (Expected: May 2020)
 * C API changes
   * `cligen_nomatch()` replaced by `reason` function parameter.
   * `cligenread_parse()` and `cliread_eval()` added `reason` and `result` parameter. The latter replaces the return values
-
-## 4.4.0 (Forthcoming)
-* CLIgen buffer functiona and API changes
-=======
-
-## 4.5.0 (Expected: May 2020)
+  * `cliread()` added return string as call-by-reference and changed return value to standard-style 0/-1.
+* Fixed [https://github.com/clicon/clixon/issues/106](simple list model in yang is broken in cligen)
 
 ## 4.4.0 (3 April 2020)
 * CLIgen buffer functions and API changes
->>>>>>> master
   * A CLIgen buffer now starts at a "start" size and grows quadratic (2x) up to a "threshold" after it grows linearly with "threshold".
   * Global start and threshold limit can be set and read with `cbuf_alloc_set()` and `cbuf_alloc_get()`, (signature changed).
   * New function `cbuf_new_alloc()` to start from another (individual) buffer size.
