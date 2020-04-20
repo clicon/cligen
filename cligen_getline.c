@@ -807,6 +807,7 @@ gl_getline(cligen_handle h,
     *buf = cligen_buf(h);
     return 0;
  err: /* fatal error */
+    gl_cleanup();
     return -1;
 }
 

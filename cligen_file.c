@@ -141,7 +141,14 @@ str2fn(char *name, void *arg, char **error)
 static void 
 usage(char *argv)
 {
-    fprintf(stderr, "Usage: %s [-h][-f <filename>][-1][-p][-P]\n", argv);
+    fprintf(stderr, "Usage:%s [-h][-f <filename>][-1][-p][-P], where the optoions have the following meaning:\n"
+	    "\t-h \t\tHelp\n"
+	    "\t-f <file> \tConfig-file (or stdin)\n"
+	    "\t-1 \t\tOnce only. Do not enter interactive mode\n"
+	    "\t-p \t\tPrint syntax\n"
+	    "\t-P \t\tSet preference mode to 1, ie return first if several have same pref\n"
+	    ,
+	    argv);
     exit(0);
 }
 

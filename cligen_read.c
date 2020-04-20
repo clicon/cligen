@@ -395,8 +395,7 @@ show_help_line(cligen_handle h,
     int          *matchvec = NULL;
     cvec         *cvt = NULL;      /* Tokenized string: vector of tokens */
     cvec         *cvr = NULL;      /* Rest variant,  eg remaining string in each step */
-    cg_var       *cvlast;         /* last element */
-    cvec         *cvv1 = NULL;     /* Rest variant,  eg remaining string in each step */
+    cg_var       *cvlast;          /* Last element */
     cligen_result result2;
     
     assert(string != NULL);
@@ -433,8 +432,8 @@ show_help_line(cligen_handle h,
 	cvec_del_i(cvr, cvec_len(cvr)-1);
 
 	if (match_pattern_exact(h, cvt, cvr, pt,
-				1,
-				cvv1, NULL, &result2, NULL) < 0)
+				1, cvv,
+				NULL, &result2, NULL) < 0)
 	    goto done;
 	if (result2 == CG_NOMATCH || result2 == CG_MULTIPLE){
 	    fprintf(fout, "  <cr>\n");
@@ -449,8 +448,6 @@ show_help_line(cligen_handle h,
 	goto done;
     retval = 0;
   done:
-    if (cvv1)
-	cvec_free(cvv1);
     if (cvt)
 	cvec_free(cvt);
     if (cvr)
@@ -654,28 +651,38 @@ cliread_parse(cligen_handle  h,
 
 /*! Read line interactively from terminal using getline (completion, etc)
  *
- * @param[in] h       CLIgen handle
- * @retval    string  Pointer to command buffer.
- * @retval    NULL    EOF or error
+ * @param[in]  h       CLIgen handle
+ * @param[out] stringp Pointer to command buffer or NULL on EOF
+ * @retval     0       OK
+ * @retval    -1       Error
  */
-char *
-cliread(cligen_handle h)
+int
+cliread(cligen_handle h,
+	char        **stringp)
 {
-    char *string;
+    int   retval = -1;
+    char *buf = NULL;
     
+    if (stringp == NULL){
+	errno = EINVAL;
+	goto done;
+    }
+    *stringp = NULL;
     do {
-	string = NULL;
-	if (gl_getline(h, &string) < 0)
+	buf = NULL;
+	if (gl_getline(h, &buf) < 0)
 	    goto done;
-	cli_trim(&string, cligen_comment(h));
-    } while (strlen(string) == 0 && !gl_eof());
+	cli_trim(&buf, cligen_comment(h));
+    } while (strlen(buf) == 0 && !gl_eof());
     if (gl_eof())
+	goto eof;
+    if (hist_add(h, buf) < 0)
 	goto done;
-    if (hist_add(h, string) < 0)
-	goto done;
-    return string;
+    *stringp = buf;
+ eof:
+    retval = 0;
  done:
-    return NULL;
+    return retval;
 }
 		
 #ifdef notused
@@ -743,7 +750,9 @@ cliread_eval(cligen_handle  h,
 	fprintf(stderr, "Illegal cligen handle\n");
 	goto done;
     }
-    if ((*line = cliread(h)) == NULL){ /* EOF */
+    if (cliread(h, line) < 0)
+	goto done;
+    if (*line == NULL){ /* EOF */
 	*result = CG_EOF; 
 	goto ok;
     }
