@@ -929,6 +929,8 @@ match_pattern_exact(cligen_handle  h,
 	*match_obj = co;
     retval = 0;
  done:
+    if (matchvec)
+	free(matchvec);
     return retval;
 }
 

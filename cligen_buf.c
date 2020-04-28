@@ -54,6 +54,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <errno.h>
 
 #include "cligen_buf.h"              /* External API */
 #include "cligen_buf_internal.h"            
@@ -223,6 +224,7 @@ cbuf_realloc(cbuf  *cb,
  * @param [in]  cb      cligen buffer allocated by cbuf_new(), may be reallocated.
  * @param [in]  format  arguments uses printf syntax.
  * @retval      See printf
+ * @see cbuf_append_str for the optimized special case of string append
  */
 int
 cprintf(cbuf       *cb, 
@@ -230,7 +232,7 @@ cprintf(cbuf       *cb,
 {
     int     retval = -1;
     va_list ap;
-    int     len;
+    size_t  len;
     int     ret;
 
     if (cb == NULL)
@@ -255,16 +257,52 @@ cprintf(cbuf       *cb,
     return retval;
 }
 
+/*! Append a string to a cbuf
+  *
+  * An optimized special case of cprintf
+  * @param [in]  cb  cligen buffer allocated by cbuf_new(), may be reallocated.
+  * @param [in]  str string
+  * @retval 0    OK
+  * @retval -1   Error
+  * @see cprintf for the generic function
+  */
+int
+cbuf_append_str(cbuf       *cb,
+		char       *str)
+{
+    size_t  len0;
+    size_t  len;
+
+    if (str == NULL){
+	errno = EINVAL;
+	return -1;
+    }
+    len0 = strlen(str);
+    len = cb->cb_strlen + len0;
+    /* Ensure buffer is large enough */
+    if (cbuf_realloc(cb, len) < 0)
+	return -1;
+    strncpy(cb->cb_buffer+cb->cb_strlen, str, len0+1);
+    cb->cb_strlen = len;;
+    return 0;
+}
+
 /*! Append a character to a cbuf
   *
   * @param [in]  cb  cligen buffer allocated by cbuf_new(), may be reallocated.
   * @param [in]  c   character to append
+  * @retval 0    OK
+  * @retval -1   Error
   * @see cbuf_append_str, use that function instead
   */
 int
 cbuf_append(cbuf       *cb,
             int        c)
 {
-    return cprintf(cb, "%c", c);
+    char str[2] = {0,};
+
+    str[0] = c;
+    return cbuf_append_str(cb, str);
 }
+
 

@@ -73,5 +73,6 @@ int      cprintf(cbuf *cb, const char *format, ...);
 #endif
 void     cbuf_reset(cbuf *cb);
 int      cbuf_append(cbuf *cb, int c);
+int      cbuf_append_str(cbuf *cb, char *str);
 
 #endif /* _CLIGEN_BUF_H */

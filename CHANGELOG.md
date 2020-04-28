@@ -1,9 +1,12 @@
 # Cligen Changelog
 	
 ## 4.5.0 (Expected: May 2020)
+
+
 * C API changes
+  * Added new specialized cbuf function: `cbuf_append_str()`
   * `cligen_nomatch()` replaced by `reason` function parameter.
-  * `cligenread_parse()` and `cliread_eval()` added `reason` and `result` parameter. The latter replaces the return values
+  * `cliread_parse()` and `cliread_eval()` added `reason` and `result` parameter. The latter replaces the return values
   * `cliread()` added return string as call-by-reference and changed return value to standard-style 0/-1.
 * Fixed [https://github.com/clicon/clixon/issues/106](simple list model in yang is broken in cligen)
 
