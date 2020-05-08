@@ -47,7 +47,8 @@
 int match_pattern(cligen_handle h, cvec *cvt, cvec *cvr, 
 		  parse_tree pt,
 		  int best, int hide, int expandvar,
-		  pt_vec *, int **, int *, cvec *, char **);
+		  pt_vec *ptp, int *matchvec[], int *matchlen,
+		  cvec *cvv, char **reasonp);
 int match_pattern_exact(cligen_handle h, cvec *cvt, cvec *cvr, 
 			parse_tree pt,
 			int expandvar,

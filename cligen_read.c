@@ -3,7 +3,7 @@
 
   ***** BEGIN LICENSE BLOCK *****
  
-  Copyright (C) 2001-2019 Olof Hagsand
+  Copyright (C) 2001-2020 Olof Hagsand
 
   This file is part of CLIgen.
 
@@ -114,7 +114,6 @@ cli_qmark_hook(cligen_handle h,
  ok:
     retval = 0;
   done:
-
     if (cvv)
 	cvec_free(cvv);
     if (cligen_parsetree_free(ptn, 0) < 0)
@@ -251,7 +250,7 @@ show_help_columns(cligen_handle h,
     int              retval = -1;
     int              level;
     pt_vec           pt1;
-    int              matches = 0;
+    int              matchlen = 0;
     int             *matchvec = NULL;
     int              vi;
     int              i;
@@ -281,18 +280,18 @@ show_help_columns(cligen_handle h,
 		      pt,
 		      0, /* best: Return all options, not only best */
 		      1, 1,
-		      &pt1, &matchvec, &matches, cvv, NULL) < 0)
+		      &pt1, &matchvec, &matchlen, cvv, NULL) < 0)
 	goto done;
     if ((level = cligen_cvv_levels(cvt)) < 0)
 	goto done;
-    if (matches > 0){ /* min, max only defined if matches > 0 */
+    if (matchlen > 0){ /* min, max only defined if matchlen > 0 */
 	/* Go through match vector and collect commands and helps */
-	if ((chvec = calloc(matches, sizeof(struct cmd_help))) ==NULL){
+	if ((chvec = calloc(matchlen, sizeof(struct cmd_help))) ==NULL){
 	    fprintf(stderr, "%s calloc: %s\n", __FUNCTION__, strerror(errno));
 	    goto done;
 	}
 	nrcmd = 0;
-	for (i = 0; i<matches; i++){ // nr-1?
+	for (i = 0; i<matchlen; i++){ // nr-1?
 	    vi=matchvec[i];
 	    if ((co = pt1[vi]) == NULL)
 		continue;
@@ -390,13 +389,13 @@ show_help_line(cligen_handle h,
 {
     int           retval = -1;
     int           level;
-    pt_vec        pt1;
-    int           matches = 0;
+    pt_vec        pt1 = NULL;
+    int           matchlen = 0;
     int          *matchvec = NULL;
     cvec         *cvt = NULL;      /* Tokenized string: vector of tokens */
     cvec         *cvr = NULL;      /* Rest variant,  eg remaining string in each step */
     cg_var       *cvlast;          /* Last element */
-    cligen_result result2;
+    cligen_result result;
     
     assert(string != NULL);
     /* Tokenize the string and transform it into two CLIgen vectors: tokens and rests */
@@ -407,7 +406,7 @@ show_help_line(cligen_handle h,
 		      pt,       /* command vector */
 		      0,        /* best: Return all options, not only best */
 		      1, 1,
-		      &pt1, &matchvec, &matches, cvv, NULL) < 0)
+		      &pt1, &matchvec, &matchlen, cvv, NULL) < 0)
 	goto done;
     if ((level =  cligen_cvv_levels(cvt)) < 0)
 	goto done;
@@ -421,7 +420,7 @@ show_help_line(cligen_handle h,
      * then add a <cr>
      */
     cvlast = cvec_i(cvt, cvec_len(cvt)-1);
-    if (cvec_len(cvt)>2 && strcmp(cv_string_get(cvlast), "")==0){
+    if (cvec_len(cvt) > 2 && strcmp(cv_string_get(cvlast), "")==0){
 	/* if it is ok to <cr> here (at end of one mode) 
 	   Example: x [y|z] and we have typed 'x ', then show
 	   help for y and z and a 'cr' for 'x'.
@@ -433,18 +432,18 @@ show_help_line(cligen_handle h,
 
 	if (match_pattern_exact(h, cvt, cvr, pt,
 				1, cvv,
-				NULL, &result2, NULL) < 0)
+				NULL, &result, NULL) < 0)
 	    goto done;
-	if (result2 == CG_NOMATCH || result2 == CG_MULTIPLE){
+	if (result == CG_MATCH || result == CG_MULTIPLE){
 	    fprintf(fout, "  <cr>\n");
 	    fflush(fout);
 	}
     }
-    if (matches == 0){
+    if (matchlen == 0){
 	retval = 0;
 	goto done;
     }
-    if (print_help_lines(fout, pt1, matchvec, matches) < 0)
+    if (print_help_lines(fout, pt1, matchvec, matchlen) < 0)
 	goto done;
     retval = 0;
   done:
