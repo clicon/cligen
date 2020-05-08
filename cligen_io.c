@@ -3,7 +3,7 @@
 
   ***** BEGIN LICENSE BLOCK *****
  
-  Copyright (C) 2001-2019 Olof Hagsand
+  Copyright (C) 2001-2020 Olof Hagsand
 
   This file is part of CLIgen.
 
@@ -275,7 +275,7 @@ print_help_lines(FILE      *fout,
 	co = ptvec[vi];
 	if (co->co_command == NULL)
 	    continue;
-	cmd=NULL;
+	cmd = NULL;
 	switch(co->co_type){
 	case CO_VARIABLE:
 	    cbuf_reset(cb);

@@ -1,7 +1,7 @@
 /*
   ***** BEGIN LICENSE BLOCK *****
  
-  Copyright (C) 2001-2019 Olof Hagsand
+  Copyright (C) 2001-2020 Olof Hagsand
 
   This file is part of CLIgen.
 
@@ -3594,6 +3594,5 @@ cv_size(cg_var *cv)
 	sz += strlen(cv->var_show)+1;
     if (cv_isstring(cv->var_type))
 	sz += strlen(cv->var_string)+1;
-    sz += sizeof(struct cg_var);
     return sz;
 }
