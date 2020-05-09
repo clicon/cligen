@@ -698,7 +698,9 @@ match_pattern_node(cligen_handle h,
     cg_var    *cv = NULL;
     co_match = NULL;
 
-    if (match_vec(h, cvt, cvr, pt, level, best, matchvec, &matches, &reason) < 0)
+    if (match_vec(h, cvt, cvr, pt, level,
+		  1, /* use best preference match in non-terminal matching*/
+		  matchvec, &matches, &reason) < 0)
 	goto done;
     /* Number of matches is 0 (no match), 1 (exact) or many */
     switch (matches){
@@ -822,7 +824,10 @@ match_pattern(cligen_handle h,
     int retval = -1;
     int levels;
 
-    assert(ptp && cvt && cvr); /* XXX */
+    if (ptp == NULL || cvt == NULL || cvr == NULL){
+	errno = EINVAL;
+	goto done;
+    }
     *matchlen = 0;
     /* Get total number of command levels */
     if ((levels = cligen_cvv_levels(cvt)) < 0)
@@ -898,13 +903,11 @@ match_pattern_exact(cligen_handle  h,
 		goto done;
 	}
     }
-#if 1
     else if (matchlen > 1){
 	/* In 4.5 there is also code for detecting allvars */
 	if (cligen_preference_mode(h))
 	    matchlen = 1; /* choose first element */
     }
-#endif
     /* Only a single match at this point */
     if (matchlen != 1)
 	goto ok;
