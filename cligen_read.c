@@ -52,7 +52,6 @@
 #include <unistd.h>
 #include <termios.h>
 #include <fcntl.h>
-#include <assert.h>
 #endif /* WIN32 */
 #define __USE_GNU /* isblank() */
 #include <ctype.h>
@@ -268,11 +267,14 @@ show_help_columns(cligen_handle h,
     cvec            *cvt = NULL;      /* Tokenized string: vector of tokens */
     cvec            *cvr = NULL;      /* Rest variant,  eg remaining string in each step */
 
+    if (string == NULL){
+	errno = EINVAL;
+	goto done;
+    }
     if ((cb = cbuf_new()) == NULL){
 	fprintf(stderr, "cbuf_new: %s\n", strerror(errno));
 	return -1;
     }
-    assert(string != NULL);
     /* Tokenize the string and transform it into two CLIgen vectors: tokens and rests */
     if (cligen_str2cvv(string, &cvt, &cvr) < 0)
 	goto done;
@@ -397,7 +399,10 @@ show_help_line(cligen_handle h,
     cg_var       *cvlast;          /* Last element */
     cligen_result result;
     
-    assert(string != NULL);
+    if (string == NULL){
+	errno = EINVAL;
+	goto done;
+    }
     /* Tokenize the string and transform it into two CLIgen vectors: tokens and rests */
     if (cligen_str2cvv(string, &cvt, &cvr) < 0)
 	goto done;
