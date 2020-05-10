@@ -1,4 +1,4 @@
-Copyright 2001-2019 Olof Hagsand
+Copyright 2001-2020 Olof Hagsand
 
 CLIgen is dual license. 
 

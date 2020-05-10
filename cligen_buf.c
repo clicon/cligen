@@ -1,6 +1,8 @@
 /*
   ***** BEGIN LICENSE BLOCK *****
  
+  Copyright (C) 2001-2020 Olof Hagsand
+
   This file is part of CLIgen.
 
   Licensed under the Apache License, Version 2.0 (the "License");
@@ -232,7 +234,7 @@ cprintf(cbuf       *cb,
 {
     int     retval = -1;
     va_list ap;
-    size_t  len;
+    int     len;
     int     ret;
 
     if (cb == NULL)
