@@ -134,6 +134,7 @@ new(){
 # - expected stdout outcome*
 # - the token "--not--"
 # - not expected stdout outcome*
+# @note need to escape \[\]
 expectpart(){
   r=$?
   ret=$1
