@@ -7,10 +7,10 @@ A refactoring release. Many have requested a "sets" functionality and
 this was necessary in order to prepare for that going forward. Note
 also a small (non-backward-compatible) API change.
 
-* Refactoring of matching code in order to cleanup and make a core functions better structured and easier to add functionality. Should not change API:s, but it took some time getting the behaviour right. The following errors in clixon were related to these (thanks https://github.com/rombie):
-  * See eg: [Once an option is used, other options fail to appear in CLI](https://github.com/clicon/clixon/issues/107)
-  * Fixed [simple list model in yang is broken in cligen](https://github.com/clicon/clixon/issues/106)
-* Added a test dir, see [test](test/README.md)
+* Refactoring of matching code in order to cleanup and make a core functions better structured and easier to add functionality. Should not change API:s, but it took some time getting the behaviour right. The following errors in clixon were related to these (Thanks [Rombie](https://github.com/rombie) for detecting and verifying these):
+  * [Once an option is used, other options fail to appear in CLI](https://github.com/clicon/clixon/issues/107)
+  * [Simple list model in yang is broken in cligen](https://github.com/clicon/clixon/issues/106)
+* Added a test dir, see [test readme](test/README.md)
 * C API changes (you need to update your C-code calling CLIgen)
   * Added new specialized cbuf function: `cbuf_append_str()`
   * `cligen_nomatch()` replaced by `reason` function parameter.
