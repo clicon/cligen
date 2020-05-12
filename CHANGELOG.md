@@ -1,18 +1,25 @@
 # Cligen Changelog
 	
-## 4.5.0 (12 May 2020)
+## 4.5.0
+12 May 2020
 
-* Refactoring of matching code in order to cleanup and make a core functions better structured and easier to add functionality. Should not change API:s, but it took some time getting the behaviour right. The following errors in clixon were related to these:
+A refactoring release. Many have requested a "sets" functionality and
+this was necessary in order to prepare for that going forward. Note
+also a small (non-backward-compatible) API change.
+
+* Refactoring of matching code in order to cleanup and make a core functions better structured and easier to add functionality. Should not change API:s, but it took some time getting the behaviour right. The following errors in clixon were related to these (thanks https://github.com/rombie):
   * See eg: [Once an option is used, other options fail to appear in CLI](https://github.com/clicon/clixon/issues/107)
   * Fixed [simple list model in yang is broken in cligen](https://github.com/clicon/clixon/issues/106)
 * Added a test dir, see [test](test/README.md)
-* C API changes
+* C API changes (you need to update your C-code calling CLIgen)
   * Added new specialized cbuf function: `cbuf_append_str()`
   * `cligen_nomatch()` replaced by `reason` function parameter.
   * `cliread_parse()` and `cliread_eval()` added `reason` and `result` parameter. The latter replaces the return values
   * `cliread()` added return string as call-by-reference and changed return value to standard-style 0/-1.
 
-## 4.4.0 (3 April 2020)
+## 4.4.0
+3 April 2020
+
 * CLIgen buffer functions and API changes
   * A CLIgen buffer now starts at a "start" size and grows quadratic (2x) up to a "threshold" after it grows linearly with "threshold".
   * Global start and threshold limit can be set and read with `cbuf_alloc_set()` and `cbuf_alloc_get()`, (signature changed).
@@ -24,7 +31,9 @@
 * BugFix: Negative uint:s get parse error messages as if they are uint64, such as when uint8 parses -1.
 * C-API change: Renamed `cligen_match_cgvar_same(int flag)` to `cligen_preference_mode_set(cligen_handle h, int flag)`
 
-## 4.3.0 (1 January 2020)
+## 4.3.0
+1 January 2020
+
 Bugfixes and internal struct reorganizing. Bumped version to match with clixon 4.3
 
 * Experimental syntax `@{}` for expressing _sets_ of commands, as opposed to alternative commands.
@@ -48,10 +57,13 @@ Bugfixes and internal struct reorganizing. Bumped version to match with clixon 4
   * Moved `co_hide`, `co_mark`, `co_treeref`, and `co_refdone` to `co_flags`
   * Removed `co_userdata` since it is not used.
 
-## 4.0.1 (18 August 2019)
+## 4.0.1
+18 August 2019
+
 No new functionality, just a release number bump to synchronize with Clixon
 
-## 4.0.0 (13 July 2019)
+## 4.0.0
+13 July 2019
 
 * Added enable/disable as alternative boolean truth values on input
   * On request by dave@netgate.
@@ -105,7 +117,9 @@ No new functionality, just a release number bump to synchronize with Clixon
   ```
   * See [yang type range statement does not support multiple values](https://github.com/clicon/clixon/issues/59)
 
-## 3.9.0 (21 Feb 2019)
+## 3.9.0
+21 Feb 2019
+
 * Added cligen_utf8_set/get functions with default 0 to ignore UTF-8, set to 1 for _experimental_ UTF-8 mode.
 * Fixed: (feature request: make cligen unicode safe)[https://github.com/olofhagsand/cligen/issues/21]
 * Fixed: [serial terminals line wrap at 21 characters](https://github.com/olofhagsand/cligen/issues/20)
@@ -132,7 +146,9 @@ No new functionality, just a release number bump to synchronize with Clixon
 	a b, fn();
 	```
 
-## 3.8.0 (6 Nov 2018)
+## 3.8.0
+6 Nov 2018
+
 * Merged a large number of Netgate commits. Thanks!
 * Moved hidden C structures from .c files to internal .h headers
   * Requested by Dcarnejo in https://github.com/olofhagsand/cligen/issues/15
@@ -140,7 +156,8 @@ No new functionality, just a release number bump to synchronize with Clixon
 * Renamed cligen_var.[ch] to  cligen_cv.[ch] 
 * Restored cvec_find_var (as requested by Matt Smith Netgate)
 
-## 3.7.0 (20 July 2018)
+## 3.7.0
+20 July 2018
 
 * Fixed bug that REST variable did not work with regexp (thanks David Cornejo, Netgate)
   * For example this now works: <a:rest regexp:".*">;
@@ -290,8 +307,9 @@ commands and variables on the same level could not have the same name.
 
 Made cligen compilable with g++.
 
-R3.4.0 September 2013
-=====================
+## R3.4.0
+September 2013
+
 Changed 'range' variable syntax, the old did not allow negative numbers.
 NOTE: You need to change all variable syntax statements of the form:
     <a:int range:3-89>
@@ -335,8 +353,8 @@ cligen syntax, including tree-references and completion.
 
 Removed the --gl-select configure option by making it mandatory.
 
-R3_3_0 April 2013
-=================
+## R3_3_0
+April 2013
 
 Variable syntax: '<' <name> 'type:'<type>'>' is no longer supported. 
 Use instead: '<' <name>':'<type>'>'.
@@ -371,8 +389,8 @@ Example:
    }
 See cligen_tutorial for a documentation of the API
 
-R3_2_0 January 2012.
-====================
+## R3_2_0
+January 2012
 
 New variable and expand syntax. Example:
  <name:int fn()>
@@ -397,8 +415,9 @@ docs/block-chart.pdf.
 2. Search and insertion is made using binary search instead of linear. Load 30K syntax 
 lines now takes 0.2s instead of 13.2s.
 
-R3_1_0 2011-11-19
-=================
+## R3_1_0
+2011-11-19
+
 NOTE: API changes (You need to search and replace in your code):
  cli_output -> cligen_output
  pt_print -> cligen_parsetree_print
@@ -414,8 +433,9 @@ New API functions:
   int cligen_tabmode(cligen_handle ch);
   int cligen_tabmode_set(cligen_handle ch, int mode);
 
-R3_0_3 2013-06-30 (branched)
-=================
+## R3_0_3
+2013-06-30 (branched)
+
 Added help-text to expanded variables. An expand callback now has a 'comments' argument:
 NOTE: You need to change all expand callbacks in your user C-code:
    int expandcb(cligen_handle h, char *fn_str, cg_var *arg, int *nr, char ***commands);
@@ -429,13 +449,15 @@ cligen_terminal_length_set(h, 160);
 
 Support for clang, and copt as config-option
 
-R3_0_2 2011-10-27
-=================
+## R3_0_2
+2011-10-27
+
 url was limited: protocol only allowed some, and trailing slash was mandatory
 vt100 application cursor bug disabling arrow keys
 
-R3_0_1 2011-10-19
-=================
+## R3_0_1
+2011-10-19
+
 Callbacks signatures have changed to:
   int cb(void *handle, varrec args, cg_var *arg)
 CLI specification syntax has radically changed. Example:
@@ -447,15 +469,16 @@ CLI specification syntax has radically changed. Example:
 New handles and cleaned up API.
 More or less complete manual.
 
-R3_0_0 2011-10-0
-================
+## R3_0_0
+2011-10-1
+
 Pre- R3.0 version. dont use
 
-R2_0
-====
+## R2_0
+
 Stable version.
 
-R1_0
-====
+## R1_0
+
 GPL version available at http://www.nada.kth.se/~olofh (~2004).
 
