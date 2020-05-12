@@ -3,9 +3,9 @@
 ## 4.5.0 (12 May 2020)
 
 * Refactoring of matching code in order to cleanup and make a core functions better structured and easier to add functionality. Should not change API:s, but it took some time getting the behaviour right. The following errors in clixon were related to these:
-  * See eg: [https://github.com/clicon/clixon/issues/#107](Once an option is used, other options fail to appear in CLI)
-  * Fixed [https://github.com/clicon/clixon/issues/#106](simple list model in yang is broken in cligen)
-* Added a test dir, see [test/README.md]
+  * See eg: [Once an option is used, other options fail to appear in CLI](https://github.com/clicon/clixon/issues/107)
+  * Fixed [simple list model in yang is broken in cligen](https://github.com/clicon/clixon/issues/106)
+* Added a test dir, see [test](test/README.md)
 * C API changes
   * Added new specialized cbuf function: `cbuf_append_str()`
   * `cligen_nomatch()` replaced by `reason` function parameter.
