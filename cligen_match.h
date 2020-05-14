@@ -45,19 +45,19 @@
  * Function Prototypes
  */
 int match_pattern(cligen_handle h, cvec *cvt, cvec *cvr, 
-		  parse_tree pt,
+		  parse_tree *pt,
 		  int best, int hide, int expandvar,
-		  pt_vec *ptp, int *matchvec[], int *matchlen,
+		  co_vec_t *ptp, int *matchvec[], int *matchlen,
 		  cvec *cvv, char **reasonp);
 int match_pattern_exact(cligen_handle h, cvec *cvt, cvec *cvr, 
-			parse_tree pt,
+			parse_tree *pt,
 			int expandvar,
 			cvec *cvv, cg_obj **match_obj,
 			cligen_result *result,
 			char **reasonp);
 int cligen_str2cvv(char *string, cvec **cvp, cvec **cvr);
 int cligen_cvv_levels(cvec *cvv);
-int match_complete(cligen_handle h, parse_tree pt,
+int match_complete(cligen_handle h, parse_tree *pt,
 		   char **stringp, size_t *slen, cvec *cvec);
 
 #endif /* _CLIGEN_MATCH_H */

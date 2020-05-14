@@ -76,9 +76,9 @@
 /*
  * Local prototypes
  */
-static int show_help_columns(cligen_handle h, FILE *fout, char *s, parse_tree pt, cvec *cvv);
-static int show_help_line(cligen_handle h, FILE *fout, char *s, parse_tree pt, cvec *);
-static int complete(cligen_handle h, int *lenp, parse_tree pt, cvec *cvv);
+static int show_help_columns(cligen_handle h, FILE *fout, char *s, parse_tree *pt, cvec *cvv);
+static int show_help_line(cligen_handle h, FILE *fout, char *s, parse_tree *pt, cvec *);
+static int complete(cligen_handle h, int *lenp, parse_tree *pt, cvec *cvv);
 
 /*! Callback from getline: '?' has been typed on command line
  * Just show help by calling long help show function. 
@@ -108,16 +108,16 @@ cli_qmark_hook(cligen_handle h,
 	goto done;
     if (pt_expand_2(h, pt, cvv, 1, 0, &ptn) < 0)      /* expansion */
 	return -1;
-    if (show_help_line(h, stdout, string, ptn, cvv) <0)
+    if (show_help_line(h, stdout, string, &ptn, cvv) <0)
 	goto done;
  ok:
     retval = 0;
   done:
     if (cvv)
 	cvec_free(cvv);
-    if (cligen_parsetree_free(ptn, 0) < 0)
+    if (cligen_parsetree_free(&ptn, 0) < 0)
 	return -1;
-    if (pt && pt_expand_cleanup_2(*pt) < 0) 
+    if (pt && pt_expand_cleanup_2(pt) < 0) 
 	return -1;
     if (pt && pt_expand_treeref_cleanup(pt) < 0) 
 	return -1;
@@ -155,17 +155,17 @@ cli_tab_hook(cligen_handle h,
     if (pt_expand_2(h, pt, cvv, 1, 0, &ptn) < 0)      /* expansion */
 	goto done;
     /* Note, can change cligen buf pointer (append and increase) */
-    if (complete(h, cursorp, ptn, cvv) < 0)
+    if (complete(h, cursorp, &ptn, cvv) < 0)
 	goto done;
     else {
 	if (old_cursor == *cursorp) { 	/* Cursor hasnt changed */
 	    fputs("\n", stdout);
 	    if (cligen_tabmode(h)&CLIGEN_TABMODE_COLUMNS){
-		if (show_help_line(h, stdout, cligen_buf(h), ptn, cvv) < 0)
+		if (show_help_line(h, stdout, cligen_buf(h), &ptn, cvv) < 0)
 		    goto done;
 	    }
 	    else{
-		if (show_help_columns(h, stdout, cligen_buf(h), ptn, cvv) < 0)
+		if (show_help_columns(h, stdout, cligen_buf(h), &ptn, cvv) < 0)
 		    goto done;
 	    }
 	}
@@ -175,9 +175,9 @@ cli_tab_hook(cligen_handle h,
  done:
     if (cvv)
 	cvec_free(cvv);
-    if (cligen_parsetree_free(ptn, 0) < 0)
+    if (cligen_parsetree_free(&ptn, 0) < 0)
 	return -1;
-    if (pt && pt_expand_cleanup_2(*pt) < 0)
+    if (pt && pt_expand_cleanup_2(pt) < 0)
 	return -1;
     if (pt && pt_expand_treeref_cleanup(pt) < 0)
 	return -1;
@@ -243,12 +243,12 @@ static int
 show_help_columns(cligen_handle h, 
 		  FILE         *fout, 
 		  char         *string, 
-		  parse_tree    pt, 
+		  parse_tree   *pt, 
 		  cvec         *cvv)
 {
     int              retval = -1;
     int              level;
-    pt_vec           pt1;
+    co_vec_t         pt1;
     int              matchlen = 0;
     int             *matchvec = NULL;
     int              vi;
@@ -386,17 +386,18 @@ static int
 show_help_line(cligen_handle h, 
 	       FILE         *fout, 
 	       char         *string, 
-	       parse_tree    pt, 
+	       parse_tree   *pt, 
 	       cvec         *cvv)
 {
     int           retval = -1;
     int           level;
-    pt_vec        pt1 = NULL;
+    co_vec_t      pt1 = NULL;
     int           matchlen = 0;
     int          *matchvec = NULL;
     cvec         *cvt = NULL;      /* Tokenized string: vector of tokens */
     cvec         *cvr = NULL;      /* Rest variant,  eg remaining string in each step */
-    cg_var       *cvlast;          /* Last element */
+    cg_var       *cvlastt;         /* Last element in cvt */
+    cg_var       *cvlastr;         /* Last element in cvr */
     cligen_result result;
     
     if (string == NULL){
@@ -404,7 +405,7 @@ show_help_line(cligen_handle h,
 	goto done;
     }
     /* Tokenize the string and transform it into two CLIgen vectors: tokens and rests */
-    if (cligen_str2cvv(string, &cvt, &cvr) < 0)
+    if (cligen_str2cvv(string, &cvt, &cvr) < 0) /* XXX cvr leaks memory */
 	goto done;
     if (match_pattern(h,
 		      cvt, cvr, /* token string */
@@ -424,15 +425,20 @@ show_help_line(cligen_handle h,
      * This means we need to peek in next level and if that provides a unique solution,
      * then add a <cr>
      */
-    cvlast = cvec_i(cvt, cvec_len(cvt)-1);
-    if (cvec_len(cvt) > 2 && strcmp(cv_string_get(cvlast), "")==0){
+    cvlastt = cvec_i(cvt, cvec_len(cvt)-1);
+    if (cvec_len(cvt) > 2 && strcmp(cv_string_get(cvlastt), "")==0){
 	/* if it is ok to <cr> here (at end of one mode) 
 	   Example: x [y|z] and we have typed 'x ', then show
 	   help for y and z and a 'cr' for 'x'.
 	*/
 
-	/* Tokenize the string and transform it into two CLIgen vectors: tokens and rests */
+	/* Remove the last elements. Awkward: first free the cv then truncate the cvec */
+	if (cvlastt)
+	    cv_reset(cvlastt);
 	cvec_del_i(cvt, cvec_len(cvt)-1); /* We really just want to truncate len-1 */
+
+	if ((cvlastr = cvec_i(cvr, cvec_len(cvr)-1)) != NULL)
+	    cv_reset(cvlastr);
 	cvec_del_i(cvr, cvec_len(cvr)-1);
 
 	if (match_pattern_exact(h, cvt, cvr, pt,
@@ -473,7 +479,7 @@ show_help_line(cligen_handle h,
 static int 
 complete(cligen_handle h, 
 	 int          *cursorp, 
-	 parse_tree    pt, 
+	 parse_tree   *pt, 
 	 cvec         *cvv)
 {
     int     retval = -1;
@@ -615,7 +621,7 @@ cliread_parse(cligen_handle  h,
     }
     if (cligen_logsyntax(h) > 0){
 	fprintf(stderr, "%s:\n", __FUNCTION__);
-	pt_print(stderr, *pt, 0);
+	pt_print(stderr, pt, 0);
     }
     cli_trim(&string, cligen_comment(h));
     /* Tokenize the string and transform it into two CLIgen vectors: tokens and rests */
@@ -628,7 +634,7 @@ cliread_parse(cligen_handle  h,
     if (pt_expand_2(h, pt, cvv0, 0, 0, &ptn) < 0)      /* expansion */
 	goto done;
     if (match_pattern_exact(h, cvt, cvr,
-			    ptn, 0,
+			    &ptn, 0,
 			    cvv0, &match_obj, result, reason) < 0)
 	goto done;
     /* Map from ghost object match_obj to real object */
@@ -646,9 +652,9 @@ cliread_parse(cligen_handle  h,
 	cvec_free(cvr);
     if (cvv0)
 	cvec_free(cvv0);
-    if (cligen_parsetree_free(ptn, 0) < 0)
+    if (cligen_parsetree_free(&ptn, 0) < 0)
 	return -1;
-    if (pt_expand_cleanup_2(*pt) < 0)
+    if (pt_expand_cleanup_2(pt) < 0)
 	return -1;
     return retval;
 }

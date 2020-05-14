@@ -154,7 +154,7 @@ cligen_exit(cligen_handle h)
 	free(ch->ch_fn_str);
     while ((ptl = ch->ch_tree) != NULL){
 	ch->ch_tree =  ptl->ptl_next;
-	cligen_parsetree_free(ptl->ptl_parsetree, 1);
+	cligen_parsetree_free(&ptl->ptl_parsetree, 1);
 	free(ptl);
     }
     free(ch);
@@ -286,7 +286,7 @@ cligen_tree_find(cligen_handle h,
 int 
 cligen_tree_add(cligen_handle h, 
 		char         *name, 
-		parse_tree    pt)
+		parse_tree   *pt)
 {
     parse_tree_list           *ptl;
     parse_tree_list           *ptlast;
@@ -298,7 +298,7 @@ cligen_tree_add(cligen_handle h,
 	return -1;
     }
     memset(ptl, 0, sizeof(*ptl));
-    ptl->ptl_parsetree = pt;
+    ptl->ptl_parsetree = *pt;
     ptn =  &ptl->ptl_parsetree;
     if ((ptn->pt_name = strdup(name)) == NULL){
 	fprintf(stderr, "%s strdup: %s\n", __FUNCTION__, strerror(errno));

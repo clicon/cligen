@@ -66,8 +66,125 @@
 #include "cligen_getline.h"
 
 /* Internal functions */
-static int pt_free1(parse_tree, int recursive);
+static int pt_free1(parse_tree *, int recursive);
 
+/*! Access function to get a CLIgen objects parse-tree (children)
+ * @param[in]  co  CLIgen parse object
+ */
+parse_tree *
+co_pt_get(cg_obj *co)
+{
+    if (co == NULL){
+       errno = EINVAL;
+       return NULL;
+    }
+    return &co->co_pt;
+}
+
+/*! Access function to set a CLIgen objects parse-tree (children)
+ * @param[in]  co  CLIgen parse object
+ * @param[in]  pt  CLIgen parse tree
+ * if pt is null, the pt struct is nullified, XXX legacy somewhat strange
+ */
+int
+co_pt_set(cg_obj     *co,
+	  parse_tree *pt)
+{
+    if (co == NULL){
+       errno = EINVAL;
+       return -1;
+    }
+    if (pt)
+	co->co_pt = *pt; /* XXX free? */
+    else
+	memset(&co->co_pt, 0, sizeof(parse_tree)); /* XXX */
+    return 0;
+}
+
+/*! Access function to get the i:th CLIgen object child
+ * @param[in]  co  CLIgen parse object
+ * @param[in]  i   
+ * @see pt_vec_get
+ */
+cg_obj *
+co_vec_i_get(cg_obj *co,
+	     int     i)
+{
+    parse_tree *pt;
+    co_vec_t    cov;
+	
+    if (co == NULL){
+       errno = EINVAL;
+       return NULL;
+    }
+    if ((pt = co_pt_get(co)) == NULL)
+	return NULL;
+    if ((cov = pt_vec_get(pt)) == NULL)
+	return NULL;
+    else
+	return pt_vec_get(pt)[i];
+}
+
+/*! Access function to get the length of a CLIgen object child vector
+ * @param[in]  co  CLIgen parse object
+ */
+int
+co_vec_len_get(cg_obj *co)
+{
+    parse_tree *pt;
+	
+    if (co == NULL){
+       errno = EINVAL;
+       return -1;
+    }
+    if ((pt = co_pt_get(co)) == NULL)
+	return 0;
+    return pt->pt_len;
+}
+
+/*! Access function to get a CLIgen objects child tree vector
+ * @param[in]  co  CLIgen parse object
+ */
+co_vec_t
+pt_vec_get(parse_tree *pt)
+{
+    if (pt == NULL){
+       errno = EINVAL;
+       return NULL;
+    }
+    return pt->pt_vec;
+}
+
+/*! Access function to get a CLIgen objects child tree vector
+ * @param[in]  co  CLIgen parse object
+ */
+int
+pt_len_get(parse_tree *pt)
+{
+    if (pt == NULL){
+       errno = EINVAL;
+       return -1;
+    }
+    return pt->pt_len;
+}
+
+#ifdef notused
+/*! Access function to set a CLIgen objects child tree vector
+ * @param[in]  pt  CLIgen parse tree
+ * @param[in]  ptv Vector of CLIgen objects
+ */
+int
+pt_vec_set(parse_tree *pt,
+	   co_vec_t    ptv)
+{
+    if (pt == NULL){
+       errno = EINVAL;
+       return -1;
+    }
+    pt->pt_vec = ptv;
+    return 0;
+}
+#endif
 void
 co_flags_set(cg_obj  *co,
 	     uint32_t flag)
@@ -89,10 +206,16 @@ co_flags_get(cg_obj  *co,
     return (co->co_flags & flag) ? 1 : 0;
 }
 
+
 int
 co_sets_get(cg_obj *co)
 {
-    return co->co_set;
+    parse_tree *pt;
+
+    if ((pt = co_pt_get(co)) != NULL)
+	return 0;
+    else
+	return pt->pt_set;
 }
 
 void
@@ -100,7 +223,9 @@ co_sets_set(cg_obj *co,
 	    int     sets)
 
 {
-    co->co_set = sets;
+    parse_tree *pt;
+    if ((pt = co_pt_get(co)) != NULL)
+	pt->pt_set = sets;
 }
 
 /*! Assign a preference to a cligen variable object
@@ -286,8 +411,7 @@ co_new(char   *cmd,
     co->co_type    = CO_COMMAND;
     co->co_command = strdup(cmd);
     co_up_set(co, parent);
-    co->co_max = 0;                  /* pt len */
-    co->co_next = NULL;
+    /* XXX: parse-tree created implicitly */
     return co;
 }
 
@@ -316,10 +440,8 @@ cov_new(enum cv_type cvtype,
     co->co_vtype   = cvtype;
     if (parent)
 	co_up_set(co, parent);
-    co->co_max = 0;                  /* pt len */
-    co->co_next = NULL;
     co->co_dec64_n = CGV_DEC64_N_DEFAULT;
-
+    /* XXX: parse-tree created implicitly */
     return co;
 }
 
@@ -407,7 +529,8 @@ co_copy(cg_obj  *co,
 	cg_obj  *parent,
 	cg_obj **conp)
 {
-    cg_obj *con;
+    cg_obj     *con;
+    parse_tree *pt;
 
     if ((con = malloc(sizeof(cg_obj))) == NULL){
 	fprintf(stderr, "%s: malloc: %s\n", __FUNCTION__, strerror(errno));
@@ -429,8 +552,9 @@ co_copy(cg_obj  *co,
 	return -1;
     if (co->co_cvec)
 	con->co_cvec = cvec_dup(co->co_cvec);
-    if (co->co_next)
-	if (pt_copy(co->co_pt, con, &con->co_pt) < 0)
+    pt = co_pt_get(co);
+    if (pt && pt_vec_get(pt))
+	if (pt_copy(pt, con, co_pt_get(con)) < 0)
 	    return -1;
     if (co->co_help)
 	if ((con->co_help = strdup(co->co_help)) == NULL){
@@ -488,14 +612,13 @@ co_copy(cg_obj  *co,
  * No common pointers between the two structures
  *
  * @param[in]  pt     Original parse-tree
- * @param[in]  parent The parent of the new parsetree (need not be same as parent 
- *                    of pt)
+ * @param[in]  parent The parent of the new parsetree. Need not be same as parent of the orignal
  * @param[out] ptnp   New parse-tree
  * @retval     0      OK
  * @retval     -1      Error
  */
 int
-pt_copy(parse_tree  pt, 
+pt_copy(parse_tree *pt, 
 	cg_obj     *parent, 
 	parse_tree *ptnp)
 {
@@ -505,13 +628,13 @@ pt_copy(parse_tree  pt,
     parse_tree ptn = {0,};
     cg_obj    *co;
 
-    if (pt.pt_vec == NULL){
+    if (pt->pt_vec == NULL){
 	*ptnp = ptn;
 	goto ok;
     }
     /* subtract treereferences, which are instances of other trees */
-    for (i=0; i<pt.pt_len; i++){
-	if ((co = pt.pt_vec[i]) && co_flags_get(co, CO_FLAGS_TREEREF))
+    for (i=0; i<pt->pt_len; i++){
+	if ((co = pt->pt_vec[i]) && co_flags_get(co, CO_FLAGS_TREEREF))
 	    ;
 	else
 	    ptn.pt_len++;
@@ -521,8 +644,8 @@ pt_copy(parse_tree  pt,
 	goto done;
     }
     j=0;
-    for (i=0; i<pt.pt_len; i++){
-	if ((co = pt.pt_vec[i]) != NULL){
+    for (i=0; i<pt->pt_len; i++){
+	if ((co = pt->pt_vec[i]) != NULL){
 	    if (!co_flags_get(co, CO_FLAGS_TREEREF))
 		if (co_copy(co, parent, &ptn.pt_vec[j++]) < 0)
 		    goto done;
@@ -711,7 +834,7 @@ co_eq(cg_obj *co1,
 int
 cligen_parsetree_merge(parse_tree *pt0, 
 		       cg_obj     *parent, 
-		       parse_tree  pt1)
+		       parse_tree *pt1)
 {
     cg_obj *co0=NULL;
     cg_obj *co1;
@@ -721,8 +844,8 @@ cligen_parsetree_merge(parse_tree *pt0,
     int     retval = -1;
     int     exist;
 
-    for (j=0; j<pt1.pt_len; j++){ 
-	co1 = pt1.pt_vec[j];
+    for (j=0; j<pt1->pt_len; j++){ 
+	co1 = pt1->pt_vec[j];
 	exist = 0;
 	for (i=0; i<pt0->pt_len; i++){
 	    co0 = pt0->pt_vec[i];
@@ -751,7 +874,7 @@ cligen_parsetree_merge(parse_tree *pt0,
 	    continue;
 	}
 	if (exist){
-	    if (cligen_parsetree_merge(&co0->co_pt, co0, co1->co_pt) < 0)
+	    if (cligen_parsetree_merge(co_pt_get(co0), co0, co_pt_get(co1)) < 0)
 		goto done;
 	}
 	else{
@@ -762,7 +885,7 @@ cligen_parsetree_merge(parse_tree *pt0,
 	    pt0->pt_vec[pt0->pt_len-1]= co1c;
 	}
     }
-    cligen_parsetree_sort(*pt0, 0);
+    cligen_parsetree_sort(pt0, 0);
     retval = 0;
   done:
     return retval;
@@ -800,20 +923,23 @@ co_cmp(const void* arg1,
  * @retval     void
  */
 void 
-cligen_parsetree_sort(parse_tree pt, 
-		      int        recursive)
+cligen_parsetree_sort(parse_tree *pt, 
+		      int         recursive)
 {
-    cg_obj *co;
-    int     i;
+    cg_obj     *co;
+    int         i;
+    parse_tree *pt1;
     
-    qsort(pt.pt_vec, pt.pt_len, sizeof(cg_obj*), co_cmp);
-    for (i=0; i<pt.pt_len; i++){
-	if ((co = pt.pt_vec[i]) == NULL)
+    qsort(pt->pt_vec, pt->pt_len, sizeof(cg_obj*), co_cmp);
+    for (i=0; i<pt->pt_len; i++){
+	if ((co = pt->pt_vec[i]) == NULL)
 	    continue;
 	if (co_flags_get(co, CO_FLAGS_MARK) == 0){ /* not recursive */
 	    co_flags_set(co, CO_FLAGS_MARK);
-	    if (co->co_next && recursive)
-		cligen_parsetree_sort(co->co_pt, 1);
+	    pt1 = co_pt_get(co);
+	    if (pt1 && pt_vec_get(pt1) && recursive){
+		cligen_parsetree_sort(pt1, 1);
+	    }
 	    co_flags_reset(co, CO_FLAGS_MARK);
 	}
     }
@@ -834,9 +960,11 @@ co_free(cg_obj *co,
 	int     recursive)
 {
     struct cg_callback *cc;
+    parse_tree         *pt;
 
-    if (recursive && co->co_next)
-	pt_free1(co->co_pt, 1); /* recursive */
+    pt = co_pt_get(co);
+    if (recursive && pt && pt_vec_get(pt))
+	pt_free1(pt, 1); /* recursive */
     if (co->co_help)
 	free(co->co_help);
     if (co->co_command)
@@ -882,21 +1010,21 @@ co_free(cg_obj *co,
  * @retval    -1          Error
  */
 static int
-pt_free1(parse_tree pt, 
+pt_free1(parse_tree *pt, 
 	 int        recursive)
 {
     int i;
 
-    if (pt.pt_vec != NULL){
-	for (i=0; i<pt.pt_len; i++)
-	    if (pt.pt_vec[i])
-		co_free(pt.pt_vec[i], recursive);
-	free(pt.pt_vec);
+    if (pt->pt_vec != NULL){
+	for (i=0; i<pt->pt_len; i++)
+	    if (pt->pt_vec[i])
+		co_free(pt->pt_vec[i], recursive);
+	free(pt->pt_vec);
     }
-    pt.pt_len = 0;
-    if (pt.pt_name){
-	free(pt.pt_name);
-	pt.pt_name = NULL;
+    pt->pt_len = 0;
+    if (pt->pt_name){
+	free(pt->pt_name);
+	pt->pt_name = NULL;
     }
     return 0;
 }
@@ -909,8 +1037,8 @@ pt_free1(parse_tree pt,
  * @see pt_free1  Does the actual work
  */
 int
-cligen_parsetree_free(parse_tree pt, 
-		      int        recursive)
+cligen_parsetree_free(parse_tree *pt, 
+		      int         recursive)
 {
     return pt_free1(pt, recursive);
 }
@@ -925,10 +1053,10 @@ cligen_parsetree_free(parse_tree pt,
  * @see co_insert Main function
  */
 static cg_obj *
-co_search1(parse_tree pt, 
-	   char      *name, 
-	   int        low, 
-	   int        upper)
+co_search1(parse_tree *pt, 
+	   char       *name, 
+	   int         low, 
+	   int         upper)
 {
     int     mid;
     int     cmp;
@@ -937,9 +1065,9 @@ co_search1(parse_tree pt,
     if (upper < low)
 	return NULL; /* not found */
     mid = (low + upper) / 2;
-    if (mid >= pt.pt_len)  /* beyond range */
+    if (mid >= pt->pt_len)  /* beyond range */
 	return NULL;
-    co = pt.pt_vec[mid];
+    co = pt->pt_vec[mid];
     cmp = str_cmp(name, co ? co->co_command : NULL);
     if (cmp < 0)
 	return co_search1(pt, name, low, mid-1);
@@ -959,10 +1087,10 @@ co_search1(parse_tree pt,
  * @see co_insert Main function
  */
 static int
-co_insert_pos(parse_tree pt, 
-	      cg_obj    *co1, 
-	      int        low, 
-	      int        upper)
+co_insert_pos(parse_tree *pt, 
+	      cg_obj     *co1, 
+	      int         low, 
+	      int         upper)
 {
     int     mid;
     int     cmp;
@@ -971,11 +1099,11 @@ co_insert_pos(parse_tree pt,
     if (upper < low)
 	return low; /* not found */
     mid = (low + upper) / 2;
-    if (mid >= pt.pt_len)
-	return pt.pt_len; 
+    if (mid >= pt->pt_len)
+	return pt->pt_len; 
     if (co1 == NULL)
 	return 0; /* Insert in 1st pos */
-    co2 = pt.pt_vec[mid];
+    co2 = pt->pt_vec[mid];
     if (co2 == NULL)
 	cmp = 1;
     else
@@ -1010,14 +1138,14 @@ co_insert(parse_tree *pt,
     cg_obj *co2;
 
     /* find closest to co in parsetree, insert after pos. */
-    pos = co_insert_pos(*pt, co1, 0, pt->pt_len);
+    pos = co_insert_pos(pt, co1, 0, pt->pt_len);
     /* check if exists */
     if (pos < pt->pt_len){
 	co2 = pt->pt_vec[pos]; /* insert after co2 */
 	if (co1 == NULL && co2==NULL)
 	    return NULL;
 	if (co1 && co2 && co_eq(co1, co2)==0){
-	    cligen_parsetree_merge(&co2->co_pt, co2, co1->co_pt);
+	    cligen_parsetree_merge(co_pt_get(co2), co2, co_pt_get(co1));
 	    co_free(co1, 1);
 	    return co2;
 	}
@@ -1043,10 +1171,10 @@ co_insert(parse_tree *pt,
  * No recursion
  */
 cg_obj *
-co_find_one(parse_tree pt, 
-	    char      *name)
+co_find_one(parse_tree *pt,
+	    char       *name)
 {
-  return co_search1(pt, name, 0, pt.pt_len);
+  return co_search1(pt, name, 0, pt->pt_len);
 }
 
 /*! Set CLIgen object value
@@ -1114,22 +1242,22 @@ cligen_reason(const char *fmt, ...)
  * @retval     -1     Error (one applied function call return -1)
  */
 int
-pt_apply(parse_tree   pt, 
-	 cg_applyfn_t fn, 
-	 void        *arg)
+pt_apply(parse_tree   *pt, 
+	 cg_applyfn_t  fn, 
+	 void         *arg)
 {
     cg_obj *co;
     int     i;
     int     retval = -1;
 
-    if (pt.pt_vec == NULL)
+    if (pt->pt_vec == NULL)
 	return 0;
-    for (i=0; i<pt.pt_len; i++){
-	if ((co = pt.pt_vec[i]) == NULL)
+    for (i=0; i<pt->pt_len; i++){
+	if ((co = pt->pt_vec[i]) == NULL)
 	    continue;
 	if (fn(co, arg) < 0)
 	    goto done;
-	if (pt_apply(co->co_pt, fn, arg) < 0)
+	if (pt_apply(co_pt_get(co), fn, arg) < 0)
 	    goto done;
     }
     retval = 0;

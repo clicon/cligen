@@ -3,6 +3,15 @@
 ## 4.6.0
 Expected: July 2020
 
+* Refactored the CLIgen object structures and introduce access macros. The object structure had a
+strange object-within-objct structure, where a CLIgen object (cg_obj)
+contained a "parse-tree" object which in turn contains all
+children. At the same time the parse-tree is a first level object, although from a memory allocation perspective it was not. This is now (on its way) to be broken apart.
+  * Access macros replace direct structure access as follows:
+    * `co->co_next[i]` --> `co_vec_i_get(co, i)`
+    * `co->co_max` --> `co_vec_len_get(co, i)`
+    * `pt->pt_vec` --> `pt_vec_get(pt)` , etc.
+
 ## 4.5.0
 12 May 2020
 

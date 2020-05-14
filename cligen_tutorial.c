@@ -320,11 +320,11 @@ main(int argc, char *argv[])
         goto done;
     pt = NULL;
     while ((pt = cligen_tree_each(h, pt)) != NULL) {
-	if (cligen_callbackv_str2fn(*pt, str2fn, NULL) < 0) /* map functions */
+	if (cligen_callbackv_str2fn(pt, str2fn, NULL) < 0) /* map functions */
 	    goto done;
-	if (cligen_expandv_str2fn(*pt, str2fn_exp, NULL) < 0)
+	if (cligen_expandv_str2fn(pt, str2fn_exp, NULL) < 0)
 	    goto done;
-	if (cligen_translate_str2fn(*pt, str2fn_trans, NULL) < 0)     
+	if (cligen_translate_str2fn(pt, str2fn_trans, NULL) < 0)     
 	    goto done;
     }
     if ((str = cvec_find_str(globals, "prompt")) != NULL)
@@ -339,7 +339,7 @@ main(int argc, char *argv[])
 	pt = NULL;
 	while ((pt = cligen_tree_each(h, pt)) != NULL) {
 	    printf("Syntax:\n");
-	    pt_print(stdout, *pt, 0);
+	    pt_print(stdout, pt, 0);
 	}
 	fflush(stdout);
     }

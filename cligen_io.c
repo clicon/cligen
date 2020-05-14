@@ -243,7 +243,7 @@ cligen_exitchar_add(cligen_handle h,
  */
 int
 print_help_lines(FILE      *fout, 
-		 pt_vec     ptvec,
+		 co_vec_t   ptvec,
 		 int       *matchvec,
 		 size_t     matchlen)
     
@@ -334,21 +334,21 @@ print_help_lines(FILE      *fout,
  * @param[in] pt    Cligen parse-tree
  */
 int
-cligen_help(FILE      *fout, 
-	    parse_tree pt)
+cligen_help(FILE       *fout, 
+	    parse_tree *pt)
 {
     int              retval = -1;
     int              i;
     int             *matchvec = NULL;
 
     /* intermediate struct to fit into print_help_lines() parameters */
-    if ((matchvec = calloc(pt.pt_len, sizeof(int))) == NULL){
+    if ((matchvec = calloc(pt->pt_len, sizeof(int))) == NULL){
 	perror("calloc");
 	goto done;
     }
-    for (i=0; i<pt.pt_len; i++)
+    for (i=0; i<pt->pt_len; i++)
 	matchvec[i] = i;
-    if (print_help_lines(fout, pt.pt_vec, matchvec, pt.pt_len) < 0)
+    if (print_help_lines(fout, pt->pt_vec, matchvec, pt->pt_len) < 0)
 	goto done;
     retval = 0;
  done:

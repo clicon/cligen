@@ -327,11 +327,11 @@ cligen_str2cvv(char  *string,
 	    break;
 	if ((cv = cvec_add(cvr, CGV_STRING)) == NULL)
 	    goto done;
-	if (cv_string_set(cv, sr?sr:"") == NULL)
+	if (cv_string_set(cv, sr?sr:"") == NULL) /* XXX memleak */
 	    goto done;
 	if ((cv = cvec_add(cvt, CGV_STRING)) == NULL)
 	    goto done;
-	if (cv_string_set(cv, t?t:"") == NULL)
+	if (cv_string_set(cv, t?t:"") == NULL) /* XXX memleak */
 	    goto done;
 	if (t)
 	    free(t);
@@ -388,14 +388,14 @@ cligen_cvv_levels(cvec *cvv)
  * @retval    1   0 elements, only variables alternatives (or commands derived from variables)
  */
 static int
-pt_onlyvars(parse_tree pt)
+pt_onlyvars(parse_tree *pt)
 {
     int     i;
     cg_obj *co;
     int     onlyvars = 0;
     
-    for (i=0; i<pt.pt_len; i++){ 
-	if ((co = pt.pt_vec[i]) == NULL)
+    for (i=0; i<pt->pt_len; i++){ 
+	if ((co = pt->pt_vec[i]) == NULL)
 	    continue;
 	if (co->co_type != CO_VARIABLE && co->co_ref == NULL){
 	    onlyvars = 0;
@@ -475,7 +475,7 @@ static int
 match_vec(cligen_handle h,
 	  cvec         *cvt,
 	  cvec         *cvr,
-	  parse_tree    pt,
+	  parse_tree   *pt,
 	  int           level, 
 	  int           best,
 	  int          *matchvec[],
@@ -488,7 +488,7 @@ match_vec(cligen_handle h,
     int32_t pref_upper = 0;         /* Preference upper bound */
     int     p;             /* If all fails, save lowest(widest) preference error message */
     int     exact;
-    char   *rtmp;
+    char   *rtmp = NULL;
     int     i;
     char   *strtoken;
     char   *strrest;
@@ -500,8 +500,8 @@ match_vec(cligen_handle h,
     strrest  = cvec_i_str(cvr, level+1);
 
     /* Loop through parse-tree at this level to find matches */
-    for (i=0; i<pt.pt_len; i++){
-	if ((co = pt.pt_vec[i]) == NULL)
+    for (i=0; i<pt->pt_len; i++){
+	if ((co = pt->pt_vec[i]) == NULL)
 	    continue;
 	/* Return -1: error, 0: nomatch, 1: match */
 	rtmp = NULL;
@@ -551,7 +551,12 @@ match_vec(cligen_handle h,
 	    }
 	} /* switch match */
 	assert(rtmp == NULL);
-    } /* for pt.pt_len */
+    } /* for pt->pt_len */
+    /* Only return reason if matches == 0 */
+    if (*matchesp != 0 && reason && *reason){
+	free(*reason);
+	*reason = NULL;
+    }
     retval = 0;
  done:
     return retval;
@@ -587,11 +592,11 @@ static int
 match_pattern_terminal(cligen_handle h, 
 		       cvec         *cvt,
 		       cvec         *cvr,
-		       parse_tree    pt,
+		       parse_tree   *pt,
 		       int           levels,
 		       int           level, 
 		       int           best,
-		       pt_vec       *ptp, 
+		       co_vec_t     *ptp, 
 		       int          *matchvec[], 
 		       int          *matchlen,
 		       char        **reasonp
@@ -623,12 +628,12 @@ match_pattern_terminal(cligen_handle h,
 	break;
     default: /* multiple matches */
 	/* If set, if multiple cligen variables match use the first one */
-	*ptp = pt.pt_vec;
+	*ptp = pt->pt_vec;
 	break;
     case 1: /* exactly one match */
 	if (matches == 1)
-	    *ptp = pt.pt_vec; /* not in fallthru */
-	co_match = pt.pt_vec[(*matchvec)[0]];
+	    *ptp = pt->pt_vec; /* not in fallthru */
+	co_match = pt->pt_vec[(*matchvec)[0]];
 	co_orig = co_match->co_ref?co_match->co_ref: co_match;
 	if (co_match->co_type == CO_COMMAND && co_orig->co_type == CO_VARIABLE){
 	    if (co_value_set(co_orig, co_match->co_command) < 0)
@@ -675,13 +680,13 @@ static int
 match_pattern_node(cligen_handle h, 
 		   cvec         *cvt,
 		   cvec         *cvr,
-		   parse_tree    pt,
+		   parse_tree   *pt,
 		   int           levels,
 		   int           level, 
 		   int           best,
 		   int           hide,
 		   int           expandvar,
-		   pt_vec       *ptp, 
+		   co_vec_t     *ptp, 
 		   int          *matchvec[], 
 		   int          *matchlen,
 		   cvec         *cvv,
@@ -721,7 +726,7 @@ match_pattern_node(cligen_handle h,
     } /* switch matches */
     if (matches != 1) 
 	goto ok;
-    co_match =  pt.pt_vec[(*matchvec)[0]];
+    co_match =  pt->pt_vec[(*matchvec)[0]];
     if (ISREST(co_match))
 	str  = cvec_i_str(cvr, level+1);
     else
@@ -729,7 +734,7 @@ match_pattern_node(cligen_handle h,
 
     /* co_orig is original object in case of expansion */
     co_orig = co_match->co_ref?co_match->co_ref: co_match;
-    if (pt_expand_treeref(h, co_match, &co_match->co_pt) < 0) /* sub-tree expansion */
+    if (pt_expand_treeref(h, co_match, co_pt_get(co_match)) < 0) /* sub-tree expansion */
 	goto done;
 
     if (co_match->co_type == CO_VARIABLE){
@@ -741,7 +746,7 @@ match_pattern_node(cligen_handle h,
 	 * This is "inline" of match_terminal
 	 */
 	if (ISREST(co_match)){
-	    *ptp = pt.pt_vec;
+	    *ptp = pt->pt_vec;
 	    goto ok;
 	}
     }
@@ -749,23 +754,23 @@ match_pattern_node(cligen_handle h,
 	if (co_match->co_type == CO_COMMAND && co_orig->co_type == CO_VARIABLE)
 	    if ((cv = add_cov_to_cvec(co_orig, co_match->co_command, cvv)) == NULL)
 		goto done;
-    if (pt_expand_2(h, &co_match->co_pt, cvv, hide, expandvar, &ptn) < 0) /* expand/choice variables */
+    if (pt_expand_2(h, co_pt_get(co_match), cvv, hide, expandvar, &ptn) < 0) /* expand/choice variables */
 	goto done;
     matches = 0;
     if (level+1 == levels){
-	if (match_pattern_terminal(h, cvt, cvr, ptn, 
+	if (match_pattern_terminal(h, cvt, cvr, &ptn, 
 				   levels,	level+1, 
 				   best,
 				   ptp, matchvec, &matches, reasonp) < 0)
 	    goto done;
     }
     else
-	if (match_pattern_node(h, cvt, cvr, ptn,
+	if (match_pattern_node(h, cvt, cvr, &ptn,
 			       levels, level+1, 
 			       best, hide, expandvar,
 			       ptp, matchvec, &matches, cvv, reasonp) < 0)
 	    goto done;
-    if (pt_expand_add(co_orig, ptn) < 0) /* add expanded ptn to orig parsetree */
+    if (pt_expand_add(co_orig, &ptn) < 0) /* add expanded ptn to orig parsetree */
 	goto done;
     /* From here ptn is not used (but ptp may be inside ptn) */
     if (co_match->co_type == CO_COMMAND && co_orig->co_type == CO_VARIABLE)
@@ -811,11 +816,11 @@ int
 match_pattern(cligen_handle h,
 	      cvec         *cvt,
 	      cvec         *cvr,
-	      parse_tree    pt, 
+	      parse_tree   *pt, 
 	      int           best,
 	      int           hide,
 	      int           expandvar,
-	      pt_vec       *ptp, 
+	      co_vec_t     *ptp, 
 	      int          *matchvec[],
 	      int          *matchlen, 
 	      cvec         *cvv,
@@ -872,7 +877,7 @@ int
 match_pattern_exact(cligen_handle  h, 
 		    cvec          *cvt,
 		    cvec          *cvr,
-		    parse_tree     pt, 
+		    parse_tree    *pt, 
 		    int            expandvar,
 		    cvec          *cvv,
 		    cg_obj       **match_obj,
@@ -880,7 +885,7 @@ match_pattern_exact(cligen_handle  h,
 		    char         **reason)
 {
     int           retval = -1;
-    pt_vec        res_pt;
+    co_vec_t      res_pt;
     cg_obj       *co = NULL;
     int          *matchvec = NULL;
     int           matchlen = -1; /* length of matchvec */
@@ -917,10 +922,11 @@ match_pattern_exact(cligen_handle  h,
     /*
      * Special case: if a NULL child is not found, then set result == GC_NOMATCH
      */
-    for (i=0; i < co->co_max; i++)
-	if (co->co_next[i] == NULL)
+    for (i=0; i < co_vec_len_get(co); i++){
+	if (co_vec_i_get(co, i) == NULL)
 	    break; /* If we match here it is OK, unless no match */
-    if (co->co_max != 0 && i==co->co_max){
+    }
+    if (co_vec_len_get(co) != 0 && i==co_vec_len_get(co)){
 	co = NULL;
 	if (reason){
 	    if (*reason != NULL)
@@ -970,7 +976,7 @@ match_pattern_exact(cligen_handle  h,
  */
 int 
 match_complete(cligen_handle h, 
-	       parse_tree    pt, 
+	       parse_tree   *pt, 
 	       char        **stringp, 
 	       size_t       *slenp, 
 	       cvec         *cvv)
@@ -988,7 +994,7 @@ match_complete(cligen_handle h,
     char   *string;
     char   *s;
     char   *ss;
-    pt_vec  pt1;
+    co_vec_t pt1;
     int     matchlen = 0;
     int    *matchvec = NULL;
     int     mv;

@@ -91,7 +91,7 @@ cligen_parse_str(cligen_handle h,
     cy.cy_parse_string = str;
     cy.cy_stack        = NULL;
     if (pt)
-	co_top->co_pt      = *pt;
+	co_pt_set(co_top, pt);
     if (vr)
 	cy.cy_globals       = vr; 
     else
@@ -109,15 +109,15 @@ cligen_parse_str(cligen_handle h,
 	    cgl_exit(&cy);
 	    goto done;
 	}
-	/* Add final tree (but only with new API) */
+	/* Add final tree */
 	if (pt == NULL){
-	    for (i=0; i<co_top->co_max; i++){
-		if ((co=co_top->co_next[i]) != NULL)
+	    for (i=0; i<co_vec_len_get(co_top); i++){
+		if ((co=co_vec_i_get(co_top, i)) != NULL)
 		    co_up_set(co, NULL);
 	    }
-	    if (cligen_tree_add(cy.cy_handle, cy.cy_treename, co_top->co_pt) < 0)
+	    if (cligen_tree_add(cy.cy_handle, cy.cy_treename, co_pt_get(co_top)) < 0)
 		goto done;
-	    memset(&co_top->co_pt, 0, sizeof(parse_tree));
+	    co_pt_set(co_top, NULL);
 	}
 	if (cgy_exit(&cy) < 0)
 	    goto done;		
@@ -132,9 +132,9 @@ cligen_parse_str(cligen_handle h,
      * Remove the fake top level object and remove references to it.
      */
     if (pt)
-	*pt = co_top->co_pt;
-    for (i=0; i<co_top->co_max; i++){
-	co=co_top->co_next[i];
+	*pt = *co_pt_get(co_top); /* XXX */
+    for (i=0; i<co_vec_len_get(co_top); i++){
+	co=co_vec_i_get(co_top, i);
 	if (co)
 	    co_up_set(co, NULL);
     }
@@ -220,7 +220,7 @@ cligen_parse_file(cligen_handle h,
  * @note str2fn may return NULL on error and should then supply a (static) error string 
  */
 int
-cligen_callbackv_str2fn(parse_tree    pt, 
+cligen_callbackv_str2fn(parse_tree   *pt, 
 			cgv_str2fn_t *str2fn, 
 			void         *arg)
 {
@@ -230,8 +230,8 @@ cligen_callbackv_str2fn(parse_tree    pt,
     struct cg_callback *cc;
     int                 i;
 
-    for (i=0; i<pt.pt_len; i++)
-	if ((co = pt.pt_vec[i]) != NULL){
+    for (i=0; i<pt->pt_len; i++)
+	if ((co = pt->pt_vec[i]) != NULL){
 	    for (cc = co->co_callbacks; cc; cc=cc->cc_next){
 		if (cc->cc_fn_str != NULL && cc->cc_fn_vec == NULL){
 		    /* Note str2fn is a function pointer */
@@ -244,7 +244,7 @@ cligen_callbackv_str2fn(parse_tree    pt,
 		}
 	    }
 	    /* recursive call to next level */
-	    if (cligen_callbackv_str2fn(co->co_pt, str2fn, arg) < 0)
+	    if (cligen_callbackv_str2fn(co_pt_get(co), str2fn, arg) < 0)
 		goto done;
 	}
     retval = 0;
@@ -274,7 +274,7 @@ cligen_callbackv_str2fn(parse_tree    pt,
  * @see cligen_callbackv_str2fn for translating callback functions
  */
 int
-cligen_expandv_str2fn(parse_tree        pt, 
+cligen_expandv_str2fn(parse_tree       *pt, 
 		      expandv_str2fn_t *str2fn, 
 		      void             *arg)
 {
@@ -283,8 +283,8 @@ cligen_expandv_str2fn(parse_tree        pt,
     char               *callback_err = NULL;   /* Error from str2fn callback */
     int                 i;
 
-    for (i=0; i<pt.pt_len; i++){    
-	if ((co = pt.pt_vec[i]) != NULL){
+    for (i=0; i<pt->pt_len; i++){    
+	if ((co = pt->pt_vec[i]) != NULL){
 	    if (co->co_expand_fn_str != NULL && co->co_expandv_fn == NULL){
 		/* Note str2fn is a function pointer */
 		co->co_expandv_fn = str2fn(co->co_expand_fn_str, arg, &callback_err);
@@ -295,7 +295,7 @@ cligen_expandv_str2fn(parse_tree        pt,
 		}
 	    }
 	    /* recursive call to next level */
-	    if (cligen_expandv_str2fn(co->co_pt, str2fn, arg) < 0)
+	    if (cligen_expandv_str2fn(co_pt_get(co), str2fn, arg) < 0)
 		goto done;
 	}
     }
@@ -311,7 +311,7 @@ cligen_expandv_str2fn(parse_tree        pt,
  * @param[in]  arg     Argument to call str2fn with
  */
 int
-cligen_translate_str2fn(parse_tree          pt, 
+cligen_translate_str2fn(parse_tree         *pt, 
 			translate_str2fn_t *str2fn, 
 			void               *arg)
 {
@@ -320,8 +320,8 @@ cligen_translate_str2fn(parse_tree          pt,
     char               *callback_err = NULL;   /* Error from str2fn callback */
     int                 i;
 
-    for (i=0; i<pt.pt_len; i++){    
-	if ((co = pt.pt_vec[i]) != NULL){
+    for (i=0; i<pt->pt_len; i++){    
+	if ((co = pt->pt_vec[i]) != NULL){
 	    if (co->co_translate_fn_str != NULL && co->co_translate_fn == NULL){
 		/* Note str2fn is a function pointer */
 		co->co_translate_fn = str2fn(co->co_translate_fn_str, arg, &callback_err);
@@ -332,7 +332,7 @@ cligen_translate_str2fn(parse_tree          pt,
 		}
 	    }
 	    /* recursive call to next level */
-	    if (cligen_translate_str2fn(co->co_pt, str2fn, arg) < 0)
+	    if (cligen_translate_str2fn(co_pt_get(co), str2fn, arg) < 0)
 		goto done;
 	}
     }

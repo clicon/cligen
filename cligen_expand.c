@@ -208,7 +208,7 @@ transform_var_to_cmd(cg_obj *co,
  * and the ones in the @ref cal are appended.
  */
 static int
-pt_callback_reference(parse_tree          pt, 
+pt_callback_reference(parse_tree         *pt, 
 		      struct cg_callback *cc0)
 {
     int                 i;
@@ -218,10 +218,10 @@ pt_callback_reference(parse_tree          pt,
     struct cg_callback *cc;
     cg_var             *cv;
 		    
-    for (i=0; i<pt.pt_len; i++){    
-	if ((co = pt.pt_vec[i]) == NULL)
+    for (i=0; i<pt->pt_len; i++){    
+	if ((co = pt->pt_vec[i]) == NULL)
 	    continue;
-	ptc = &co->co_pt;
+	ptc = co_pt_get(co);
 	/* Filter out non-executable non-terminals. */
 	if (ptc->pt_len && ptc->pt_vec[0] == NULL){
 	    /* Copy the callback from top */
@@ -245,7 +245,7 @@ pt_callback_reference(parse_tree          pt,
 		
 	    }
 	}
-	if (pt_callback_reference(co->co_pt, cc0) < 0)
+	if (pt_callback_reference(co_pt_get(co), cc0) < 0)
 	    goto done;
     }
     retval = 0;
@@ -256,16 +256,16 @@ pt_callback_reference(parse_tree          pt,
 /*! Truncate parse tree
  */
 static int
-pt_reference_trunc(parse_tree pt)
+pt_reference_trunc(parse_tree *pt)
 {
     int     i;
     cg_obj *co;
     int     retval = -1;
 
-    for (i=0; i<pt.pt_len; i++){    
-	if ((co = pt.pt_vec[i]) == NULL)
+    for (i=0; i<pt->pt_len; i++){    
+	if ((co = pt->pt_vec[i]) == NULL)
 	    continue;
-	if (pt_reference_trunc(co->co_pt) < 0)
+	if (pt_reference_trunc(co_pt_get(co)) < 0)
 	    goto done;
     }
     retval = 0;
@@ -322,17 +322,17 @@ pt_expand_treeref(cligen_handle h,
 	    /* make a copy of ptref -> pt1ref */
 	    co02 = co_up(co);
 
-	    if (pt_copy(*ptref, co02, &pt1ref) < 0){ /* From ptref -> pt1ref */
+	    if (pt_copy(ptref, co02, &pt1ref) < 0){ /* From ptref -> pt1ref */
 		fprintf(stderr, "%s: Copying parse-tree\n", __FUNCTION__);
 		return -1;
 	    }
 	    /* Recursively add extra NULLs in non-terminals */
 	    if (co_flags_get(co, CO_FLAGS_HIDE) && /* XXX: hide to trunk? */
-		pt_reference_trunc(pt1ref) < 0)
+		pt_reference_trunc(&pt1ref) < 0)
 		return -1;
 	    /* Recursively install callback all through the referenced tree */
 	    if (co->co_callbacks && 
-		pt_callback_reference(pt1ref, co->co_callbacks) < 0)
+		pt_callback_reference(&pt1ref, co->co_callbacks) < 0)
 		return -1;
 	    /* Copy top-levels into original parse-tree */
 	    for (j=0; j<pt1ref.pt_len; j++)
@@ -345,7 +345,7 @@ pt_expand_treeref(cligen_handle h,
 	       be safe to remove */
 	    free(pt1ref.pt_vec);
 	    if (co0 && co0->co_ref) /* co02 ? */
-		co0->co_ref->co_pt = co0->co_pt;
+		co_pt_set(co0->co_ref, co_pt_get(co0));
 
 	    co_flags_set(co, CO_FLAGS_REFDONE);
 	    goto again; 
@@ -528,10 +528,10 @@ pt_expand_2(cligen_handle h,
 	    pt_realloc(ptn); /* empty child */
 	}
     } /* for */
-    cligen_parsetree_sort(*ptn, 1);
+    cligen_parsetree_sort(ptn, 1);
     if (cligen_logsyntax(h) > 0){
 	fprintf(stderr, "%s:\n", __FUNCTION__);
-	pt_print(stderr, *ptn, 0);
+	pt_print(stderr, ptn, 0);
     }
     retval = 0;
  done:
@@ -567,7 +567,7 @@ pt_expand_treeref_cleanup(parse_tree *pt)
 		    break;
 	    }
 	    else
-		if (pt_expand_treeref_cleanup(&co->co_pt) < 0)
+		if (pt_expand_treeref_cleanup(co_pt_get(co)) < 0)
 		    return -1;
 	}
     }
@@ -579,23 +579,23 @@ pt_expand_treeref_cleanup(parse_tree *pt)
  * @see pt_expand_2
  */
 int
-pt_expand_cleanup_2(parse_tree pt)
+pt_expand_cleanup_2(parse_tree *pt)
 {
     int i;
     cg_obj *co;
 
-    if (pt.pt_vec == NULL)
+    if (pt->pt_vec == NULL)
         return 0;
-    for (i=0; i<pt.pt_len; i++){
-	if ((co = pt.pt_vec[i]) != NULL){
+    for (i=0; i<pt->pt_len; i++){
+	if ((co = pt->pt_vec[i]) != NULL){
 	    if (co_value_set(co, NULL) < 0)
 		return -1;
 	    if (co->co_pt_exp.pt_vec != NULL){
-		if (cligen_parsetree_free(co->co_pt_exp, 0) < 0)
+		if (cligen_parsetree_free(&co->co_pt_exp, 0) < 0)
 		    return -1;
 		memset(&co->co_pt_exp, 0, sizeof(parse_tree));
 	    }
-	    if (pt_expand_cleanup_2(co->co_pt) < 0)
+	    if (pt_expand_cleanup_2(co_pt_get(co)) < 0)
 		return -1;
 	}
     }
@@ -608,14 +608,14 @@ pt_expand_cleanup_2(parse_tree pt)
  * match_pattern_node when it will be used.
  */
 int
-pt_expand_add(cg_obj    *co, 
-	      parse_tree ptn)
+pt_expand_add(cg_obj     *co, 
+	      parse_tree *ptn)
 {
     if (co->co_pt_exp.pt_vec != NULL){
-	if (cligen_parsetree_free(co->co_pt_exp, 0) < 0)
+	if (cligen_parsetree_free(&co->co_pt_exp, 0) < 0)
 	    return -1;
     }
-    co->co_pt_exp = ptn;
+    co->co_pt_exp = *ptn;
     return 0;
 }
 
@@ -634,9 +634,9 @@ pt_expand_add(cg_obj    *co,
        (given)     (we want to find this)
  */
 int
-reference_path_match(cg_obj    *co1, 
-		     parse_tree pt0, 
-		     cg_obj   **co0p)
+reference_path_match(cg_obj     *co1, 
+		     parse_tree *pt0, 
+		     cg_obj    **co0p)
 {
     cg_obj    *co0, *co;
 
@@ -650,7 +650,7 @@ reference_path_match(cg_obj    *co1,
     }
     if (reference_path_match(co_up(co1), pt0, &co) < 0)
 	return -1;
-    if ((co0 = co_find_one(co->co_pt, co1->co_command)) == NULL)
+    if ((co0 = co_find_one(co_pt_get(co), co1->co_command)) == NULL)
 	return -1;
     *co0p = co0;
     return 0;

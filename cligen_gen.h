@@ -45,7 +45,7 @@
  */
 enum cg_objtype{
   CO_COMMAND,   /* Simple string parsing */
-  CO_VARIABLE,  /* parse as type eg int */
+  CO_VARIABLE,  /* Parse as type eg int */
   CO_REFERENCE  /* Symbolic reference to other tree */
 };
 
@@ -178,7 +178,10 @@ typedef struct cg_varspec cg_varspec;
  */
 struct cg_obj{
     parse_tree          co_pt;        /* Child parse-tree (see co_next macro below) */
-    struct cg_obj      *co_prev;
+    /* Expand data: expand, choice temporarily replaces the original parse-tree
+       with one where expand and choice is replaced by string constants. */
+    struct parse_tree   co_pt_exp;    
+    struct cg_obj      *co_prev;      /* Parent */
     enum cg_objtype     co_type;      /* Type of object: command, variable or tree
 					 reference */
     char               *co_command;   /* malloc:ed matching string / name or type */
@@ -187,9 +190,7 @@ struct cg_obj{
 					 callbacks) */
     char	       *co_help;      /* Helptext */
     uint32_t            co_flags;     /* General purpose flags, see CO_FLAGS_ above*/
-    /* Expand data: expand, choice temporarily replaces the original parse-tree
-       with one where expand and choice is replaced by string constants. */
-    struct parse_tree   co_pt_exp;    
+
     struct cg_obj      *co_ref;       /* Ref to original (if this is expanded) */
     char               *co_value;     /* Expanded value can be a string with a constant. 
 					 Store the constant in the original variable. */
@@ -200,7 +201,7 @@ struct cg_obj{
 };
 typedef struct cg_obj cg_obj; /* in cli_var.h */
 
-typedef cg_obj** pt_vec;  /* vector of (pointers to) parse-tree nodes */
+typedef cg_obj** co_vec_t;  /* vector of (pointers to) parse-tree nodes XXX is really cg_vec */
 
 /* Callback for pt_apply() */
 typedef int (cg_applyfn_t)(cg_obj *co, void *arg);
@@ -209,9 +210,6 @@ typedef int (cg_applyfn_t)(cg_obj *co, void *arg);
 #define co2varspec(co)  &(co)->u.cou_var
 
 /* Access fields for code traversing parse tree */
-#define co_next          co_pt.pt_vec
-#define co_max           co_pt.pt_len
-#define co_set           co_pt.pt_set
 #define co_vtype         u.cou_var.cgs_vtype
 #define co_show          u.cou_var.cgs_show
 #define co_expand_fn_str u.cou_var.cgs_expand_fn_str
@@ -258,32 +256,41 @@ co_top(cg_obj *co0)
 /*
  * Prototypes
  */
+parse_tree *co_pt_get(cg_obj *co);
+int         co_pt_set(cg_obj *co, parse_tree *pt);
+cg_obj     *co_vec_i_get(cg_obj *co, int i);
+int         co_vec_len_get(cg_obj *co);
+co_vec_t    pt_vec_get(parse_tree *pt);
+#ifdef notused
+int         pt_vec_set(parse_tree *pt, co_vec_t cov);
+#endif
+int         pt_len_get(parse_tree *pt);
 void    co_flags_set(cg_obj *co, uint32_t flag);
 void    co_flags_reset(cg_obj *co, uint32_t flag);
 int     co_flags_get(cg_obj *co, uint32_t flag);
 int     co_sets_get(cg_obj *co);
 void    co_sets_set(cg_obj *co, int sets);
-void    cligen_parsetree_sort(parse_tree pt, int recursive);
+void    cligen_parsetree_sort(parse_tree *pt, int recursive);
 cg_obj *co_new(char *cmd, cg_obj *prev);
 cg_obj *cov_new(enum cv_type cvtype, cg_obj *prev);
 int     co_pref(cg_obj *co, int exact);
 int     pt_realloc(parse_tree *);
 int     co_callback_copy(struct cg_callback *cc0, struct cg_callback **ccn);
 int     co_copy(cg_obj *co, cg_obj *parent, cg_obj **conp);
-int     pt_copy(parse_tree pt, cg_obj *parent, parse_tree *ptn);
+int     pt_copy(parse_tree *pt, cg_obj *parent, parse_tree *ptn);
 int     co_eq(cg_obj *co1, cg_obj *co2);
-int     cligen_parsetree_merge(parse_tree *pt0, cg_obj *parent0, parse_tree pt1);
-int     cligen_parsetree_free(parse_tree pt, int recurse);
+int     cligen_parsetree_merge(parse_tree *pt0, cg_obj *parent0, parse_tree *pt1);
+int     cligen_parsetree_free(parse_tree *pt, int recurse);
 int     co_free(cg_obj *co, int recursive);
 cg_obj *co_insert(parse_tree *pt, cg_obj *co);
-cg_obj *co_find_one(parse_tree pt, char *name);
+cg_obj *co_find_one(parse_tree *pt, char *name);
 int     co_value_set(cg_obj *co, char *str);
 #if defined(__GNUC__) && __GNUC__ >= 3
 char   *cligen_reason(const char *fmt, ...) __attribute__ ((format (printf, 1, 2)));
 #else
 char   *cligen_reason(const char *fmt, ...);
 #endif
-int     pt_apply(parse_tree pt, cg_applyfn_t fn, void *arg);
+int     pt_apply(parse_tree *pt, cg_applyfn_t fn, void *arg);
 
 #endif /* _CLIGEN_GEN_H_ */
 
