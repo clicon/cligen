@@ -494,14 +494,18 @@ cv_string_set(cg_var *cv,
 {
     char *s1 = NULL;
 
-    if (cv == NULL) 
-	return 0;
+    if (cv == NULL){
+	errno = EINVAL;
+	return NULL;
+    }
+    if (s0 == NULL){
+	errno = EINVAL;
+	return NULL;
+    }
 
     /* Duplicate s0. Must be done before a free, in case s0 is part of the original */
-    if (s0){
-	if ((s1 = strdup(s0)) == NULL)
-	    return NULL; /* error in errno */
-    }
+    if ((s1 = strdup(s0)) == NULL)
+	return NULL; /* error in errno */
     if (cv->u.varu_string != NULL)
 	free(cv->u.varu_string);
     cv->u.varu_string = s1;

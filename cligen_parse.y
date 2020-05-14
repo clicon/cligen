@@ -211,7 +211,7 @@ cgy_treename(cligen_yacc *cy,
 	break;
     }
     cot = co_top(co);
-    pt = &cot->co_pt;
+    pt = co_pt_get(cot);
     /* If anything anything parsed */
     if (pt->pt_len){ 
 	/* 2. Add the old parse-tree with old name*/
@@ -219,7 +219,7 @@ cgy_treename(cligen_yacc *cy,
 	    if ((co=pt->pt_vec[i]) != NULL)
 		co_up_set(co, NULL);
 	}
-	if (cligen_tree_add(cy->cy_handle, cy->cy_treename, *pt) < 0)
+	if (cligen_tree_add(cy->cy_handle, cy->cy_treename, pt) < 0)
 	    goto done;
 	/* 3. Create new parse-tree XXX */
 	memset(pt, 0, sizeof(*pt));
@@ -518,7 +518,7 @@ cgy_var_post(cligen_yacc *cy)
 	else
 	    coc = coy; /* Dont copy if last in list */
 	co_up_set(coc, coparent);
-	if ((co = co_insert(&coparent->co_pt, coc)) == NULL) /* coc may be deleted */
+	if ((co = co_insert(co_pt_get(coparent), coc)) == NULL) /* coc may be deleted */
 	    return -1;
 	cl->cl_obj = co;
     }
@@ -551,7 +551,7 @@ cgy_cmd(cligen_yacc *cy,
 	    cligen_parseerror1(cy, "Allocating cligen object"); 
 	    return -1;
 	}
-	if ((co = co_insert(&cop->co_pt, conew)) == NULL)  /* co_new may be deleted */
+	if ((co = co_insert(co_pt_get(cop), conew)) == NULL)  /* co_new may be deleted */
 	    return -1;
 	cl->cl_obj = co; /* Replace parent in cgy_list */
     }
@@ -580,7 +580,7 @@ cgy_reference(cligen_yacc *cy,
 	    return -1;
 	}
 	cot->co_type    = CO_REFERENCE;
-	if ((cot = co_insert(&cop->co_pt, cot)) == NULL)  /* cot may be deleted */
+	if ((cot = co_insert(co_pt_get(cop), cot)) == NULL)  /* cot may be deleted */
 	    return -1;
 	/* Replace parent in cgy_list: not allowed after ref?
 	   but only way to add callbacks to it.
@@ -670,11 +670,11 @@ cgy_terminal(cligen_yacc *cy)
 	    }
 	}
 	/* misc */
-	for (i=0; i<co->co_max; i++)
-	    if (co->co_next[i]==NULL)
+	for (i=0; i<co_vec_len_get(co); i++)
+	    if (co_vec_i_get(co, i) == NULL)
 		break;
-	if (i == co->co_max) /* Insert empty child if ';' */
-	    co_insert(&co->co_pt, NULL);
+	if (i == co_vec_len_get(co)) /* Insert empty child if ';' */
+	    co_insert(co_pt_get(co), NULL);
     }
     /* cleanup */
     while ((cc = cy->cy_callbacks) != NULL){

@@ -56,7 +56,7 @@
 
 
 /* Static prototypes */
-static int pt2cbuf(cbuf *cb, parse_tree pt, int level, int brief);
+static int pt2cbuf(cbuf *cb, parse_tree *pt, int level, int brief);
 
 /*! Print the syntax specification of a variable syntax spec to a cligen buf
  *
@@ -142,8 +142,11 @@ cov2cbuf(cbuf   *cb,
 static int
 terminal(cg_obj *co)
 {
-    return ((co->co_pt.pt_len>0 && co->co_pt.pt_vec[0] == NULL) || 
-	    co->co_pt.pt_len == 0);
+    parse_tree *pt;
+
+    pt = co_pt_get(co);
+    return ((pt->pt_len>0 && pt->pt_vec[0] == NULL) || 
+	    pt->pt_len == 0);
 }
 
 /*! Print a CLIgen object (cg object / co) to a CLIgen buffer
@@ -154,8 +157,9 @@ co2cbuf(cbuf   *cb,
 	int     marginal,
 	int     brief)
 {
-    int retval = -1;
+    int                 retval = -1;
     struct cg_callback *cc;
+    parse_tree         *pt;
 
     switch (co->co_type){
     case CO_COMMAND:
@@ -186,19 +190,20 @@ co2cbuf(cbuf   *cb,
     }
     if (terminal(co))
 	cprintf(cb, ";");
-    if (co->co_pt.pt_len>1){
-	if (co->co_set)
+    pt = co_pt_get(co);
+    if (pt->pt_len>1){
+	if (co_sets_get(co))
 	    cprintf(cb, "@");
 	cprintf(cb, "{\n");
     }
     else
-	if (co->co_pt.pt_len==1 && co->co_pt.pt_vec[0] != NULL)
+	if (pt->pt_len==1 && pt->pt_vec[0] != NULL)
 	    cprintf(cb, " ");
 	else
 	    cprintf(cb, "\n");
-    if (pt2cbuf(cb, co->co_pt, marginal+3, brief) < 0)
+    if (pt2cbuf(cb, pt, marginal+3, brief) < 0)
 	goto done;
-    if (co->co_pt.pt_len>1){
+    if (pt->pt_len>1){
 	cprintf(cb, "%*s", marginal, ""); 
 	cprintf(cb, "}\n");
     }
@@ -214,21 +219,21 @@ co2cbuf(cbuf   *cb,
  * @param[in]     brief  Print brief output, otherwise clispec parsable format
  */
 static int 
-pt2cbuf(cbuf      *cb,
-	parse_tree pt,
-	int        marginal,
-	int        brief)
+pt2cbuf(cbuf       *cb,
+	parse_tree *pt,
+	int         marginal,
+	int         brief)
 {
     int retval = -1;
     int i;
 
-    for (i=0; i<pt.pt_len; i++){
-	if (pt.pt_vec[i] == NULL){
+    for (i=0; i<pt->pt_len; i++){
+	if (pt->pt_vec[i] == NULL){
 	    continue;
 	}
-	if (pt.pt_len > 1)
+	if (pt->pt_len > 1)
 	    cprintf(cb, "%*s", marginal, "");
-	if (co2cbuf(cb, pt.pt_vec[i], marginal, brief) < 0)
+	if (co2cbuf(cb, pt->pt_vec[i], marginal, brief) < 0)
 	    goto done;
     }
     retval = 0;
@@ -252,9 +257,9 @@ pt2cbuf(cbuf      *cb,
  * @see co_print which prints an individual CLIgen syntax object, not vector
  */
 int 
-pt_print(FILE      *f,
-	 parse_tree pt,
-	 int        brief)
+pt_print(FILE       *f,
+	 parse_tree *pt,
+	 int         brief)
 {
     int   retval = -1;
     cbuf *cb = NULL;
@@ -321,7 +326,7 @@ cligen_print_trees(FILE         *f,
 
     while ((pt = cligen_tree_each(h, pt)) != NULL) {
 	fprintf(stderr, "%s\n", pt->pt_name);
-	if (!brief && pt_print(f, *pt, brief) < 0)
+	if (!brief && pt_print(f, pt, brief) < 0)
 	    goto done;
     }
     retval = 0;

@@ -13,7 +13,10 @@ cat > $fspec <<EOF
 
   a,callback();
   abc,callback();
-  abd {a,callback();b,callback();}
+  abd {
+    a,callback();
+    b,callback();
+  }
 EOF
 
 new "$cligen_file -f $fspec"

@@ -74,7 +74,7 @@ char* cligen_prompt(cligen_handle h);
 int cligen_prompt_set(cligen_handle h, char *prompt);
 
 parse_tree *cligen_tree_find(cligen_handle h, char *name);
-int cligen_tree_add(cligen_handle h, char *name, parse_tree pt);
+int cligen_tree_add(cligen_handle h, char *name, parse_tree *pt);
 int cligen_tree_del(cligen_handle h, char *name);
 
 parse_tree *cligen_tree_each(cligen_handle h, parse_tree *pt);

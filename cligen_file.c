@@ -249,10 +249,10 @@ main(int argc, char *argv[])
 
     /* map functions */
     if (pt) {
-	if (cligen_callbackv_str2fn(*pt, str2fn, NULL) < 0)   /* callback */
+	if (cligen_callbackv_str2fn(pt, str2fn, NULL) < 0)   /* callback */
 	    goto done;
 	if (set_expand &&
-	    cligen_expandv_str2fn(*pt, str2fn_exp, NULL) < 0) /* expand */
+	    cligen_expandv_str2fn(pt, str2fn_exp, NULL) < 0) /* expand */
 	    goto done;
     }
     if ((str = cvec_find_str(globals, "prompt")) != NULL)
@@ -267,7 +267,7 @@ main(int argc, char *argv[])
     cvec_free(globals);
 
     if (print_syntax){
-	pt_print(stdout, *pt, 0);
+	pt_print(stdout, pt, 0);
 	fflush(stdout);
     }
     if (once)

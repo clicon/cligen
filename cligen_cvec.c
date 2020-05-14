@@ -172,8 +172,8 @@ cvec_reset(cvec *cvv)
 {
     cg_var *cv = NULL;
 
-    if (!cvv) {
-	    return 0;
+    if (cvv == NULL) {
+	return 0;
     }
 
     while ((cv = cvec_each(cvv, cv)) != NULL)
@@ -314,6 +314,7 @@ cvec_del(cvec   *cvv,
  * cvec_add) may have been modified with realloc (eg cvec_add/delete) and
  * therefore can not be used as a reference.  Safer methods are to use
  * cvec_find/cvec_i to find a cv and then to immediately remove it.
+ * @note does not deallocate the cv, you may need to do it with cv_reset
  */
 int
 cvec_del_i(cvec *cvv,
