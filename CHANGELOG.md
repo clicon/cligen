@@ -1,5 +1,8 @@
 # Cligen Changelog
 	
+## 4.6.0
+Expected: July 2020
+
 ## 4.5.0
 12 May 2020
 
