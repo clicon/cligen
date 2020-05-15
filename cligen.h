@@ -55,7 +55,8 @@ typedef void *cligen_handle; /* API */
 #include <cligen/cligen_buf.h>
 #include <cligen/cligen_cv.h>
 #include <cligen/cligen_cvec.h>
-#include <cligen/cligen_gen.h>
+#include <cligen/cligen_parsetree.h>
+#include <cligen/cligen_object.h>
 #include <cligen/cligen_handle.h>
 #include <cligen/cligen_print.h>
 #include <cligen/cligen_read.h>

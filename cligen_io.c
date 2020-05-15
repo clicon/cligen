@@ -53,7 +53,8 @@
 #include "cligen_buf.h"
 #include "cligen_cv.h"
 #include "cligen_cvec.h"
-#include "cligen_gen.h"
+#include "cligen_parsetree.h"
+#include "cligen_object.h"
 #include "cligen_handle.h"
 #include "cligen_read.h"
 #include "cligen_print.h"
@@ -342,13 +343,13 @@ cligen_help(FILE       *fout,
     int             *matchvec = NULL;
 
     /* intermediate struct to fit into print_help_lines() parameters */
-    if ((matchvec = calloc(pt->pt_len, sizeof(int))) == NULL){
+    if ((matchvec = calloc(pt_len_get(pt), sizeof(int))) == NULL){
 	perror("calloc");
 	goto done;
     }
-    for (i=0; i<pt->pt_len; i++)
+    for (i=0; i<pt_len_get(pt); i++)
 	matchvec[i] = i;
-    if (print_help_lines(fout, pt->pt_vec, matchvec, pt->pt_len) < 0)
+    if (print_help_lines(fout, pt_vec_get(pt), matchvec, pt_len_get(pt)) < 0)
 	goto done;
     retval = 0;
  done:

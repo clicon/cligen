@@ -42,7 +42,8 @@
 #include "cligen_buf.h"
 #include "cligen_cv.h"
 #include "cligen_cvec.h"
-#include "cligen_gen.h"
+#include "cligen_parsetree.h"
+#include "cligen_object.h"
 #include "cligen_parse.h"
 #include "cligen_handle.h"
 #include "cligen_read.h"
@@ -230,8 +231,8 @@ cligen_callbackv_str2fn(parse_tree   *pt,
     struct cg_callback *cc;
     int                 i;
 
-    for (i=0; i<pt->pt_len; i++)
-	if ((co = pt->pt_vec[i]) != NULL){
+    for (i=0; i<pt_len_get(pt); i++)
+	if ((co = pt_vec_i_get(pt, i)) != NULL){
 	    for (cc = co->co_callbacks; cc; cc=cc->cc_next){
 		if (cc->cc_fn_str != NULL && cc->cc_fn_vec == NULL){
 		    /* Note str2fn is a function pointer */
@@ -283,8 +284,8 @@ cligen_expandv_str2fn(parse_tree       *pt,
     char               *callback_err = NULL;   /* Error from str2fn callback */
     int                 i;
 
-    for (i=0; i<pt->pt_len; i++){    
-	if ((co = pt->pt_vec[i]) != NULL){
+    for (i=0; i<pt_len_get(pt); i++){    
+	if ((co = pt_vec_i_get(pt, i)) != NULL){
 	    if (co->co_expand_fn_str != NULL && co->co_expandv_fn == NULL){
 		/* Note str2fn is a function pointer */
 		co->co_expandv_fn = str2fn(co->co_expand_fn_str, arg, &callback_err);
@@ -320,8 +321,8 @@ cligen_translate_str2fn(parse_tree         *pt,
     char               *callback_err = NULL;   /* Error from str2fn callback */
     int                 i;
 
-    for (i=0; i<pt->pt_len; i++){    
-	if ((co = pt->pt_vec[i]) != NULL){
+    for (i=0; i<pt_len_get(pt); i++){    
+	if ((co = pt_vec_i_get(pt, i)) != NULL){
 	    if (co->co_translate_fn_str != NULL && co->co_translate_fn == NULL){
 		/* Note str2fn is a function pointer */
 		co->co_translate_fn = str2fn(co->co_translate_fn_str, arg, &callback_err);

@@ -47,7 +47,7 @@
 /*
  * CLIgen handle code.
  * Should be moved into its own, but there are some quirks with mutual dependencies
- * with rest cligen_gen.h that I didnt have time to sort out.
+ * with rest cligen_object.h that I didnt have time to sort out.
  */
 /*
  * Constants

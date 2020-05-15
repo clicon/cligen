@@ -54,7 +54,8 @@
 #include "cligen_buf.h"
 #include "cligen_cv.h"
 #include "cligen_cvec.h"
-#include "cligen_gen.h"
+#include "cligen_parsetree.h"
+#include "cligen_object.h"
 #include "cligen_io.h"
 #include "cligen_handle.h"
 #include "cligen_read.h"
@@ -370,7 +371,7 @@ cligen_tree_each(cligen_handle h,
 	pt = &ptl->ptl_parsetree;
 	if (pt0 == NULL || next)
 	    return pt; /* Initial */
-	if (pt0->pt_vec == pt->pt_vec)
+	if (pt_vec_get(pt0) == pt_vec_get(pt))
 	    next++;
     }
     return NULL;

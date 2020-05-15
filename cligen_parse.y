@@ -90,7 +90,8 @@
 #include "cligen_buf.h"
 #include "cligen_cv.h"
 #include "cligen_cvec.h"
-#include "cligen_gen.h"
+#include "cligen_parsetree.h"
+#include "cligen_object.h"
 #include "cligen_syntax.h"
 #include "cligen_handle.h"
 #include "cligen_parse.h"
@@ -213,10 +214,10 @@ cgy_treename(cligen_yacc *cy,
     cot = co_top(co);
     pt = co_pt_get(cot);
     /* If anything anything parsed */
-    if (pt->pt_len){ 
+    if (pt_len_get(pt)){ 
 	/* 2. Add the old parse-tree with old name*/
-	for (i=0; i<pt->pt_len; i++){
-	    if ((co=pt->pt_vec[i]) != NULL)
+	for (i=0; i<pt_len_get(pt); i++){
+	    if ((co=pt_vec_i_get(pt, i)) != NULL)
 		co_up_set(co, NULL);
 	}
 	if (cligen_tree_add(cy->cy_handle, cy->cy_treename, pt) < 0)

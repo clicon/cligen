@@ -32,8 +32,8 @@
 
 */
 
-#ifndef _CLIGEN_GEN_H_
-#define _CLIGEN_GEN_H_
+#ifndef _CLIGEN_OBJECT_H_
+#define _CLIGEN_OBJECT_H_
 
 #define CLIGEN_DELIMITERS " \t"
 #define CLIGEN_QUOTES     "\""
@@ -95,21 +95,6 @@ typedef int (cligen_susp_cb_t)(void *h, char *, int, int *);
  */
 typedef int (cligen_interrupt_cb_t)(cligen_handle h);
 
-/*! A parse tree is a top object containing a vector of parse-tree nodes 
- *
- * @code
- *   [0 1..n]
- *    | |  |
- *    v v  v
- *    o o  o  cg_obj:s
- * @endcode
- */
-struct parse_tree{
-    struct cg_obj     **pt_vec;    /* vector of pointers to parse-tree nodes */
-    int                 pt_len;    /* length of vector */
-    char               *pt_name;
-    char                pt_set;    /* Parse-tree is a SET */ 
-};
 typedef struct parse_tree parse_tree;
 
 /*! A CLIgen object may have one or several callbacks. This type defines one callback
@@ -203,9 +188,6 @@ typedef struct cg_obj cg_obj; /* in cli_var.h */
 
 typedef cg_obj** co_vec_t;  /* vector of (pointers to) parse-tree nodes XXX is really cg_vec */
 
-/* Callback for pt_apply() */
-typedef int (cg_applyfn_t)(cg_obj *co, void *arg);
-
 /* Access macro to cligen object variable specification */
 #define co2varspec(co)  &(co)->u.cou_var
 
@@ -260,37 +242,26 @@ parse_tree *co_pt_get(cg_obj *co);
 int         co_pt_set(cg_obj *co, parse_tree *pt);
 cg_obj     *co_vec_i_get(cg_obj *co, int i);
 int         co_vec_len_get(cg_obj *co);
-co_vec_t    pt_vec_get(parse_tree *pt);
-#ifdef notused
-int         pt_vec_set(parse_tree *pt, co_vec_t cov);
-#endif
-int         pt_len_get(parse_tree *pt);
-void    co_flags_set(cg_obj *co, uint32_t flag);
-void    co_flags_reset(cg_obj *co, uint32_t flag);
-int     co_flags_get(cg_obj *co, uint32_t flag);
-int     co_sets_get(cg_obj *co);
-void    co_sets_set(cg_obj *co, int sets);
-void    cligen_parsetree_sort(parse_tree *pt, int recursive);
-cg_obj *co_new(char *cmd, cg_obj *prev);
-cg_obj *cov_new(enum cv_type cvtype, cg_obj *prev);
-int     co_pref(cg_obj *co, int exact);
-int     pt_realloc(parse_tree *);
-int     co_callback_copy(struct cg_callback *cc0, struct cg_callback **ccn);
-int     co_copy(cg_obj *co, cg_obj *parent, cg_obj **conp);
-int     pt_copy(parse_tree *pt, cg_obj *parent, parse_tree *ptn);
-int     co_eq(cg_obj *co1, cg_obj *co2);
-int     cligen_parsetree_merge(parse_tree *pt0, cg_obj *parent0, parse_tree *pt1);
-int     cligen_parsetree_free(parse_tree *pt, int recurse);
-int     co_free(cg_obj *co, int recursive);
-cg_obj *co_insert(parse_tree *pt, cg_obj *co);
-cg_obj *co_find_one(parse_tree *pt, char *name);
-int     co_value_set(cg_obj *co, char *str);
+void        co_flags_set(cg_obj *co, uint32_t flag);
+void        co_flags_reset(cg_obj *co, uint32_t flag);
+int         co_flags_get(cg_obj *co, uint32_t flag);
+int         co_sets_get(cg_obj *co);
+void        co_sets_set(cg_obj *co, int sets);
+cg_obj     *co_new(char *cmd, cg_obj *prev);
+cg_obj     *cov_new(enum cv_type cvtype, cg_obj *prev);
+int         co_pref(cg_obj *co, int exact);
+int         co_callback_copy(struct cg_callback *cc0, struct cg_callback **ccn);
+int         co_copy(cg_obj *co, cg_obj *parent, cg_obj **conp);
+int         co_eq(cg_obj *co1, cg_obj *co2);
+int         co_free(cg_obj *co, int recursive);
+cg_obj     *co_insert(parse_tree *pt, cg_obj *co);
+cg_obj     *co_find_one(parse_tree *pt, char *name);
+int         co_value_set(cg_obj *co, char *str);
 #if defined(__GNUC__) && __GNUC__ >= 3
-char   *cligen_reason(const char *fmt, ...) __attribute__ ((format (printf, 1, 2)));
+char       *cligen_reason(const char *fmt, ...) __attribute__ ((format (printf, 1, 2)));
 #else
-char   *cligen_reason(const char *fmt, ...);
+char       *cligen_reason(const char *fmt, ...);
 #endif
-int     pt_apply(parse_tree *pt, cg_applyfn_t fn, void *arg);
 
-#endif /* _CLIGEN_GEN_H_ */
+#endif /* _CLIGEN_OBJECT_H_ */
 

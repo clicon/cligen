@@ -45,7 +45,8 @@
 #include "cligen_buf.h"
 #include "cligen_cv.h"
 #include "cligen_cvec.h"
-#include "cligen_gen.h"
+#include "cligen_parsetree.h"
+#include "cligen_object.h"
 #include "cligen_handle.h"
 #include "cligen_print.h"
 #include "cligen_expand.h"
@@ -218,12 +219,12 @@ pt_callback_reference(parse_tree         *pt,
     struct cg_callback *cc;
     cg_var             *cv;
 		    
-    for (i=0; i<pt->pt_len; i++){    
-	if ((co = pt->pt_vec[i]) == NULL)
+    for (i=0; i<pt_len_get(pt); i++){    
+	if ((co = pt_vec_i_get(pt, i)) == NULL)
 	    continue;
 	ptc = co_pt_get(co);
 	/* Filter out non-executable non-terminals. */
-	if (ptc->pt_len && ptc->pt_vec[0] == NULL){
+	if (pt_len_get(ptc) && pt_vec_i_get(ptc, 0) == NULL){
 	    /* Copy the callback from top */
 	    if ((cc = co->co_callbacks) == NULL){
 		if (co_callback_copy(cc0, &co->co_callbacks) < 0)
@@ -262,8 +263,8 @@ pt_reference_trunc(parse_tree *pt)
     cg_obj *co;
     int     retval = -1;
 
-    for (i=0; i<pt->pt_len; i++){    
-	if ((co = pt->pt_vec[i]) == NULL)
+    for (i=0; i<pt_len_get(pt); i++){    
+	if ((co = pt_vec_i_get(pt, i)) == NULL)
 	    continue;
 	if (pt_reference_trunc(co_pt_get(co)) < 0)
 	    goto done;
@@ -301,11 +302,11 @@ pt_expand_treeref(cligen_handle h,
     char       *treename;
     cg_obj     *co02;
 
-    if (pt0->pt_vec == NULL)
+    if (pt_vec_get(pt0) == NULL)
 	return 0;
  again:
-    for (i=0; i<pt0->pt_len; i++){ /*  */
-	if ((co = pt0->pt_vec[i]) == NULL)
+    for (i=0; i<pt_len_get(pt0); i++){ /*  */
+	if ((co = pt_vec_i_get(pt0, i)) == NULL)
 	    continue;
 	if (co->co_type == CO_REFERENCE && !co_flags_get(co, CO_FLAGS_REFDONE)){
 	    /* Expansion is made in-line so we need to know if already 
@@ -335,7 +336,7 @@ pt_expand_treeref(cligen_handle h,
 		pt_callback_reference(&pt1ref, co->co_callbacks) < 0)
 		return -1;
 	    /* Copy top-levels into original parse-tree */
-	    for (j=0; j<pt1ref.pt_len; j++)
+	    for (j=0; j<pt_len_get(&pt1ref); j++)
 		if ((cot = pt1ref.pt_vec[j]) != NULL){
 		    co_flags_set(cot, CO_FLAGS_TREEREF); /* Mark expanded refd tree */
 		    if (co_insert(pt0, cot) == NULL) /* XXX alphabetically */
@@ -396,9 +397,9 @@ pt_expand_fnv(cligen_handle h,
 	i++;
 	pt_realloc(ptn);
 	if (co_expand_sub(co, parent, 
-			  &ptn->pt_vec[ptn->pt_len-1]) < 0)
+			  &ptn->pt_vec[pt_len_get(ptn)-1]) < 0)
 	    goto done;
-	con = ptn->pt_vec[ptn->pt_len-1];
+	con = pt_vec_i_get(ptn, pt_len_get(ptn)-1);
 	value = cv_string_get(cv);
 	escaped = cligen_escape(value);
 	if (escaped == value) {
@@ -437,9 +438,9 @@ pt_expand_choice(cg_obj       *co,
 	while ((c = strsep(&ccmd, ",|")) != NULL){
 	    pt_realloc(ptn);
 	    if (co_expand_sub(co, parent, 
-			      &ptn->pt_vec[ptn->pt_len-1]) < 0)
+			      &ptn->pt_vec[pt_len_get(ptn)-1]) < 0)
 		goto done;
-	    con = ptn->pt_vec[ptn->pt_len-1];
+	    con = pt_vec_i_get(ptn, pt_len_get(ptn)-1);
 	    if (transform_var_to_cmd(con, strdup(c), NULL) < 0) 
 		goto done;
 	}
@@ -477,12 +478,12 @@ pt_expand_2(cligen_handle h,
     int          retval = -1;
 
     ptn->pt_len = 0;
-    ptn->pt_vec = NULL;
+    pt_vec_set(ptn, NULL);
     ptn->pt_set = ptr->pt_set;
-    if (ptr->pt_vec == NULL)
+    if (pt_vec_get(ptr) == NULL)
 	return 0;
-    for (i=0; i<ptr->pt_len; i++){ /* Build ptn (new) from ptr (orig) */
-	if ((co = ptr->pt_vec[i]) != NULL){
+    for (i=0; i<pt_len_get(ptr); i++){ /* Build ptn (new) from ptr (orig) */
+	if ((co = pt_vec_i_get(ptr, i)) != NULL){
 	    if (co_value_set(co, NULL) < 0)
 		goto done;
 	    if (hide && co_flags_get(co, CO_FLAGS_HIDE))
@@ -518,10 +519,10 @@ pt_expand_2(cligen_handle h,
 
 		/* Copy original cg_obj to shadow list*/
 		if (co_expand_sub(co, parent, 
-				  &ptn->pt_vec[ptn->pt_len-1]) < 0)
+				  &ptn->pt_vec[pt_len_get(ptn)-1]) < 0)
 		    goto done;
 		/* Reference old cg_obj */
-		//		  con = ptn->pt_vec[ptn->pt_len-1];
+		//		  con = ptn->pt_vec[pt_len_get(ptn)-1];
 	    }
 	}
 	else{ 
@@ -548,20 +549,20 @@ pt_expand_treeref_cleanup(parse_tree *pt)
     int i, j;
     cg_obj *co;
 
-    if (pt->pt_vec == NULL)
+    if (pt_vec_get(pt) == NULL)
         return 0;
-    for (i=0; i<pt->pt_len; i++){
+    for (i=0; i<pt_len_get(pt); i++){
       again:
-	if ((co = pt->pt_vec[i]) != NULL){
+	if ((co = pt_vec_i_get(pt, i)) != NULL){
 	    if (co_flags_get(co, CO_FLAGS_REFDONE))
 		co_flags_reset(co, CO_FLAGS_REFDONE);
 	    if (co_flags_get(co, CO_FLAGS_TREEREF)){
 		pt->pt_vec[i] = NULL;
 		co_free(co, 1);
-		for (j=i; j<pt->pt_len-1; j++)
-		    pt->pt_vec[j] = pt->pt_vec[j+1];
+		for (j=i; j<pt_len_get(pt)-1; j++)
+		    pt->pt_vec[j] = pt_vec_i_get(pt, j+1);
 		pt->pt_len--;
-		if (i<pt->pt_len)
+		if (i < pt_len_get(pt))
 		    goto again;
 		else
 		    break;
@@ -584,10 +585,10 @@ pt_expand_cleanup_2(parse_tree *pt)
     int i;
     cg_obj *co;
 
-    if (pt->pt_vec == NULL)
+    if (pt_vec_get(pt) == NULL)
         return 0;
-    for (i=0; i<pt->pt_len; i++){
-	if ((co = pt->pt_vec[i]) != NULL){
+    for (i=0; i<pt_len_get(pt); i++){
+	if ((co = pt_vec_i_get(pt, i)) != NULL){
 	    if (co_value_set(co, NULL) < 0)
 		return -1;
 	    if (co->co_pt_exp.pt_vec != NULL){
