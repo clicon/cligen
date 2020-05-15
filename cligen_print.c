@@ -47,7 +47,8 @@
 #include "cligen_buf.h"
 #include "cligen_cv.h"
 #include "cligen_cvec.h"
-#include "cligen_gen.h"
+#include "cligen_parsetree.h"
+#include "cligen_object.h"
 #include "cligen_handle.h"
 #include "cligen_print.h"
 
@@ -145,8 +146,8 @@ terminal(cg_obj *co)
     parse_tree *pt;
 
     pt = co_pt_get(co);
-    return ((pt->pt_len>0 && pt->pt_vec[0] == NULL) || 
-	    pt->pt_len == 0);
+    return ((pt_len_get(pt)>0 && pt_vec_i_get(pt, 0) == NULL) || 
+	    pt_len_get(pt) == 0);
 }
 
 /*! Print a CLIgen object (cg object / co) to a CLIgen buffer
@@ -191,19 +192,19 @@ co2cbuf(cbuf   *cb,
     if (terminal(co))
 	cprintf(cb, ";");
     pt = co_pt_get(co);
-    if (pt->pt_len>1){
+    if (pt_len_get(pt)>1){
 	if (co_sets_get(co))
 	    cprintf(cb, "@");
 	cprintf(cb, "{\n");
     }
     else
-	if (pt->pt_len==1 && pt->pt_vec[0] != NULL)
+	if (pt_len_get(pt)==1 && pt_vec_i_get(pt, 0) != NULL)
 	    cprintf(cb, " ");
 	else
 	    cprintf(cb, "\n");
     if (pt2cbuf(cb, pt, marginal+3, brief) < 0)
 	goto done;
-    if (pt->pt_len>1){
+    if (pt_len_get(pt)>1){
 	cprintf(cb, "%*s", marginal, ""); 
 	cprintf(cb, "}\n");
     }
@@ -227,13 +228,13 @@ pt2cbuf(cbuf       *cb,
     int retval = -1;
     int i;
 
-    for (i=0; i<pt->pt_len; i++){
-	if (pt->pt_vec[i] == NULL){
+    for (i=0; i<pt_len_get(pt); i++){
+	if (pt_vec_i_get(pt, i) == NULL){
 	    continue;
 	}
-	if (pt->pt_len > 1)
+	if (pt_len_get(pt) > 1)
 	    cprintf(cb, "%*s", marginal, "");
-	if (co2cbuf(cb, pt->pt_vec[i], marginal, brief) < 0)
+	if (co2cbuf(cb, pt_vec_i_get(pt, i), marginal, brief) < 0)
 	    goto done;
     }
     retval = 0;

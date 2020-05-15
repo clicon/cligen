@@ -39,3 +39,11 @@ typedef struct {int a;} *cligen_handle;
 typedef void *cligen_handle; /* API */
 #endif
 
+/*! One CLIgen object can have multiple sub parse-trees
+ * See:
+ *   struct parse_tree_list 
+ *   cg_obj->co_pt
+ *   cg_obj->co_pt_ex
+ * clixon: cli_syntaxmode_t;
+ */
+#undef PT_MULTI

@@ -57,7 +57,8 @@
 #include "cligen_buf.h"
 #include "cligen_cv.h"
 #include "cligen_cvec.h"
-#include "cligen_gen.h"
+#include "cligen_parsetree.h"
+#include "cligen_object.h"
 #include "cligen_handle.h"
 #include "cligen_expand.h"
 #include "cligen_read.h"
@@ -394,8 +395,8 @@ pt_onlyvars(parse_tree *pt)
     cg_obj *co;
     int     onlyvars = 0;
     
-    for (i=0; i<pt->pt_len; i++){ 
-	if ((co = pt->pt_vec[i]) == NULL)
+    for (i=0; i<pt_len_get(pt); i++){ 
+	if ((co = pt_vec_i_get(pt, i)) == NULL)
 	    continue;
 	if (co->co_type != CO_VARIABLE && co->co_ref == NULL){
 	    onlyvars = 0;
@@ -500,8 +501,8 @@ match_vec(cligen_handle h,
     strrest  = cvec_i_str(cvr, level+1);
 
     /* Loop through parse-tree at this level to find matches */
-    for (i=0; i<pt->pt_len; i++){
-	if ((co = pt->pt_vec[i]) == NULL)
+    for (i=0; i<pt_len_get(pt); i++){
+	if ((co = pt_vec_i_get(pt, i)) == NULL)
 	    continue;
 	/* Return -1: error, 0: nomatch, 1: match */
 	rtmp = NULL;
@@ -551,7 +552,7 @@ match_vec(cligen_handle h,
 	    }
 	} /* switch match */
 	assert(rtmp == NULL);
-    } /* for pt->pt_len */
+    } /* for pt_len_get(pt) */
     /* Only return reason if matches == 0 */
     if (*matchesp != 0 && reason && *reason){
 	free(*reason);
@@ -628,12 +629,12 @@ match_pattern_terminal(cligen_handle h,
 	break;
     default: /* multiple matches */
 	/* If set, if multiple cligen variables match use the first one */
-	*ptp = pt->pt_vec;
+	*ptp = pt_vec_get(pt);
 	break;
     case 1: /* exactly one match */
 	if (matches == 1)
-	    *ptp = pt->pt_vec; /* not in fallthru */
-	co_match = pt->pt_vec[(*matchvec)[0]];
+	    *ptp = pt_vec_get(pt); /* not in fallthru */
+	co_match = pt_vec_i_get(pt, (*matchvec)[0]);
 	co_orig = co_match->co_ref?co_match->co_ref: co_match;
 	if (co_match->co_type == CO_COMMAND && co_orig->co_type == CO_VARIABLE){
 	    if (co_value_set(co_orig, co_match->co_command) < 0)
@@ -726,7 +727,7 @@ match_pattern_node(cligen_handle h,
     } /* switch matches */
     if (matches != 1) 
 	goto ok;
-    co_match =  pt->pt_vec[(*matchvec)[0]];
+    co_match =  pt_vec_i_get(pt, (*matchvec)[0]);
     if (ISREST(co_match))
 	str  = cvec_i_str(cvr, level+1);
     else
@@ -746,7 +747,7 @@ match_pattern_node(cligen_handle h,
 	 * This is "inline" of match_terminal
 	 */
 	if (ISREST(co_match)){
-	    *ptp = pt->pt_vec;
+	    *ptp = pt_vec_get(pt);
 	    goto ok;
 	}
     }

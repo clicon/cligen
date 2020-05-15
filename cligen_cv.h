@@ -117,9 +117,9 @@ enum cv_type{
  */
 typedef struct cg_var cg_var;
 
-struct cg_obj;     /* forward declaration. Original in cligen_gen.h */
+struct cg_obj;     /* forward declaration. Original in cligen_object.h */
 
-struct cg_varspec; /* forward declaration. Original in cligen_gen.h */
+struct cg_varspec; /* forward declaration. Original in cligen_object.h */
 
 /*
  * Prototypes
