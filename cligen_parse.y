@@ -206,11 +206,12 @@ cgy_treename(cligen_yacc *cy,
     int                i;
     parse_tree        *pt;
 
-    /* 1. Get the top object (cache it?) */
+    /* Get the first object */
     for (cl=cy->cy_list; cl; cl = cl->cl_next){
 	co = cl->cl_obj;
 	break;
     }
+    /* Get the top object */
     cot = co_top(co);
     pt = co_pt_get(cot);
     /* If anything anything parsed */
@@ -223,7 +224,10 @@ cgy_treename(cligen_yacc *cy,
 	if (cligen_tree_add(cy->cy_handle, cy->cy_treename, pt) < 0)
 	    goto done;
 	/* 3. Create new parse-tree XXX */
-	memset(pt, 0, sizeof(*pt));
+	if ((pt = pt_new()) == NULL)
+	    goto done;
+	cot->co_pt = NULL; /* Dont purge */
+	co_pt_set(cot, pt);
     }
 
     /* 4. Set the new name */
@@ -273,7 +277,7 @@ cgy_assignment(cligen_yacc *cy,
 	    goto done;
     }
     else{ /* global */
-	treename_keyword = cligen_treename_keyword(h);
+	treename_keyword = cligen_treename_keyword(h); /* typically: "treename" */
 	if (strcmp(var, treename_keyword) == 0){
 	    if (cgy_treename(cy, val) < 0)
 		goto done;
@@ -482,7 +486,7 @@ static int
 cgy_var_post(cligen_yacc *cy)
 {
     struct cgy_list *cl; 
-    cg_obj          *coc; /* variable copy object */
+    cg_obj          *coc = NULL; /* variable copy object */
     cg_obj          *coparent; /* parent */
     cg_obj          *co;  /* new obj/sister */
     cg_obj          *coy = cy->cy_var;
@@ -591,7 +595,6 @@ cgy_reference(cligen_yacc *cy,
     return 0;
 }
 
-
 /*! Add comment
  * Assume comment is malloced and not freed by parser 
  * @param[in]  cy  CLIgen yacc parse struct
@@ -648,7 +651,8 @@ cgy_terminal(cligen_yacc *cy)
     struct cgy_list    *cl; 
     cg_obj             *co; 
     int                 i;
-    struct cg_callback *cc, **ccp;
+    struct cg_callback *cc;
+    struct cg_callback **ccp;
     int                 retval = -1;
     
     for (cl = cy->cy_list; cl; cl = cl->cl_next){

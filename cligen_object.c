@@ -66,8 +66,10 @@
 #include "cligen_handle.h"
 #include "cligen_getline.h"
 
-/*! Access function to get a CLIgen objects parse-tree (children)
+/*! Access function to get a CLIgen objects parse-tree head
  * @param[in]  co  CLIgen parse object
+ * @retval     pt   parse-tree
+ * @retval     NULL Error or no such parsetree
  */
 parse_tree *
 co_pt_get(cg_obj *co)
@@ -76,13 +78,14 @@ co_pt_get(cg_obj *co)
        errno = EINVAL;
        return NULL;
     }
-    return &co->co_pt;
+    return co->co_pt;
 }
 
-/*! Access function to set a CLIgen objects parse-tree (children)
+/*! Access function to set a CLIgen objects parse-tree head
  * @param[in]  co  CLIgen parse object
  * @param[in]  pt  CLIgen parse tree
- * if pt is null, the pt struct is nullified, XXX legacy somewhat strange
+ * @retval     0   OK
+ * @retval    -1   Error
  */
 int
 co_pt_set(cg_obj     *co,
@@ -92,11 +95,94 @@ co_pt_set(cg_obj     *co,
        errno = EINVAL;
        return -1;
     }
-    if (pt)
-	co->co_pt = *pt; /* XXX free? */
-    else
-	memset(&co->co_pt, 0, sizeof(parse_tree)); /* XXX */
+   if (co->co_pt != NULL) /* XXX */
+	pt_free(co->co_pt, 0);
+    co->co_pt = pt; 
     return 0;
+}
+
+/* Access functions for "expand" data.
+ * Expansion is done only on one layer, a vector is created with new (expanded) objects, but they
+ * in turn point to the original tree. Additionally, the match functions may return pointers to
+ * these, so they may not be free:d until late.
+ * The following functions is an API to handle these "dangling" parsetrees.
+ */
+
+/*! Remove and free all hanging parstree references
+ * @param[in]  co   CLIgen parse object
+ * @retval     NULL Error or no such parsetree
+ * This is only a reference to an original tree in co_pt. Dont free it.
+ */
+int
+co_pt_exp_purge(cg_obj *co)
+{
+    int         retval = -1;
+    parse_tree *pt;
+    int         i;
+    
+    if (co == NULL){
+       errno = EINVAL;
+       goto done;
+    }
+    for (i=0; i< co->co_pt_exp_len; i++)
+	if ((pt = co->co_pt_exp[i]) != NULL)
+	    if (pt_free(pt, 0) < 0)
+		goto done;
+    if (co->co_pt_exp)
+	free(co->co_pt_exp);
+    co->co_pt_exp = NULL;
+    co->co_pt_exp_len = 0; 
+    retval = 0;
+ done:
+    return retval;
+}
+
+/*! Clear hanging parsetree references (dont free)
+ * @param[in]  co   CLIgen parse object
+ * @retval     0   OK
+ * @retval    -1   Error
+ * This is only a reference to an original tree in co_pt. Dont free it.
+ */
+int
+co_pt_exp_clear(cg_obj *co)
+{
+    int retval = -1;
+    
+    if (co == NULL){
+       errno = EINVAL;
+       goto done;
+    }
+    co->co_pt_exp = NULL;
+    co->co_pt_exp_len = 0; 
+    retval = 0;
+ done:
+    return retval;
+}
+
+/*! Add a new hanging parsetree reference
+ * @param[in]  co   CLIgen parse object
+ * @param[in]  ptx  CLIgen parse tree
+ * @retval     0   OK
+ * @retval    -1   Error
+ * This is only a reference to an original tree in co_pt. Dont free it.
+ */
+int
+co_pt_exp_add(cg_obj     *co,
+	      parse_tree *ptx)
+{
+    int retval = -1;
+
+    if (co == NULL){
+       errno = EINVAL;
+       goto done;
+    }
+    co->co_pt_exp_len++; 
+    if ((co->co_pt_exp = realloc(co->co_pt_exp, (co->co_pt_exp_len)*sizeof(parse_tree *))) == 0)
+	goto done;
+    co->co_pt_exp[co->co_pt_exp_len-1] = ptx; 
+    retval = 0;
+ done:
+    return retval;
 }
 
 /*! Access function to get the i:th CLIgen object child
@@ -121,6 +207,8 @@ co_vec_i_get(cg_obj *co,
 
 /*! Access function to get the length of a CLIgen object child vector
  * @param[in]  co  CLIgen parse object
+ * @retval     len Length of parse tree vector
+ * @retval     NULL Error or no such parsetree
  */
 int
 co_vec_len_get(cg_obj *co)
@@ -360,13 +448,12 @@ co_new(char   *cmd,
     }
     memset(co, 0, sizeof(cg_obj));
     co->co_type    = CO_COMMAND;
-    co->co_command = strdup(cmd);
+    if (cmd)
+	co->co_command = strdup(cmd);
     co_up_set(co, parent);
     /* parse-tree created implicitly */
-#ifdef PT_MULTI
     if ((co->co_pt = pt_new()) == NULL)
 	return NULL;
-#endif
     return co;
 }
 
@@ -397,10 +484,8 @@ cov_new(enum cv_type cvtype,
 	co_up_set(co, parent);
     co->co_dec64_n = CGV_DEC64_N_DEFAULT;
     /* parse-tree created implicitly */
-#ifdef PT_MULTI
     if ((co->co_pt = pt_new()) == NULL)
 	return NULL;
-#endif
     return co;
 }
 
@@ -458,82 +543,75 @@ co_copy(cg_obj  *co,
 	cg_obj  *parent,
 	cg_obj **conp)
 {
-    cg_obj     *con;
+    int         retval = -1;
+    cg_obj     *con = NULL;
     parse_tree *pt;
+    parse_tree *ptn;
 
     if ((con = malloc(sizeof(cg_obj))) == NULL){
 	fprintf(stderr, "%s: malloc: %s\n", __FUNCTION__, strerror(errno));
 	return -1;
     }
     memcpy(con, co, sizeof(cg_obj));
-    memset(&con->co_pt_exp, 0, sizeof(struct parse_tree));
-    con->co_ref  = NULL;
+    con->co_pt = NULL;
+    con->co_ref = NULL;
     co_flags_reset(con, CO_FLAGS_MARK);
     co_flags_reset(con, CO_FLAGS_REFDONE);
     /* Replace all pointers */
     co_up_set(con, parent);
     if (co->co_command)
-	if ((con->co_command = strdup(co->co_command)) == NULL){
-	    fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
-	    return -1;
-	}
+	if ((con->co_command = strdup(co->co_command)) == NULL)
+	    goto done;
     if (co_callback_copy(co->co_callbacks, &con->co_callbacks) < 0)
-	return -1;
+	goto done;
     if (co->co_cvec)
 	con->co_cvec = cvec_dup(co->co_cvec);
-    pt = co_pt_get(co);
-    if (pt && pt_vec_get(pt))
-	if (pt_copy(pt, con, co_pt_get(con)) < 0)
-	    return -1;
+    if ((pt = co_pt_get(co)) != NULL){
+	if ((ptn = pt_dup(pt, con)) == NULL) /* sets a new pt under con */
+	    goto done;
+	if (co_pt_set(con, ptn) < 0)
+	    goto done;
+    }
+    /* Reference only always cleared? */
+    if (co_pt_exp_clear(con) < 0)
+	goto done;
     if (co->co_help)
-	if ((con->co_help = strdup(co->co_help)) == NULL){
-	    fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
-	    return -1;
-	}
+	if ((con->co_help = strdup(co->co_help)) == NULL)
+	    goto done;
     if (co_value_set(con, co->co_value) < 0) /* XXX: free på co->co_value? */
-	return -1;
-
+	goto done;
     if (co->co_type == CO_VARIABLE){
 	if (co->co_expand_fn_str)
-	    if ((con->co_expand_fn_str = strdup(co->co_expand_fn_str)) == NULL){
-		fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
-		return -1;
-	    }
+	    if ((con->co_expand_fn_str = strdup(co->co_expand_fn_str)) == NULL)
+		goto done;
 	if (co->co_translate_fn_str)
-	    if ((con->co_translate_fn_str = strdup(co->co_translate_fn_str)) == NULL){
-		fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
-		return -1;
-	    }
+	    if ((con->co_translate_fn_str = strdup(co->co_translate_fn_str)) == NULL)
+		goto done;
 	if (co->co_show)
-	    if ((con->co_show = strdup(co->co_show)) == NULL){
-		fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
-		return -1;
-	    }
+	    if ((con->co_show = strdup(co->co_show)) == NULL)
+		goto done;
 	if (co->co_rangecvv_low)
 	    if ((con->co_rangecvv_low = cvec_dup(co->co_rangecvv_low)) == NULL)
-		return -1;
+		goto done;
 	if (co->co_rangecvv_upp)
 	    if ((con->co_rangecvv_upp = cvec_dup(co->co_rangecvv_upp)) == NULL)
-		return -1;
+		goto done;
 	if (co->co_expand_fn_vec)
 	    if ((con->co_expand_fn_vec = cvec_dup(co->co_expand_fn_vec)) == NULL)
-		return -1;
-
+		goto done;
 	if (co->co_choice){
-	    if ((con->co_choice = strdup(co->co_choice)) == NULL){
-		fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
-		return -1;
-	    }
+	    if ((con->co_choice = strdup(co->co_choice)) == NULL)
+		goto done;
 	}
 	if (co->co_regex){
-	    if ((con->co_regex = cvec_dup(co->co_regex)) == NULL){
-		fprintf(stderr, "%s: cvec_dup: %s\n", __FUNCTION__, strerror(errno));
-		return -1;
-	    }
+	    if ((con->co_regex = cvec_dup(co->co_regex)) == NULL)
+		goto done;
 	}
     } /* VARIABLE */
     *conp = con;
-    return 0;
+    retval = 0;
+ done:
+    return retval;
 }
 
 /*! Compare two strings, extends strcmp 
@@ -702,7 +780,7 @@ co_eq(cg_obj *co1,
 
 /*! Free an individual syntax node (cg_obj).
  * @param[in]  co         CLIgen object
- * @param[in]  recursive  If set free recursive
+ * @param[in]  recursive  If set free recursive, if 0 free only cligen object, and parsetree
  * @retval     0          OK
  * @retval    -1          Error
  * Note that the co_var pointer is not freed. The application
@@ -717,9 +795,6 @@ co_free(cg_obj *co,
     struct cg_callback *cc;
     parse_tree         *pt;
 
-    pt = co_pt_get(co);
-    if (recursive && pt && pt_vec_get(pt))
-	cligen_parsetree_free(pt, 1); /* recursive */
     if (co->co_help)
 	free(co->co_help);
     if (co->co_command)
@@ -753,6 +828,9 @@ co_free(cg_obj *co,
 	    cvec_free(co->co_rangecvv_low);
 	if (co->co_rangecvv_upp)
 	    cvec_free(co->co_rangecvv_upp);
+    }
+    if (recursive && (pt = co_pt_get(co)) != NULL){ 
+	pt_free(pt, 1); /* recursive */ 
     }
     free(co);
     return 0;
