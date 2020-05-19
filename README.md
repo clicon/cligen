@@ -2,6 +2,9 @@
 
 CLIgen is a Command-Line Interface generator.
 
+> Note: This repo will be migrated from olofhagsand/cligen to [Clicon
+> project](https://github.com/clicon) soon.
+
 Well, actually it is not really a generator, since it does
 not _generate_ code for CLI:s. Instead, it builds and interprets
 datastructures (a parse-tree) which a library (libcligen) interprets
@@ -11,14 +14,15 @@ write callback functions where you call the right library
 routines. The callback functions add the semantics, that is, what the
 commands in the CLI are supposed to do. 
 
-I try to keep thi [cligen tutorial](cligen_tutorial.pdf) up to date
-and is probably the best way to understand CLIgen.
+The main documentation is the [cligen tutorial](cligen_tutorial.pdf)
+which is usually kept up-to-date and is probably the best way to
+understand CLIgen.
 
 Some background material can be found on the [CLIgen project
 page](http://www.cligen.se).
 
 CLIgen is _not_ a system in itself, you need to build your own
-'backend'.  We have started another project: 'clixon' which is
+'backend'.  There is another co-project: 'clixon' which is
 actually a whole system where you load dynamic frontend and backend
 modules [CLIXON project page](http://www.clicon.org) and [CLIXON
 github](https://github.com/clicon/clixon). Clixon provides a
