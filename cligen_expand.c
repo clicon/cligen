@@ -54,22 +54,21 @@
 
 /* Callback function for expand variables */
 
-
 /*! Copy and expand a cligen object.
  * this object could actually give rise to several if it is a variable
  * with expand (co_exp) or choice (co_choice) set.
  * Set co_ref to point back to the original.
  * @param[in]  co     Original cg_obj
- * @param[in]  parent Parent of original co object
+ * @param[in]  co_parent Parent of original co object
  * @param[out] conp   New, shadow object
  * @see co_copy XXX: maybe this could call co_copy?
  */
 static int
 co_expand_sub(cg_obj  *co, 
-	      cg_obj  *parent, 
+	      cg_obj  *co_parent, 
 	      cg_obj **conp)
 {
-    cg_obj *con;
+    cg_obj *con = NULL;
 
     if ((con = malloc(sizeof(cg_obj))) == NULL){
 	fprintf(stderr, "%s: malloc: %s\n", __FUNCTION__, strerror(errno));
@@ -77,7 +76,7 @@ co_expand_sub(cg_obj  *co,
     }
     memcpy(con, co, sizeof(cg_obj));
     /* Replace all pointers */
-    co_up_set(con, parent);
+    co_up_set(con, co_parent);
     if (co->co_command)
 	if ((con->co_command = strdup(co->co_command)) == NULL){
 	    fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
@@ -243,7 +242,6 @@ pt_callback_reference(parse_tree         *pt,
 		    while ((cv = cvec_each(cc0->cc_cvec, cv)) != NULL)
 			cvec_append_var(cc->cc_cvec, cv);
 		}
-		
 	    }
 	}
 	if (pt_callback_reference(co_pt_get(co), cc0) < 0)
@@ -296,15 +294,15 @@ pt_expand_treeref(cligen_handle h,
     int         i;
     int         j;
     cg_obj     *co;
-    parse_tree *ptref = 0;       /* tree referenced by pt0 orig */
-    parse_tree  pt1ref = {0, };  /* tree referenced by pt0 resolved */
-    cg_obj     *cot;             /* treeref object */
+    parse_tree *ptref = 0;      /* tree referenced by pt0 orig */
+    parse_tree *pt1ref = NULL;  /* tree referenced by pt0 resolved */
+    cg_obj     *cot;            /* treeref object */
     char       *treename;
     cg_obj     *co02;
 
     if (pt_vec_get(pt0) == NULL)
 	return 0;
- again:
+ again: /* XXX ugly goto , try to replace with a loop */
     for (i=0; i<pt_len_get(pt0); i++){ /*  */
 	if ((co = pt_vec_i_get(pt0, i)) == NULL)
 	    continue;
@@ -317,42 +315,44 @@ pt_expand_treeref(cligen_handle h,
 	    if ((ptref = cligen_tree_find(h, treename)) == NULL){
 		fprintf(stderr, "CLIgen subtree '%s' not found\n", 
 			treename);
-		return -1;
+		goto done;
 	    }
 
 	    /* make a copy of ptref -> pt1ref */
 	    co02 = co_up(co);
 
-	    if (pt_copy(ptref, co02, &pt1ref) < 0){ /* From ptref -> pt1ref */
-		fprintf(stderr, "%s: Copying parse-tree\n", __FUNCTION__);
-		return -1;
-	    }
+	    if ((pt1ref = pt_dup(ptref, co02)) == NULL) /* From ptref -> pt1ref */
+		goto done;
 	    /* Recursively add extra NULLs in non-terminals */
 	    if (co_flags_get(co, CO_FLAGS_HIDE) && /* XXX: hide to trunk? */
-		pt_reference_trunc(&pt1ref) < 0)
-		return -1;
+		pt_reference_trunc(pt1ref) < 0)
+		goto done;
 	    /* Recursively install callback all through the referenced tree */
 	    if (co->co_callbacks && 
-		pt_callback_reference(&pt1ref, co->co_callbacks) < 0)
-		return -1;
+		pt_callback_reference(pt1ref, co->co_callbacks) < 0)
+		goto done;
 	    /* Copy top-levels into original parse-tree */
-	    for (j=0; j<pt_len_get(&pt1ref); j++)
-		if ((cot = pt1ref.pt_vec[j]) != NULL){
+	    for (j=0; j<pt_len_get(pt1ref); j++)
+		if ((cot = pt1ref->pt_vec[j]) != NULL){
 		    co_flags_set(cot, CO_FLAGS_TREEREF); /* Mark expanded refd tree */
 		    if (co_insert(pt0, cot) == NULL) /* XXX alphabetically */
-			return -1;
+			goto done;
+		    pt1ref->pt_vec[j] = NULL; /* XXX */
 		}
 	    /* Due to loop above, all co in vec should be moved, it should
 	       be safe to remove */
-	    free(pt1ref.pt_vec);
-	    if (co0 && co0->co_ref) /* co02 ? */
-		co_pt_set(co0->co_ref, co_pt_get(co0));
-
 	    co_flags_set(co, CO_FLAGS_REFDONE);
+	    if (pt1ref){
+		pt_free(pt1ref, 1);
+		pt1ref = NULL;
+	    }
 	    goto again; 
 	}
     }
     retval = 0;
+ done:
+    if (pt1ref)
+	pt_free(pt1ref, 1);
     return retval;
 }
 
@@ -364,23 +364,23 @@ pt_expand_fnv(cligen_handle h,
 	      cg_obj       *co,     
 	      cvec         *cvv,
 	      parse_tree   *ptn,
-	      cg_obj       *parent)
+	      cg_obj       *co_parent)
 {
-    int     retval = -1;
-    cvec   *commands = cvec_new(0);
-    cvec   *helptexts = cvec_new(0);
-    cg_var *cv = NULL;
-    char   *helpstr;
-    cg_obj *con;
-    int     i;
-    const char *value, *escaped;
+    int         retval = -1;
+    cvec       *commands = cvec_new(0);
+    cvec       *helptexts = cvec_new(0);
+    cg_var     *cv = NULL;
+    char       *helpstr;
+    cg_obj     *con = NULL;
+    int         i;
+    const char *value;
+    const char *escaped;
 
     if (cvv == NULL){
 	errno = EINVAL;
 	goto done;
     }
-    if ((*co->co_expandv_fn)(
-			     cligen_userhandle(h)?cligen_userhandle(h):h, 
+    if ((*co->co_expandv_fn)(cligen_userhandle(h)?cligen_userhandle(h):h, 
 			     co->co_expand_fn_str, 
 			     cvv,
 			     co->co_expand_fn_vec,
@@ -389,21 +389,21 @@ pt_expand_fnv(cligen_handle h,
 	goto done;
     i = 0;
     while ((cv = cvec_each(commands, cv)) != NULL) {
-	if (i < cvec_len(helptexts)){
+	if (i < cvec_len(helptexts))
 	    helpstr = strdup(cv_string_get(cvec_i(helptexts, i)));
-	}
 	else
 	    helpstr = NULL;
 	i++;
-	pt_realloc(ptn);
-	if (co_expand_sub(co, parent, 
-			  &ptn->pt_vec[pt_len_get(ptn)-1]) < 0)
+	con = NULL;
+	if (co_expand_sub(co, co_parent, &con) < 0)
 	    goto done;
-	con = pt_vec_i_get(ptn, pt_len_get(ptn)-1);
+	if (pt_vec_append(ptn, con) < 0)
+	    goto done;
 	value = cv_string_get(cv);
 	escaped = cligen_escape(value);
 	if (escaped == value) {
-	    escaped = strdup(escaped);
+	    if ((escaped = strdup(escaped)) == NULL) /* XXX: leaks memory */
+		goto done;
 	}
 	/* 'escaped' always points to mutable string */
 	if (transform_var_to_cmd(con, (char*)escaped, helpstr) < 0)
@@ -424,23 +424,21 @@ pt_expand_fnv(cligen_handle h,
 static int
 pt_expand_choice(cg_obj       *co,     
 		 parse_tree   *ptn,
-		 cg_obj       *parent)
+		 cg_obj       *co_parent)
 {
     int     retval = -1;
     char   *ccmd;
     char   *cp = NULL;
     char   *c;
-    cg_obj *con;
+    cg_obj *con = NULL;
 
     /* parse co_command and get alternatives <alt:hej,hopp> */
     if (co->co_choice){
 	cp = ccmd = strdup(co->co_choice);
 	while ((c = strsep(&ccmd, ",|")) != NULL){
-	    pt_realloc(ptn);
-	    if (co_expand_sub(co, parent, 
-			      &ptn->pt_vec[pt_len_get(ptn)-1]) < 0)
+	    con = NULL;
+	    if (co_expand_sub(co, co_parent, &con) < 0)
 		goto done;
-	    con = pt_vec_i_get(ptn, pt_len_get(ptn)-1);
 	    if (transform_var_to_cmd(con, strdup(c), NULL) < 0) 
 		goto done;
 	}
@@ -462,7 +460,7 @@ pt_expand_choice(cg_obj       *co,
  * @param[out] cvv     Cligen variable vector containing vars/values pair for completion
  * @param[in]  hide    Respect hide setting of commands (dont show)
  * @param[in]  expandvar Set if VARS should be expanded, eg ? <tab>
- * @param[out] ptn     shadow parse-tree initially an empty pointer, its value is returned.
+ * @param[out] ptn     Shadow parse-tree initially an empty pointer, its value is returned.
  */
 int
 pt_expand_2(cligen_handle h, 
@@ -474,7 +472,8 @@ pt_expand_2(cligen_handle h,
 {
     int          i;
     cg_obj      *co;
-    cg_obj      *parent = NULL;
+    cg_obj      *con = NULL;
+    cg_obj      *co_parent = NULL;
     int          retval = -1;
 
     ptn->pt_len = 0;
@@ -493,7 +492,7 @@ pt_expand_2(cligen_handle h,
 	     * of the variable
 	     */
 	    if (co->co_type == CO_VARIABLE && co->co_choice != NULL){
-		if (pt_expand_choice(co, ptn, parent) < 0)
+		if (pt_expand_choice(co, ptn, co_parent) < 0)
 		    goto done;
 	    }
 	    /* Expand variable - call expand callback and insert expanded
@@ -510,19 +509,16 @@ pt_expand_2(cligen_handle h,
 		 * this iteration and if not add it?
 		 */
 		if (expandvar)
-		    if (pt_expand_fnv(h, co, cvv, ptn, parent) < 0)
+		    if (pt_expand_fnv(h, co, cvv, ptn, co_parent) < 0)
 			goto done;
 	    }
 	    else{
-		/* Copy vector element */
-		pt_realloc(ptn);
-
 		/* Copy original cg_obj to shadow list*/
-		if (co_expand_sub(co, parent, 
-				  &ptn->pt_vec[pt_len_get(ptn)-1]) < 0)
+		con = NULL;
+		if (co_expand_sub(co, co_parent, &con) < 0)
 		    goto done;
-		/* Reference old cg_obj */
-		//		  con = ptn->pt_vec[pt_len_get(ptn)-1];
+		if (pt_vec_append(ptn, con) < 0)
+		    goto done;
 	    }
 	}
 	else{ 
@@ -582,8 +578,10 @@ pt_expand_treeref_cleanup(parse_tree *pt)
 int
 pt_expand_cleanup_2(parse_tree *pt)
 {
-    int i;
-    cg_obj *co;
+    int         retval = -1;
+    int         i;
+    cg_obj     *co;
+    cg_obj     *co_orig;
 
     if (pt_vec_get(pt) == NULL)
         return 0;
@@ -591,35 +589,17 @@ pt_expand_cleanup_2(parse_tree *pt)
 	if ((co = pt_vec_i_get(pt, i)) != NULL){
 	    if (co_value_set(co, NULL) < 0)
 		return -1;
-	    if (co->co_pt_exp.pt_vec != NULL){
-		if (cligen_parsetree_free(&co->co_pt_exp, 0) < 0)
-		    return -1;
-		memset(&co->co_pt_exp, 0, sizeof(parse_tree));
-	    }
+	    co_orig = co->co_ref?co->co_ref: co;
+	    if (co_pt_exp_purge(co_orig) < 0)
+		goto done;
 	    if (pt_expand_cleanup_2(co_pt_get(co)) < 0)
-		return -1;
+		goto done;
 	}
     }
-    return 0;
+    retval = 0;
+ done:
+    return retval;
 }
-
-/*! Help functions to delete hanging memory
- * It is allocated in match_pattern_node, and deallocated 
- * after every call to pt_expand - because we do not now in
- * match_pattern_node when it will be used.
- */
-int
-pt_expand_add(cg_obj     *co, 
-	      parse_tree *ptn)
-{
-    if (co->co_pt_exp.pt_vec != NULL){
-	if (cligen_parsetree_free(&co->co_pt_exp, 0) < 0)
-	    return -1;
-    }
-    co->co_pt_exp = *ptn;
-    return 0;
-}
-
 
 /*! Return object in original tree from  object in a referenced tree
  * Given an object in a referenced tree, and the top of the original tree,
@@ -669,11 +649,11 @@ reference_path_match(cg_obj     *co1,
 const char*
 cligen_escape(const char* s)
 {
-	char *copy;
-	size_t len;
-	int chars_to_escape = 0;
+	char       *copy;
+	size_t      len;
+	int         chars_to_escape = 0;
 	const char *spec;
-	int i, j;
+	int         i, j;
 
 	spec = s;
 	while ((spec = strpbrk(spec, "?\\ \t"))) {

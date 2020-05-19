@@ -580,8 +580,8 @@ match_vec(cligen_handle h,
  * @param[in]  level    Current command level
  * @param[in]  best      Only return best match (for command evaluation) instead of 
  *                       all possible options
- * @param[out] ptp      Returns the vector at the place of matching
- * @param[out] matchvec A vector of integers containing indexes in ptp which match
+ * @param[out] covec      Returns the vector at the place of matching
+ * @param[out] matchvec A vector of integers containing indexes in covec which match
  * @param[out] matchlen Number of matches in matchvec, (if retval is 0)
  * @param[out] reasonp  If *matchlen = 0, this may be malloced to indicate reason for 
  *                      not matching variables, if given. Neeed to be free:d
@@ -597,7 +597,7 @@ match_pattern_terminal(cligen_handle h,
 		       int           levels,
 		       int           level, 
 		       int           best,
-		       co_vec_t     *ptp, 
+		       co_vec_t     *covec, 
 		       int          *matchvec[], 
 		       int          *matchlen,
 		       char        **reasonp
@@ -629,11 +629,11 @@ match_pattern_terminal(cligen_handle h,
 	break;
     default: /* multiple matches */
 	/* If set, if multiple cligen variables match use the first one */
-	*ptp = pt_vec_get(pt);
+	*covec = pt_vec_get(pt);
 	break;
     case 1: /* exactly one match */
 	if (matches == 1)
-	    *ptp = pt_vec_get(pt); /* not in fallthru */
+	    *covec = pt_vec_get(pt); /* not in fallthru */
 	co_match = pt_vec_i_get(pt, (*matchvec)[0]);
 	co_orig = co_match->co_ref?co_match->co_ref: co_match;
 	if (co_match->co_type == CO_COMMAND && co_orig->co_type == CO_VARIABLE){
@@ -666,8 +666,8 @@ match_pattern_terminal(cligen_handle h,
  *                       all possible options
  * @param[in]  hide      Respect hide setting of commands (dont show)
  * @param[in]  expandvar Set if VARS should be expanded, eg ? <tab>
- * @param[out] ptp       Returns the input pt vector at the place of matching
- * @param[out] matchvec  A vector of integers containing indexes in ptp which match
+ * @param[out] covec       Returns the input pt vector at the place of matching
+ * @param[out] matchvec  A vector of integers containing indexes in covec which match
  * @param[out] matchlen  Number of matches in matchvec, (if retval is 0)
  * @param[out] cvv       cligen variable vector containing vars/values pair for 
  *                       completion
@@ -687,23 +687,24 @@ match_pattern_node(cligen_handle h,
 		   int           best,
 		   int           hide,
 		   int           expandvar,
-		   co_vec_t     *ptp, 
+		   co_vec_t     *covec, 
 		   int          *matchvec[], 
 		   int          *matchlen,
 		   cvec         *cvv,
 		   char        **reasonp
 		   )
 {
-    int        retval = -1;
-    int        matches = 0;
-    cg_obj    *co_match;
-    cg_obj    *co_orig;
-    char      *reason = NULL;
-    char      *str;
-    parse_tree ptn={0,};     /* Expanded */
-    cg_var    *cv = NULL;
-    co_match = NULL;
+    int         retval = -1;
+    int         matches = 0;
+    cg_obj     *co_match = NULL;
+    cg_obj     *co_orig;
+    char       *reason = NULL;
+    char       *str;
+    parse_tree *ptn = NULL;     /* Expanded */
+    cg_var     *cv = NULL;
 
+    if ((ptn = pt_new()) == NULL)
+	goto done;
     if (match_vec(h, cvt, cvr, pt, level,
 		  1, /* use best preference match in non-terminal matching*/
 		  matchvec, &matches, &reason) < 0)
@@ -747,7 +748,7 @@ match_pattern_node(cligen_handle h,
 	 * This is "inline" of match_terminal
 	 */
 	if (ISREST(co_match)){
-	    *ptp = pt_vec_get(pt);
+	    *covec = pt_vec_get(pt);
 	    goto ok;
 	}
     }
@@ -755,25 +756,25 @@ match_pattern_node(cligen_handle h,
 	if (co_match->co_type == CO_COMMAND && co_orig->co_type == CO_VARIABLE)
 	    if ((cv = add_cov_to_cvec(co_orig, co_match->co_command, cvv)) == NULL)
 		goto done;
-    if (pt_expand_2(h, co_pt_get(co_match), cvv, hide, expandvar, &ptn) < 0) /* expand/choice variables */
+    if (pt_expand_2(h, co_pt_get(co_match), cvv, hide, expandvar, ptn) < 0) /* expand/choice variables */
 	goto done;
     matches = 0;
     if (level+1 == levels){
-	if (match_pattern_terminal(h, cvt, cvr, &ptn, 
+	if (match_pattern_terminal(h, cvt, cvr, ptn, 
 				   levels,	level+1, 
 				   best,
-				   ptp, matchvec, &matches, reasonp) < 0)
+				   covec, matchvec, &matches, reasonp) < 0)
 	    goto done;
     }
     else
-	if (match_pattern_node(h, cvt, cvr, &ptn,
+	if (match_pattern_node(h, cvt, cvr, ptn,
 			       levels, level+1, 
 			       best, hide, expandvar,
-			       ptp, matchvec, &matches, cvv, reasonp) < 0)
+			       covec, matchvec, &matches, cvv, reasonp) < 0)
 	    goto done;
-    if (pt_expand_add(co_orig, &ptn) < 0) /* add expanded ptn to orig parsetree */
+    if (co_pt_exp_add(co_orig, ptn) < 0) 
 	goto done;
-    /* From here ptn is not used (but ptp may be inside ptn) */
+    ptn = NULL;
     if (co_match->co_type == CO_COMMAND && co_orig->co_type == CO_VARIABLE)
 	if (co_value_set(co_orig, co_match->co_command) < 0)
 	    goto done;
@@ -785,6 +786,10 @@ match_pattern_node(cligen_handle h,
 	cv = cvec_i(cvv, cvec_len(cvv)-1);
 	cv_reset(cv);
 	cvec_del(cvv, cv);
+    }
+    if (ptn != NULL){
+	if (pt_free(ptn, 0) < 0)
+	    return -1;
     }
     /* Only the last level may have multiple matches */
     return retval;
@@ -800,8 +805,8 @@ match_pattern_node(cligen_handle h,
  *                       all possible options
  * @param[in]  hide      Respect hide setting of commands (dont show)
  * @param[in]  expandvar Set if VARS should be expanded, eg ? <tab>
- * @param[out] ptp       Returns the vector at the place of matching
- * @param[out] matchvec  A vector of integers containing indexes in ptp which match
+ * @param[out] covec       Returns the vector at the place of matching
+ * @param[out] matchvec  A vector of integers containing indexes in covec which match
  * @param[out] matchlen  Number of matches in matchvec, (if retval is 0)
  * @param[out] cvv       cligen variable vector containing vars/values pair for completion
  * @param[out] reasonp   If retval = 0, this may be malloced to indicate reason for 
@@ -821,7 +826,7 @@ match_pattern(cligen_handle h,
 	      int           best,
 	      int           hide,
 	      int           expandvar,
-	      co_vec_t     *ptp, 
+	      co_vec_t     *covec, 
 	      int          *matchvec[],
 	      int          *matchlen, 
 	      cvec         *cvv,
@@ -830,7 +835,7 @@ match_pattern(cligen_handle h,
     int retval = -1;
     int levels;
 
-    if (ptp == NULL || cvt == NULL || cvr == NULL){
+    if (covec == NULL || cvt == NULL || cvr == NULL){
 	errno = EINVAL;
 	goto done;
     }
@@ -842,7 +847,7 @@ match_pattern(cligen_handle h,
 	if (match_pattern_terminal(h, cvt, cvr,
 				   pt,
 				   levels, 0, best,
-				   ptp, matchvec, matchlen, 
+				   covec, matchvec, matchlen, 
 				   reasonp) < 0)
 	    goto done;
     }
@@ -850,7 +855,7 @@ match_pattern(cligen_handle h,
 				pt,
 				levels, 0,
 				best, hide, expandvar,
-				ptp, matchvec, matchlen,
+				covec, matchvec, matchlen,
 				cvv,
 				reasonp) < 0)
 	    goto done;
@@ -969,11 +974,10 @@ match_pattern_exact(cligen_handle  h,
  * @param[in]     pt      Vector of commands (array of cligen object pointers)
  * @param[in,out] stringp Input string to match and to complete (append to)
  * @param[in,out] slen    Current string length 
- * @param[out]    cvv    cligen variable vector containing vars/values pair for
- *                        completion
- * @retval    -1   Error 
- * @retval     0   No matches, no completions made
- * @retval     1   Function completed by adding characters at the end of "string"
+ * @param[out]    cvv     cligen variable vector containing vars/values pair for completion
+ * @retval       -1       Error 
+ * @retval        0       No matches, no completions made
+ * @retval        1       Function completed by adding characters at the end of "string"
  */
 int 
 match_complete(cligen_handle h, 
@@ -982,25 +986,25 @@ match_complete(cligen_handle h,
 	       size_t       *slenp, 
 	       cvec         *cvv)
 {
-    int     level;
-    int     slen;
-    int     equal;
-    int     i;
-    int     j;
-    int     minmatch;
-    cg_obj *co;
-    cg_obj *co1 = NULL;
-    cvec   *cvt = NULL;      /* Tokenized string: vector of tokens */
-    cvec   *cvr = NULL;      /* Rest variant,  eg remaining string in each step */
-    char   *string;
-    char   *s;
-    char   *ss;
-    co_vec_t pt1;
-    int     matchlen = 0;
-    int    *matchvec = NULL;
-    int     mv;
-    int     append = 0; /* Has appended characters */
-    int     retval = -1;
+    int      level;
+    int      slen;
+    int      equal;
+    int      i;
+    int      j;
+    int      minmatch;
+    cg_obj  *co;
+    cg_obj  *co1 = NULL;
+    cvec    *cvt = NULL;      /* Tokenized string: vector of tokens */
+    cvec    *cvr = NULL;      /* Rest variant,  eg remaining string in each step */
+    char    *string;
+    char    *s;
+    char    *ss;
+    co_vec_t covec = NULL;
+    int      matchlen = 0;
+    int     *matchvec = NULL;
+    int      mv;
+    int      append = 0; /* Has appended characters */
+    int      retval = -1;
 
     /* ignore any leading whitespace */
     string = *stringp;
@@ -1010,14 +1014,14 @@ match_complete(cligen_handle h,
     s = string;
     while ((strlen(s) > 0) && isblank(*s))
 	s++;
- again:
+ again: /* XXX ugly goto usage, replace with loop */
     matchlen = 0;
     if (match_pattern(h, cvt, cvr,
 		      pt,
 		      0, /* best: Return all options, not only best */
 		      1,
 		      1, /* expandvar: Must be one for interactive TAB to work*/
-		      &pt1, &matchvec, &matchlen,
+		      &covec, &matchvec, &matchlen,
 		      cvv, NULL) < 0)
 	goto done;
     if (matchlen == 0){
@@ -1034,7 +1038,7 @@ match_complete(cligen_handle h,
     for (i=0; i<matchlen; i++){
 	mv = matchvec[i];
 	assert(mv != -1);
-	co = pt1[mv];
+	co = covec[mv];
 	if (co == NULL){
 	    retval = 0;
 	    goto done;

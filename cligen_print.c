@@ -138,7 +138,6 @@ cov2cbuf(cbuf   *cb,
     return retval;
 }
 
-
 /*! co is a terminal command, and therefore should be printed with a ';' */
 static int
 terminal(cg_obj *co)
@@ -307,6 +306,69 @@ co_print(FILE    *f,
     if (cb)
 	cbuf_free(cb);
     return retval;
+}
+
+static int co_dump1(FILE *f, cg_obj *co, int indent);
+
+static int 
+pt_dump1(FILE       *f,
+	 parse_tree *pt,
+	 int         indent)
+{
+    int     i;
+    cg_obj *co;
+
+    fprintf(stderr, "%*s %p pt %d\n", indent*3, "", pt, pt_len_get(pt));
+    if (pt_vec_get(pt))
+	fprintf(stderr, "%*s %p pt_vec [%d]\n", indent*3, "", pt_vec_get(pt), pt_len_get(pt));
+    for (i=0; i<pt_len_get(pt); i++){
+	if ((co = pt_vec_i_get(pt, i)) == NULL)
+	    fprintf(stderr, "%*s NULL\n", indent*3, "");
+	else
+	    co_dump1(f, co, indent+1);
+    }
+    return 0;
+}
+
+static int 
+co_dump1(FILE    *f,
+	 cg_obj  *co,
+	 int      indent)
+{
+    parse_tree *pt;
+
+    switch (co->co_type){
+    case CO_COMMAND:
+	fprintf(stderr, "%*s %p co %s\n", indent*3, "", co, co->co_command);
+	break;
+    case CO_REFERENCE:
+	fprintf(stderr, "%*s %p co @%s\n", indent*3, "", co, co->co_command);
+	break;
+    case CO_VARIABLE:
+	fprintf(stderr, "%*s %p co <%s>\n", indent*3, "", co, co->co_command);
+	break;
+    }
+    if ((pt = co_pt_get(co)) != NULL)
+	pt_dump1(stderr, pt, indent);
+    return 0;
+}
+
+/*! Debugging function for dumping a tree:s pointers
+ */
+int 
+co_dump(FILE    *f,
+	cg_obj  *co)
+{
+    return co_dump1(f, co, 0);
+}
+
+/*! Debugging function for dumping a tree:s pointers
+ */
+int 
+pt_dump(FILE       *f,
+	parse_tree *pt)
+{
+    return pt_dump1(f, pt, 0);
 }
 
 /*! Print list of CLIgen parse-trees

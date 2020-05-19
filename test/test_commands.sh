@@ -22,13 +22,13 @@ EOF
 new "$cligen_file -f $fspec"
 
 new "cligen b unknown"
-expectpart "$(echo "b" | $cligen_file -f $fspec )" 0 "Unknown command"
+expectpart "$(echo "b" | $cligen_file -f $fspec)" 0 "Unknown command"
 
 new "cligen a OK"
 expectpart "$(echo "a" | $cligen_file -f $fspec 2>&1)" 0 "1 name:a type:string value:a"
 
 new "cligen ab ambiguous"
-expectpart "$(echo "ab" | $cligen_file -f $fspec )" 0 "Ambigous command"
+expectpart "$(echo "ab" | $cligen_file -f $fspec)" 0 "Ambigous command"
 
 new "cligen ab ambiguous preference mode"
 expectpart "$(echo "ab" | $cligen_file -P -f $fspec 2>&1)" 0 "1 name:abc type:string value:abc"

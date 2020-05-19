@@ -41,6 +41,8 @@ int cov2cbuf(cbuf *cb, cg_obj *co, int brief);
 int pt_print(FILE *f, parse_tree *pt, int brief);
 int co_print(FILE *f, cg_obj *co, int brief);
 int cligen_print_trees(FILE *f, cligen_handle h, int brief);
+int co_dump(FILE *f, cg_obj *co);
+int pt_dump(FILE *f, parse_tree *pt);
 
 /* Backward compatible */
 #define cligen_print(f, h, b) pt_print((f), (h), (b))

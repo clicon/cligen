@@ -162,10 +162,14 @@ typedef struct cg_varspec cg_varspec;
  * @endcode
  */
 struct cg_obj{
-    parse_tree          co_pt;        /* Child parse-tree (see co_next macro below) */
+    parse_tree         *co_pt;        /* Child parse-tree (see co_next macro below) */
     /* Expand data: expand, choice temporarily replaces the original parse-tree
-       with one where expand and choice is replaced by string constants. */
-    struct parse_tree   co_pt_exp;    
+     * with one where expand and choice is replaced by string constants. 
+     * This is only a reference to an original tree in co_pt. Dont free it.
+     */
+    struct parse_tree **co_pt_exp;    /* vector of parse-trees */
+    int                 co_pt_exp_len;
+
     struct cg_obj      *co_prev;      /* Parent */
     enum cg_objtype     co_type;      /* Type of object: command, variable or tree
 					 reference */
@@ -240,6 +244,10 @@ co_top(cg_obj *co0)
  */
 parse_tree *co_pt_get(cg_obj *co);
 int         co_pt_set(cg_obj *co, parse_tree *pt);
+int         co_pt_exp_purge(cg_obj *co);
+int         co_pt_exp_clear(cg_obj *co);
+int         co_pt_exp_add(cg_obj *co, parse_tree *ptx);
+
 cg_obj     *co_vec_i_get(cg_obj *co, int i);
 int         co_vec_len_get(cg_obj *co);
 void        co_flags_set(cg_obj *co, uint32_t flag);

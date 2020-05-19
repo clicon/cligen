@@ -45,6 +45,7 @@
 #include "cligen_parsetree.h"
 #include "cligen_object.h"
 #include "cligen_parse.h"
+#include "cligen_print.h" /* XXX */
 #include "cligen_handle.h"
 #include "cligen_read.h"
 #include "cligen_syntax.h"
@@ -81,10 +82,10 @@ cligen_parse_str(cligen_handle h,
     int                i;
     cligen_yacc        cy = {0,};
     cg_obj            *co;
-    cg_obj             co0; /* tmp top object: NOT malloced */
-    cg_obj            *co_top = &co0;
+    cg_obj            *co_top = NULL;
 
-    memset(&co0, 0, sizeof(co0));
+    if ((co_top = co_new(NULL, NULL)) == NULL)
+	goto done;
     cy.cy_handle       = h; /* cligen_handle */
     cy.cy_name         = name;
     cy.cy_treename     = strdup(name); /* Use name as default tree name */
@@ -94,7 +95,7 @@ cligen_parse_str(cligen_handle h,
     if (pt)
 	co_pt_set(co_top, pt);
     if (vr)
-	cy.cy_globals       = vr; 
+	cy.cy_globals  = vr; 
     else
 	if ((cy.cy_globals = cvec_new(0)) == NULL){
 	    fprintf(stderr, "%s: malloc: %s\n", __FUNCTION__, strerror(errno)); 
@@ -118,7 +119,6 @@ cligen_parse_str(cligen_handle h,
 	    }
 	    if (cligen_tree_add(cy.cy_handle, cy.cy_treename, co_pt_get(co_top)) < 0)
 		goto done;
-	    co_pt_set(co_top, NULL);
 	}
 	if (cgy_exit(&cy) < 0)
 	    goto done;		
@@ -141,6 +141,9 @@ cligen_parse_str(cligen_handle h,
     }
     retval = 0;
   done:
+    if (co_top){
+	co_free(co_top, 0);
+    }
     if (cy.cy_treename)
 	free (cy.cy_treename);
     return retval;

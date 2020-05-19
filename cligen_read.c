@@ -79,7 +79,7 @@
  */
 static int show_help_columns(cligen_handle h, FILE *fout, char *s, parse_tree *pt, cvec *cvv);
 static int show_help_line(cligen_handle h, FILE *fout, char *s, parse_tree *pt, cvec *);
-static int complete(cligen_handle h, int *lenp, parse_tree *pt, cvec *cvv);
+static int cli_complete(cligen_handle h, int *lenp, parse_tree *pt, cvec *cvv);
 
 /*! Callback from getline: '?' has been typed on command line
  * Just show help by calling long help show function. 
@@ -96,10 +96,11 @@ cli_qmark_hook(cligen_handle h,
 {
     int           retval = -1;
     parse_tree   *pt=NULL;     /* Orig parse-tree */
-    parse_tree    ptn={0,};    /* Expanded */
+    parse_tree   *ptn = NULL;    /* Expanded */
     cvec         *cvv = NULL;
 
-
+    if ((ptn = pt_new()) == NULL)
+	goto done;
     fputs("\n", stdout);
     if ((pt = cligen_tree_active_get(h)) == NULL)
 	goto ok;
@@ -107,16 +108,16 @@ cli_qmark_hook(cligen_handle h,
 	goto done; 
     if ((cvv = cvec_start(string)) == NULL)
 	goto done;
-    if (pt_expand_2(h, pt, cvv, 1, 0, &ptn) < 0)      /* expansion */
+    if (pt_expand_2(h, pt, cvv, 1, 0, ptn) < 0)      /* expansion */
 	return -1;
-    if (show_help_line(h, stdout, string, &ptn, cvv) <0)
+    if (show_help_line(h, stdout, string, ptn, cvv) <0)
 	goto done;
  ok:
     retval = 0;
   done:
     if (cvv)
 	cvec_free(cvv);
-    if (cligen_parsetree_free(&ptn, 0) < 0)
+    if (ptn && pt_free(ptn, 0) < 0)
 	return -1;
     if (pt && pt_expand_cleanup_2(pt) < 0) 
 	return -1;
@@ -142,10 +143,12 @@ cli_tab_hook(cligen_handle h,
 {
     int           retval = -1;
     int	          old_cursor;
-    parse_tree   *pt;     /* Orig */
-    parse_tree    ptn={0,};     /* Expanded */
+    parse_tree   *pt = NULL;     /* Orig */
+    parse_tree   *ptn = NULL;    /* Expanded */
     cvec         *cvv = NULL;
 
+    if ((ptn = pt_new()) == NULL)
+	goto done;
     old_cursor = *cursorp;  /* Save old location of cursor */
     if ((pt = cligen_tree_active_get(h)) == NULL)
 	goto ok;
@@ -153,20 +156,20 @@ cli_tab_hook(cligen_handle h,
 	goto done;
     if ((cvv = cvec_start(cligen_buf(h))) == NULL)
 	goto done; 
-    if (pt_expand_2(h, pt, cvv, 1, 0, &ptn) < 0)      /* expansion */
+    if (pt_expand_2(h, pt, cvv, 1, 0, ptn) < 0)      /* expansion */
 	goto done;
     /* Note, can change cligen buf pointer (append and increase) */
-    if (complete(h, cursorp, &ptn, cvv) < 0)
+    if (cli_complete(h, cursorp, ptn, cvv) < 0) /* XXX expand-cleanup must be done here before show commands */
 	goto done;
     else {
 	if (old_cursor == *cursorp) { 	/* Cursor hasnt changed */
 	    fputs("\n", stdout);
 	    if (cligen_tabmode(h)&CLIGEN_TABMODE_COLUMNS){
-		if (show_help_line(h, stdout, cligen_buf(h), &ptn, cvv) < 0)
+		if (show_help_line(h, stdout, cligen_buf(h), ptn, cvv) < 0)
 		    goto done;
 	    }
 	    else{
-		if (show_help_columns(h, stdout, cligen_buf(h), &ptn, cvv) < 0)
+		if (show_help_columns(h, stdout, cligen_buf(h), ptn, cvv) < 0)
 		    goto done;
 	    }
 	}
@@ -176,12 +179,14 @@ cli_tab_hook(cligen_handle h,
  done:
     if (cvv)
 	cvec_free(cvv);
-    if (cligen_parsetree_free(&ptn, 0) < 0)
+    if (ptn && pt_free(ptn, 0) < 0)
 	return -1;
-    if (pt && pt_expand_cleanup_2(pt) < 0)
-	return -1;
-    if (pt && pt_expand_treeref_cleanup(pt) < 0)
-	return -1;
+    if (pt != NULL) {
+	if (pt_expand_cleanup_2(pt) < 0)
+	    return -1;
+	if (pt_expand_treeref_cleanup(pt) < 0)
+	    return -1;
+    }
     return retval;	
 }
 
@@ -392,7 +397,7 @@ show_help_line(cligen_handle h,
 {
     int           retval = -1;
     int           level;
-    co_vec_t      pt1 = NULL;
+    co_vec_t      ptmatch = NULL;
     int           matchlen = 0;
     int          *matchvec = NULL;
     cvec         *cvt = NULL;      /* Tokenized string: vector of tokens */
@@ -413,8 +418,9 @@ show_help_line(cligen_handle h,
 		      pt,       /* command vector */
 		      0,        /* best: Return all options, not only best */
 		      1, 1,
-		      &pt1, &matchvec, &matchlen, cvv, NULL) < 0)
+		      &ptmatch, &matchvec, &matchlen, cvv, NULL) < 0)
 	goto done;
+
     if ((level =  cligen_cvv_levels(cvt)) < 0)
 	goto done;
 
@@ -455,8 +461,10 @@ show_help_line(cligen_handle h,
 	retval = 0;
 	goto done;
     }
-    if (print_help_lines(fout, pt1, matchvec, matchlen) < 0)
+    /* ptmatch points to expanded nodes from first match_pattern call */
+    if (print_help_lines(fout, ptmatch, matchvec, matchlen) < 0) 
 	goto done;
+
     retval = 0;
   done:
     if (cvt)
@@ -478,10 +486,10 @@ show_help_line(cligen_handle h,
  * @retval     0       Success
  */
 static int 
-complete(cligen_handle h, 
-	 int          *cursorp, 
-	 parse_tree   *pt, 
-	 cvec         *cvv)
+cli_complete(cligen_handle h, 
+	     int          *cursorp, 
+	     parse_tree   *pt, 
+	     cvec         *cvv)
 {
     int     retval = -1;
     char   *string;
@@ -609,17 +617,19 @@ cliread_parse(cligen_handle  h,
 	      cligen_result *result,
 	      char         **reason)
 {
-    int        retval = -1;
-    cg_obj    *match_obj;
-    parse_tree ptn={0,};        /* Expanded */
-    cvec      *cvt = NULL;      /* Tokenized string: vector of tokens */
-    cvec      *cvr = NULL;      /* Rest variant,  eg remaining string in each step */
-    cvec      *cvv0 = NULL;     /* Top-level vars/val vector with just command as 0th element */
+    int         retval = -1;
+    cg_obj     *match_obj;
+    parse_tree *ptn = NULL;        /* Expanded */
+    cvec       *cvt = NULL;      /* Tokenized string: vector of tokens */
+    cvec       *cvr = NULL;      /* Rest variant,  eg remaining string in each step */
+    cvec       *cvv0 = NULL;     /* Top-level vars/val vector with just command as 0th element */
 
     if (cvv == NULL || cvec_len(cvv) != 0){
 	errno = EINVAL;
 	goto done;
     }
+    if ((ptn = pt_new()) == NULL)
+	goto done;
     if (cligen_logsyntax(h) > 0){
 	fprintf(stderr, "%s:\n", __FUNCTION__);
 	pt_print(stderr, pt, 0);
@@ -632,10 +642,10 @@ cliread_parse(cligen_handle  h,
 	goto done; 
     if ((cvv0 = cvec_start(string)) == NULL)
 	goto done;
-    if (pt_expand_2(h, pt, cvv0, 0, 0, &ptn) < 0)      /* expansion */
+    if (pt_expand_2(h, pt, cvv0, 0, 0, ptn) < 0)      /* expansion */
 	goto done;
     if (match_pattern_exact(h, cvt, cvr,
-			    &ptn, 0,
+			    ptn, 0,
 			    cvv0, &match_obj, result, reason) < 0)
 	goto done;
     /* Map from ghost object match_obj to real object */
@@ -653,7 +663,7 @@ cliread_parse(cligen_handle  h,
 	cvec_free(cvr);
     if (cvv0)
 	cvec_free(cvv0);
-    if (cligen_parsetree_free(&ptn, 0) < 0)
+    if (ptn && pt_free(ptn, 0) < 0)
 	return -1;
     if (pt_expand_cleanup_2(pt) < 0)
 	return -1;
