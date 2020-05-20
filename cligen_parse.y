@@ -617,13 +617,18 @@ cgy_comment(cligen_yacc *cy,
     return 0;
 }
 
-/*!
- * @param[in]  cy  CLIgen yacc parse struct
+/*! Append a new choice option to a choice variable string 
+ * @param[in]  cy   CLIgen yacc parse struct
+ * @param[in]  str  Accumulated choice string on the form: "a|..|z"
+ * @param[in]  app  Choice option to append
+ * @retval     s    New string created by appending: "<str>|<app>"
+ * This is just string manipulation, the complete string is linked into CLIgen structs by upper rule
+ * Note that this is variable choice. There is also command choice, eg [a|b] which is different.
  */
 static char *
-cgy_choice_merge(cligen_yacc *cy,
-		 char        *str,
-		 char        *app)
+cgy_var_choice_append(cligen_yacc *cy,
+		      char        *str,
+		      char        *app)
 {
     int len;
     char *s;
@@ -733,7 +738,7 @@ ctx_push(cligen_yacc *cy,
 }
 
 /*! Peek context from stack and replace the object list with it
- * Typically done in a choice, eg "(c1|c2)" at c2.
+ * Typically done in a command choice, eg "(c1|c2)" at c2.
  * Dont pop context
  * @param[in]  cy  CLIgen yacc parse struct
  * @see ctx_peek_swap2
@@ -772,7 +777,7 @@ ctx_peek_swap(cligen_yacc *cy)
 }
 
 /*! Peek context from stack and replace the object list with it
- * Typically done in a choice, eg "(c1|c2)" at c2.
+ * Typically done in a command choice, eg "(c1|c2)" at c2.
  * Dont pop context
  * @param[in]  cy  CLIgen yacc parse struct
  * @see ctx_peek_swap
@@ -1305,9 +1310,9 @@ choices     : { $$ = NULL;}
             | NUMBER { $$ = $1;}
             | NAME { $$ = $1;}
             | DECIMAL { $$ = $1;}
-            | choices '|' NUMBER { $$ = cgy_choice_merge(_cy, $1, $3); free($3);}
-            | choices '|' NAME { $$ = cgy_choice_merge(_cy, $1, $3); free($3);}
-            | choices '|' DECIMAL { $$ = cgy_choice_merge(_cy, $1, $3); free($3);}
+            | choices '|' NUMBER  { $$ = cgy_var_choice_append(_cy, $1, $3); free($3);}
+            | choices '|' NAME    { $$ = cgy_var_choice_append(_cy, $1, $3); free($3);}
+            | choices '|' DECIMAL { $$ = cgy_var_choice_append(_cy, $1, $3); free($3);}
             ;
 
 charseq    : charseq CHARS

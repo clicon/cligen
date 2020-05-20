@@ -407,7 +407,7 @@ pt_onlyvars(parse_tree *pt)
     return onlyvars;
 }
 
-/*! Help function to append a cv to a cvec. For expansion cvec passed to pt_expand_2
+/*! Help function to append a cv to a cvec. For expansion cvec passed to pt_expand
  * @param[in]  co     A cligen variable that has a matching value
  * @param[in]  cmd    Value in string of the variable
  * @param[out] cvv   The cligen variable vector to push a cv with name of co and
@@ -756,7 +756,7 @@ match_pattern_node(cligen_handle h,
 	if (co_match->co_type == CO_COMMAND && co_orig->co_type == CO_VARIABLE)
 	    if ((cv = add_cov_to_cvec(co_orig, co_match->co_command, cvv)) == NULL)
 		goto done;
-    if (pt_expand_2(h, co_pt_get(co_match), cvv, hide, expandvar, ptn) < 0) /* expand/choice variables */
+    if (pt_expand(h, co_pt_get(co_match), cvv, hide, expandvar, ptn) < 0) /* expand/choice variables */
 	goto done;
     matches = 0;
     if (level+1 == levels){

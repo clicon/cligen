@@ -420,11 +420,14 @@ pt_expand_fnv(cligen_handle h,
 }
 
 /*! Expand a choice rule with actual commands
+ * @param[in]  co        Original cligen object (to expand into ptn)
+ * @param[out] ptn       New parse-tree initially an empty pointer, its value is returned.
+ * @retval     0         OK
+ * @retval    -1         Error
  */
 static int
 pt_expand_choice(cg_obj       *co,     
-		 parse_tree   *ptn,
-		 cg_obj       *co_parent)
+		 parse_tree   *ptn)
 {
     int     retval = -1;
     char   *ccmd;
@@ -437,7 +440,9 @@ pt_expand_choice(cg_obj       *co,
 	cp = ccmd = strdup(co->co_choice);
 	while ((c = strsep(&ccmd, ",|")) != NULL){
 	    con = NULL;
-	    if (co_expand_sub(co, co_parent, &con) < 0)
+	    if (co_expand_sub(co, NULL, &con) < 0)
+		goto done;
+	    if (pt_vec_append(ptn, con) < 0)
 		goto done;
 	    if (transform_var_to_cmd(con, strdup(c), NULL) < 0) 
 		goto done;
@@ -450,39 +455,44 @@ pt_expand_choice(cg_obj       *co,
     return retval;
 }
 
-/*! Take a pattern and expand all <variables> with option 'choice' or 'expand'. 
- * The pattern is expanded by examining the objects they point 
- * to: those objects that are expand or choice variables
- * (eg <string expand:foo>) are transformed into a set of new commands
- * with a reference point back to the original.
- * @param[in]  h       cligen handle
- * @param[in]  ptr     original parse-tree consisting of a vector of cligen objects
+/*! Take a pattern pt and expand all <variables> with option 'choice' or 'expand' into new ptn tree
+ *
+ * The pattern is expanded by examining the objects they point to: those objects that are expand 
+ * or choice variables
+ * (eg <string expand:foo>) are transformed into a set of new commands with a reference point back
+ * to the original.
+ * The structure of the new parsetree ptn is a little peculiar, it only creates a new top-level
+ * with new, temporary expanded cg-objects, but they in turn point back to the original
+ * parse-tree. Therefore this new parse-tree cannot be free:d recursively.
+ * @param[in]  h       Cligen handle
+ * @param[in]  pt      Original parse-tree consisting of a vector of cligen objects
  * @param[out] cvv     Cligen variable vector containing vars/values pair for completion
  * @param[in]  hide    Respect hide setting of commands (dont show)
  * @param[in]  expandvar Set if VARS should be expanded, eg ? <tab>
- * @param[out] ptn     Shadow parse-tree initially an empty pointer, its value is returned.
+ * @param[out] ptn     New parse-tree initially an empty pointer, its value is returned.
+ * @retval     0       OK
+ * @retval    -1       Error
  */
 int
-pt_expand_2(cligen_handle h, 
-	    parse_tree   *ptr, 
-	    cvec         *cvv,
-	    int           hide,
-	    int           expandvar,
-	    parse_tree   *ptn)
+pt_expand(cligen_handle h, 
+	  parse_tree   *pt, 
+	  cvec         *cvv,
+	  int           hide,
+	  int           expandvar,
+	  parse_tree   *ptn)
 {
     int          i;
     cg_obj      *co;
     cg_obj      *con = NULL;
-    cg_obj      *co_parent = NULL;
     int          retval = -1;
 
     ptn->pt_len = 0;
     pt_vec_set(ptn, NULL);
-    ptn->pt_set = ptr->pt_set;
-    if (pt_vec_get(ptr) == NULL)
+    ptn->pt_set = pt->pt_set;
+    if (pt_vec_get(pt) == NULL)
 	return 0;
-    for (i=0; i<pt_len_get(ptr); i++){ /* Build ptn (new) from ptr (orig) */
-	if ((co = pt_vec_i_get(ptr, i)) != NULL){
+    for (i=0; i<pt_len_get(pt); i++){ /* Build ptn (new) from pt (orig) */
+	if ((co = pt_vec_i_get(pt, i)) != NULL){
 	    if (co_value_set(co, NULL) < 0)
 		goto done;
 	    if (hide && co_flags_get(co, CO_FLAGS_HIDE))
@@ -492,7 +502,7 @@ pt_expand_2(cligen_handle h,
 	     * of the variable
 	     */
 	    if (co->co_type == CO_VARIABLE && co->co_choice != NULL){
-		if (pt_expand_choice(co, ptn, co_parent) < 0)
+		if (pt_expand_choice(co, ptn) < 0)
 		    goto done;
 	    }
 	    /* Expand variable - call expand callback and insert expanded
@@ -509,13 +519,13 @@ pt_expand_2(cligen_handle h,
 		 * this iteration and if not add it?
 		 */
 		if (expandvar)
-		    if (pt_expand_fnv(h, co, cvv, ptn, co_parent) < 0)
+		    if (pt_expand_fnv(h, co, cvv, ptn, NULL) < 0)
 			goto done;
 	    }
 	    else{
 		/* Copy original cg_obj to shadow list*/
 		con = NULL;
-		if (co_expand_sub(co, co_parent, &con) < 0)
+		if (co_expand_sub(co, NULL, &con) < 0)
 		    goto done;
 		if (pt_vec_append(ptn, con) < 0)
 		    goto done;
@@ -571,12 +581,12 @@ pt_expand_treeref_cleanup(parse_tree *pt)
     return 0;
 }
 
-/*! Go through tree and clean & delete all extra memory from pt_expand_2()
+/*! Go through tree and clean & delete all extra memory from pt_expand()
  * More specifically, delete all co_values and co_pt_exp.
- * @see pt_expand_2
+ * @see pt_expand
  */
 int
-pt_expand_cleanup_2(parse_tree *pt)
+pt_expand_cleanup(parse_tree *pt)
 {
     int         retval = -1;
     int         i;
@@ -592,7 +602,7 @@ pt_expand_cleanup_2(parse_tree *pt)
 	    co_orig = co->co_ref?co->co_ref: co;
 	    if (co_pt_exp_purge(co_orig) < 0)
 		goto done;
-	    if (pt_expand_cleanup_2(co_pt_get(co)) < 0)
+	    if (pt_expand_cleanup(co_pt_get(co)) < 0)
 		goto done;
 	}
     }
