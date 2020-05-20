@@ -16,6 +16,7 @@ children. This is a work to make parse-tree a first level object for future enha
     * `pt->pt_len` --> `pt_len_get(pt)`
   * All functions taking call-by-value: `parse-tree pt` have been replaced by call-by-reference: `parse_tree *pt`.
     * This includes:  `cligen_tree_add(), cligen_help(), match_pattern(), pt_print(), cligen_callback_str2fn()`,  and many others.
+* C-API: Renamed `pt_expand_2()` -> `pt_expand()`, removed backward compatible `pt_expand_1()`
 
 ## 4.5.0
 12 May 2020

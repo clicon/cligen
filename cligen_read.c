@@ -108,7 +108,7 @@ cli_qmark_hook(cligen_handle h,
 	goto done; 
     if ((cvv = cvec_start(string)) == NULL)
 	goto done;
-    if (pt_expand_2(h, pt, cvv, 1, 0, ptn) < 0)      /* expansion */
+    if (pt_expand(h, pt, cvv, 1, 0, ptn) < 0)      /* expansion */
 	return -1;
     if (show_help_line(h, stdout, string, ptn, cvv) <0)
 	goto done;
@@ -119,7 +119,7 @@ cli_qmark_hook(cligen_handle h,
 	cvec_free(cvv);
     if (ptn && pt_free(ptn, 0) < 0)
 	return -1;
-    if (pt && pt_expand_cleanup_2(pt) < 0) 
+    if (pt && pt_expand_cleanup(pt) < 0) 
 	return -1;
     if (pt && pt_expand_treeref_cleanup(pt) < 0) 
 	return -1;
@@ -156,7 +156,7 @@ cli_tab_hook(cligen_handle h,
 	goto done;
     if ((cvv = cvec_start(cligen_buf(h))) == NULL)
 	goto done; 
-    if (pt_expand_2(h, pt, cvv, 1, 0, ptn) < 0)      /* expansion */
+    if (pt_expand(h, pt, cvv, 1, 0, ptn) < 0)      /* expansion */
 	goto done;
     /* Note, can change cligen buf pointer (append and increase) */
     if (cli_complete(h, cursorp, ptn, cvv) < 0) /* XXX expand-cleanup must be done here before show commands */
@@ -182,7 +182,7 @@ cli_tab_hook(cligen_handle h,
     if (ptn && pt_free(ptn, 0) < 0)
 	return -1;
     if (pt != NULL) {
-	if (pt_expand_cleanup_2(pt) < 0)
+	if (pt_expand_cleanup(pt) < 0)
 	    return -1;
 	if (pt_expand_treeref_cleanup(pt) < 0)
 	    return -1;
@@ -642,7 +642,7 @@ cliread_parse(cligen_handle  h,
 	goto done; 
     if ((cvv0 = cvec_start(string)) == NULL)
 	goto done;
-    if (pt_expand_2(h, pt, cvv0, 0, 0, ptn) < 0)      /* expansion */
+    if (pt_expand(h, pt, cvv0, 0, 0, ptn) < 0)      /* expansion */
 	goto done;
     if (match_pattern_exact(h, cvt, cvr,
 			    ptn, 0,
@@ -665,7 +665,7 @@ cliread_parse(cligen_handle  h,
 	cvec_free(cvv0);
     if (ptn && pt_free(ptn, 0) < 0)
 	return -1;
-    if (pt_expand_cleanup_2(pt) < 0)
+    if (pt_expand_cleanup(pt) < 0)
 	return -1;
     return retval;
 }

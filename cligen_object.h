@@ -115,7 +115,7 @@ struct cg_varspec{
     enum cv_type    cgs_vtype;         /* its type */
     char           *cgs_show;          /* help text of variable */
     char           *cgs_expand_fn_str; /* expand callback string */
-    expandv_cb     *cgs_expandv_fn;    /* expand callback see pt_expand_2 */
+    expandv_cb     *cgs_expandv_fn;    /* expand callback see pt_expand */
     cvec           *cgs_expand_fn_vec; /* expand callback argument vector */
     char           *cgs_translate_fn_str; /* translate function string */
     translate_cb_t *cgs_translate_fn;  /* variable translate function */

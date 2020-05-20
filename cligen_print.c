@@ -323,7 +323,7 @@ pt_dump1(FILE       *f,
 	fprintf(stderr, "%*s %p pt_vec [%d]\n", indent*3, "", pt_vec_get(pt), pt_len_get(pt));
     for (i=0; i<pt_len_get(pt); i++){
 	if ((co = pt_vec_i_get(pt, i)) == NULL)
-	    fprintf(stderr, "%*s NULL\n", indent*3, "");
+	    fprintf(stderr, "%*s NULL\n", (indent+1)*3, "");
 	else
 	    co_dump1(f, co, indent+1);
     }
