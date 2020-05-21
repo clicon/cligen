@@ -162,12 +162,17 @@ typedef struct cg_varspec cg_varspec;
  * @endcode
  */
 struct cg_obj{
+#ifdef NOTYET /* experimental */
+    parse_tree        **co_ptvec;        /* Child parse-tree (see co_next macro below) */
+    int                 co_pt_len;    /* Length of parse-tree vector */
+#else
     parse_tree         *co_pt;        /* Child parse-tree (see co_next macro below) */
+#endif
     /* Expand data: expand, choice temporarily replaces the original parse-tree
      * with one where expand and choice is replaced by string constants. 
-     * This is only a reference to an original tree in co_pt. Dont free it.
+     * vector of "dangling" parse-trees for post removal 
      */
-    struct parse_tree **co_pt_exp;    /* vector of parse-trees */
+    struct parse_tree **co_pt_exp;    
     int                 co_pt_exp_len;
 
     struct cg_obj      *co_prev;      /* Parent */
@@ -188,9 +193,8 @@ struct cg_obj{
 	struct cg_varspec cou_var;
     } u;
 };
-typedef struct cg_obj cg_obj; /* in cli_var.h */
 
-typedef cg_obj** co_vec_t;  /* vector of (pointers to) parse-tree nodes XXX is really cg_vec */
+typedef struct cg_obj cg_obj; 
 
 /* Access macro to cligen object variable specification */
 #define co2varspec(co)  &(co)->u.cou_var
@@ -213,35 +217,12 @@ typedef cg_obj** co_vec_t;  /* vector of (pointers to) parse-tree nodes XXX is r
 
 #define iskeyword(CV) 0
 
-/* Access macro */
-static inline cg_obj* 
-co_up(cg_obj *co) 
-{
-    return co->co_prev;
-}
-
-static inline int
-co_up_set(cg_obj *co, cg_obj *cop) 
-{
-    co->co_prev = cop;
-    return 0;
-}
-
-/*! return top-of-tree (ancestor) */
-static inline cg_obj* 
-co_top(cg_obj *co0) 
-{
-    cg_obj *co = co0;
-    cg_obj *co1;
-
-    while ((co1 = co_up(co)) != NULL)
-	co = co1;
-    return co;
-}
-
 /*
  * Prototypes
  */
+cg_obj*     co_up(cg_obj *co);
+int         co_up_set(cg_obj *co, cg_obj *cop);
+cg_obj*     co_top(cg_obj *co0);
 parse_tree *co_pt_get(cg_obj *co);
 int         co_pt_set(cg_obj *co, parse_tree *pt);
 int         co_pt_clear(cg_obj *co);

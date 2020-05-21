@@ -580,7 +580,7 @@ match_vec(cligen_handle h,
  * @param[in]  level    Current command level
  * @param[in]  best      Only return best match (for command evaluation) instead of 
  *                       all possible options
- * @param[out] covec      Returns the vector at the place of matching
+ * @param[out] ptmatch     Returns the parsetree at the place of matching
  * @param[out] matchvec A vector of integers containing indexes in covec which match
  * @param[out] matchlen Number of matches in matchvec, (if retval is 0)
  * @param[out] reasonp  If *matchlen = 0, this may be malloced to indicate reason for 
@@ -597,7 +597,7 @@ match_pattern_terminal(cligen_handle h,
 		       int           levels,
 		       int           level, 
 		       int           best,
-		       co_vec_t     *covec, 
+		       parse_tree  **ptmatch, 
 		       int          *matchvec[], 
 		       int          *matchlen,
 		       char        **reasonp
@@ -627,13 +627,10 @@ match_pattern_terminal(cligen_handle h,
 	    reason = NULL;
 	}
 	break;
-    default: /* multiple matches */
-	/* If set, if multiple cligen variables match use the first one */
-	*covec = pt_vec_get(pt);
-	break;
+
     case 1: /* exactly one match */
 	if (matches == 1)
-	    *covec = pt_vec_get(pt); /* not in fallthru */
+	    *ptmatch = pt;
 	co_match = pt_vec_i_get(pt, (*matchvec)[0]);
 	co_orig = co_match->co_ref?co_match->co_ref: co_match;
 	if (co_match->co_type == CO_COMMAND && co_orig->co_type == CO_VARIABLE){
@@ -641,7 +638,10 @@ match_pattern_terminal(cligen_handle h,
 		goto done;
 	}
 	break;
-
+    default: /* multiple matches */
+	/* If set, if multiple cligen variables match use the first one */
+	*ptmatch = pt;
+	break;
     } /* switch matches */
     if (matchlen)
 	*matchlen = matches;
@@ -666,7 +666,7 @@ match_pattern_terminal(cligen_handle h,
  *                       all possible options
  * @param[in]  hide      Respect hide setting of commands (dont show)
  * @param[in]  expandvar Set if VARS should be expanded, eg ? <tab>
- * @param[out] covec       Returns the input pt vector at the place of matching
+ * @param[out] ptmatch     Returns the parsetree at the place of matching
  * @param[out] matchvec  A vector of integers containing indexes in covec which match
  * @param[out] matchlen  Number of matches in matchvec, (if retval is 0)
  * @param[out] cvv       cligen variable vector containing vars/values pair for 
@@ -687,7 +687,7 @@ match_pattern_node(cligen_handle h,
 		   int           best,
 		   int           hide,
 		   int           expandvar,
-		   co_vec_t     *covec, 
+		   parse_tree  **ptmatch, 
 		   int          *matchvec[], 
 		   int          *matchlen,
 		   cvec         *cvv,
@@ -748,7 +748,7 @@ match_pattern_node(cligen_handle h,
 	 * This is "inline" of match_terminal
 	 */
 	if (ISREST(co_match)){
-	    *covec = pt_vec_get(pt);
+	    *ptmatch = pt;
 	    goto ok;
 	}
     }
@@ -763,14 +763,16 @@ match_pattern_node(cligen_handle h,
 	if (match_pattern_terminal(h, cvt, cvr, ptn, 
 				   levels,	level+1, 
 				   best,
-				   covec, matchvec, &matches, reasonp) < 0)
+				   ptmatch,
+				   matchvec, &matches, reasonp) < 0)
 	    goto done;
     }
     else
 	if (match_pattern_node(h, cvt, cvr, ptn,
 			       levels, level+1, 
 			       best, hide, expandvar,
-			       covec, matchvec, &matches, cvv, reasonp) < 0)
+			       ptmatch,
+			       matchvec, &matches, cvv, reasonp) < 0)
 	    goto done;
     if (co_pt_exp_add(co_orig, ptn) < 0) 
 	goto done;
@@ -805,7 +807,7 @@ match_pattern_node(cligen_handle h,
  *                       all possible options
  * @param[in]  hide      Respect hide setting of commands (dont show)
  * @param[in]  expandvar Set if VARS should be expanded, eg ? <tab>
- * @param[out] covec       Returns the vector at the place of matching
+ * @param[out] ptmatch     Returns the parsetree at the place of matching
  * @param[out] matchvec  A vector of integers containing indexes in covec which match
  * @param[out] matchlen  Number of matches in matchvec, (if retval is 0)
  * @param[out] cvv       cligen variable vector containing vars/values pair for completion
@@ -826,7 +828,7 @@ match_pattern(cligen_handle h,
 	      int           best,
 	      int           hide,
 	      int           expandvar,
-	      co_vec_t     *covec, 
+	      parse_tree  **ptmatch, 
 	      int          *matchvec[],
 	      int          *matchlen, 
 	      cvec         *cvv,
@@ -835,7 +837,7 @@ match_pattern(cligen_handle h,
     int retval = -1;
     int levels;
 
-    if (covec == NULL || cvt == NULL || cvr == NULL){
+    if (ptmatch == NULL || cvt == NULL || cvr == NULL){
 	errno = EINVAL;
 	goto done;
     }
@@ -847,7 +849,8 @@ match_pattern(cligen_handle h,
 	if (match_pattern_terminal(h, cvt, cvr,
 				   pt,
 				   levels, 0, best,
-				   covec, matchvec, matchlen, 
+				   ptmatch, 
+				   matchvec, matchlen, 
 				   reasonp) < 0)
 	    goto done;
     }
@@ -855,7 +858,8 @@ match_pattern(cligen_handle h,
 				pt,
 				levels, 0,
 				best, hide, expandvar,
-				covec, matchvec, matchlen,
+				ptmatch, 
+				matchvec, matchlen,
 				cvv,
 				reasonp) < 0)
 	    goto done;
@@ -888,10 +892,10 @@ match_pattern_exact(cligen_handle  h,
 		    cvec          *cvv,
 		    cg_obj       **match_obj,
 		    cligen_result *resultp,
-		    char         **reason)
+				char         **reason)
 {
     int           retval = -1;
-    co_vec_t      res_pt;
+    parse_tree   *ptmatch = NULL;
     cg_obj       *co = NULL;
     int          *matchvec = NULL;
     int           matchlen = -1; /* length of matchvec */
@@ -901,7 +905,7 @@ match_pattern_exact(cligen_handle  h,
 		       pt,
 		       1, /* best: Return only best option */
 		       0, 1,
-		       &res_pt, 
+		       &ptmatch, 
 		       &matchvec,
 		       &matchlen, 
 		       cvv, reason)) < 0)
@@ -922,9 +926,8 @@ match_pattern_exact(cligen_handle  h,
     /* Only a single match at this point */
     if (matchlen != 1)
 	goto ok;
-    /* Here we have an obj (res_pt[]) that is unique so far.
-       We need to see if there is only one sibling to it. */
-    co = res_pt[*matchvec];
+    /* Here we have an obj that is unique so far. We need to see if there is only one sibling to it. */
+    co = pt_vec_i_get(ptmatch, *matchvec);
     /*
      * Special case: if a NULL child is not found, then set result == GC_NOMATCH
      */
@@ -999,7 +1002,7 @@ match_complete(cligen_handle h,
     char    *string;
     char    *s;
     char    *ss;
-    co_vec_t covec = NULL;
+    parse_tree *ptmatch = NULL; 
     int      matchlen = 0;
     int     *matchvec = NULL;
     int      mv;
@@ -1021,7 +1024,8 @@ match_complete(cligen_handle h,
 		      0, /* best: Return all options, not only best */
 		      1,
 		      1, /* expandvar: Must be one for interactive TAB to work*/
-		      &covec, &matchvec, &matchlen,
+		      &ptmatch, 
+		      &matchvec, &matchlen,
 		      cvv, NULL) < 0)
 	goto done;
     if (matchlen == 0){
@@ -1038,7 +1042,7 @@ match_complete(cligen_handle h,
     for (i=0; i<matchlen; i++){
 	mv = matchvec[i];
 	assert(mv != -1);
-	co = covec[mv];
+	co = pt_vec_i_get(ptmatch, mv);
 	if (co == NULL){
 	    retval = 0;
 	    goto done;

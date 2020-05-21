@@ -72,8 +72,7 @@ void cligen_redraw(cligen_handle h);
 int cligen_susp_hook(cligen_handle h, cligen_susp_cb_t *fn);
 int cligen_interrupt_hook(cligen_handle h, cligen_interrupt_cb_t *fn);
 void cligen_exitchar_add(cligen_handle h, char c);
-int print_help_lines(FILE *fout, co_vec_t ptvec, int *matchvec, size_t matchlen);
-    
+int print_help_lines(FILE *fout, parse_tree *ptmatch, int *matchvec, size_t matchlen);
 int cligen_help(FILE *f, parse_tree *pt);
 
 #endif /* _CLIGEN_IO_H_ */

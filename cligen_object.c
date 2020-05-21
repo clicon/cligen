@@ -66,6 +66,33 @@
 #include "cligen_handle.h"
 #include "cligen_getline.h"
 
+
+/* Access macro */
+cg_obj* 
+co_up(cg_obj *co) 
+{
+    return co->co_prev;
+}
+
+int
+co_up_set(cg_obj *co, cg_obj *cop) 
+{
+    co->co_prev = cop;
+    return 0;
+}
+
+/*! return top-of-tree (ancestor) */
+cg_obj* 
+co_top(cg_obj *co0) 
+{
+    cg_obj *co = co0;
+    cg_obj *co1;
+
+    while ((co1 = co_up(co)) != NULL)
+	co = co1;
+    return co;
+}
+
 /*! Access function to get a CLIgen objects parse-tree head
  * @param[in]  co  CLIgen parse object
  * @retval     pt   parse-tree
@@ -95,7 +122,7 @@ co_pt_set(cg_obj     *co,
        errno = EINVAL;
        return -1;
     }
-   if (co->co_pt != NULL)
+    if (co->co_pt != NULL)
 	pt_free(co->co_pt, 0);
     co->co_pt = pt; 
     return 0;

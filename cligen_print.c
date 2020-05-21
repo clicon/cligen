@@ -319,8 +319,6 @@ pt_dump1(FILE       *f,
     cg_obj *co;
 
     fprintf(stderr, "%*s %p pt %d\n", indent*3, "", pt, pt_len_get(pt));
-    if (pt_vec_get(pt))
-	fprintf(stderr, "%*s %p pt_vec [%d]\n", indent*3, "", pt_vec_get(pt), pt_len_get(pt));
     for (i=0; i<pt_len_get(pt); i++){
 	if ((co = pt_vec_i_get(pt, i)) == NULL)
 	    fprintf(stderr, "%*s NULL\n", (indent+1)*3, "");
