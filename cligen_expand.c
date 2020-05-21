@@ -333,11 +333,12 @@ pt_expand_treeref(cligen_handle h,
 		goto done;
 	    /* Copy top-levels into original parse-tree */
 	    for (j=0; j<pt_len_get(pt1ref); j++)
-		if ((cot = pt1ref->pt_vec[j]) != NULL){
+		if ((cot = pt_vec_i_get(pt1ref, j)) != NULL){
 		    co_flags_set(cot, CO_FLAGS_TREEREF); /* Mark expanded refd tree */
 		    if (co_insert(pt0, cot) == NULL) /* XXX alphabetically */
 			goto done;
-		    pt1ref->pt_vec[j] = NULL; /* XXX */
+		    if (pt_vec_i_clear(pt1ref, j) < 0)
+			goto done;
 		}
 	    /* Due to loop above, all co in vec should be moved, it should
 	       be safe to remove */
@@ -486,9 +487,9 @@ pt_expand(cligen_handle h,
     cg_obj      *con = NULL;
     int          retval = -1;
 
-    ptn->pt_len = 0;
+    pt_len_set(ptn, 0);
     pt_vec_set(ptn, NULL);
-    ptn->pt_set = pt->pt_set;
+    pt_sets_set(ptn, pt_sets_get(pt));
     if (pt_vec_get(pt) == NULL)
 	return 0;
     for (i=0; i<pt_len_get(pt); i++){ /* Build ptn (new) from pt (orig) */
@@ -552,7 +553,8 @@ pt_expand(cligen_handle h,
 int
 pt_expand_treeref_cleanup(parse_tree *pt)
 {
-    int i, j;
+    int     retval = -1;
+    int     i;
     cg_obj *co;
 
     if (pt_vec_get(pt) == NULL)
@@ -563,11 +565,8 @@ pt_expand_treeref_cleanup(parse_tree *pt)
 	    if (co_flags_get(co, CO_FLAGS_REFDONE))
 		co_flags_reset(co, CO_FLAGS_REFDONE);
 	    if (co_flags_get(co, CO_FLAGS_TREEREF)){
-		pt->pt_vec[i] = NULL;
-		co_free(co, 1);
-		for (j=i; j<pt_len_get(pt)-1; j++)
-		    pt->pt_vec[j] = pt_vec_i_get(pt, j+1);
-		pt->pt_len--;
+		if (pt_vec_i_delete(pt, i) < 0)
+		    goto done;
 		if (i < pt_len_get(pt))
 		    goto again;
 		else
@@ -578,7 +577,9 @@ pt_expand_treeref_cleanup(parse_tree *pt)
 		    return -1;
 	}
     }
-    return 0;
+    retval = 0;
+ done:
+    return retval;
 }
 
 /*! Go through tree and clean & delete all extra memory from pt_expand()

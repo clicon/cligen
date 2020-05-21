@@ -151,13 +151,14 @@ cli_expand_cb(cligen_handle h,
 	      cvec         *helptexts)   /* vector of help-texts */
 {
 #if 1
+    /* Special case for two partly overlapping expand sets */
     if (strcmp(fn_str,"exp")==0){
-	cvec_add_string(commands, NULL, "exp1"); cvec_add_string(helptexts, NULL, "Help a");
-	cvec_add_string(commands, NULL, "exp2"); cvec_add_string(helptexts, NULL, "Help a");
-	cvec_add_string(commands, NULL, "exp3"); cvec_add_string(helptexts, NULL, "Help a");
+	cvec_add_string(commands, NULL, "exp1"); cvec_add_string(helptexts, NULL, "Help exp1");
+	cvec_add_string(commands, NULL, "exp2"); cvec_add_string(helptexts, NULL, "Help exp2");
+	cvec_add_string(commands, NULL, "exp3"); cvec_add_string(helptexts, NULL, "Help exp3");
     }
     else{
-	cvec_add_string(commands, NULL, "exp2");  cvec_add_string(helptexts, NULL, "Help a");
+	cvec_add_string(commands, NULL, "exp2");  cvec_add_string(helptexts, NULL, "Help exp2");
     }
 #else
     cvec_add_string(commands, NULL, "auto");

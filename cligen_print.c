@@ -388,7 +388,7 @@ cligen_print_trees(FILE         *f,
     parse_tree *pt = NULL;
 
     while ((pt = cligen_tree_each(h, pt)) != NULL) {
-	fprintf(stderr, "%s\n", pt->pt_name);
+	fprintf(stderr, "%s\n", pt_name_get(pt));
 	if (!brief && pt_print(f, pt, brief) < 0)
 	    goto done;
     }

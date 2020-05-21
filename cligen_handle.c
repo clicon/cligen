@@ -269,10 +269,14 @@ cligen_tree_find(cligen_handle h,
     parse_tree_list      *ptl;
     parse_tree           *pt;
     struct cligen_handle *ch = handle(h);
+    char                 *ptname;
 
     for (ptl = ch->ch_tree; ptl; ptl = ptl->ptl_next){
-	pt = ptl->ptl_parsetree;
-	if (strcmp(pt->pt_name, name) == 0)
+	if ((pt = ptl->ptl_parsetree) == NULL)
+	    continue;
+	if ((ptname = pt_name_get(pt)) == NULL)
+	    continue;
+	if (strcmp(ptname, name) == 0)
 	    return pt;
     }
     return NULL;
@@ -301,10 +305,8 @@ cligen_tree_add(cligen_handle h,
     memset(ptl, 0, sizeof(*ptl));
     ptl->ptl_parsetree = pt;
     ptn =  ptl->ptl_parsetree;
-    if ((ptn->pt_name = strdup(name)) == NULL){
-	fprintf(stderr, "%s strdup: %s\n", __FUNCTION__, strerror(errno));
+    if (pt_name_set(ptn, name) < 0)
 	return -1;
-    }
     if ((ptlast = ch->ch_tree) == NULL){
 	ptl->ptl_active++;
 	ch->ch_tree = ptl;
@@ -334,7 +336,7 @@ cligen_tree_del(cligen_handle h,
 	 ptl; 
 	 ptl_prev = &ptl->ptl_next, ptl = ptl->ptl_next){
 	pt = ptl->ptl_parsetree;
-	if (strcmp(pt->pt_name, name) == 0){
+	if (strcmp(pt_name_get(pt), name) == 0){
 	    *ptl_prev = ptl->ptl_next;
 	    free(ptl);
 	    break;
@@ -428,7 +430,7 @@ cligen_tree_active_set(cligen_handle h,
     /* First see if there is such a tree, and set it */
     for (ptl = ch->ch_tree; ptl; ptl = ptl->ptl_next){
 	pt = ptl->ptl_parsetree;
-	if (strcmp(name, pt->pt_name) == 0){
+	if (strcmp(name, pt_name_get(pt)) == 0){
 	    ptl->ptl_active = 1;
 	    break;
 	}
@@ -437,7 +439,7 @@ cligen_tree_active_set(cligen_handle h,
 	/*  Then reset all other trees */
 	for (ptl = ch->ch_tree; ptl; ptl = ptl->ptl_next){
 	    pt = ptl->ptl_parsetree;
-	    if (strcmp(name, pt->pt_name) != 0)
+	    if (strcmp(name, pt_name_get(pt)) != 0)
 		ptl->ptl_active = 0;
 	}
 	retval = 0;

@@ -51,13 +51,7 @@
 typedef struct cg_obj cg_obj;
 typedef cg_obj** co_vec_t;  /* vector of (pointers to) parse-tree nodes */
 
-struct parse_tree{
-    struct cg_obj     **pt_vec;    /* vector of pointers to parse-tree nodes */
-    int                 pt_len;    /* length of vector */
-    char               *pt_name;
-    char                pt_set;    /* Parse-tree is a SET */ 
-};
-typedef struct parse_tree parse_tree;
+typedef struct parse_tree parse_tree; /* struct defined internally in cligen_parsetree.c */
 
 /* Callback for pt_apply() */
 typedef int (cg_applyfn_t)(cg_obj *co, void *arg);
@@ -67,16 +61,23 @@ typedef int (cg_applyfn_t)(cg_obj *co, void *arg);
  * Note: pt_ vs cligen_parsetree_
  */
 co_vec_t    pt_vec_get(parse_tree *pt);
-cg_obj     *pt_vec_i_get(parse_tree *pt, int i);
 int         pt_vec_set(parse_tree *pt, co_vec_t cov);
+cg_obj     *pt_vec_i_get(parse_tree *pt, int i);
+int         pt_vec_i_clear(parse_tree *pt, int i);
+int         pt_vec_i_insert(parse_tree *pt, int i, cg_obj *co);
 int         pt_vec_append(parse_tree *pt, cg_obj *co);
+int         pt_vec_i_delete(parse_tree *pt, int i);
 int         pt_len_get(parse_tree *pt);
+int         pt_len_set(parse_tree *pt, int len);
+char       *pt_name_get(parse_tree *pt);
+int         pt_name_set(parse_tree *pt, char *name);
+int         pt_sets_get(parse_tree *pt);
+int         pt_sets_set(parse_tree *pt, int sets);
 void        cligen_parsetree_sort(parse_tree *pt, int recursive);
 int         pt_realloc(parse_tree *pt);
 int         pt_copy(parse_tree *pt, cg_obj *parent, parse_tree *ptn);
 parse_tree *pt_dup(parse_tree *pt, cg_obj *cop);
 int         cligen_parsetree_merge(parse_tree *pt0, cg_obj *parent0, parse_tree *pt1);
-int         pt_free_only(parse_tree *pt);
 int         pt_free(parse_tree *pt, int recurse);
 int         cligen_parsetree_free(parse_tree *pt, int recurse);
 parse_tree *pt_new(void);

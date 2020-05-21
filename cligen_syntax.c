@@ -54,36 +54,33 @@
  * 
  * Syntax parsing. A string is input and a syntax-tree is returned (or error). 
  * A variable record is also returned containing a list of (global) variable values.
-
  * The string contains a hierarchy of syntax specs bounded by {} and semi-colon. Comma is used
  * to tag a syntax-spec with assignments or callbacks. Help strings are delimited with ("").
  * '#' anywhere on the line means the rest is comment.
- * Example:
- * @code
- * global=foo;
- * a("command") b, fn1();{
- *    c("help"), fn2("arg"), local=3;
- *    d("help");
- * }
- * (e | d)
- * @endcode
- * Gives the following allowed strings: "a b", "a b c", "a b d", "e", "d".
- * ;
+ * @param[in]     h    CLIgen handle
+ * @param[in]     str  String to parse containing CLIgen specification statements
+ * @param[in]     name Debug string identifying the spec, typically a filename
+ * @param[in,out] pt   Parse-tree, if set, add commands to this. Can be NULL
+ * @param[out]    cvv  Global variables
+ * @see cligen_parse_file
+ * @note parse-trees can be added as side-effect:s using the treename clispec:s. The tree returned
+ * in pt is only the "latest" one.
  */
 int
 cligen_parse_str(cligen_handle h,
 		 char         *str,
-		 char         *name, /* just for errs */
-		 parse_tree   *pt,
-		 cvec         *vr
-    )
+		 char         *name,
+		 parse_tree   *ptp,
+		 cvec         *cvv)
 {
     int                retval = -1;
     int                i;
     cligen_yacc        cy = {0,};
     cg_obj            *co;
     cg_obj            *co_top = NULL;
-
+    parse_tree        *pt = NULL; 
+    
+    /* "Fake" top-level object that is removed on exit */
     if ((co_top = co_new(NULL, NULL)) == NULL)
 	goto done;
     cy.cy_handle       = h; /* cligen_handle */
@@ -92,10 +89,14 @@ cligen_parse_str(cligen_handle h,
     cy.cy_linenum      = 1;
     cy.cy_parse_string = str;
     cy.cy_stack        = NULL;
-    if (pt)
-	co_pt_set(co_top, pt);
-    if (vr)
-	cy.cy_globals  = vr; 
+    if (ptp != NULL)
+	pt = ptp;
+    else
+	if ((pt = pt_new()) == NULL)
+	    goto done;
+    co_pt_set(co_top, pt);
+    if (cvv)
+	cy.cy_globals  = cvv; 
     else
 	if ((cy.cy_globals = cvec_new(0)) == NULL){
 	    fprintf(stderr, "%s: malloc: %s\n", __FUNCTION__, strerror(errno)); 
@@ -111,39 +112,31 @@ cligen_parse_str(cligen_handle h,
 	    cgl_exit(&cy);
 	    goto done;
 	}
-	/* Add final tree */
-	if (pt == NULL){
-	    for (i=0; i<co_vec_len_get(co_top); i++){
-		if ((co=co_vec_i_get(co_top, i)) != NULL)
-		    co_up_set(co, NULL);
-	    }
+	/* Note pt/ptp is stale after parsing due to treename that replaces co_top->pt 
+	   Add final tree */
+	if (ptp == NULL)
 	    if (cligen_tree_add(cy.cy_handle, cy.cy_treename, co_pt_get(co_top)) < 0)
 		goto done;
-	}
 	if (cgy_exit(&cy) < 0)
 	    goto done;		
 	if (cgl_exit(&cy) < 0)
 	    goto done;		
     }
-    if (vr)
-	vr= cy.cy_globals;
+    if (cvv)
+	cvv= cy.cy_globals;
     else
 	cvec_free(cy.cy_globals);
     /*
      * Remove the fake top level object and remove references to it.
      */
-    if (pt)
-	*pt = *co_pt_get(co_top); /* XXX */
-    for (i=0; i<co_vec_len_get(co_top); i++){
-	co=co_vec_i_get(co_top, i);
-	if (co)
+    for (i=0; i<pt_len_get(pt); i++){
+	if ((co=pt_vec_i_get(pt, i)) != NULL)
 	    co_up_set(co, NULL);
     }
     retval = 0;
   done:
-    if (co_top){
+    if (co_top)
 	co_free(co_top, 0);
-    }
     if (cy.cy_treename)
 	free (cy.cy_treename);
     return retval;
@@ -151,14 +144,19 @@ cligen_parse_str(cligen_handle h,
 
 /*! Parse a file containing a CLIgen spec into a parse-tree
  *
- * Similar to cligen_parse_str(), just read a file first
+ * @param[in]     h    CLIgen handle
+ * @param[in]     f    Open stdio file handle
+ * @param[in]     name Debug string identifying the spec, typically a filename
+ * @param[in,out] pt   Parse-tree, if set, add commands to this
+ * @param[out]    cvv  Global variables
+ * @see cligen_parse_str
  */
 int
 cligen_parse_file(cligen_handle h,
 		  FILE         *f,
-		  char         *name, /* just for errs */
-		  parse_tree   *pt,   /* obsolete */
-		  cvec         *globals)
+		  char         *name,
+		  parse_tree   *pt,  
+		  cvec         *cvv)
 {
     char         *buf;
     int           i;
@@ -187,7 +185,7 @@ cligen_parse_file(cligen_handle h,
 	}
 	buf[i++] = (char)(c&0xff);
     } /* read a line */
-    if (cligen_parse_str(h, buf, name, pt, globals) < 0)
+    if (cligen_parse_str(h, buf, name, pt, cvv) < 0)
 	goto done;
     retval = 0;
   done:
