@@ -244,7 +244,7 @@ cligen_exitchar_add(cligen_handle h,
  */
 int
 print_help_lines(FILE      *fout, 
-		 co_vec_t   ptvec,
+		 parse_tree *ptmatch, 
 		 int       *matchvec,
 		 size_t     matchlen)
     
@@ -273,7 +273,7 @@ print_help_lines(FILE      *fout,
     }
     for (i=0; i<matchlen; i++){
 	vi = matchvec[i]; /* index into array, extra indirection */
-	co = ptvec[vi];
+	co = pt_vec_i_get(ptmatch, vi);
 	if (co->co_command == NULL)
 	    continue;
 	cmd = NULL;
@@ -349,7 +349,7 @@ cligen_help(FILE       *fout,
     }
     for (i=0; i<pt_len_get(pt); i++)
 	matchvec[i] = i;
-    if (print_help_lines(fout, pt_vec_get(pt), matchvec, pt_len_get(pt)) < 0)
+    if (print_help_lines(fout, pt, matchvec, pt_len_get(pt)) < 0)
 	goto done;
     retval = 0;
  done:

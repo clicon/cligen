@@ -254,7 +254,6 @@ show_help_columns(cligen_handle h,
 {
     int              retval = -1;
     int              level;
-    co_vec_t         pt1;
     int              matchlen = 0;
     int             *matchvec = NULL;
     int              vi;
@@ -272,6 +271,7 @@ show_help_columns(cligen_handle h,
     int              rest;
     cvec            *cvt = NULL;      /* Tokenized string: vector of tokens */
     cvec            *cvr = NULL;      /* Rest variant,  eg remaining string in each step */
+    parse_tree      *ptmatch = NULL;
 
     if (string == NULL){
 	errno = EINVAL;
@@ -288,7 +288,8 @@ show_help_columns(cligen_handle h,
 		      pt,
 		      0, /* best: Return all options, not only best */
 		      1, 1,
-		      &pt1, &matchvec, &matchlen, cvv, NULL) < 0)
+		      &ptmatch, 
+		      &matchvec, &matchlen, cvv, NULL) < 0)
 	goto done;
     if ((level = cligen_cvv_levels(cvt)) < 0)
 	goto done;
@@ -301,7 +302,7 @@ show_help_columns(cligen_handle h,
 	nrcmd = 0;
 	for (i = 0; i<matchlen; i++){ // nr-1?
 	    vi=matchvec[i];
-	    if ((co = pt1[vi]) == NULL)
+	    if ((co = pt_vec_i_get(ptmatch, vi)) == NULL)
 		continue;
 	    if (co->co_command == NULL)
 		continue;		
@@ -397,7 +398,7 @@ show_help_line(cligen_handle h,
 {
     int           retval = -1;
     int           level;
-    co_vec_t      ptmatch = NULL;
+
     int           matchlen = 0;
     int          *matchvec = NULL;
     cvec         *cvt = NULL;      /* Tokenized string: vector of tokens */
@@ -405,7 +406,8 @@ show_help_line(cligen_handle h,
     cg_var       *cvlastt;         /* Last element in cvt */
     cg_var       *cvlastr;         /* Last element in cvr */
     cligen_result result;
-    
+    parse_tree   *ptmatch = NULL; 
+
     if (string == NULL){
 	errno = EINVAL;
 	goto done;
@@ -418,7 +420,8 @@ show_help_line(cligen_handle h,
 		      pt,       /* command vector */
 		      0,        /* best: Return all options, not only best */
 		      1, 1,
-		      &ptmatch, &matchvec, &matchlen, cvv, NULL) < 0)
+		      &ptmatch,
+		      &matchvec, &matchlen, cvv, NULL) < 0)
 	goto done;
 
     if ((level =  cligen_cvv_levels(cvt)) < 0)

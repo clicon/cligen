@@ -74,35 +74,6 @@ struct parse_tree{
     char                pt_set;    /* Parse-tree is a SET */ 
 };
 
-/*! Access function to get a CLIgen objects child tree vector
- * @param[in]  co  CLIgen parse object
- */
-co_vec_t
-pt_vec_get(parse_tree *pt)
-{
-    if (pt == NULL){
-       errno = EINVAL;
-       return NULL;
-    }
-    return pt->pt_vec;
-}
-
-/*! Access function to set a CLIgen objects child tree vector
- * @param[in]  pt  CLIgen parse tree
- * @param[in]  ptv Vector of CLIgen objects
- */
-int
-pt_vec_set(parse_tree *pt,
-	   co_vec_t    ptv)
-{
-    if (pt == NULL){
-       errno = EINVAL;
-       return -1;
-    }
-    pt->pt_vec = ptv;
-    return 0;
-}
-
 /*! Access function to get the i:th CLIgen object child of a parse-tree
  * @param[in]  pt  Parse tree
  * @param[in]  i   Which object to return
@@ -111,16 +82,11 @@ cg_obj *
 pt_vec_i_get(parse_tree *pt,
 	     int         i)
 {
-    co_vec_t    cov;
-	
     if (pt == NULL){
        errno = EINVAL;
        return NULL;
     }
-    if ((cov = pt_vec_get(pt)) == NULL)
-	return NULL;
-    else
-	return pt_vec_get(pt)[i];
+    return pt->pt_vec?pt->pt_vec[i]:NULL;
 }
 
 /*! Clear the i:th CLIgen object child of a parse-tree (without freeing existing)
@@ -131,8 +97,6 @@ int
 pt_vec_i_clear(parse_tree *pt,
 	       int         i)
 {
-    co_vec_t    cov;
-	
     if (pt == NULL){
        errno = EINVAL;
        return -1;
@@ -141,11 +105,11 @@ pt_vec_i_clear(parse_tree *pt,
        errno = EINVAL;
        return -1;
     }
-    if ((cov = pt_vec_get(pt)) == NULL){
-	errno = EINVAL;
+    if (pt->pt_vec == NULL){
+	errno = EFAULT;
 	return -1;
     }
-    cov[i] = NULL;
+    pt->pt_vec[i] = NULL;
     return 0;
 }
 
@@ -201,7 +165,7 @@ pt_vec_i_delete(parse_tree *pt,
        errno = EINVAL;
        goto done;
     }
-    if (pt_vec_get(pt) == NULL){
+    if (pt->pt_vec == NULL){
 	errno = EFAULT;
 	goto done;
     }
@@ -231,19 +195,6 @@ pt_len_get(parse_tree *pt)
     }
     return pt->pt_len;
 }
-
-int
-pt_len_set(parse_tree *pt,
-	   int         len)
-{
-    if (pt == NULL){
-       errno = EINVAL;
-       return -1;
-    }
-    pt->pt_len = len;
-    return 0;
-}
-
 
 char*
 pt_name_get(parse_tree *pt)
@@ -529,7 +480,7 @@ cligen_parsetree_sort(parse_tree *pt,
 	if (co_flags_get(co, CO_FLAGS_MARK) == 0){ /* not recursive */
 	    co_flags_set(co, CO_FLAGS_MARK);
 	    pt1 = co_pt_get(co);
-	    if (pt1 && pt_vec_get(pt1) && recursive){
+	    if (pt1 && recursive){
 		cligen_parsetree_sort(pt1, 1);
 	    }
 	    co_flags_reset(co, CO_FLAGS_MARK);

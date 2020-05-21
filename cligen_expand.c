@@ -300,8 +300,6 @@ pt_expand_treeref(cligen_handle h,
     char       *treename;
     cg_obj     *co02;
 
-    if (pt_vec_get(pt0) == NULL)
-	return 0;
  again: /* XXX ugly goto , try to replace with a loop */
     for (i=0; i<pt_len_get(pt0); i++){ /*  */
 	if ((co = pt_vec_i_get(pt0, i)) == NULL)
@@ -335,7 +333,7 @@ pt_expand_treeref(cligen_handle h,
 	    for (j=0; j<pt_len_get(pt1ref); j++)
 		if ((cot = pt_vec_i_get(pt1ref, j)) != NULL){
 		    co_flags_set(cot, CO_FLAGS_TREEREF); /* Mark expanded refd tree */
-		    if (co_insert(pt0, cot) == NULL) /* XXX alphabetically */
+		    if (co_insert(pt0, cot) == NULL) 
 			goto done;
 		    if (pt_vec_i_clear(pt1ref, j) < 0)
 			goto done;
@@ -487,11 +485,9 @@ pt_expand(cligen_handle h,
     cg_obj      *con = NULL;
     int          retval = -1;
 
-    pt_len_set(ptn, 0);
-    pt_vec_set(ptn, NULL);
     pt_sets_set(ptn, pt_sets_get(pt));
-    if (pt_vec_get(pt) == NULL)
-	return 0;
+    if (pt_len_get(pt) == 0)
+	goto ok;
     for (i=0; i<pt_len_get(pt); i++){ /* Build ptn (new) from pt (orig) */
 	if ((co = pt_vec_i_get(pt, i)) != NULL){
 	    if (co_value_set(co, NULL) < 0)
@@ -541,6 +537,7 @@ pt_expand(cligen_handle h,
 	fprintf(stderr, "%s:\n", __FUNCTION__);
 	pt_print(stderr, ptn, 0);
     }
+ ok:
     retval = 0;
  done:
     return retval;
@@ -557,8 +554,6 @@ pt_expand_treeref_cleanup(parse_tree *pt)
     int     i;
     cg_obj *co;
 
-    if (pt_vec_get(pt) == NULL)
-        return 0;
     for (i=0; i<pt_len_get(pt); i++){
       again:
 	if ((co = pt_vec_i_get(pt, i)) != NULL){
@@ -594,8 +589,6 @@ pt_expand_cleanup(parse_tree *pt)
     cg_obj     *co;
     cg_obj     *co_orig;
 
-    if (pt_vec_get(pt) == NULL)
-        return 0;
     for (i=0; i<pt_len_get(pt); i++){
 	if ((co = pt_vec_i_get(pt, i)) != NULL){
 	    if (co_value_set(co, NULL) < 0)
