@@ -8,6 +8,7 @@ structure had a object-within-objct structure, where a CLIgen object
 (cg_obj) contained a "parse-tree" object which in turn contains all
 children. This is a work to make parse-tree a first level object for future enhancements.
   * Split cligen_gen.[ch] into cligen_object.[ch] and cligen_parsetree.[ch]
+    * parsetree structure hidden in cligen_parsetree.c
   * Access macros replace direct structure access as follows:
     * `co->co_next[i]` --> `co_vec_i_get(co, i)`
     * `co->co_max` --> `co_vec_len_get(co, i)`

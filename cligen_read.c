@@ -642,7 +642,7 @@ cliread_parse(cligen_handle  h,
 	goto done; 
     if ((cvv0 = cvec_start(string)) == NULL)
 	goto done;
-    if (pt_expand(h, pt, cvv0, 0, 0, ptn) < 0)      /* expansion */
+    if (pt_expand(h, pt, cvv0, 0, 0, ptn) < 0) /* sub-tree expansion, ie choice, expand function */
 	goto done;
     if (match_pattern_exact(h, cvt, cvr,
 			    ptn, 0,

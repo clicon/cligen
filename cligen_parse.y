@@ -226,7 +226,7 @@ cgy_treename(cligen_yacc *cy,
 	/* 3. Create new parse-tree XXX */
 	if ((pt = pt_new()) == NULL)
 	    goto done;
-	cot->co_pt = NULL; /* Dont purge */
+	co_pt_clear(cot);
 	co_pt_set(cot, pt);
     }
 

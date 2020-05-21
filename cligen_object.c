@@ -81,7 +81,7 @@ co_pt_get(cg_obj *co)
     return co->co_pt;
 }
 
-/*! Access function to set a CLIgen objects parse-tree head
+/*! Set a CLIgen objects parse-tree head
  * @param[in]  co  CLIgen parse object
  * @param[in]  pt  CLIgen parse tree
  * @retval     0   OK
@@ -95,9 +95,28 @@ co_pt_set(cg_obj     *co,
        errno = EINVAL;
        return -1;
     }
-   if (co->co_pt != NULL) /* XXX */
+   if (co->co_pt != NULL)
 	pt_free(co->co_pt, 0);
     co->co_pt = pt; 
+    return 0;
+}
+
+/*! Clear a CLIgen objects parse-tree head (dont free old)
+ * @param[in]  co  CLIgen parse object
+ * @param[in]  pt  CLIgen parse tree
+ * @retval     0   OK
+ * @retval    -1   Error
+ * @see co_pt_set
+ */
+int
+co_pt_clear(cg_obj *co)
+{
+    if (co == NULL){
+       errno = EINVAL;
+       return -1;
+    }
+   if (co->co_pt != NULL)
+       co->co_pt = NULL; 
     return 0;
 }
 
@@ -219,9 +238,10 @@ co_vec_len_get(cg_obj *co)
        errno = EINVAL;
        return -1;
     }
+
     if ((pt = co_pt_get(co)) == NULL)
 	return 0;
-    return pt->pt_len;
+    return pt_len_get(pt);
 }
 
 void
@@ -245,7 +265,6 @@ co_flags_get(cg_obj  *co,
     return (co->co_flags & flag) ? 1 : 0;
 }
 
-
 int
 co_sets_get(cg_obj *co)
 {
@@ -254,7 +273,7 @@ co_sets_get(cg_obj *co)
     if ((pt = co_pt_get(co)) != NULL)
 	return 0;
     else
-	return pt->pt_set;
+	return pt_sets_get(pt);
 }
 
 void
@@ -264,7 +283,7 @@ co_sets_set(cg_obj *co,
 {
     parse_tree *pt;
     if ((pt = co_pt_get(co)) != NULL)
-	pt->pt_set = sets;
+	pt_sets_set(pt, sets);
 }
 
 /*! Assign a preference to a cligen variable object
@@ -927,7 +946,6 @@ co_insert(parse_tree *pt,
 	  cg_obj     *co1)
 {
     int     pos;
-    size_t  size;
     cg_obj *co2;
 
     /* find closest to co in parsetree, insert after pos. */
@@ -943,13 +961,8 @@ co_insert(parse_tree *pt,
 	    return co2;
 	}
     }
-    if (pt_realloc(pt) < 0)
+    if (pt_vec_i_insert(pt, pos, co1) < 0)
 	return NULL;
-    if ((size = (pt_len_get(pt) - (pos+1))*sizeof(cg_obj*)) != 0)
-	memmove(&pt->pt_vec[pos+1], 
-		&pt->pt_vec[pos], 
-		size);
-    pt->pt_vec[pos] = co1;
     return co1;
 }
 

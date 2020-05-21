@@ -244,6 +244,7 @@ co_top(cg_obj *co0)
  */
 parse_tree *co_pt_get(cg_obj *co);
 int         co_pt_set(cg_obj *co, parse_tree *pt);
+int         co_pt_clear(cg_obj *co);
 int         co_pt_exp_purge(cg_obj *co);
 int         co_pt_exp_clear(cg_obj *co);
 int         co_pt_exp_add(cg_obj *co, parse_tree *ptx);
