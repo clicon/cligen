@@ -357,6 +357,8 @@ show_help_columns(cligen_handle h,
 	}
 	free(chvec);
     }
+    if (ptmatch && ptmatch != pt)
+	pt_free(ptmatch, 0);
     if (cvt)
 	cvec_free(cvt);
     if (cvr)
@@ -470,6 +472,8 @@ show_help_line(cligen_handle h,
 
     retval = 0;
   done:
+    if (ptmatch)
+	pt_free(ptmatch, 0);
     if (cvt)
 	cvec_free(cvt);
     if (cvr)
