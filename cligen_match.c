@@ -774,9 +774,9 @@ match_pattern_node(cligen_handle h,
 			       ptmatch,
 			       matchvec, &matches, cvv, reasonp) < 0)
 	    goto done;
-    if (co_pt_exp_add(co_orig, ptn) < 0) 
-	goto done;
-    ptn = NULL;
+    if (ptmatch && *ptmatch == ptn)
+	ptn = NULL; /* passed to upper layers, dont free here */
+
     if (co_match->co_type == CO_COMMAND && co_orig->co_type == CO_VARIABLE)
 	if (co_value_set(co_orig, co_match->co_command) < 0)
 	    goto done;
@@ -900,6 +900,7 @@ match_pattern_exact(cligen_handle  h,
     int          *matchvec = NULL;
     int           matchlen = -1; /* length of matchvec */
     int           i;
+    parse_tree   *ptc;
 
     if ((match_pattern(h, cvt, cvr,
 		       pt,
@@ -931,19 +932,21 @@ match_pattern_exact(cligen_handle  h,
     /*
      * Special case: if a NULL child is not found, then set result == GC_NOMATCH
      */
-    for (i=0; i < co_vec_len_get(co); i++){
-	if (co_vec_i_get(co, i) == NULL)
-	    break; /* If we match here it is OK, unless no match */
-    }
-    if (co_vec_len_get(co) != 0 && i==co_vec_len_get(co)){
-	co = NULL;
-	if (reason){
-	    if (*reason != NULL)
-		free(*reason);
-	    if ((*reason = strdup("Incomplete command")) == NULL)
-		goto done;
+    if ((ptc = co_pt_get(co)) != NULL){
+	for (i=0; i<pt_len_get(ptc); i++){
+	    if (pt_vec_i_get(ptc, i) == NULL)
+		break; /* If we match here it is OK, unless no match */
 	}
-	matchlen = 0;
+	if (pt_len_get(ptc) != 0 && i==pt_len_get(ptc)){
+	    co = NULL;
+	    if (reason){
+		if (*reason != NULL)
+		    free(*reason);
+		if ((*reason = strdup("Incomplete command")) == NULL)
+		    goto done;
+	    }
+	    matchlen = 0;
+	}
     }
  ok:
     if (resultp){
@@ -966,6 +969,8 @@ match_pattern_exact(cligen_handle  h,
 	*match_obj = co;
     retval = 0;
  done:
+    if (ptmatch && pt != ptmatch)
+	pt_free(ptmatch, 0);
     if (matchvec)
 	free(matchvec);
     return retval;
@@ -1095,6 +1100,8 @@ match_complete(cligen_handle h,
     }
     retval = append?1:0;
   done:
+    if (ptmatch && pt != ptmatch)
+	pt_free(ptmatch, 0);
     if (cvt)
 	cvec_free(cvt);
     if (cvr)

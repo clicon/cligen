@@ -659,6 +659,7 @@ cgy_terminal(cligen_yacc *cy)
     struct cg_callback *cc;
     struct cg_callback **ccp;
     int                 retval = -1;
+    parse_tree         *ptc;
     
     for (cl = cy->cy_list; cl; cl = cl->cl_next){
 	co  = cl->cl_obj;
@@ -680,10 +681,15 @@ cgy_terminal(cligen_yacc *cy)
 	    }
 	}
 	/* misc */
-	for (i=0; i<co_vec_len_get(co); i++)
-	    if (co_vec_i_get(co, i) == NULL)
-		break;
-	if (i == co_vec_len_get(co)) /* Insert empty child if ';' */
+	if ((ptc = co_pt_get(co)) != NULL){
+	    for (i=0; i<pt_len_get(ptc); i++){
+		if (pt_vec_i_get(ptc, i) == NULL)
+		    break;
+	    }
+	    if (i == pt_len_get(ptc)) /* Insert empty child if ';' */
+		co_insert(co_pt_get(co), NULL);
+	}
+	else
 	    co_insert(co_pt_get(co), NULL);
     }
     /* cleanup */

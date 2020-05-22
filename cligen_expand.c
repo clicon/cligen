@@ -357,6 +357,13 @@ pt_expand_treeref(cligen_handle h,
 
 /*! Call expand callback and insert expanded commands in place of variable
  * variable argument callback variant
+ * @param[in]  h       CLIgen handle
+ * @param[in]  co      CLIgen object
+ * @param[out] cvv     Cligen variable vector containing vars/values pair for completion
+ * @param[out] ptn     New parse-tree initially an empty pointer, its value is returned.
+ * @param[in]  co      CLIgen object parent
+ * @retval     0       OK
+ * @retval    -1       Error
  */
 static int
 pt_expand_fnv(cligen_handle h, 
@@ -480,10 +487,10 @@ pt_expand(cligen_handle h,
 	  int           expandvar,
 	  parse_tree   *ptn)
 {
-    int          i;
-    cg_obj      *co;
-    cg_obj      *con = NULL;
-    int          retval = -1;
+    int     i;
+    cg_obj *co;
+    cg_obj *con = NULL;
+    int     retval = -1;
 
     pt_sets_set(ptn, pt_sets_get(pt));
     if (pt_len_get(pt) == 0)
@@ -545,6 +552,9 @@ pt_expand(cligen_handle h,
 
 /*! Go through tree and clean & delete all extra memory from pt_expand_treeref()
  * More specifically, delete all expanded subtrees co_ref
+ * @param[in] pt   Parsetree
+ * @retval    0    OK
+ * @retval   -1    Error
  * @see pt_expand_treeref
  */
 int
@@ -579,6 +589,9 @@ pt_expand_treeref_cleanup(parse_tree *pt)
 
 /*! Go through tree and clean & delete all extra memory from pt_expand()
  * More specifically, delete all co_values and co_pt_exp.
+ * @param[in] pt   Parsetree
+ * @retval    0    OK
+ * @retval   -1    Error
  * @see pt_expand
  */
 int
@@ -587,15 +600,12 @@ pt_expand_cleanup(parse_tree *pt)
     int         retval = -1;
     int         i;
     cg_obj     *co;
-    cg_obj     *co_orig;
+
 
     for (i=0; i<pt_len_get(pt); i++){
 	if ((co = pt_vec_i_get(pt, i)) != NULL){
 	    if (co_value_set(co, NULL) < 0)
 		return -1;
-	    co_orig = co->co_ref?co->co_ref: co;
-	    if (co_pt_exp_purge(co_orig) < 0)
-		goto done;
 	    if (pt_expand_cleanup(co_pt_get(co)) < 0)
 		goto done;
 	}
