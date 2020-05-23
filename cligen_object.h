@@ -162,12 +162,8 @@ typedef struct cg_varspec cg_varspec;
  * @endcode
  */
 struct cg_obj{
-#ifdef NOTYET /* experimental */
     parse_tree        **co_ptvec;        /* Child parse-tree (see co_next macro below) */
     int                 co_pt_len;    /* Length of parse-tree vector */
-#else
-    parse_tree         *co_pt;        /* Child parse-tree (see co_next macro below) */
-#endif
     struct cg_obj      *co_prev;      /* Parent */
     enum cg_objtype     co_type;      /* Type of object: command, variable or tree
 					 reference */
@@ -224,6 +220,7 @@ void        co_flags_reset(cg_obj *co, uint32_t flag);
 int         co_flags_get(cg_obj *co, uint32_t flag);
 int         co_sets_get(cg_obj *co);
 void        co_sets_set(cg_obj *co, int sets);
+cg_obj     *co_new_only(void);
 cg_obj     *co_new(char *cmd, cg_obj *prev);
 cg_obj     *cov_new(enum cv_type cvtype, cg_obj *prev);
 int         co_pref(cg_obj *co, int exact);

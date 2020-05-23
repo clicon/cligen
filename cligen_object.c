@@ -93,6 +93,21 @@ co_top(cg_obj *co0)
     return co;
 }
 
+static int 
+co_pt_realloc(cg_obj *co)
+{
+    int retval = -1;
+    if (co->co_pt_len == 0){
+	co->co_pt_len++;
+	//	if ((co->co_ptvec = realloc(co->co_ptvec, (co->co_pt_len)*sizeof(parse_tree *))) == 0)
+	if ((co->co_ptvec = calloc(co->co_pt_len, sizeof(parse_tree *))) == 0)
+	    goto done;
+    }
+    retval = 0;
+ done:
+    return retval;
+}
+
 /*! Access function to get a CLIgen objects parse-tree head
  * @param[in]  co  CLIgen parse object
  * @retval     pt   parse-tree
@@ -105,7 +120,7 @@ co_pt_get(cg_obj *co)
        errno = EINVAL;
        return NULL;
     }
-    return co->co_pt;
+    return co->co_ptvec?co->co_ptvec[0]:NULL;
 }
 
 /*! Set a CLIgen objects parse-tree head
@@ -122,9 +137,15 @@ co_pt_set(cg_obj     *co,
        errno = EINVAL;
        return -1;
     }
-    if (co->co_pt != NULL)
-	pt_free(co->co_pt, 0);
-    co->co_pt = pt; 
+    if (co->co_pt_len == 0){
+	if (co_pt_realloc(co) < 0)
+	    return -1;
+    }
+    else {
+	if (co->co_ptvec[0])
+	    pt_free(co->co_ptvec[0], 1);
+    }
+    co->co_ptvec[0] = pt; 
     return 0;
 }
 
@@ -142,8 +163,11 @@ co_pt_clear(cg_obj *co)
        errno = EINVAL;
        return -1;
     }
-   if (co->co_pt != NULL)
-       co->co_pt = NULL; 
+    if (co->co_pt_len == 0){
+	if (co_pt_realloc(co) < 0)
+	    return -1;
+    }
+    co->co_ptvec[0] = NULL; 
     return 0;
 }
 
@@ -348,6 +372,18 @@ co_pref(cg_obj *co,
     return pref;
 }
 
+/*! Just malloc a CLIgen object. No other allocations allowed */
+cg_obj *
+co_new_only()
+{
+    cg_obj *co;
+
+    if ((co = malloc(sizeof(cg_obj))) == NULL)
+	return NULL;
+    memset(co, 0, sizeof(cg_obj));
+    return co;
+}
+
 /*! Create new cligen parse-tree command object
  *
  * That is, a cligen parse-tree object with type == CO_COMMAND (not variable)
@@ -362,19 +398,19 @@ cg_obj *
 co_new(char   *cmd, 
        cg_obj *parent)
 {
-    cg_obj *co;
+    cg_obj     *co;
+    parse_tree *pt;
 
-    if ((co = malloc(sizeof(cg_obj))) == NULL){
-	perror("co_new: malloc");
+    if ((co = co_new_only()) == NULL)
 	return NULL;
-    }
-    memset(co, 0, sizeof(cg_obj));
     co->co_type    = CO_COMMAND;
     if (cmd)
 	co->co_command = strdup(cmd);
     co_up_set(co, parent);
     /* parse-tree created implicitly */
-    if ((co->co_pt = pt_new()) == NULL)
+    if ((pt = pt_new()) == NULL)
+	return NULL;
+    if (co_pt_set(co, pt) < 0)
 	return NULL;
     return co;
 }
@@ -393,20 +429,20 @@ cg_obj *
 cov_new(enum cv_type cvtype, 
 	cg_obj      *parent)
 {
-    cg_obj *co;
+    cg_obj     *co;
+    parse_tree *pt;
 
-    if ((co = malloc(sizeof(cg_obj))) == NULL){
-	perror("co_new: malloc");
+    if ((co = co_new_only()) == NULL)
 	return NULL;
-    }
-    memset(co, 0, sizeof(cg_obj));
     co->co_type    = CO_VARIABLE;
     co->co_vtype   = cvtype;
     if (parent)
 	co_up_set(co, parent);
     co->co_dec64_n = CGV_DEC64_N_DEFAULT;
     /* parse-tree created implicitly */
-    if ((co->co_pt = pt_new()) == NULL)
+    if ((pt = pt_new()) == NULL)
+	return NULL;
+    if (co_pt_set(co, pt) < 0)
 	return NULL;
     return co;
 }
@@ -470,12 +506,11 @@ co_copy(cg_obj  *co,
     parse_tree *pt;
     parse_tree *ptn;
 
-    if ((con = malloc(sizeof(cg_obj))) == NULL){
-	fprintf(stderr, "%s: malloc: %s\n", __FUNCTION__, strerror(errno));
-	return -1;
-    }
+    if ((con = co_new_only()) == NULL)
+	goto done;
     memcpy(con, co, sizeof(cg_obj));
-    con->co_pt = NULL;
+    con->co_ptvec = NULL;
+    con->co_pt_len = 0;
     con->co_ref = NULL;
     co_flags_reset(con, CO_FLAGS_MARK);
     co_flags_reset(con, CO_FLAGS_REFDONE);
@@ -751,6 +786,8 @@ co_free(cg_obj *co,
     if (recursive && (pt = co_pt_get(co)) != NULL){ 
 	pt_free(pt, 1); /* recursive */ 
     }
+    if (co->co_ptvec != NULL)
+	free(co->co_ptvec);
     free(co);
     return 0;
 }
@@ -924,10 +961,8 @@ cligen_reason(const char *fmt, ...)
     len = vsnprintf(NULL, 0, fmt, ap);
     len++;
     va_end(ap);
-    if ((reason = malloc(len)) == NULL){
-	fprintf(stderr, "%s: malloc: %s\n", __FUNCTION__, strerror(errno));
+    if ((reason = malloc(len)) == NULL)
 	return NULL;
-    }
     va_start(ap, fmt);
     if ((res = vsnprintf(reason, len, fmt, ap)) < 0){
 	free(reason);
