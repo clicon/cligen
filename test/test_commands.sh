@@ -21,22 +21,22 @@ EOF
 
 new "$cligen_file -f $fspec"
 
-new "cligen b unknown"
+new "b unknown"
 expectpart "$(echo "b" | $cligen_file -f $fspec)" 0 "Unknown command"
 
-new "cligen a OK"
+new "a OK"
 expectpart "$(echo "a" | $cligen_file -f $fspec 2>&1)" 0 "1 name:a type:string value:a"
 
-new "cligen ab ambiguous"
+new "ab ambiguous"
 expectpart "$(echo "ab" | $cligen_file -f $fspec)" 0 "Ambigous command"
 
-new "cligen ab ambiguous preference mode"
+new "ab ambiguous preference mode"
 expectpart "$(echo "ab" | $cligen_file -P -f $fspec 2>&1)" 0 "1 name:abc type:string value:abc"
 
-new "cligen abc ok"
+new "abc ok"
 expectpart "$(echo "abc" | $cligen_file -f $fspec 2>&1)" 0 "1 name:abc type:string value:abc"
 
-new "cligen abd incomplete"
+new "abd incomplete"
 expectpart "$(echo "abd" | $cligen_file -f $fspec 2>&1)" 0 'CLI syntax error in: "abd": Incomplete command'
 
 rm -rf $dir

@@ -68,13 +68,18 @@ co_expand_sub(cg_obj  *co,
 	      cg_obj  *co_parent, 
 	      cg_obj **conp)
 {
-    cg_obj *con = NULL;
+    cg_obj     *con = NULL;
+    parse_tree *pt;
 
-    if ((con = malloc(sizeof(cg_obj))) == NULL){
-	fprintf(stderr, "%s: malloc: %s\n", __FUNCTION__, strerror(errno));
+    if ((con = co_new_only()) == NULL)
 	return -1;
-    }
     memcpy(con, co, sizeof(cg_obj));
+    /* Point to same underlying pt */
+    con->co_ptvec = NULL;
+    con->co_pt_len = 0;
+    pt = co_pt_get(co);
+    if (co_pt_set(con, pt) < 0)
+	return -1;
     /* Replace all pointers */
     co_up_set(con, co_parent);
     if (co->co_command)
@@ -600,7 +605,6 @@ pt_expand_cleanup(parse_tree *pt)
     int         retval = -1;
     int         i;
     cg_obj     *co;
-
 
     for (i=0; i<pt_len_get(pt); i++){
 	if ((co = pt_vec_i_get(pt, i)) != NULL){
