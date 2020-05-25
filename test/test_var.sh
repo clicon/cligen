@@ -27,7 +27,6 @@ new "$cligen_file -f $fspec"
 
 # 3.1 Basic structure
 # commands
-if false; then
 new "a 42"
 expectpart "$(echo "a 42" | $cligen_file -f $fspec 2>&1)" 0 "1 name:a type:string value:a" "2 name:int32 type:int32 value:42"
 
@@ -56,7 +55,6 @@ expectpart "$(echo -n "b		" | $cligen_file -f $fspec 2>&1)" 0 "<b>"
 
 new "c <tab><tab>"
 expectpart "$(echo -n "c		" | $cligen_file -f $fspec 2>&1)" 0 "<a number>"
-fi # XXX
 
 # 3.10 Choice
 new "interface eth0"

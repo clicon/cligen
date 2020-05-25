@@ -807,7 +807,7 @@ match_pattern_node(cligen_handle h,
  *                       all possible options
  * @param[in]  hide      Respect hide setting of commands (dont show)
  * @param[in]  expandvar Set if VARS should be expanded, eg ? <tab>
- * @param[out] ptmatch     Returns the parsetree at the place of matching
+ * @param[out] ptmatch   Returns the parsetree at the place of matching
  * @param[out] matchvec  A vector of integers containing indexes in covec which match
  * @param[out] matchlen  Number of matches in matchvec, (if retval is 0)
  * @param[out] cvv       cligen variable vector containing vars/values pair for completion
@@ -877,6 +877,7 @@ match_pattern(cligen_handle h,
  * @param[in]  expandvar Set if VARS should be expanded, eg ? <tab>
  * @param[out] cvv       CLIgen variable vector containing vars/values pair for completion
  * @param[out] match_obj Exact object to return
+ * @param[out] ptmatch   Expanded parse tree in which match_obj occurs
  * @param[out] resultp   Result, < 0: errors, >=0 number of matches (only if retval == 0)
  * @param[out] reason    If retval is 0 and matchlen != 1, contains reason 
  *                       for not matching variables, if given. Need to be free:d
@@ -891,8 +892,9 @@ match_pattern_exact(cligen_handle  h,
 		    int            expandvar,
 		    cvec          *cvv,
 		    cg_obj       **match_obj,
+		    parse_tree   **ptmatchp,
 		    cligen_result *resultp,
-				char         **reason)
+		    char         **reason)
 {
     int           retval = -1;
     parse_tree   *ptmatch = NULL;
@@ -967,6 +969,10 @@ match_pattern_exact(cligen_handle  h,
     }
     if (match_obj)
 	*match_obj = co;
+    if (ptmatchp){
+	*ptmatchp = ptmatch;
+	ptmatch = NULL;
+    }
     retval = 0;
  done:
     if (ptmatch && pt != ptmatch)

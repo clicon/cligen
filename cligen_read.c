@@ -455,7 +455,8 @@ show_help_line(cligen_handle h,
 
 	if (match_pattern_exact(h, cvt, cvr, pt,
 				1, cvv,
-				NULL, &result, NULL) < 0)
+				NULL, NULL,
+				&result, NULL) < 0)
 	    goto done;
 	if (result == CG_MATCH || result == CG_MULTIPLE){
 	    fprintf(fout, "  <cr>\n");
@@ -472,7 +473,7 @@ show_help_line(cligen_handle h,
 
     retval = 0;
   done:
-    if (ptmatch)
+    if (ptmatch && pt != ptmatch)
 	pt_free(ptmatch, 0);
     if (cvt)
 	cvec_free(cvt);
@@ -626,7 +627,8 @@ cliread_parse(cligen_handle  h,
 {
     int         retval = -1;
     cg_obj     *match_obj;
-    parse_tree *ptn = NULL;        /* Expanded */
+    parse_tree *ptn = NULL;      /* Expanded */
+    parse_tree *ptmatch = NULL;
     cvec       *cvt = NULL;      /* Tokenized string: vector of tokens */
     cvec       *cvr = NULL;      /* Rest variant,  eg remaining string in each step */
     cvec       *cvv0 = NULL;     /* Top-level vars/val vector with just command as 0th element */
@@ -652,8 +654,9 @@ cliread_parse(cligen_handle  h,
     if (pt_expand(h, pt, cvv0, 0, 0, ptn) < 0) /* sub-tree expansion, ie choice, expand function */
 	goto done;
     if (match_pattern_exact(h, cvt, cvr,
-			    ptn, 0,
-			    cvv0, &match_obj, result, reason) < 0)
+			    ptn, 0, cvv0,
+			    &match_obj, &ptmatch, 
+			    result, reason) < 0)
 	goto done;
     /* Map from ghost object match_obj to real object */
     if (match_obj && match_obj->co_ref)
@@ -670,8 +673,13 @@ cliread_parse(cligen_handle  h,
 	cvec_free(cvr);
     if (cvv0)
 	cvec_free(cvv0);
-    if (ptn && pt_free(ptn, 0) < 0)
-	return -1;
+    if (ptmatch && ptmatch != ptn)
+	if (pt_free(ptmatch, 0) < 0)
+	    return -1;
+    if (ptn)
+	if (pt_free(ptn, 0) < 0)
+	    return -1;
+
     if (pt_expand_cleanup(pt) < 0)
 	return -1;
     return retval;
