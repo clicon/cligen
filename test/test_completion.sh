@@ -22,7 +22,10 @@ EOF
 
 new "$cligen_file -f $fspec"
 
-new "empty<tab"
+new "empty?"
+expectpart "$(echo "?" | $cligen_file -f $fspec )" 0 "cli>" "values" "vb"
+
+new "empty<tab>"
 expectpart "$(echo "	  " | $cligen_file -f $fspec )" 0 "cli> v  " "Ambigous command"
 
 new "empty<tab><tab>"
