@@ -1,5 +1,10 @@
 # Cligen Changelog
 	
+## 4.5.1
+26 May 2020
+
+* Added patch so that two equal commands when preference mode is set returns "Ambiguous command". This is the legacy behaviour but was broken in 4.5.0.
+
 ## 4.5.0
 12 May 2020
 

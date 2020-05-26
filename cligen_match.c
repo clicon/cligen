@@ -903,10 +903,29 @@ match_pattern_exact(cligen_handle  h,
 		goto done;
 	}
     }
-    else if (matchlen > 1){
-	/* In 4.5 there is also code for detecting allvars */
-	if (cligen_preference_mode(h))
-	    matchlen = 1; /* choose first element */
+    else if (matchlen > 1){ /* There is some magic to this. Collapse many choices to one
+			     * if all alternatives are variables.
+			     */
+	    int j;
+	    int allvars = 1;
+	    char *string1;
+
+	    string1 =  cvec_i_str(cvt, cligen_cvv_levels(cvt)+1);
+	    for (j=0; j<matchlen; j++){
+		co = res_pt[matchvec[j]];
+		/* XXX If variable dont compare co_command */
+		if (co->co_type == CO_COMMAND && string1 && 
+		    strcmp(string1, co->co_command)==0){
+		    matchlen = 1;
+		    matchvec[0] = matchvec[j];
+		    break;
+		}
+		if (co->co_type != CO_VARIABLE)
+		    allvars = 0;
+	    }
+	    if (allvars && cligen_preference_mode(h)) {
+		matchlen = 1; /* choose first element */
+	    }
     }
     /* Only a single match at this point */
     if (matchlen != 1)
