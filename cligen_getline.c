@@ -190,7 +190,7 @@ gl_char_init(void)			/* turn off input echo */
     new_termios.c_lflag &= ~(ICANON|ISIG|IEXTEN|ECHO);
     new_termios.c_cc[VMIN] = 1;
     new_termios.c_cc[VTIME] = 0;
-    tcsetattr(0, TCSANOW, &new_termios);
+    tcsetattr(0, TCSADRAIN, &new_termios);
 #else				/* not POSIX */
 #ifdef TIOCSETN			/* BSD */
     ioctl(0, TIOCGETC, &tch);
@@ -236,7 +236,7 @@ gl_char_cleanup(void)		/* undo effects of gl_char_init */
 {
 #ifdef __unix__
 #ifdef POSIX 
-    tcsetattr(0, TCSANOW, &old_termios);
+    tcsetattr(0, TCSADRAIN, &old_termios);
 #else 			/* not POSIX */
 #ifdef TIOCSETN		/* BSD */
     ioctl(0, TIOCSETN, &old_tty);
