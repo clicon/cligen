@@ -76,12 +76,26 @@ cli_output_reset(void)
 /*! CLIgen output function. All printf-style output should be made via this function.
  * 
  * It deals with formatting, page breaks, etc. 
- * @note Consider obsolete
- * Many style of outputs cannot be handled this way. Spawning more/less process
- * is more general.
+ * @param[in] f           Open stdio FILE pointer
+ * @param[in] template... See man printf(3)
+ * @note: There has been a debate whether this function is the right solution to the
+ * pageing problem of CLIgen or not. 
+ * (1) On the one hand, a less/more like sub-process could be forked and stdout piped to this
+ * sub-process. This would handle all prints to stdout, instead of relying on all output
+ * functions using this function and not printf.
+ * (2) On the other hand, this gives a slim and simple solution with smaller footprint (no forked
+ * process), but all output functions need to pass though this code.
+ * For now (2) is used and extended also for clixon functions. However (1) could still be 
+ * implemented as an option.
+ *
+ * @note: There has also been a discussion on the use of handles in this code (it relies on a
+ * global variable _terminalrows). However, the signature needs to be the same as fprintf in
+ * order to make compatible printing code.
  */
 int
-cligen_output(FILE *f, char *template, ... )
+cligen_output(FILE       *f,
+	      const char *template,
+	      ... )
 {
     int     retval = -1;
     va_list args;

@@ -285,7 +285,9 @@ cligen_tree_find(cligen_handle h,
 /*! Add a new parsetree last in list
  * @param[in] h       CLIgen handle
  * @param[in] name    name of parse-tree
- * @param[in] pt      parse-tree passed by value(!)
+ * @param[in] pt      parse-tree
+ * @retval    0       OK
+ * @retval   -1       Error
  * Note, if this is the first tree, it is activated by default
  */
 int 
