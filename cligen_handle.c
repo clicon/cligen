@@ -126,7 +126,6 @@ cligen_init(void)
     h = (cligen_handle)ch;
     cligen_prompt_set(h, CLIGEN_PROMPT_DEFAULT);
     /* Only if stdin and stdout refers to a terminal make win size check */
-    fprintf(stderr, "%s: isatty: %d\n", __FUNCTION__, isatty(0) && isatty(1));
     if (isatty(0) && isatty(1)){
 	if (cligen_gwinsz(h) < 0)
 	    return NULL;
