@@ -164,27 +164,16 @@ cligen_parse_file(cligen_handle h,
     int           len;
     int           retval = -1;
 
-    len = 1024; /* any number is fine */
-    if ((buf = malloc(len)) == NULL){
-	perror("pt_file malloc");
-	return -1;
-    }
-    memset(buf, 0, len);
+    fseek(f, 0L, SEEK_END);
+    len = ftell(f);
+    rewind(f);
 
-    i = 0; /* position in buf */
-    while (1){ /* read the whole file */
-	if ((c =  fgetc(f)) == EOF)
-	    break;
-	if (len==i){
-	    if ((buf = realloc(buf, 2*len)) == NULL){
-		fprintf(stderr, "%s: realloc: %s\n", __FUNCTION__, strerror(errno));
-		goto done;
-	    }	    
-	    memset(buf+len, 0, len);
-	    len *= 2;
-	}
-	buf[i++] = (char)(c&0xff);
-    } /* read a line */
+    if ((buf = malloc(len + 1)) == NULL){
+        perror("pt_file malloc");
+        return -1;
+    }
+    memset(buf, 0, len + 1);
+
     if (cligen_parse_str(h, buf, name, pt, cvv) < 0)
 	goto done;
     retval = 0;
