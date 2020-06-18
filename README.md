@@ -2,8 +2,8 @@
 
 CLIgen is a Command-Line Interface generator.
 
-> Note: This repo will be migrated from olofhagsand/cligen to [Clicon
-> project](https://github.com/clicon) soon.
+> Note: This repo has migrated from https://olofhagsand/cligen.git to https://github.com/clicon/cligen.git. Redirection should work, but for existing
+> clones it is recommended to change remote as follows: `git remote set-url origin https://github.com/clicon/cligen.git`
 
 Well, actually it is not really a generator, since it does
 not _generate_ code for CLI:s. Instead, it builds and interprets

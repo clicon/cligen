@@ -67,6 +67,17 @@
 #include "cligen_history.h"
 #include "cligen_history_internal.h"
 
+/* forward */
+static int terminal_rows_set1(int rows);
+
+/*
+ * Variables
+ */
+/* Number of terminal rows as used by cligen_output pageing routine
+ * @see cligen_output
+ */
+static int _terminalrows = 0;
+
 /*! Get window size and set terminal row size
  * @param[in] h       CLIgen handle
  * The only real effect this has is to set the getline width parameter which effects scrolling
@@ -80,15 +91,15 @@ cligen_gwinsz(cligen_handle h)
 	perror("ioctl(STDIN_FILENO,TIOCGWINSZ)");
 	return -1;
     }
-    cligen_terminal_rows_set(h, ws.ws_row); /* note special treatment of 0 in sub function */
-    cligen_terminal_width_set(h, ws.ws_col); /* only used in obsolete cli_output */
+    terminal_rows_set1(ws.ws_row); /* note special treatment of 0 in sub function */
+    cligen_terminal_width_set(h, ws.ws_col);
+
     return 0;
 }
 
 void
 sigwinch_handler(int arg)
 {
-    /* the handle parameter isn't used */
     cligen_gwinsz(0);
 }
 
@@ -115,6 +126,7 @@ cligen_init(void)
     h = (cligen_handle)ch;
     cligen_prompt_set(h, CLIGEN_PROMPT_DEFAULT);
     /* Only if stdin and stdout refers to a terminal make win size check */
+    fprintf(stderr, "%s: isatty: %d\n", __FUNCTION__, isatty(0) && isatty(1));
     if (isatty(0) && isatty(1)){
 	if (cligen_gwinsz(h) < 0)
 	    return NULL;
@@ -126,6 +138,8 @@ cligen_init(void)
 	    return NULL;
 	}
     }
+    else
+	terminal_rows_set1(0); 
     cliread_init(h);
     cligen_buf_init(h);
     /* getline cant function without some history */
@@ -553,8 +567,6 @@ cligen_fn_str_set(cligen_handle h,
     return 0;
 }
 
-static int _terminalrows; /* XXX: global since cli_output dont take handle */
-
 /*! Get number of displayed terminal rows.
  * @param[in] h       CLIgen handle
  */
@@ -566,6 +578,17 @@ cligen_terminal_rows(cligen_handle h)
     return _terminalrows; /* ch->ch_terminalrows; */
 }
 
+/*! Set number of displayed terminal rows, internal function
+ * @param[in] h       CLIgen handle
+ * @param[in] rows    Number of lines in a terminal (y-direction)
+ */
+static int 
+terminal_rows_set1(int rows)
+{
+    _terminalrows = rows;
+    return 0;
+}
+
 /*! Set number of displayed terminal rows.
  * @param[in] h       CLIgen handle
  * @param[in] rows    Number of lines in a terminal (y-direction)
@@ -574,10 +597,26 @@ int
 cligen_terminal_rows_set(cligen_handle h, 
 			int           rows)
 {
-    //    struct cligen_handle *ch = handle(h);
+    int            retval = -1;
+    struct winsize ws;
 
-    _terminalrows = rows;
-    return 0;
+    /* Sanity checks :
+     * (1) only set new value if it runs in a tty
+     * (2) cannot determine window size
+     */
+    if (!isatty(0) || !isatty(1))
+	goto ok;
+    if (ioctl(0, TIOCGWINSZ, &ws) == -1){
+	perror("ioctl(STDIN_FILENO,TIOCGWINSZ)");
+	goto done;
+    }
+    if (ws.ws_row !=0 )
+	goto ok;
+    terminal_rows_set1(rows);
+ ok:
+    retval = 0;
+ done:
+    return retval;
 }
 
 /*! Get length of lines (number of 'columns' in a line)
