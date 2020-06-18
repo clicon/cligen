@@ -173,9 +173,9 @@ cligen_parse_file(cligen_handle h,
 
     i = 0; /* position in buf */
     while (1){ /* read the whole file */
-	if ((c =  fgetc(f)) == EOF)
+	if ((c = fgetc(f)) == EOF)
 	    break;
-	if (len==i){
+	if (i == len-1){
 	    if ((buf = realloc(buf, 2*len)) == NULL){
 		fprintf(stderr, "%s: realloc: %s\n", __FUNCTION__, strerror(errno));
 		goto done;

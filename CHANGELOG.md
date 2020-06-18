@@ -3,6 +3,7 @@
 ## 4.6.0
 Expected: July 2020
 
+* Fixed: [Reading in a file exactly the same size as the buffer could leave the buffer not terminated with a 0 byte](https://github.com/clicon/cligen/pull/49)
 * Refactored the CLIgen object and parsetree structure. The object
 structure had a object-within-objct structure, where a CLIgen object
 (cg_obj) contained a "parse-tree" object which in turn contains all
