@@ -141,11 +141,6 @@ typedef struct cg_varspec cg_varspec;
 #define CO_FLAGS_MARK      0x02  /* Only used internally (for recursion avoidance) */
 #define CO_FLAGS_TREEREF   0x04  /* This node is top of expanded sub-tree */
 #define CO_FLAGS_REFDONE   0x08  /* This reference has already been expanded */
-#ifdef USE_SETS
-#define CO_FLAGS_SETS_SUB  0x20  /* Parent is SETS, ie direct child of set (static) */
-#define CO_FLAGS_SETS_GEN  0x40  /* Parent is SUBS or GEN,  */
-#define CO_FLAGS_SETS_EXP  0x80  /* Child set is generated */
-#endif
 #define CO_FLAGS_OPTION   0x100  /* Generated from optional [] */
 
 /*! cligen gen object is a parse-tree node. A cg_obj is either a command or a variable
@@ -203,8 +198,6 @@ typedef struct cg_obj cg_obj;
 #define co_rangecvv_upp  u.cou_var.cgs_rangecvv_upp
 #define co_regex         u.cou_var.cgs_regex
 #define co_dec64_n       u.cou_var.cgs_dec64_n
-
-#define iskeyword(CV) 0
 
 /*
  * Prototypes
