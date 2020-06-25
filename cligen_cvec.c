@@ -245,7 +245,7 @@ cvec_add(cvec        *cvv,
     return cv;
 }
 
-/*! Append a new var that is a clone of data in 'var' to the vector, return it
+/*! Append a new var that is a clone of data in 'cv' to the vector, return it
  * @param[in] cvv  Cligen variable vector
  * @param[in] cv   Append this cligen variable to vector. Note that it is copied.
  * @retval    NULL Error
@@ -467,134 +467,6 @@ cvec_dup(cvec *old)
     return new;
 }
 
-/*! Create cv list by matching a CLIgen parse-tree and an input string.
- *
- * The matched parse-tree is  given by a syntax-node in a leaf, and by following
- * the parse-tree 'upwards' in the tree, a syntactic string can be found.
- * This function creates CLIgen cvec structures for every keyword and variable
- * syntax node it encounters, and thus creates one vector of keys and
- * one vector of CLIgen variables.
- * Typically called internally from cliread_parse().
- *
- * The variable cvv should be freed with cvec_reset()!
- *
- * @param[in]     co_match  Leaf CLIgen syntax node
- * @param[in]     cmd       Command string
- * @param[in]     cvt       Tokenized string: vector of tokens
- * @param[in]     cvr       Rest variant,  eg remaining string in each step
- * @param[in,out] cvv       Initialized cvec (cvec_new or cvec_reset). CLIgen
- * @retval          0       OK
- * @retval          -1      Error
- * @see match_variable  where sanity check is made
- */
-int
-cvec_match(cligen_handle h,
-	   cg_obj       *co_match,
-	   cvec         *cvt,
-	   cvec         *cvr,
-	   cvec         *cvv)
-{
-    cg_obj    *co;
-    cg_var    *cv;
-    int        nrargs;
-    int        nrlevels;
-    int        v;  /* variable index */
-    int        j;
-    char      *val;
-    int        level;
-    int        retval = -1;
-
-    if (!cvv) {
-	    return 0;
-    }
-
-    nrlevels   = -1;
-    nrargs   = 0;
-    memset(cvv, 0, sizeof(*cvv));
-
-    /* Count nr of keys and variables by going upwards from leaf to top */
-    for (co=co_match; co; co=co_up(co)){
-#ifdef notused
-	if (co->co_top)
-	    break;
-#endif
-	nrlevels++;
-	switch (co->co_type){
-	case CO_VARIABLE:
-	    nrargs++;
-	    break;
-	case CO_COMMAND:
-	    if (!excludekeys)
-		nrargs++;
-	    break;
-	case CO_REFERENCE: /* shouldnt happen */
-	    fprintf(stderr, "%s: type should not be REFERENCE\n", __FUNCTION__);
-	    goto done;
-	    break;
-	}
-    }
-    /* cvec for each arg + command itself */
-    if (cvec_init(cvv, nrargs + 1) < 0){
-	fprintf(stderr, "%s: calloc: %s\n", __FUNCTION__, strerror(errno));
-	goto done;
-    }
-    /* Historically we put command line here, maybe more logical in keyword? */
-    cv = cvec_i(cvv, 0);
-    cv->var_type = CGV_REST;
-    cv_string_set(cv, cvec_i_str(cvt,0)); /* the whole command string */
-
-    v = 1; /* first ele)ment is whole string */
-    for (level=0; level<=nrlevels; level++){
-	/* Go up with co to the level XXX co can be in the loop? */
-	for (j=nrlevels, co=co_match; j>level; j--)
-	    co = co_up(co);
-	/* Check if this is a variable */
-	cv = cvec_i(cvv, v);
-	switch (co->co_type){
-	case CO_VARIABLE: /* Get the value of the variable */
-	    if (co->co_value)
-		val = co->co_value;
-	    else
-		val = cvec_i_str((co->co_vtype == CGV_REST)?cvr:cvt, level+1);
-	    cv->var_type = co->co_vtype;
-	    cv->var_name = strdup4(co->co_command);
-	    if (co->co_show)
-		cv->var_show = strdup4(co->co_show);
-	    cv->var_const = iskeyword(co);
-	    if (co->co_vtype == CGV_DEC64) /* XXX: Seems misplaced? / too specific */
-		cv_dec64_n_set(cv, co->co_dec64_n);
-	    /* String value to structured type */
-	    if (cv_parse(val, cv) < 0) {
-		/* This should never happen, since it passes in match_variable() */
-		goto done;
-	    }
-	    /* If translator function defined, here translate value */
-	    if (co->co_translate_fn != NULL &&
-		co->co_translate_fn(h, cv) < 0)
-		goto done;
-	    if (co->co_vtype == CGV_REST)
-		break; /* XXX should break for() */
-	    v++;
-	    break;
-	case CO_COMMAND:
-	    if (!excludekeys){
-		cv->var_name = strdup4(co->co_command);
-		cv->var_type = CGV_STRING;
-		cv_string_set(cv, co->co_command);
-		cv->var_const = 1;
-		v++;
-	    }
-	    break;
-	default:
-	    break;
-	} /* switch */
-    }
-    retval = 0;
-  done:
-    return retval;
-} /* cvec_match */
-
-
 /*! Create a cv list with a single string element.
  *
  * @param[in]  cmd  Text string
@@ -799,6 +671,14 @@ cv_exclude_keys(int status)
 {
     excludekeys = status;
     return 0;
+}
+/*! Changes cvec find function behaviour, exclude keywords or include them.
+ * @param[in] status
+ */
+int
+cv_exclude_keys_get(void)
+{
+    return excludekeys;
 }
 
 /*! Return the alloced memory of a CLIgen variable vector

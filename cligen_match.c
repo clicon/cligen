@@ -383,6 +383,31 @@ cligen_cvv_levels(cvec *cvv)
     else return sz - 2;
 }
 
+/*! Termination criterium foir command string
+ */
+static int
+last_level(cvec *cvt,
+	   int   level)
+{
+    int levels;
+    
+    assert((levels = cligen_cvv_levels(cvt)) >= 0);
+    if (level >= levels)
+	return 1;
+    return 0;
+}
+
+/*! Termination criterium for parse-tree
+ */
+static int
+last_pt(parse_tree *pt)
+{
+    if (pt_len_get(pt) == 0 ||
+	(pt_len_get(pt) == 1 && pt_vec_i_get(pt, 0) == NULL))
+	return 1;
+    return 0;
+}
+
 /*! Return if the parse-tree is aonly variables, or if there is at least one non-variable
  * @param[in] pt  Parse-tree
  * @retval    0   Empty or contains at least one command (non-var) 
@@ -408,26 +433,36 @@ pt_onlyvars(parse_tree *pt)
 }
 
 /*! Help function to append a cv to a cvec. For expansion cvec passed to pt_expand
+ * @param[in]  h      CLIgen handle
  * @param[in]  co     A cligen variable that has a matching value
  * @param[in]  cmd    Value in string of the variable
  * @param[out] cvv   The cligen variable vector to push a cv with name of co and
  *                    value in cmd
  * @retval     cv     Cligen variable
  * @retval     NULL   Error
+ * XXX see cvec_match
  */
 static cg_var *
-add_cov_to_cvec(cg_obj *co, 
-		char   *cmd, 
-		cvec   *cvv)
+add_cov_to_cvec(cligen_handle h,
+		cg_obj       *co, 
+		char         *cmd, 
+		cvec         *cvv)
 {
     cg_var *cv = NULL;
 
     if ((cv = cvec_add(cvv, co->co_vtype)) == NULL)
 	return NULL;
+#if 1
+    //    if (co->co_show)
+    //	cv->var_show = strdup4(co->co_show);
+    /* If translator function defined, here translate value */
+    if (co->co_translate_fn != NULL &&
+	co->co_translate_fn(h, cv) < 0)
+	return NULL;
+#endif
     cv_name_set(cv, co->co_command);
-    cv_const_set(cv, iskeyword(co));
-	if (co->co_vtype == CGV_DEC64) /* XXX: Seems misplaced? / too specific */
-		cv_dec64_n_set(cv, co->co_dec64_n);
+    if (co->co_vtype == CGV_DEC64) /* XXX: Seems misplaced? / too specific */
+	cv_dec64_n_set(cv, co->co_dec64_n);
     if (cv_parse(cmd, cv) < 0) {
 	cv_reset(cv);
 	cvec_del(cvv, cv);
@@ -459,10 +494,9 @@ matchv_append(int  i,
 
 /*! Match a parse-tree (pt) with a command vector (cvt/cvr)
  * @param[in]  h        CLIgen handle
- * @param[in]  cvt      Tokenized string: vector of tokens
- * @param[in]  cvr      Rest variant,  eg remaining string in each step
+ * @param[in]  token    Token to match at this level
+ * @param[in]  resttokens Rest of tokens at this level (special case if type is REST)
  * @param[in]  pt       Vector of commands (array of cligen object pointers (cg_obj)
- * @param[in]  level    Current command level
  * @param[in]  best     Only return best match (for command evaluation) instead of 
  *                      all possible options
  * @param[out] matchvec A vector of indexes into ptp
@@ -474,10 +508,9 @@ matchv_append(int  i,
  */
 static int
 match_vec(cligen_handle h,
-	  cvec         *cvt,
-	  cvec         *cvr,
 	  parse_tree   *pt,
-	  int           level, 
+	  char         *token,
+	  char         *resttokens,
 	  int           best,
 	  int          *matchvec[],
 	  int          *matchesp,
@@ -491,14 +524,8 @@ match_vec(cligen_handle h,
     int     exact;
     char   *rtmp = NULL;
     int     i;
-    char   *strtoken;
-    char   *strrest;
     cg_obj *co;
     int     match;
-
-    /* Either individual token or rest-of-string */
-    strtoken = cvec_i_str(cvt, level+1);
-    strrest  = cvec_i_str(cvr, level+1);
 
     /* Loop through parse-tree at this level to find matches */
     for (i=0; i<pt_len_get(pt); i++){
@@ -507,7 +534,7 @@ match_vec(cligen_handle h,
 	/* Return -1: error, 0: nomatch, 1: match */
 	rtmp = NULL;
 	if ((match = match_object(h,
-				  ISREST(co)?strrest:strtoken,
+				  ISREST(co)?resttokens:token,
 				  co, &exact,
 				  &rtmp      /* if match == 0 */
 				  )) < 0)
@@ -563,96 +590,54 @@ match_vec(cligen_handle h,
     return retval;
 }
 
-/*! Match terminal/leaf cligen objects. Multiple matches is used for completion.
- * We must have a preference when matching when it matches a command
- * and some variables.
- * The preference is:
- *  command > ipv4,mac > string > rest
- * return in matchvector which element match (their index)
- * and how many that match.
- * return value is the number of matches on return (also returned in matchlen)
- * index is the index of the first such match.
- * @param[in]  h        CLIgen handle
- * @param[in]  cvt      Tokenized string: vector of tokens
- * @param[in]  cvr      Rest variant,  eg remaining string in each step
- * @param[in]  pt       Vector of commands (array of cligen object pointers (cg_obj)
- * @param[in]  levels   Total nr of command levels
- * @param[in]  level    Current command level
- * @param[in]  best      Only return best match (for command evaluation) instead of 
- *                       all possible options
- * @param[out] ptmatch     Returns the parsetree at the place of matching
- * @param[out] matchvec A vector of integers containing indexes in covec which match
- * @param[out] matchlen Number of matches in matchvec, (if retval is 0)
- * @param[out] reasonp  If *matchlen = 0, this may be malloced to indicate reason for 
- *                      not matching variables, if given. Neeed to be free:d
- * @retval     0        OK. Number of matches returned in matchlen
- * @retval    -1        Error
- * @see match_pattern_node
+/*! Bind vars and constants to variable vectors used for completion and callbacks
+ * @param[in]  h         CLIgen handle
+ * @param[in]  co_match  Matched cligen parse object
+ * @param[in]  token     Token 
+ * @param[out] cvv       cligen variable vector containing vars/values pair for completion
+ * @param[out] cvvall    cligen variable vector containing vars/values + keywords for callbacks
  */
-static int 
-match_pattern_terminal(cligen_handle h, 
-		       cvec         *cvt,
-		       cvec         *cvr,
-		       parse_tree   *pt,
-		       int           levels,
-		       int           level, 
-		       int           best,
-		       parse_tree  **ptmatch, 
-		       int          *matchvec[], 
-		       int          *matchlen,
-		       char        **reasonp
-		       )
+static int
+match_bindvars(cligen_handle h,
+	       cg_obj       *co,
+	       char         *token,
+	       cvec         *cvv,
+	       cvec         *cvvall)
 {
     int     retval = -1;
-    int     matches = 0;
-    cg_obj *co_match;
+    cg_var *cv = NULL;
     cg_obj *co_orig;
-    char   *reason = NULL;
 
-    if (match_vec(h, cvt, cvr, pt, level, best, matchvec, &matches, &reason) < 0)
-	goto done;
-    /* Number of matches is 0 (no match), 1 (exact) or many */
-    switch (matches){
-    case 0: /* no matches */
-	/* Reason is only recorded, sent to upper layers if there are only
-	 * variables.then reason is set once
-	 * this may not be the best preference, we just set the first
-	 * This is logic to hinder error message to relate to variable mismatch
-	 * if there is a commands on same level with higher prio to match.
-	 * If all match fails, it is more interesting to understand the match fails
-	 * on commands, not variables.
-	 */
-	if (pt_onlyvars(pt) && reasonp && reason){
-	    *reasonp = reason;
-	    reason = NULL;
-	}
-	break;
-
-    case 1: /* exactly one match */
-	if (matches == 1)
-	    *ptmatch = pt;
-	co_match = pt_vec_i_get(pt, (*matchvec)[0]);
-	co_orig = co_match->co_ref?co_match->co_ref: co_match;
-	if (co_match->co_type == CO_COMMAND && co_orig->co_type == CO_VARIABLE){
-	    if (co_value_set(co_orig, co_match->co_command) < 0)
+    /* co_orig is original object in case of expansion */
+    co_orig = co->co_ref?co->co_ref: co;
+    if (co->co_type == CO_VARIABLE){
+	if (add_cov_to_cvec(h, co, token, cvv) == NULL)
+	    goto done;
+	if (cvvall && add_cov_to_cvec(h, co, token, cvvall) == NULL)
+	    goto done;
+    }
+    else if (co->co_type == CO_COMMAND && co_orig->co_type == CO_VARIABLE){
+	    if (add_cov_to_cvec(h, co_orig, co->co_command, cvv) == NULL)
 		goto done;
+	    if (cvvall && add_cov_to_cvec(h, co_orig, co->co_command, cvvall) == NULL)
+		goto done;
+    }
+    else{
+	if (!cv_exclude_keys_get() && cvvall){
+	    if ((cv = cvec_add(cvvall, co_orig->co_vtype)) == NULL)
+		goto done;
+	    cv_name_set(cv, co_orig->co_command);
+	    cv_type_set(cv, CGV_STRING);
+	    cv_string_set(cv, co_orig->co_command);
+	    cv_const_set(cv, 1);
 	}
-	break;
-    default: /* multiple matches */
-	/* If set, if multiple cligen variables match use the first one */
-	*ptmatch = pt;
-	break;
-    } /* switch matches */
-    if (matchlen)
-	*matchlen = matches;
+    }
     retval = 0;
  done:
-    if (reason)
-	free(reason);
     return retval;
 }
 
-/*! Match non-terminal cligen object. Need to match exact.
+/*! Matchpattern sets
  *
  * @param[in]  h         CLIgen handle
  * @param[in]  string0   Input string to match
@@ -660,37 +645,37 @@ match_pattern_terminal(cligen_handle h,
  * @param[in]  cvr       Rest variant,  eg remaining string in each step
  * @param[in]  pt        Vector of commands. Array of cligen object pointers
  * @param[in]  pt_max    Length of the pt array
- * @param[in]  levels    Total nr of command levels
  * @param[in]  level     Current command level
  * @param[in]  best      Only return best match (for command evaluation) instead of 
- *                       all possible options
+ *                       all possible options. Only called from match_pattern_exact()
  * @param[in]  hide      Respect hide setting of commands (dont show)
  * @param[in]  expandvar Set if VARS should be expanded, eg ? <tab>
- * @param[out] ptmatch     Returns the parsetree at the place of matching
+ * @param[out] levelp    Total nr of command levels
+ * @param[out] ptmatch   Returns the parsetree at the place of matching
  * @param[out] matchvec  A vector of integers containing indexes in covec which match
  * @param[out] matchlen  Number of matches in matchvec, (if retval is 0)
- * @param[out] cvv       cligen variable vector containing vars/values pair for 
- *                       completion
+ * @param[out] cvv       cligen variable vector containing vars/values pair for completion
+ * @param[out] cvvall    cligen variable vector containing vars/values + keywords for callbacks
  * @param[out] reasonp   If retval = 0, this may be malloced to indicate reason for
  *                       not matching variables, if given. Need to be free:d
  * @retval     0         OK. Number of matches returned in matchlen
  * @retval    -1         Error
- * @see match_pattern_terminal
  */
 static int 
-match_pattern_node(cligen_handle h, 
+match_pattern_sets(cligen_handle h, 
 		   cvec         *cvt,
 		   cvec         *cvr,
 		   parse_tree   *pt,
-		   int           levels,
-		   int           level, 
+		   int           level,
 		   int           best,
 		   int           hide,
 		   int           expandvar,
+		   int          *levelp, 
 		   parse_tree  **ptmatch, 
 		   int          *matchvec[], 
 		   int          *matchlen,
 		   cvec         *cvv,
+		   cvec         *cvvall,
 		   char        **reasonp
 		   )
 {
@@ -699,14 +684,21 @@ match_pattern_node(cligen_handle h,
     cg_obj     *co_match = NULL;
     cg_obj     *co_orig;
     char       *reason = NULL;
-    char       *str;
     parse_tree *ptn = NULL;     /* Expanded */
-    cg_var     *cv = NULL;
+    int         last;
+    char       *token;
+    char       *resttokens;
 
-    if ((ptn = pt_new()) == NULL)
-	goto done;
-    if (match_vec(h, cvt, cvr, pt, level,
-		  1, /* use best preference match in non-terminal matching*/
+    /* Tokens of this level */
+    token = cvec_i_str(cvt, level+1);
+    resttokens  = cvec_i_str(cvr, level+1);
+    
+    *levelp = level; /* can be overriden by recursive call */
+    last = last_level(cvt, level); /* behave as match_pattern_terminal */
+    /* How many matches of cvt[level+1] in pt */
+    if (match_vec(h,
+		  pt, token, resttokens,
+		  last?best:1, /* use best preference match in non-terminal matching*/
 		  matchvec, &matches, &reason) < 0)
 	goto done;
     /* Number of matches is 0 (no match), 1 (exact) or many */
@@ -721,27 +713,44 @@ match_pattern_node(cligen_handle h,
 	break;
     case 1: /* exactly one match */
 	break;
-    default: /* multiple matches */
+    default: /* multiple matches:
+	      * note that there is code in match_patter_exact that can collapse multiple matches to 
+	      * one under certain circumstances
+	      */
+	if (last){
+	    *ptmatch = pt;
+	    co_match = pt_vec_i_get(pt, (*matchvec)[0]); /* also add to cvv: use first element*/
+	    if (match_bindvars(h, co_match, 
+			       ISREST(co_match)?resttokens:token,
+			       cvv, cvvall) < 0)
+		goto done;
+	    goto ok;
+	}
 	retval = 0;
 	goto done;
 	break;
     } /* switch matches */
     if (matches != 1) 
 	goto ok;
-    co_match =  pt_vec_i_get(pt, (*matchvec)[0]);
-    if (ISREST(co_match))
-	str  = cvec_i_str(cvr, level+1);
-    else
-	str  = cvec_i_str(cvt, level+1);
 
+    co_match = pt_vec_i_get(pt, (*matchvec)[0]);
     /* co_orig is original object in case of expansion */
     co_orig = co_match->co_ref?co_match->co_ref: co_match;
+    /* Do it if not last or best */
+    if (!last || best)
+	if (match_bindvars(h, co_match, 
+			   ISREST(co_match)?resttokens:token,
+			   cvv, cvvall) < 0)
+	    goto done;
+    if (last){
+	*ptmatch = pt;
+	goto ok;
+    }
     if (pt_expand_treeref(h, co_match, co_pt_get(co_match)) < 0) /* sub-tree expansion */
 	goto done;
 
+
     if (co_match->co_type == CO_VARIABLE){
-	if ((cv = add_cov_to_cvec(co_match, str, cvv)) == NULL)
-	    goto done;
 	/* 
 	 * Special case: we have matched a REST variable (anything) and
 	 * there is more text have this word, then we can match REST
@@ -752,50 +761,69 @@ match_pattern_node(cligen_handle h,
 	    goto ok;
 	}
     }
-    else
-	if (co_match->co_type == CO_COMMAND && co_orig->co_type == CO_VARIABLE)
-	    if ((cv = add_cov_to_cvec(co_orig, co_match->co_command, cvv)) == NULL)
-		goto done;
+
+    if ((ptn = pt_new()) == NULL)
+	goto done;
+
     if (pt_expand(h, co_pt_get(co_match), cvv, hide, expandvar, ptn) < 0) /* expand/choice variables */
 	goto done;
     matches = 0;
-    if (level+1 == levels){
-	if (match_pattern_terminal(h, cvt, cvr, ptn, 
-				   levels,	level+1, 
-				   best,
+    /* Check termination criteria */
+    if (!last_pt(ptn)){
+	if (pt_sets_get(ptn)){
+	    while (!last_level(cvt, level)){
+		if (match_pattern_sets(h, cvt, cvr, ptn,
+				       level+1,
+				       best, hide, expandvar,
+				       levelp,	 /* out from here */
+				       ptmatch,
+				       matchvec,
+				       &matches,
+				       cvv,
+				       cvvall,
+				       reasonp) < 0)
+		    goto done;		
+		level = *levelp;
+	    }
+	}
+	else
+	    if (match_pattern_sets(h, cvt, cvr, ptn,
+				   level+1, 
+				   best, hide, expandvar,
+				   levelp,	 /* out from here */
 				   ptmatch,
-				   matchvec, &matches, reasonp) < 0)
-	    goto done;
+				   matchvec,
+				   &matches,
+				   cvv,
+				   cvvall,
+				   reasonp) < 0)
+		goto done;
     }
-    else
-	if (match_pattern_node(h, cvt, cvr, ptn,
-			       levels, level+1, 
-			       best, hide, expandvar,
-			       ptmatch,
-			       matchvec, &matches, cvv, reasonp) < 0)
-	    goto done;
     if (ptmatch && *ptmatch == ptn)
 	ptn = NULL; /* passed to upper layers, dont free here */
-
-    if (co_match->co_type == CO_COMMAND && co_orig->co_type == CO_VARIABLE)
-	if (co_value_set(co_orig, co_match->co_command) < 0)
-	    goto done;
  ok:
+    if (matches == 1){
+	if (co_match->co_type == CO_COMMAND && co_orig->co_type == CO_VARIABLE)
+	    if (co_value_set(co_orig, co_match->co_command) < 0)
+		goto done;
+    }
     *matchlen = matches;
     retval = 0;
  done:
+#if 0 /* Only if no match? */
     if (cv){ /* cv may be stale */
 	cv = cvec_i(cvv, cvec_len(cvv)-1);
 	cv_reset(cv);
 	cvec_del(cvv, cv);
     }
+#endif
     if (ptn != NULL){
 	if (pt_free(ptn, 0) < 0)
 	    return -1;
     }
     /* Only the last level may have multiple matches */
     return retval;
-}
+} /* match_pattern_sets */
 
 /*! CLIgen object matching function
  * @param[in]  h         CLIgen handle
@@ -832,41 +860,32 @@ match_pattern(cligen_handle h,
 	      int          *matchvec[],
 	      int          *matchlen, 
 	      cvec         *cvv,
+	      cvec         *cvvall,
 	      char        **reasonp)
 {
     int retval = -1;
-    int levels;
-
+    int levelp = 0;
+    
     if (ptmatch == NULL || cvt == NULL || cvr == NULL){
 	errno = EINVAL;
 	goto done;
     }
     *matchlen = 0;
-    /* Get total number of command levels */
-    if ((levels = cligen_cvv_levels(cvt)) < 0)
+
+    if (match_pattern_sets(h, cvt, cvr,
+			   pt,
+			   0,
+			   best, hide, expandvar,
+			   &levelp,
+			   ptmatch, 
+			   matchvec, matchlen,
+			   cvv, cvvall,
+			   reasonp) < 0)
 	goto done;
-    if (levels == 0){
-	if (match_pattern_terminal(h, cvt, cvr,
-				   pt,
-				   levels, 0, best,
-				   ptmatch, 
-				   matchvec, matchlen, 
-				   reasonp) < 0)
-	    goto done;
-    }
-    else if (match_pattern_node(h, cvt, cvr,
-				pt,
-				levels, 0,
-				best, hide, expandvar,
-				ptmatch, 
-				matchvec, matchlen,
-				cvv,
-				reasonp) < 0)
-	    goto done;
     retval = 0;
  done:
     return retval;
-}
+} /* match_pattern */
 
 /*! CLIgen object matching function for exact match
  * @param[in]  h         CLIgen handle
@@ -875,7 +894,8 @@ match_pattern(cligen_handle h,
  * @param[in]  cvr       Rest variant,  eg remaining string in each step
  * @param[in]  pt        CLIgen parse tree, vector of cligen objects.
  * @param[in]  expandvar Set if VARS should be expanded, eg ? <tab>
- * @param[out] cvv       CLIgen variable vector containing vars/values pair for completion
+ * @param[out] cvv       CLIgen variable vector containing vars for matching path
+ * @param[out] cvvall    CLIgen variable vector containing vars and constants for matching vars
  * @param[out] match_obj Exact object to return
  * @param[out] ptmatch   Expanded parse tree in which match_obj occurs
  * @param[out] resultp   Result, < 0: errors, >=0 number of matches (only if retval == 0)
@@ -891,6 +911,7 @@ match_pattern_exact(cligen_handle  h,
 		    parse_tree    *pt, 
 		    int            expandvar,
 		    cvec          *cvv,
+		    cvec          *cvvall,
 		    cg_obj       **match_obj,
 		    parse_tree   **ptmatchp,
 		    cligen_result *resultp,
@@ -911,7 +932,8 @@ match_pattern_exact(cligen_handle  h,
 		       &ptmatch, 
 		       &matchvec,
 		       &matchlen, 
-		       cvv, reason)) < 0)
+		       cvv, cvvall,
+		       reason)) < 0)
 	goto done;
     assert(matchlen != -1);
     /* If no match fix an error message */
@@ -927,7 +949,7 @@ match_pattern_exact(cligen_handle  h,
 	    int j;
 	    int allvars = 1;
 	    char *string1;
-	    string1 =  cvec_i_str(cvt, cligen_cvv_levels(cvt)+1);
+	    string1 = cvec_i_str(cvt, cligen_cvv_levels(cvt)+1);
 	    for (j=0; j<matchlen; j++){
 		co = pt_vec_i_get(ptmatch,matchvec[j]);
 		/* XXX If variable dont compare co_command */
@@ -998,7 +1020,7 @@ match_pattern_exact(cligen_handle  h,
     if (matchvec)
 	free(matchvec);
     return retval;
-}
+} /* match_pattern_exact */
 
 /*! Try to complete a string as far as possible using the syntax.
  * 
@@ -1055,7 +1077,8 @@ match_complete(cligen_handle h,
 		      1, /* expandvar: Must be one for interactive TAB to work*/
 		      &ptmatch, 
 		      &matchvec, &matchlen,
-		      cvv, NULL) < 0)
+		      cvv, NULL,
+		      NULL) < 0)
 	goto done;
     if (matchlen == 0){
 	retval = 0;
