@@ -227,6 +227,7 @@ cbuf_realloc(cbuf  *cb,
  * @param [in]  format  arguments uses printf syntax.
  * @retval      See printf
  * @see cbuf_append_str for the optimized special case of string append
+ * @note cprintf assume null-terminated string as %s, use cbuf_memcp for a raw interface
  */
 int
 cprintf(cbuf       *cb, 
@@ -285,7 +286,7 @@ cbuf_append_str(cbuf       *cb,
     if (cbuf_realloc(cb, len) < 0)
 	return -1;
     strncpy(cb->cb_buffer+cb->cb_strlen, str, len0+1);
-    cb->cb_strlen = len;;
+    cb->cb_strlen = len;
     return 0;
 }
 
@@ -307,4 +308,36 @@ cbuf_append(cbuf       *cb,
     return cbuf_append_str(cb, str);
 }
 
+/*! Append a raw memory buffer and add null-termion
+  *
+  * A raw buffer handler to cprintf
+  * @param [in]  cb  cligen buffer allocated by cbuf_new(), may be reallocated.
+  * @param [in]  src Source buffer
+  * @param [in]  n   Number of bytes to copy, add a null
+  * @retval 0    OK
+  * @retval -1   Error
+  * @see cprintf for the generic function
+  */
+int
+cbuf_append_buf(cbuf  *cb,
+		void  *src,
+		size_t n)
+{
+    size_t  len0;
+    size_t  len;
+
+    if (src == NULL){
+	errno = EINVAL;
+	return -1;
+    }
+    len0 = cb->cb_strlen;
+    len = cb->cb_strlen + n + 1;
+    /* Ensure buffer is large enough */
+    if (cbuf_realloc(cb, len) < 0)
+	return -1;
+    memcpy(cb->cb_buffer+len0, src, n);
+    cb->cb_buffer[len-1] = '\0'; /* Add a null byte */
+    cb->cb_strlen = len;
+    return 0;
+}
 
