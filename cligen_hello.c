@@ -63,7 +63,7 @@ str2fn(char *name, void *arg, char **error)
 
 
 /*! The command syntax specification */
-static char *hello_syntax = "prompt=\"hello> \";\n" 
+static char *hello_syntax = (char*)"prompt=\"hello> \";\n"
     "hello(\"Greet the world\") world, cb(\"Hello World!\");"
     ;
 
@@ -76,10 +76,10 @@ main(int argc, char *argv[])
 
     if ((h = cligen_init()) == NULL)
 	goto done;
-    if (cligen_parse_str(h, hello_syntax, "hello world", NULL, NULL) < 0)
+    if (cligen_parse_str(h, hello_syntax, (char*)"hello world", NULL, NULL) < 0)
 	goto done;
     /* find global assignments: prompt and comment sign */
-    cligen_prompt_set(h, "hello> ");
+    cligen_prompt_set(h, (char*)"hello> ");
     cligen_comment_set(h, '#');
     /* Get the default (first) parse-tree */
     if ((pt = cligen_tree_i(h, 0)) == NULL)

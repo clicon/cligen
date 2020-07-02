@@ -93,15 +93,15 @@ letters(cligen_handle h, cvec *cvv, cvec *argv)
     char   *str;
     cg_var *cv;
 
-    if ((str = cvec_find_str(cvv, "ca")) != NULL)
+    if ((str = cvec_find_str(cvv, (char*)"ca")) != NULL)
         printf("%s\n", str);
-    if ((cv = cvec_find(cvv, "int")) != NULL)
+    if ((cv = cvec_find(cvv, (char*)"int")) != NULL)
         printf("%d\n", cv_int32_get(cv));
-    if ((str = cvec_find_str(cvv, "cb")) != NULL)
+    if ((str = cvec_find_str(cvv, (char*)"cb")) != NULL)
         printf("%s\n", str);
-    if ((str = cvec_find_str(cvv, "dd")) != NULL)
+    if ((str = cvec_find_str(cvv, (char*)"dd")) != NULL)
         printf("%s\n", str);
-    if ((str = cvec_find_str(cvv, "ee")) != NULL)
+    if ((str = cvec_find_str(cvv, (char*)"ee")) != NULL)
         printf("%s\n", str);
     return 0;
 }
@@ -127,7 +127,7 @@ setprompt(cligen_handle h, cvec *cvv, cvec *argv)
 {
     char *str;
 
-    if ((str = cvec_find_str(cvv, "new")) != NULL)
+    if ((str = cvec_find_str(cvv, (char*)"new")) != NULL)
         cligen_prompt_set(h, str);
     return 0;
 }
@@ -209,10 +209,10 @@ cli_expand_cb(cligen_handle h,
 	      cvec         *commands,     /* vector of function strings */
 	      cvec         *helptexts)   /* vector of help-texts */
 {
-    cvec_add_string(commands, NULL, "eth0");
-    cvec_add_string(commands, NULL, "eth1");
-    cvec_add_string(helptexts, NULL, "Interface A");
-    cvec_add_string(helptexts, NULL, "Interface B");
+    cvec_add_string(commands, NULL, (char*)"eth0");
+    cvec_add_string(commands, NULL, (char*)"eth1");
+    cvec_add_string(helptexts, NULL, (char*)"Interface A");
+    cvec_add_string(helptexts, NULL, (char*)"Interface B");
     return 0;
 }
 
@@ -232,7 +232,7 @@ incstr(cligen_handle h,
        cg_var       *cv)
 {
     char *str;
-    int i;
+    size_t i;
     
     if (cv_type_get(cv) != CGV_STRING)
 	return 0;
@@ -327,11 +327,11 @@ main(int argc, char *argv[])
 	if (cligen_translate_str2fn(pt, str2fn_trans, NULL) < 0)     
 	    goto done;
     }
-    if ((str = cvec_find_str(globals, "prompt")) != NULL)
+    if ((str = cvec_find_str(globals, (char*)"prompt")) != NULL)
         cligen_prompt_set(h, str);
-    if ((str = cvec_find_str(globals, "comment")) != NULL)
+    if ((str = cvec_find_str(globals, (char*)"comment")) != NULL)
         cligen_comment_set(h, *str);
-    if ((str = cvec_find_str(globals, "tabmode")) != NULL)
+    if ((str = cvec_find_str(globals, (char*)"tabmode")) != NULL)
 	if (strcmp(str,"long") == 0)
 	    cligen_tabmode_set(h, CLIGEN_TABMODE_COLUMNS);
     cvec_free(globals);

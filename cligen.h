@@ -38,6 +38,10 @@
    You include cligen.h which includes the other cligen include files for you.
    All cligen include files are placed in the sub-directory cligen/cligen*.h. 
 */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdio.h>
 #include <netinet/in.h>
 
@@ -73,3 +77,6 @@ typedef void *cligen_handle; /* API */
 extern const char CLIGEN_BUILDSTR[];
 extern const char CLIGEN_VERSION[];
 
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
