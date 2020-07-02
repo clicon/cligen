@@ -204,8 +204,10 @@ cligen_regex_libxml2_exec(void *recomp,
 int
 cligen_regex_libxml2_free(void *recomp)
 {
+#ifdef HAVE_LIBXML_XMLREGEXP_H
     if (recomp)
-	free(recomp);
+	xmlRegFreeRegexp(recomp);
+#endif
     return 0;
 }
 
@@ -260,8 +262,10 @@ cligen_regex_free(cligen_handle h,
 {
     int   retval = -1;
 
-    if (cligen_regex_xsd(h) == 0) 
+    if (cligen_regex_xsd(h) == 0) {
 	retval = cligen_regex_posix_free(recomp);
+	free(recomp);
+    }
     else 
 	retval = cligen_regex_libxml2_free(recomp);
     return retval;
@@ -305,7 +309,6 @@ match_regexp(cligen_handle h,
  done:
     if (re){
 	cligen_regex_free(h, re);
-	free(re);
     }
     return retval;
  fail:
