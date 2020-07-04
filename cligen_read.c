@@ -55,6 +55,7 @@
 #endif /* WIN32 */
 #define __USE_GNU /* isblank() */
 #include <ctype.h>
+#include <assert.h>
 
 #ifndef isblank
 #define isblank(c) (c==' ')
@@ -240,7 +241,6 @@ column_print(FILE            *fout,
  * @param[in]  fout    This is where the output (help text) is shown.
  * @param[in]  string  Input string to match
  * @param[in]  pt      Vector of commands (array of cligen object pointers (cg_obj)
- * @param[in]  pt_max  Length of the pt array
  * @param[out] cvv     Cligen variable vector containing vars/values pair for completion
  * @retval     0       OK
  * @retval     -1      Error
@@ -429,7 +429,8 @@ show_help_line(cligen_handle h,
 		      cvv, NULL,
 		      NULL) < 0)
 	goto done;
-
+    if (matchlen) /* sanity */
+	assert(matchvec!= NULL && ptmatch != NULL);
     if ((level =  cligen_cvv_levels(cvt)) < 0)
 	goto done;
 

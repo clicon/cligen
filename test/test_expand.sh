@@ -23,13 +23,13 @@ new "cligen i<tab>"
 expectpart "$(echo "i	" | $cligen_tutorial -q -f $fspec)" 0 "cli> interface " 'CLI syntax error in: "interface": Incomplete command'
 
 new "cligen i<tab><tab>"
-expectpart "$(echo "i		" | $cligen_tutorial -q -f $fspec)" 0 "cli> interface eth" 'Ambigous command'
+expectpart "$(echo "i		" | $cligen_tutorial -q -f $fspec)" 0 "cli> interface eth" 'Ambiguous command'
 
 new "cligen i<tab><tab><tab>"
-expectpart "$(echo "i			" | $cligen_tutorial -q -f $fspec)" 0 "cli> interface eth" "eth0                      eth1" 'Ambigous command'
+expectpart "$(echo "i			" | $cligen_tutorial -q -f $fspec)" 0 "cli> interface eth" "eth0                      eth1" 'Ambiguous command'
 
 new "cligen i<tab><tab>?"
-expectpart "$(echo "i		?" | $cligen_tutorial -q -f $fspec)" 0 "cli> interface eth" "eth0                  Interface A" 'Ambigous command'
+expectpart "$(echo "i		?" | $cligen_tutorial -q -f $fspec)" 0 "cli> interface eth" "eth0                  Interface A" 'Ambiguous command'
 
 new "cligen interface eth0"
 expectpart "$(echo "interface eth0" | $cligen_tutorial -q -f $fspec 2>&1)" 0 "1 name:ifname type:string value:eth0"

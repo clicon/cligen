@@ -26,13 +26,13 @@ new "empty?"
 expectpart "$(echo "?" | $cligen_file -f $fspec )" 0 "cli>" "values" "vb"
 
 new "empty<tab>"
-expectpart "$(echo "	  " | $cligen_file -f $fspec )" 0 "cli> v  " "Ambigous command"
+expectpart "$(echo "	  " | $cligen_file -f $fspec )" 0 "cli> v  " "Ambiguous command"
 
 new "empty<tab><tab>"
 expectpart "$(echo "		" | $cligen_file -f $fspec )" 0 "cli> v" "values                    vb"
 
 new "v<tab> ambiguous"
-expectpart "$(echo "v	  " | $cligen_file -f $fspec )" 0 "values                    vb" "Ambigous command"
+expectpart "$(echo "v	  " | $cligen_file -f $fspec )" 0 "values                    vb" "Ambiguous command"
 
 new "v<tab>a<tab> incomplete"
 expectpart "$(echo "v	a	" | $cligen_file -f $fspec)" 0  "values                    vb" "cli> values" 'CLI syntax error in: "values": Incomplete command'
