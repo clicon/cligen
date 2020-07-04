@@ -119,7 +119,7 @@ cligen_loop(cligen_handle h)
 		printf("CLI callback error\n");
 	    break;
 	default: /* multiple matches */
-	    printf("Ambigous command\n");
+	    printf("Ambiguous command\n");
 	    break;
 	}
 	if (reason){
