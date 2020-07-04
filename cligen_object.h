@@ -141,7 +141,8 @@ typedef struct cg_varspec cg_varspec;
 #define CO_FLAGS_MARK      0x02  /* Only used internally (for recursion avoidance) */
 #define CO_FLAGS_TREEREF   0x04  /* This node is top of expanded sub-tree */
 #define CO_FLAGS_REFDONE   0x08  /* This reference has already been expanded */
-#define CO_FLAGS_OPTION   0x100  /* Generated from optional [] */
+#define CO_FLAGS_OPTION    0x10  /* Generated from optional [] */
+#define CO_FLAGS_MATCH     0x20  /* For sets: avoid selecting same more than once */
 
 /*! cligen gen object is a parse-tree node. A cg_obj is either a command or a variable
  * A cg_obj 

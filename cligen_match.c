@@ -637,6 +637,14 @@ match_bindvars(cligen_handle h,
     return retval;
 }
 
+static int
+co_clearflag(cg_obj *co,
+	     void   *arg)
+{
+    co_flags_reset(co, (intptr_t)arg);
+    return 0;
+}
+
 /*! Matchpattern sets
  *
  * @param[in]  h         CLIgen handle
@@ -660,6 +668,8 @@ match_bindvars(cligen_handle h,
  *                       not matching variables, if given. Need to be free:d
  * @retval     0         OK. Number of matches returned in matchlen
  * @retval    -1         Error
+ *
+ * Reasons for exiting function
  */
 static int 
 match_pattern_sets(cligen_handle h, 
@@ -685,20 +695,25 @@ match_pattern_sets(cligen_handle h,
     cg_obj     *co_orig;
     char       *reason = NULL;
     parse_tree *ptn = NULL;     /* Expanded */
-    int         last;
+    int         lasttoken = 0;
+    int         lastsyntax = 0;
     char       *token;
     char       *resttokens;
 
     /* Tokens of this level */
     token = cvec_i_str(cvt, level+1);
+    /* Is this last token? */
+    lasttoken = last_level(cvt, level); 
+    
     resttokens  = cvec_i_str(cvr, level+1);
     
-    *levelp = level; /* can be overriden by recursive call */
-    last = last_level(cvt, level); /* behave as match_pattern_terminal */
+    /* Return level at this point, can be overriden by recursive call */
+    *levelp = level; 
+
     /* How many matches of cvt[level+1] in pt */
     if (match_vec(h,
 		  pt, token, resttokens,
-		  last?best:1, /* use best preference match in non-terminal matching*/
+		  lasttoken?best:1, /* use best preference match in non-terminal matching*/
 		  matchvec, &matches, &reason) < 0)
 	goto done;
     /* Number of matches is 0 (no match), 1 (exact) or many */
@@ -709,46 +724,59 @@ match_pattern_sets(cligen_handle h,
 	    reason = NULL;
 	}
 	retval = 0;
-	goto done;
+	goto ok;
 	break;
     case 1: /* exactly one match */
 	break;
     default: /* multiple matches:
-	      * note that there is code in match_patter_exact that can collapse multiple matches to 
-	      * one under certain circumstances
+	      * note that there is code in match_patter_exact that can collapse multiple matches 
+	      * to one under certain circumstances
 	      */
-	if (last){
+	if (lasttoken){
 	    *ptmatch = pt;
-	    co_match = pt_vec_i_get(pt, (*matchvec)[0]); /* also add to cvv: use first element*/
-	    if (match_bindvars(h, co_match, 
-			       ISREST(co_match)?resttokens:token,
-			       cvv, cvvall) < 0)
+	    if (best){
+		co_match = pt_vec_i_get(pt, (*matchvec)[0]); /* also add to cvv: use first element*/
+		if (match_bindvars(h, co_match, 
+				   ISREST(co_match)?resttokens:token,
+				   cvv, cvvall) < 0)
 		goto done;
-	    goto ok;
+	    }
+	    goto ok; /* will return matches > 1 */
 	}
 	retval = 0;
-	goto done;
+	goto done; /* will return matches = 0 */
 	break;
     } /* switch matches */
     if (matches != 1) 
 	goto ok;
-
+    /* Get the single match object */
     co_match = pt_vec_i_get(pt, (*matchvec)[0]);
     /* co_orig is original object in case of expansion */
     co_orig = co_match->co_ref?co_match->co_ref: co_match;
+
+    /* Already matched (sets functionality) */
+    if (co_flags_get(co_match, CO_FLAGS_MATCH)){ /* XXX: orig?? */
+	matches = 0;
+	if (reasonp){
+	    if ((reason = strdup("Already matched")) == NULL)
+		goto done;
+	    *reasonp = reason;
+	}
+	goto ok;
+    }
+
     /* Do it if not last or best */
-    if (!last || best)
+    if (!lasttoken || best)
 	if (match_bindvars(h, co_match, 
 			   ISREST(co_match)?resttokens:token,
 			   cvv, cvvall) < 0)
 	    goto done;
-    if (last){
+    if (lasttoken){
 	*ptmatch = pt;
 	goto ok;
     }
     if (pt_expand_treeref(h, co_match, co_pt_get(co_match)) < 0) /* sub-tree expansion */
 	goto done;
-
 
     if (co_match->co_type == CO_VARIABLE){
 	/* 
@@ -767,11 +795,17 @@ match_pattern_sets(cligen_handle h,
 
     if (pt_expand(h, co_pt_get(co_match), cvv, hide, expandvar, ptn) < 0) /* expand/choice variables */
 	goto done;
-    matches = 0;
+
     /* Check termination criteria */
-    if (!last_pt(ptn)){
-	if (pt_sets_get(ptn)){
+    lastsyntax = last_pt(ptn);
+    if (lastsyntax){ /* Last in syntax tree (not token) */
+	*ptmatch = pt; /* XXX not necessary */
+    }
+    else {
+	matches = 0;
+	if (pt_sets_get(ptn)){ /* For sets, iterate */
 	    while (!last_level(cvt, level)){
+		matches = 0;
 		if (match_pattern_sets(h, cvt, cvr, ptn,
 				       level+1,
 				       best, hide, expandvar,
@@ -783,6 +817,9 @@ match_pattern_sets(cligen_handle h,
 				       cvvall,
 				       reasonp) < 0)
 		    goto done;		
+		/* XXX If matched here, mark the match so we cant go there again for a set */
+		if (matches != 1)
+		    break;
 		level = *levelp;
 	    }
 	}
@@ -798,16 +835,19 @@ match_pattern_sets(cligen_handle h,
 				   cvvall,
 				   reasonp) < 0)
 		goto done;
+	/* Clear all CO_FLAGS_MATCH recursively */
+	pt_apply(pt, co_clearflag, (void*)CO_FLAGS_MATCH);
     }
     if (ptmatch && *ptmatch == ptn)
 	ptn = NULL; /* passed to upper layers, dont free here */
  ok:
-    if (matches == 1){
+    if (matches == 1 && co_match){
+	co_flags_set(co_match, CO_FLAGS_MATCH);
 	if (co_match->co_type == CO_COMMAND && co_orig->co_type == CO_VARIABLE)
 	    if (co_value_set(co_orig, co_match->co_command) < 0)
 		goto done;
     }
-    *matchlen = matches;
+    *matchlen = matches; /* Differentiate exists */
     retval = 0;
  done:
 #if 0 /* Only if no match? */
@@ -882,6 +922,8 @@ match_pattern(cligen_handle h,
 			   cvv, cvvall,
 			   reasonp) < 0)
 	goto done;
+    /* Clear all CO_FLAGS_MATCH recursively */
+    pt_apply(pt, co_clearflag, (void*)CO_FLAGS_MATCH);
     retval = 0;
  done:
     return retval;

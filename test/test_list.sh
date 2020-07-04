@@ -52,7 +52,7 @@ expectpart "$(echo -n "$CMD ?" | $cligen_file -e -P -f $fspec)" 0 "cli> $CMD" "<
 # Second: semicolon and "fruit apple<cr>"
 CMD="fruit apple"
 new "cligen $CMD"
-expectpart "$(echo "$CMD" | $cligen_file -f $fspec)" 0 "cli> $CMD" "Ambigous command"
+expectpart "$(echo "$CMD" | $cligen_file -f $fspec)" 0 "cli> $CMD" "Ambiguous command"
 
 new "cligen -P $CMD"
 expectpart "$(echo "$CMD" | $cligen_file -P -f $fspec 2>&1)" 0 "cli> $CMD" "1 name:fruit type:string value:fruit" "2 name:name type:string value:apple"
@@ -123,7 +123,7 @@ expectpart "$(echo -n "$CMD ?" | $cligen_file -e -P -f $fspec)" 0 "cli> $CMD" "s
 # Sixth: no semicolon and "fruit apple<cr>"
 CMD="fruit apple"
 new "cligen $CMD"
-expectpart "$(echo "$CMD" | $cligen_file -f $fspec)" 0 "cli> $CMD" "Ambigous command"
+expectpart "$(echo "$CMD" | $cligen_file -f $fspec)" 0 "cli> $CMD" "Ambiguous command"
 
 new "cligen -P $CMD"
 expectpart "$(echo "$CMD" | $cligen_file -P -f $fspec 2>&1)" 0 "cli> $CMD" 'CLI syntax error in: "fruit apple": Incomplete command'
