@@ -38,7 +38,3 @@ typedef struct {int a;} *cligen_handle;
 #else
 typedef void *cligen_handle; /* API */
 #endif
-
-/* Unify match_pattern result struct
- */
-#define USE_MATCH_RESULT
