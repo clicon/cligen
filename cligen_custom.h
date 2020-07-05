@@ -41,4 +41,4 @@ typedef void *cligen_handle; /* API */
 
 /* Unify match_pattern result struct
  */
-#undef USE_MATCHVEC
+#define USE_MATCH_RESULT
