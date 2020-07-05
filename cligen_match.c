@@ -70,6 +70,19 @@
 
 #define ISREST(co) ((co)->co_type == CO_VARIABLE && (co)->co_vtype == CGV_REST)
 
+#ifdef USE_MATCH_RESULT
+/*! Result vector from match_pattern_* family of functions
+ */
+struct match_result{
+    uint32_t     mr_len;
+    int         *mr_vec;
+    int         *mr_level;
+    parse_tree  *mr_parsetree;
+    char        *mr_reason;
+};
+typedef struct match_result match_result;
+#endif
+
 /*! Match variable against input string
  * 
  * @param[in]  string  Input string to match
@@ -398,6 +411,11 @@ last_level(cvec *cvt,
 }
 
 /*! Termination criterium for parse-tree
+ * Assume:
+ * pt -> []
+ * pt -> [null]
+ * pt -> [null, a, ..]
+ * pt -> [a, ..] # with no null element
  */
 static int
 last_pt(parse_tree *pt)
@@ -471,27 +489,75 @@ add_cov_to_cvec(cligen_handle h,
     return cv;
 }
 
+/*! Append a matching index i to a matchvec of indexes by g and incrementing vector
+ * @param[in,out]  matchvec  Vector of indexes
+ * @param[in,out]  matches   Length of vector
+ * @param[in]      index     index to append to vector
+ */
 static int
-matchv_append(int  i,
-	      int *matchvec[],
-	      int *matches,
-	      int *matchlen)
+matchv_append(int *vec[],
+	      int *veclen,
+	      int  index)
 {
     int retval = -1;
 
-    if ((*matches)+1 > *matchlen){
-	(*matchlen)++;
-	if ((*matchvec = realloc(*matchvec, (*matchlen)*sizeof(int))) == NULL){
-	    fprintf(stderr, "%s: realloc: %s\n", __FUNCTION__, strerror(errno));
-	    goto done;
-	}
-    }
-    (*matchvec)[(*matches)++] = i;
+    (*veclen)++;
+    if ((*vec = realloc(*vec, (*veclen)*sizeof(int))) == NULL)
+	goto done;
+    (*vec)[(*veclen)-1] = index;
     retval = 0;
  done:
     return retval;
 }
 
+/*! Reset/empty matchvec of indexes by g and incrementing vector
+ * @param[in,out]  vec  Vector of indexes
+ * @param[in,out]  veclen   Length of vector
+ */
+static int
+matchv_reset(int *vec[],
+	     int *veclen)
+{
+    if (vec && *vec){
+	free(*vec);
+	*vec = NULL;
+	*veclen = 0;
+    }
+    return 0;
+}
+
+#ifdef USE_MATCH_RESULT
+static int
+mr_vec_append(match_result *mr,
+		 int  index)
+{
+    int retval = -1;
+
+    mr->mr_len++;
+    if ((mr->mr_vec = realloc(*vec, (mr->mr_len)*sizeof(int))) == NULL)
+	goto done;
+    mr->mr_vec[mr->mr_len-1] = index;
+    retval = 0;
+ done:
+    return retval;
+}
+
+
+/*! Reset/empty matchvec of indexes by g and incrementing vector
+ * @param[in,out]  vec  Vector of indexes
+ * @param[in,out]  veclen   Length of vector
+ */
+static int
+mr_vec_reset(match_result *mr)
+{
+    if (mr->mr_vec){
+	free(mr->mr_vec);
+	mr->mr_vec = NULL;
+	mr->mr_len = 0;
+    }
+    return 0;
+}
+#endif
 /*! Match a parse-tree (pt) with a command vector (cvt/cvr)
  * @param[in]  h        CLIgen handle
  * @param[in]  token    Token to match at this level
@@ -514,10 +580,13 @@ match_vec(cligen_handle h,
 	  int           best,
 	  int          *matchvec[],
 	  int          *matchesp,
-	  char        **reason)
+	  char        **reason
+#ifdef USE_MATCHVEC
+	  , match_result *mr
+#endif
+	  )
 {
     int     retval = -1;
-    int     matchlen = 0; /* Length of matchvec */
     int32_t pref_lower = INT32_MAX; /* Preference lower bound */
     int32_t pref_upper = 0;         /* Preference upper bound */
     int     p;             /* If all fails, save lowest(widest) preference error message */
@@ -527,6 +596,7 @@ match_vec(cligen_handle h,
     cg_obj *co;
     int     match;
 
+    assert(*matchesp == 0);
     /* Loop through parse-tree at this level to find matches */
     for (i=0; i<pt_len_get(pt); i++){
 	if ((co = pt_vec_i_get(pt, i)) == NULL)
@@ -549,7 +619,11 @@ match_vec(cligen_handle h,
 		pref_lower = p;
 		if (*reason)
 		    free(*reason);
+#ifdef USE_MATCHVEC
+		mr_reason(mr, rmtp);
+#else
 		*reason = rtmp;
+#endif
 		rtmp = NULL;
 	    }
 	    if (rtmp){
@@ -561,21 +635,36 @@ match_vec(cligen_handle h,
 	    assert(rtmp == NULL);
 	    if (best){ /* only save best match */
 		if (p == pref_upper){
-		    if (matchv_append(i, matchvec, matchesp, &matchlen) < 0)
+#ifdef USE_MATCHVEC
+		    if (mr_vec_append(mr, i) < 0)
 			goto done;
+#else
+		    if (matchv_append(matchvec, matchesp, i) < 0)
+			goto done;
+#endif
 		}
 		else if (p > pref_upper){ /* Start again at this level */
 		    pref_upper = p;
 		    *matchesp = 0;
-		    if (matchv_append(i, matchvec, matchesp, &matchlen) < 0)
+#ifdef USE_MATCHVEC
+		    if (mr_vec_append(mr, i) < 0)
 			goto done;
+#else
+		    if (matchv_append(matchvec, matchesp, i) < 0)
+			goto done;
+#endif
 		}
 		else{ /* p < pref_upper : skip */
 		}
 	    } /* if best */
 	    else {
-		if (matchv_append(i, matchvec, matchesp, &matchlen) < 0)
+#ifdef USE_MATCHVEC
+		if (mr_vec_append(mr, i) < 0)
 		    goto done;
+#else
+		if (matchv_append(matchvec, matchesp, i) < 0)
+		    goto done;
+#endif
 	    }
 	} /* switch match */
 	assert(rtmp == NULL);
@@ -687,10 +776,12 @@ match_pattern_sets(cligen_handle h,
 		   cvec         *cvv,
 		   cvec         *cvvall,
 		   char        **reasonp
+#ifdef USE_MATCHVEC
+		   , match_result **mrp
+#endif
 		   )
 {
     int         retval = -1;
-    int         matches = 0;
     cg_obj     *co_match = NULL;
     cg_obj     *co_orig;
     char       *reason = NULL;
@@ -699,7 +790,11 @@ match_pattern_sets(cligen_handle h,
     int         lastsyntax = 0;
     char       *token;
     char       *resttokens;
+#ifdef USE_MATCHVEC
+    match_result mr = {0,};
+#endif
 
+    assert(*ptmatch == NULL);
     /* Tokens of this level */
     token = cvec_i_str(cvt, level+1);
     /* Is this last token? */
@@ -708,23 +803,31 @@ match_pattern_sets(cligen_handle h,
     resttokens  = cvec_i_str(cvr, level+1);
     
     /* Return level at this point, can be overriden by recursive call */
+#ifdef USE_MATCHVEC
+    mr.mr_level = level;
+#else
     *levelp = level; 
+#endif
 
     /* How many matches of cvt[level+1] in pt */
     if (match_vec(h,
 		  pt, token, resttokens,
 		  lasttoken?best:1, /* use best preference match in non-terminal matching*/
-		  matchvec, &matches, &reason) < 0)
+		  matchvec, matchlen, &reason
+#ifdef USE_MATCHVEC
+		   , &mr
+#endif
+		   ) < 0)
 	goto done;
     /* Number of matches is 0 (no match), 1 (exact) or many */
-    switch (matches){
+    switch (*matchlen){
     case 0: /* no matches */
 	if (pt_onlyvars(pt) && reasonp && reason){
 	    *reasonp = reason;
 	    reason = NULL;
 	}
-	retval = 0;
-	goto ok;
+	matchv_reset(matchvec, matchlen);
+	goto ok; 
 	break;
     case 1: /* exactly one match */
 	break;
@@ -733,22 +836,23 @@ match_pattern_sets(cligen_handle h,
 	      * to one under certain circumstances
 	      */
 	if (lasttoken){
-	    *ptmatch = pt;
+	    *ptmatch = pt; /* xxx 1 */
 	    if (best){
 		co_match = pt_vec_i_get(pt, (*matchvec)[0]); /* also add to cvv: use first element*/
 		if (match_bindvars(h, co_match, 
 				   ISREST(co_match)?resttokens:token,
 				   cvv, cvvall) < 0)
-		goto done;
+		    goto done;
 	    }
-	    goto ok; /* will return matches > 1 */
+	    goto ok; /* will return matches > 1 */ 
 	}
-	retval = 0;
-	goto done; /* will return matches = 0 */
+	matchv_reset(matchvec, matchlen);
+	goto ok;  /* will return matches = 0 */
 	break;
     } /* switch matches */
-    if (matches != 1) 
-	goto ok;
+
+    assert(*matchlen == 1);
+    
     /* Get the single match object */
     co_match = pt_vec_i_get(pt, (*matchvec)[0]);
     /* co_orig is original object in case of expansion */
@@ -756,38 +860,38 @@ match_pattern_sets(cligen_handle h,
 
     /* Already matched (sets functionality) */
     if (co_flags_get(co_match, CO_FLAGS_MATCH)){ /* XXX: orig?? */
-	matches = 0;
 	if (reasonp){
 	    if ((reason = strdup("Already matched")) == NULL)
 		goto done;
 	    *reasonp = reason;
 	}
+	matchv_reset(matchvec, matchlen);
 	goto ok;
     }
 
     /* Do it if not last or best */
-    if (!lasttoken || best)
+    if (!lasttoken || best){
 	if (match_bindvars(h, co_match, 
 			   ISREST(co_match)?resttokens:token,
 			   cvv, cvvall) < 0)
 	    goto done;
+    }
     if (lasttoken){
-	*ptmatch = pt;
+	*ptmatch = pt; /* xxx 2 */
 	goto ok;
     }
     if (pt_expand_treeref(h, co_match, co_pt_get(co_match)) < 0) /* sub-tree expansion */
 	goto done;
 
-    if (co_match->co_type == CO_VARIABLE){
+    if (co_match->co_type == CO_VARIABLE &&
+	ISREST(co_match)){	
 	/* 
 	 * Special case: we have matched a REST variable (anything) and
 	 * there is more text have this word, then we can match REST
 	 * This is "inline" of match_terminal
 	 */
-	if (ISREST(co_match)){
-	    *ptmatch = pt;
-	    goto ok;
-	}
+	*ptmatch = pt; /* xxx 3 */
+	goto ok;
     }
 
     if ((ptn = pt_new()) == NULL)
@@ -802,52 +906,73 @@ match_pattern_sets(cligen_handle h,
 	*ptmatch = pt; /* XXX not necessary */
     }
     else {
-	matches = 0;
 	if (pt_sets_get(ptn)){ /* For sets, iterate */
 	    while (!last_level(cvt, level)){
-		matches = 0;
+		matchv_reset(matchvec, matchlen);
+		if (ptmatch && *ptmatch != NULL)
+		    *ptmatch = NULL; /* XXX free? */
+		if (matchvec && *matchvec != NULL){
+		    free(*matchvec);
+		    *matchvec = NULL;
+		}
 		if (match_pattern_sets(h, cvt, cvr, ptn,
 				       level+1,
 				       best, hide, expandvar,
 				       levelp,	 /* out from here */
 				       ptmatch,
 				       matchvec,
-				       &matches,
+				       matchlen,
 				       cvv,
 				       cvvall,
 				       reasonp) < 0)
 		    goto done;		
 		/* XXX If matched here, mark the match so we cant go there again for a set */
-		if (matches != 1)
+		if (*matchlen != 1)
 		    break;
+		assert(ptmatch==NULL || *ptmatch != NULL);
+		assert(matchvec==NULL || *matchvec != NULL);
 		level = *levelp;
 	    }
 	}
-	else
+	else{
+	    matchv_reset(matchvec, matchlen);
 	    if (match_pattern_sets(h, cvt, cvr, ptn,
 				   level+1, 
 				   best, hide, expandvar,
 				   levelp,	 /* out from here */
 				   ptmatch,
 				   matchvec,
-				   &matches,
+				   matchlen,
 				   cvv,
 				   cvvall,
 				   reasonp) < 0)
 		goto done;
+	}
 	/* Clear all CO_FLAGS_MATCH recursively */
 	pt_apply(pt, co_clearflag, (void*)CO_FLAGS_MATCH);
     }
-    if (ptmatch && *ptmatch == ptn)
+    if (*ptmatch == ptn)
 	ptn = NULL; /* passed to upper layers, dont free here */
  ok:
-    if (matches == 1 && co_match){
+    switch (*matchlen){
+    case 0:
+	if (matchvec && *matchvec){
+	    free(*matchvec);
+	    *matchvec = NULL;
+	}
+	if (*ptmatch)
+	    *ptmatch = NULL;
+	break;
+    case 1:
+	assert(co_match);
 	co_flags_set(co_match, CO_FLAGS_MATCH);
 	if (co_match->co_type == CO_COMMAND && co_orig->co_type == CO_VARIABLE)
 	    if (co_value_set(co_orig, co_match->co_command) < 0)
 		goto done;
-    }
-    *matchlen = matches; /* Differentiate exists */
+	break;
+    default:
+	break;
+    } /* matches */
     retval = 0;
  done:
 #if 0 /* Only if no match? */
@@ -906,7 +1031,7 @@ match_pattern(cligen_handle h,
     int retval = -1;
     int levelp = 0;
     
-    if (ptmatch == NULL || cvt == NULL || cvr == NULL){
+    if (ptmatch == NULL || cvt == NULL || cvr == NULL || matchvec == NULL || matchlen == NULL){
 	errno = EINVAL;
 	goto done;
     }
@@ -1166,10 +1291,8 @@ match_complete(cligen_handle h,
     }
     while (strlen(*stringp) + minmatch - slen >= *slenp){
 	*slenp *= 2;
-	if ((*stringp = realloc(*stringp, *slenp)) == NULL){
-	    fprintf(stderr, "%s realloc: %s\n", __FUNCTION__, strerror(errno));
+	if ((*stringp = realloc(*stringp, *slenp)) == NULL)
 	    goto done;
-	}
 	string = *stringp;
     }
     strncat(string, &co1->co_command[slen], minmatch-slen);
