@@ -75,8 +75,9 @@
  */
 struct match_result{
     uint32_t     mr_len;
+    uint32_t     mr_size;
     int         *mr_vec;
-    int         *mr_level;
+    int          mr_level;
     parse_tree  *mr_parsetree;
     char        *mr_reason;
 };
@@ -426,7 +427,7 @@ last_pt(parse_tree *pt)
     return 0;
 }
 
-/*! Return if the parse-tree is aonly variables, or if there is at least one non-variable
+/*! Return if the parse-tree is only variables, or if there is at least one non-variable
  * @param[in] pt  Parse-tree
  * @retval    0   Empty or contains at least one command (non-var) 
  * @retval    1   0 elements, only variables alternatives (or commands derived from variables)
@@ -489,6 +490,85 @@ add_cov_to_cvec(cligen_handle h,
     return cv;
 }
 
+
+#ifdef USE_MATCH_RESULT
+static int
+mr_vec_append(match_result *mr,
+	      int           index)
+{
+    int retval = -1;
+
+    if (mr->mr_size > mr->mr_len)
+	goto ok;
+    mr->mr_len++;
+    if ((mr->mr_vec = realloc(mr->mr_vec, (mr->mr_len)*sizeof(int))) == NULL)
+	goto done;
+    mr->mr_vec[mr->mr_len-1] = index;
+    mr->mr_size = mr->mr_len;
+ ok:
+    retval = 0;
+ done:
+    return retval;
+}
+
+/*! Reset/empty matchvec of indexes by g and incrementing vector
+ * @param[in,out]  mr  Match result struct
+ */
+static int
+mr_vec_reset(match_result *mr)
+{
+    if (mr->mr_len)
+	mr->mr_len = 0;
+    return 0;
+}
+
+
+/*! Reset/empty matchvec of indexes by g and incrementing vector
+ * @param[in,out]  mr      Match result struct
+ * @param[in]      reason  Malloced string (consumed here)
+ */
+static int
+mr_reason_set(match_result *mr,
+	      char         *reason)
+{
+    if (mr->mr_reason)
+	free(mr->mr_reason);
+    mr->mr_reason = reason;
+    return 0;
+}
+
+static int
+mr_parsetree_set(match_result *mr,
+		 parse_tree   *pt)
+{
+    mr->mr_parsetree = pt;
+    return 0;
+}
+
+static match_result *
+mr_new(void)
+{
+    match_result *mr;
+    
+    if ((mr = malloc(sizeof(*mr))) == NULL)
+	return NULL;
+    memset(mr, 0, sizeof(*mr));
+    return mr;
+}
+
+static int
+mr_free(match_result *mr)
+{
+    if (mr->mr_vec)
+	free(mr->mr_vec);
+    if (mr->mr_reason)
+	free(mr->mr_reason);
+    free(mr);
+    return 0;
+}
+
+#else  /* USE_MATCH_RESULT */
+
 /*! Append a matching index i to a matchvec of indexes by g and incrementing vector
  * @param[in,out]  matchvec  Vector of indexes
  * @param[in,out]  matches   Length of vector
@@ -525,39 +605,8 @@ matchv_reset(int *vec[],
     }
     return 0;
 }
+#endif /* USE_MATCH_RESULT */
 
-#ifdef USE_MATCH_RESULT
-static int
-mr_vec_append(match_result *mr,
-		 int  index)
-{
-    int retval = -1;
-
-    mr->mr_len++;
-    if ((mr->mr_vec = realloc(*vec, (mr->mr_len)*sizeof(int))) == NULL)
-	goto done;
-    mr->mr_vec[mr->mr_len-1] = index;
-    retval = 0;
- done:
-    return retval;
-}
-
-
-/*! Reset/empty matchvec of indexes by g and incrementing vector
- * @param[in,out]  vec  Vector of indexes
- * @param[in,out]  veclen   Length of vector
- */
-static int
-mr_vec_reset(match_result *mr)
-{
-    if (mr->mr_vec){
-	free(mr->mr_vec);
-	mr->mr_vec = NULL;
-	mr->mr_len = 0;
-    }
-    return 0;
-}
-#endif
 /*! Match a parse-tree (pt) with a command vector (cvt/cvr)
  * @param[in]  h        CLIgen handle
  * @param[in]  token    Token to match at this level
@@ -578,11 +627,12 @@ match_vec(cligen_handle h,
 	  char         *token,
 	  char         *resttokens,
 	  int           best,
+#ifdef USE_MATCH_RESULT
+	  match_result *mr
+#else
 	  int          *matchvec[],
 	  int          *matchesp,
 	  char        **reason
-#ifdef USE_MATCHVEC
-	  , match_result *mr
 #endif
 	  )
 {
@@ -591,51 +641,50 @@ match_vec(cligen_handle h,
     int32_t pref_upper = 0;         /* Preference upper bound */
     int     p;             /* If all fails, save lowest(widest) preference error message */
     int     exact;
-    char   *rtmp = NULL;
+    char   *tmpreason = NULL;
     int     i;
     cg_obj *co;
     int     match;
 
-    assert(*matchesp == 0);
     /* Loop through parse-tree at this level to find matches */
     for (i=0; i<pt_len_get(pt); i++){
 	if ((co = pt_vec_i_get(pt, i)) == NULL)
 	    continue;
 	/* Return -1: error, 0: nomatch, 1: match */
-	rtmp = NULL;
+	tmpreason = NULL;
 	if ((match = match_object(h,
 				  ISREST(co)?resttokens:token,
 				  co, &exact,
-				  &rtmp      /* if match == 0 */
+				  &tmpreason      /* if match == 0 */
 				  )) < 0)
 	    goto done;
 	p = co_pref(co, exact); /* get match preferences (higher is better match) */
 	if (match == 0){ /* No match */
-	    assert(rtmp != NULL);
+	    assert(tmpreason != NULL);
 	    /* If all fails, save lowest(widest) preference error message,
 	     * for variables only
 	     */
 	    if (p < pref_lower && co->co_type == CO_VARIABLE){
 		pref_lower = p;
+#ifdef USE_MATCH_RESULT
+		mr_reason_set(mr, tmpreason);
+#else
 		if (*reason)
 		    free(*reason);
-#ifdef USE_MATCHVEC
-		mr_reason(mr, rmtp);
-#else
-		*reason = rtmp;
+		*reason = tmpreason;
 #endif
-		rtmp = NULL;
+		tmpreason = NULL;
 	    }
-	    if (rtmp){
-		free(rtmp);
-		rtmp = NULL;
+	    if (tmpreason){
+		free(tmpreason);
+		tmpreason = NULL;
 	    }
 	}
 	else { /* Match: if best compare and save highest preference */
-	    assert(rtmp == NULL);
+	    assert(tmpreason == NULL);
 	    if (best){ /* only save best match */
 		if (p == pref_upper){
-#ifdef USE_MATCHVEC
+#ifdef USE_MATCH_RESULT
 		    if (mr_vec_append(mr, i) < 0)
 			goto done;
 #else
@@ -645,11 +694,13 @@ match_vec(cligen_handle h,
 		}
 		else if (p > pref_upper){ /* Start again at this level */
 		    pref_upper = p;
-		    *matchesp = 0;
-#ifdef USE_MATCHVEC
+#ifdef USE_MATCH_RESULT
+		    if (mr_vec_reset(mr) < 0)
+			goto done;
 		    if (mr_vec_append(mr, i) < 0)
 			goto done;
 #else
+		    *matchesp = 0;
 		    if (matchv_append(matchvec, matchesp, i) < 0)
 			goto done;
 #endif
@@ -658,7 +709,7 @@ match_vec(cligen_handle h,
 		}
 	    } /* if best */
 	    else {
-#ifdef USE_MATCHVEC
+#ifdef USE_MATCH_RESULT
 		if (mr_vec_append(mr, i) < 0)
 		    goto done;
 #else
@@ -667,13 +718,18 @@ match_vec(cligen_handle h,
 #endif
 	    }
 	} /* switch match */
-	assert(rtmp == NULL);
+	assert(tmpreason == NULL);
     } /* for pt_len_get(pt) */
     /* Only return reason if matches == 0 */
+#ifdef USE_MATCH_RESULT
+    if (mr->mr_len != 0)
+	mr_reason_set(mr, NULL);
+#else
     if (*matchesp != 0 && reason && *reason){
 	free(*reason);
 	*reason = NULL;
     }
+#endif
     retval = 0;
  done:
     return retval;
@@ -769,32 +825,38 @@ match_pattern_sets(cligen_handle h,
 		   int           best,
 		   int           hide,
 		   int           expandvar,
+		   cvec         *cvv,
+		   cvec         *cvvall,
+#ifdef USE_MATCH_RESULT
+		   match_result **mrp
+#else
 		   int          *levelp, 
 		   parse_tree  **ptmatch, 
 		   int          *matchvec[], 
 		   int          *matchlen,
-		   cvec         *cvv,
-		   cvec         *cvvall,
 		   char        **reasonp
-#ifdef USE_MATCHVEC
-		   , match_result **mrp
 #endif
 		   )
 {
     int         retval = -1;
     cg_obj     *co_match = NULL;
     cg_obj     *co_orig;
-    char       *reason = NULL;
     parse_tree *ptn = NULL;     /* Expanded */
     int         lasttoken = 0;
     int         lastsyntax = 0;
     char       *token;
     char       *resttokens;
-#ifdef USE_MATCHVEC
-    match_result mr = {0,};
+#ifdef USE_MATCH_RESULT
+    match_result *mrc = NULL; /* child result */
+    match_result *mr0 = NULL;
+#else
+    char       *reason = NULL;
 #endif
 
-    assert(*ptmatch == NULL);
+#ifdef USE_MATCH_RESULT
+    if ((mr0 = mr_new()) == NULL)
+	goto done;
+#endif
     /* Tokens of this level */
     token = cvec_i_str(cvt, level+1);
     /* Is this last token? */
@@ -803,8 +865,8 @@ match_pattern_sets(cligen_handle h,
     resttokens  = cvec_i_str(cvr, level+1);
     
     /* Return level at this point, can be overriden by recursive call */
-#ifdef USE_MATCHVEC
-    mr.mr_level = level;
+#ifdef USE_MATCH_RESULT
+    mr0->mr_level = level;
 #else
     *levelp = level; 
 #endif
@@ -813,20 +875,34 @@ match_pattern_sets(cligen_handle h,
     if (match_vec(h,
 		  pt, token, resttokens,
 		  lasttoken?best:1, /* use best preference match in non-terminal matching*/
+
+#ifdef USE_MATCH_RESULT
+		   mr0
+#else
 		  matchvec, matchlen, &reason
-#ifdef USE_MATCHVEC
-		   , &mr
 #endif
 		   ) < 0)
 	goto done;
     /* Number of matches is 0 (no match), 1 (exact) or many */
-    switch (*matchlen){
+#ifdef USE_MATCH_RESULT
+    switch (mr0->mr_len)
+#else
+    switch (*matchlen)
+#endif
+	{
     case 0: /* no matches */
-	if (pt_onlyvars(pt) && reasonp && reason){
+#ifdef USE_MATCH_RESULT
+	if (pt_onlyvars(pt))
+	    ; /* XXX Uuh mr0 already has a reason,... */
+	mr_vec_reset(mr0);
+#else
+	 if (pt_onlyvars(pt) && reasonp && reason){
 	    *reasonp = reason;
 	    reason = NULL;
 	}
 	matchv_reset(matchvec, matchlen);
+#endif
+
 	goto ok; 
 	break;
     case 1: /* exactly one match */
@@ -836,9 +912,17 @@ match_pattern_sets(cligen_handle h,
 	      * to one under certain circumstances
 	      */
 	if (lasttoken){
+#ifdef USE_MATCH_RESULT
+	    mr_parsetree_set(mr0, pt);
+#else
 	    *ptmatch = pt; /* xxx 1 */
+#endif
 	    if (best){
+#ifdef USE_MATCH_RESULT
+		co_match = pt_vec_i_get(pt, mr0->mr_vec[0]); 
+#else
 		co_match = pt_vec_i_get(pt, (*matchvec)[0]); /* also add to cvv: use first element*/
+#endif		
 		if (match_bindvars(h, co_match, 
 				   ISREST(co_match)?resttokens:token,
 				   cvv, cvvall) < 0)
@@ -846,26 +930,44 @@ match_pattern_sets(cligen_handle h,
 	    }
 	    goto ok; /* will return matches > 1 */ 
 	}
+#ifdef USE_MATCH_RESULT
+	mr_vec_reset(mr0);
+#else
 	matchv_reset(matchvec, matchlen);
+#endif
 	goto ok;  /* will return matches = 0 */
 	break;
     } /* switch matches */
-
+#ifdef USE_MATCH_RESULT
+    assert(mr0->mr_len == 1);
+#else
     assert(*matchlen == 1);
-    
+#endif
     /* Get the single match object */
+#ifdef USE_MATCH_RESULT
+    co_match = pt_vec_i_get(pt, mr0->mr_vec[0]);
+#else
     co_match = pt_vec_i_get(pt, (*matchvec)[0]);
+#endif
     /* co_orig is original object in case of expansion */
     co_orig = co_match->co_ref?co_match->co_ref: co_match;
 
     /* Already matched (sets functionality) */
     if (co_flags_get(co_match, CO_FLAGS_MATCH)){ /* XXX: orig?? */
+#ifdef USE_MATCH_RESULT
+	char *r;
+	if ((r = strdup("Already matched")) == NULL)
+	    goto done;
+	mr_reason_set(mr0, r);
+	mr_vec_reset(mr0);
+#else
 	if (reasonp){
 	    if ((reason = strdup("Already matched")) == NULL)
 		goto done;
 	    *reasonp = reason;
 	}
 	matchv_reset(matchvec, matchlen);
+#endif
 	goto ok;
     }
 
@@ -877,7 +979,11 @@ match_pattern_sets(cligen_handle h,
 	    goto done;
     }
     if (lasttoken){
-	*ptmatch = pt; /* xxx 2 */
+#ifdef USE_MATCH_RESULT
+	    mr_parsetree_set(mr0, pt);
+#else
+	    *ptmatch = pt; /* xxx 2 */
+#endif
 	goto ok;
     }
     if (pt_expand_treeref(h, co_match, co_pt_get(co_match)) < 0) /* sub-tree expansion */
@@ -890,7 +996,11 @@ match_pattern_sets(cligen_handle h,
 	 * there is more text have this word, then we can match REST
 	 * This is "inline" of match_terminal
 	 */
+#ifdef USE_MATCH_RESULT
+	mr_parsetree_set(mr0, pt);
+#else
 	*ptmatch = pt; /* xxx 3 */
+#endif
 	goto ok;
     }
 
@@ -899,15 +1009,24 @@ match_pattern_sets(cligen_handle h,
 
     if (pt_expand(h, co_pt_get(co_match), cvv, hide, expandvar, ptn) < 0) /* expand/choice variables */
 	goto done;
-
     /* Check termination criteria */
     lastsyntax = last_pt(ptn);
     if (lastsyntax){ /* Last in syntax tree (not token) */
+#ifdef USE_MATCH_RESULT
+	mr_parsetree_set(mr0, pt);
+#else
 	*ptmatch = pt; /* XXX not necessary */
+#endif
     }
-    else {
+    else { /* recurse */
 	if (pt_sets_get(ptn)){ /* For sets, iterate */
 	    while (!last_level(cvt, level)){
+#ifdef USE_MATCH_RESULT
+		if (mrc != NULL){
+		    mr_free(mrc);
+		    mrc = NULL;
+		}
+#else
 		matchv_reset(matchvec, matchlen);
 		if (ptmatch && *ptmatch != NULL)
 		    *ptmatch = NULL; /* XXX free? */
@@ -915,47 +1034,109 @@ match_pattern_sets(cligen_handle h,
 		    free(*matchvec);
 		    *matchvec = NULL;
 		}
+#endif
 		if (match_pattern_sets(h, cvt, cvr, ptn,
 				       level+1,
 				       best, hide, expandvar,
+				       cvv,
+	                               cvvall,
+#ifdef USE_MATCH_RESULT
+	                               &mrc
+#else
 				       levelp,	 /* out from here */
 				       ptmatch,
 				       matchvec,
 				       matchlen,
-				       cvv,
-				       cvvall,
-				       reasonp) < 0)
+				       reasonp
+#endif
+				       ) < 0)
 		    goto done;		
+#ifdef USE_MATCH_RESULT
+		if (mrc->mr_len != 1)
+		    break;
+		level = mrc->mr_level;
+#else
 		/* XXX If matched here, mark the match so we cant go there again for a set */
 		if (*matchlen != 1)
 		    break;
 		assert(ptmatch==NULL || *ptmatch != NULL);
 		assert(matchvec==NULL || *matchvec != NULL);
 		level = *levelp;
+#endif
 	    }
 	}
 	else{
+#ifndef USE_MATCH_RESULT
 	    matchv_reset(matchvec, matchlen);
+#endif
 	    if (match_pattern_sets(h, cvt, cvr, ptn,
 				   level+1, 
 				   best, hide, expandvar,
+				   cvv,
+				   cvvall,
+#ifdef USE_MATCH_RESULT
+				   &mrc
+#else
 				   levelp,	 /* out from here */
 				   ptmatch,
 				   matchvec,
 				   matchlen,
-				   cvv,
-				   cvvall,
-				   reasonp) < 0)
+				   reasonp
+#endif
+				   ) < 0)
 		goto done;
 	}
 	/* Clear all CO_FLAGS_MATCH recursively */
 	pt_apply(pt, co_clearflag, (void*)CO_FLAGS_MATCH);
-    }
+#ifdef USE_MATCH_RESULT
+    if (mrc->mr_parsetree == ptn)
+	ptn = NULL; /* passed to upper layers, dont free here */
+#endif
+    } /* if lastsyntax */
+	; /* XXX */
+#ifndef USE_MATCH_RESULT
     if (*ptmatch == ptn)
 	ptn = NULL; /* passed to upper layers, dont free here */
- ok:
-    switch (*matchlen){
-    case 0:
+#endif
+ ok: 
+#ifdef USE_MATCH_RESULT
+    /* mr0:local or mrc:child
+     * if mrc has result, take that, otherwise take mr0
+     */
+    //    if (mrc && mrc->mr_len){
+    if (mrc){
+	switch (mrc->mr_len) {
+	case 1:
+	    if (mr0->mr_len == 1)
+		co_flags_set(co_match, CO_FLAGS_MATCH);
+	    break;
+	default:
+	    break;
+	}
+	*mrp = mrc;
+	mrc = NULL;
+    }
+    else{ /* Local */
+	switch (mr0->mr_len) {
+	case 0:
+	    break;
+	case 1:
+	    assert(co_match);
+	    co_flags_set(co_match, CO_FLAGS_MATCH);
+	    if (co_match->co_type == CO_COMMAND && co_orig->co_type == CO_VARIABLE)
+		if (co_value_set(co_orig, co_match->co_command) < 0)
+		    goto done;
+	    break;
+	default:
+	    break;
+	} /* matches */
+	*mrp = mr0;
+	mr0 = NULL;
+    }
+
+#else
+    switch (*matchlen) {
+	case 0:
 	if (matchvec && *matchvec){
 	    free(*matchvec);
 	    *matchvec = NULL;
@@ -973,6 +1154,7 @@ match_pattern_sets(cligen_handle h,
     default:
 	break;
     } /* matches */
+#endif
     retval = 0;
  done:
 #if 0 /* Only if no match? */
@@ -986,6 +1168,12 @@ match_pattern_sets(cligen_handle h,
 	if (pt_free(ptn, 0) < 0)
 	    return -1;
     }
+#ifdef USE_MATCH_RESULT
+    if (mr0)
+	mr_free(mr0);
+    if (mrc)
+	mr_free(mrc);
+#endif
     /* Only the last level may have multiple matches */
     return retval;
 } /* match_pattern_sets */
@@ -1029,7 +1217,11 @@ match_pattern(cligen_handle h,
 	      char        **reasonp)
 {
     int retval = -1;
+#ifdef USE_MATCH_RESULT
+    match_result *mr = NULL;
+#else
     int levelp = 0;
+#endif
     
     if (ptmatch == NULL || cvt == NULL || cvr == NULL || matchvec == NULL || matchlen == NULL){
 	errno = EINVAL;
@@ -1041,14 +1233,34 @@ match_pattern(cligen_handle h,
 			   pt,
 			   0,
 			   best, hide, expandvar,
+			   cvv, cvvall,
+#ifdef USE_MATCH_RESULT
+			   &mr
+#else
 			   &levelp,
 			   ptmatch, 
 			   matchvec, matchlen,
-			   cvv, cvvall,
-			   reasonp) < 0)
+			   reasonp
+#endif
+			   ) < 0)
 	goto done;
     /* Clear all CO_FLAGS_MATCH recursively */
     pt_apply(pt, co_clearflag, (void*)CO_FLAGS_MATCH);
+#ifdef USE_MATCH_RESULT
+    if (mr){
+	*ptmatch = mr->mr_parsetree;
+	*matchvec = mr->mr_vec;
+	*matchlen = mr->mr_len;
+	if (reasonp){
+	    if (mr->mr_reason)
+		fprintf(stderr, "%s reason: %p\n", __FUNCTION__, mr->mr_reason);
+	    *reasonp = mr->mr_reason;
+	}
+	else if (mr->mr_reason)
+	    free(mr->mr_reason);
+	free(mr);
+    }
+#endif
     retval = 0;
  done:
     return retval;

@@ -675,6 +675,8 @@ cliread_parse(cligen_handle  h,
 	*co_orig = match_obj;
     retval = 0;
   done:
+    if (cvv)
+	cvec_free(cvv);
     if (cvt)
 	cvec_free(cvt);
     if (cvr)
