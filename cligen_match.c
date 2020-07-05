@@ -1010,6 +1010,8 @@ match_pattern_sets(cligen_handle h,
 	assert(mrcprev != *mrp);
 	mr_free(mrcprev);
     }
+    if (ptn)
+	pt_free(ptn, 0);
     if (mrc)
 	mr_free(mrc);
     if (mr0)
@@ -1100,8 +1102,6 @@ match_pattern(cligen_handle h,
 	*matchvec = mr->mr_vec;
 	*matchlen = mr->mr_len;
 	if (reasonp){
-	    if (mr->mr_reason)
-		fprintf(stderr, "%s reason: %p\n", __FUNCTION__, mr->mr_reason);
 	    *reasonp = mr->mr_reason;
 	}
 	else if (mr->mr_reason)
