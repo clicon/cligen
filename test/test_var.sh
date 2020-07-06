@@ -18,9 +18,11 @@ cat > $fspec <<EOF
   b <b:int32>, callback();
   c <c:int32 show:"a number">("A 32-bit number"), callback();
 
-# 3.12 Choice
+# 3.10 Choice
   interface <ifname:string choice:eth0|eth1>("Interface name"), callback();
 
+# * Choice with variable
+  extra (<crypto:string>|<crypto:string choice:mc:aes|mc:foo|des:des|des:des3>), callback();
 EOF
 
 new "$cligen_file -f $fspec"
@@ -68,5 +70,21 @@ expectpart "$(echo "interface ethx" | $cligen_file -f $fspec 2>&1)" 0 "Unknown c
 
 new "interface eth0 ?"
 expectpart "$(echo -n "interface ?" | $cligen_file -f $fspec 2>&1)" 0 "eth0                  Interface name" "eth1                  Interface name"
+
+# * Choice with variable
+new "extra foo"
+expectpart "$(echo "extra xxx" | $cligen_file -f $fspec 2>&1)" 0 "1 name:extra type:string value:extra" "2 name:crypto type:string value:xxx"
+
+new "extra mc:aes"
+expectpart "$(echo "extra mc:aes" | $cligen_file -f $fspec 2>&1)" 0 "1 name:extra type:string value:extra" "2 name:crypto type:string value:mc:aes"
+
+new "extra des:des3"
+expectpart "$(echo "extra des:des3" | $cligen_file -f $fspec 2>&1)" 0 "1 name:extra type:string value:extra" "2 name:crypto type:string value:des:des3"
+
+new "extra ?"
+expectpart "$(echo -n "extra ?" | $cligen_file -f $fspec 2>&1)" 0 "<crypto>" "des:des" "des:des3" "mc:aes" "mc:foo"
+
+new "extra des:?"
+expectpart "$(echo -n "extra des:?" | $cligen_file -f $fspec 2>&1)" 0 "<crypto>" "des:des" "des:des3" --not-- "mc:aes" "mc:foo"
 
 rm -rf $dir

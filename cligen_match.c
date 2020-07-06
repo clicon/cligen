@@ -79,7 +79,8 @@ struct match_result{
     int          mr_level;
     parse_tree  *mr_parsetree;
     int          mr_last;
-    char        *mr_reason;
+    char        *mr_reason; /* Error reason if mr_len=0. Can also be carried by a mr_len!=0 
+			     * to store first error in case it is needed in a later error */
 };
 typedef struct match_result match_result;
 
@@ -499,20 +500,20 @@ add_cov_to_cvec(cligen_handle h,
 }
 
 
+/*! Append int vector with one index
+ */
 static int
 mr_vec_append(match_result *mr,
 	      int           index)
 {
     int retval = -1;
 
-    if (mr->mr_size > mr->mr_len)
-	goto ok;
-    mr->mr_len++;
-    if ((mr->mr_vec = realloc(mr->mr_vec, (mr->mr_len)*sizeof(int))) == NULL)
-	goto done;
-    mr->mr_vec[mr->mr_len-1] = index;
+    if (mr->mr_size <= mr->mr_len){ /* need increased size */
+	if ((mr->mr_vec = realloc(mr->mr_vec, (mr->mr_len+1)*sizeof(int))) == NULL)
+	    goto done;
+    }
+    mr->mr_vec[mr->mr_len++] = index;
     mr->mr_size = mr->mr_len;
- ok:
     retval = 0;
  done:
     return retval;
@@ -528,7 +529,6 @@ mr_vec_reset(match_result *mr)
 	mr->mr_len = 0;
     return 0;
 }
-
 
 /*! Reset/empty matchvec of indexes by g and incrementing vector
  * @param[in,out]  mr      Match result struct
@@ -549,6 +549,23 @@ mr_parsetree_set(match_result *mr,
 		 parse_tree   *pt)
 {
     mr->mr_parsetree = pt;
+    return 0;
+}
+
+/*! Move an error reason from one mr to the next
+ * There is a case for keeping the first error reason in case of multiple
+ */
+static int
+mr_mv_reason(match_result *from,
+	     match_result *to)
+{
+    char *reason;
+
+    if ((reason = from->mr_reason) != NULL &&
+	to->mr_reason == NULL){
+	to->mr_reason = reason;
+	from->mr_reason = NULL;
+    }
     return 0;
 }
 
@@ -986,12 +1003,14 @@ match_pattern_sets(cligen_handle h,
     assert(mrc != NULL);
     /* If child match fails, use previous */
     if (mrc->mr_len == 0 && mrcprev){
+	mr_mv_reason(mrc, mrcprev); 	/* transfer error reason if any from child */
 	*mrp = mrcprev;
 	mrcprev = NULL;
     }
     else if (mrc->mr_len == 0 && lastsyntax == 2){ /* If no child match, then use local */
 	mr_parsetree_set(mr0, pt);
 	co_flags_set(co_match, CO_FLAGS_MATCH);
+	mr_mv_reason(mrc, mr0); 	/* transfer error reason if any from child */
 	*mrp = mr0;
 	mr0 = NULL;
     }
@@ -1085,9 +1104,11 @@ match_pattern(cligen_handle h,
 		if (co_match->co_type == CO_VARIABLE && ISREST(co_match))
 		    ;
 		else{
-		    if ((r = strdup("Unknown command")) == NULL)
-			goto done;
-		    mr_reason_set(mr, r);
+		    if (mr->mr_reason == NULL){ /* If pre-existing error reason use that */
+			if ((r = strdup("Unknown command")) == NULL) /* else create unknown error */
+			    goto done;
+			mr_reason_set(mr, r);
+		    }
 		    mr_vec_reset(mr);
 		}
 	    }
