@@ -87,9 +87,14 @@ LEX		= @LEX@
 
 all:	cligen $(MYLIB) $(MYLIBLINK) $(APPS)
 
-.PHONY: TAGS
+.PHONY: TAGS test
 TAGS:
 	find . -name '*.[chyl]' -print | etags -
+
+# Run a clixon test container.
+# Alt: cd test; ./all.sh
+test:
+	(cd test && ./sum.sh)
 
 distclean: clean
 	rm -f Makefile config.log config.status config.h TAGS .depend
