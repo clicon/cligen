@@ -3,7 +3,7 @@ language: c
 branches:
   only:
   - master
-script: ./configure && make && sudo make install && ldconfig && make test
+script: ./configure && make && sudo make install && sudo ldconfig && make test
 arch:
 - amd64
 - arm64
