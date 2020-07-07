@@ -1,10 +1,9 @@
 language: c
 # safelist
-script: 
 branches:
   only:
   - master
-script: ./configure && make && sudo make install
+script: ./configure && make && sudo make install && make test
 arch:
 - amd64
 - arm64
