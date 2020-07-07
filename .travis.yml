@@ -1,0 +1,10 @@
+language: c
+# safelist
+script: 
+branches:
+  only:
+  - master
+script: ./configure && make && sudo make install
+arch:
+- amd64
+- arm64

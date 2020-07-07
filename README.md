@@ -1,5 +1,7 @@
 # CLIgen
 
+[![Build Status](https://travis-ci.org/clicon/cligen.png)](https://travis-ci.org/clicon/cligen) 
+
 CLIgen is a Command-Line Interface generator.
 
 > Note: This repo has migrated from https://olofhagsand/cligen.git to https://github.com/clicon/cligen.git. Redirection should work, but for existing
