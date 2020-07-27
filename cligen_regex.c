@@ -32,7 +32,7 @@
 
   ***** END LICENSE BLOCK *****
 
-  This file includes utility functions (good-to-have) for CLIgen applications
+  This file includes support for regular expressions
  */
 #include "cligen_config.h"
 
@@ -81,24 +81,31 @@ cligen_regex_posix_compile(char  *regexp,
 			   void **recomp)
 {
     int      retval = -1;
-    char     pattern[1024]; /* XXX change to malloc / strdup */
+    cbuf    *cb = NULL;
     regex_t *re = NULL;
     int      len0;
-    
+
     len0 = strlen(regexp);
-    if (len0 > sizeof(pattern)-5)
-	return -1;
-    strncpy(pattern, "^(", 2);
-    strncpy(pattern+2, regexp, sizeof(pattern)-2);
-    strncat(pattern, ")$",  sizeof(pattern)-len0-1);
+    if ((cb = cbuf_new()) == NULL)
+	goto done;
+    /* Check if prepended by ^( */
+    if (len0 > 0 && regexp[0] == '^'){
+	if (regexp[len0-1] != '$')
+	    goto fail;
+	cprintf(cb, "%s", regexp);
+    }
+    else
+	cprintf(cb, "^(%s)$", regexp);
     if ((re = malloc(sizeof(regex_t))) == NULL)
 	goto done;
     memset(re, 0, sizeof(regex_t));
-    if (regcomp(re, pattern, REG_NOSUB|REG_EXTENDED) != 0) 
+    if (regcomp(re, cbuf_get(cb), REG_NOSUB|REG_EXTENDED) != 0) 
 	goto fail;
     *recomp = re;
     retval = 1;
  done:
+    if (cb)
+	cbuf_free(cb);
     return retval;
  fail:
     retval = 0;

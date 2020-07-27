@@ -31,6 +31,8 @@
   the terms of any one of the Apache License version 2 or the GPL.
 
   ***** END LICENSE BLOCK *****
+
+  This file includes support for regular expressions
 */
 
 #ifndef _CLIGEN_REGEX_H_
