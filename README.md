@@ -1,9 +1,8 @@
 # CLIgen
 
-CLIgen is a Command-Line Interface generator.
+[![Build Status](https://travis-ci.org/clicon/cligen.png)](https://travis-ci.org/clicon/cligen) 
 
-> Note: This repo has migrated from https://olofhagsand/cligen.git to https://github.com/clicon/cligen.git. Redirection should work, but for existing
-> clones it is recommended to change remote as follows: `git remote set-url origin https://github.com/clicon/cligen.git`
+CLIgen is a Command-Line Interface generator.
 
 Well, actually it is not really a generator, since it does
 not _generate_ code for CLI:s. Instead, it builds and interprets

@@ -1,0 +1,9 @@
+language: c
+# safelist
+branches:
+  only:
+  - master
+script: ./configure && make && sudo make install && sudo ldconfig && make test
+arch:
+- amd64
+- arm64
