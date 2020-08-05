@@ -76,8 +76,8 @@ expectpart "$(echo "a exp1 y" | $cligen_file -e -f $fspec 2>&1)" 0 "1 name:a typ
 # XXX: this does not work as expected, you get unknown command,
 # It is a known issue and tricky to fix
 if false; then
-new "a exp2 y"
-expectpart "$(echo "a exp2 y" | $cligen_file -e -f $fspec 2>&1)" 0 "1 name:a type:string value:a" "2 name:x type:string value:exp2" "3 name:y type:string value:y"
+    new "a exp2 y"
+    expectpart "$(echo "a exp2 y" | $cligen_file -e -f $fspec 2>&1)" 0 "1 name:a type:string value:a" "2 name:x type:string value:exp2" "3 name:y type:string value:y"
 fi
 
 rm -rf $dir

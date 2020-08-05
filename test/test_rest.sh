@@ -16,22 +16,29 @@ cat > $fspec <<EOF
     <x:rest>,callback(); 
     aa,callback(); 
   }
-
+  xxx <x:rest>, callback();
 EOF
 
 new "$cligen_file -f $fspec"
 
-new "cligen values aa command"
+new "cligen values aa"
 expectpart "$(echo "values aa" | $cligen_file -f $fspec 2>&1)" 0 "1 name:values type:string value:values" "2 name:aa type:string value:aa"
 
-# DOESNT WORK - DIDNT WORK in 4.4 either phew
-#new "cligen values aa bb rest"
-#expectpart "$(echo "values aa bb" | $cligen_file -f $fspec 2>&1)" 0 "1 name:values type:string value:values" "2 name:x type:rest value:aa bb"
+# XXX: this does not work as expected, 
+# sets (type:string), valgrind leaks
+# master (aa bb unknwon command) valgrind OK
+if false; then
+    new "cligen values aa bb"
+    expectpart "$(echo "values aa bb" | $cligen_file -f $fspec 2>&1)" 0 "1 name:values type:string value:values" "2 name:x type:rest value:aa bb"
+fi
 
-new "cligen values aab rest"
+new "cligen values aab"
 expectpart "$(echo "values aab" | $cligen_file -f $fspec 2>&1)" 0 "1 name:values type:string value:values" "2 name:x type:rest value:aab"
 
-new "cligen values aab foo rest"
+new "cligen values aab foo"
 expectpart "$(echo "values aab cde" | $cligen_file -f $fspec 2>&1)" 0 "1 name:values type:string value:values" "2 name:x type:rest value:aab cde"
+
+new "xx a ? - has memory problems in 4.5"
+expectpart "$(echo "xxx a ?" | $cligen_file -f $fspec 2>&1)" 0 "1 name:xxx type:string value:xxx" "2 name:x type:rest value:a"
 
 rm -rf $dir
