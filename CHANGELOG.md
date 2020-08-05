@@ -15,11 +15,11 @@ children. This is a work to make parse-tree a first level object for future enha
   * Split cligen_gen.[ch] into cligen_object.[ch] and cligen_parsetree.[ch]
     * parsetree structure hidden in cligen_parsetree.c
   * Access macros replace direct structure access as follows:
-    * `co->co_next[i]` --> `co_vec_i_get(co, i)`
-    * `co->co_max` --> `co_vec_len_get(co, i)`
     * `pt->pt_vec` --> `pt_vec_get(pt)` 
     * `pt->pt_vec[i]` --> `pt_vec_i_get(pt, i)` 
     * `pt->pt_len` --> `pt_len_get(pt)`
+    * `co->co_max` --> `parse_tree *pt = co_pt_get(co); pt_len_get(pt, i)`
+    * `co->co_next[i]` --> `parse_tree *pt = co_pt_get(co); pt_vec_i_get(pt, i)`
   * All functions taking call-by-value: `parse-tree pt` have been replaced by call-by-reference: `parse_tree *pt`.
     * This includes:  `cligen_tree_add(), cligen_help(), match_pattern(), pt_print(), cligen_callback_str2fn()`,  and many others.
 * C-API: Renamed `pt_expand_2()` -> `pt_expand()`, removed backward compatible `pt_expand_1()`
