@@ -3,6 +3,8 @@
 ## 4.6.0
 Expected: July 2020
 
+* Fixed: [Need to add the possibility to use anchors around patterns #51](https://github.com/clicon/cligen/issues/51):
+  * checked if `^$` already around string, if so, do not add it.
 * Fixed: [Double free when using libxml2 as regex engine #117](https://github.com/clicon/clixon/issues/117)
 * Corrected spelling mistake: "Ambigous" -> "Ambiguous".
 * Changed cligen output row scrolling/pageing behaviour for raw terminals, such as serial consoles: if there is a tty but cannot determine window size, then `cligen_terminal_rows_set()` can be called to set a fixed page size.
