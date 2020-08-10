@@ -1,13 +1,18 @@
 # Cligen Changelog
 	
 ## 4.6.0
-Expected: July 2020
+10 August 2010
 
-* Fixed: [Need to add the possibility to use anchors around patterns #51](https://github.com/clicon/cligen/issues/51):
-  * checked if `^$` already around string, if so, do not add it.
-* Fixed: [Double free when using libxml2 as regex engine #117](https://github.com/clicon/clixon/issues/117)
+Again considerable refactoring has been made, with some API changes as
+documented below.
+
+### New features
+
+* The `sets` functionality is a separate branch which is expected to take be the main branch in the next release.
 * Changed cligen output row scrolling/pageing behaviour for raw terminals, such as serial consoles: if there is a tty but cannot determine window size, then `cligen_terminal_rows_set()` can be called to set a fixed page size.
-* Fixed: [Reading in a file exactly the same size as the buffer could leave the buffer not terminated with a 0 byte](https://github.com/clicon/cligen/pull/49)
+
+### Changed API
+
 * Refactored the CLIgen object and parsetree structure. The object
 structure had a object-within-objct structure, where a CLIgen object
 (cg_obj) contained a "parse-tree" object which in turn contains all
@@ -23,6 +28,15 @@ children. This is a work to make parse-tree a first level object for future enha
   * All functions taking call-by-value: `parse-tree pt` have been replaced by call-by-reference: `parse_tree *pt`.
     * This includes:  `cligen_tree_add(), cligen_help(), match_pattern(), pt_print(), cligen_callback_str2fn()`,  and many others.
 * C-API: Renamed `pt_expand_2()` -> `pt_expand()`, removed backward compatible `pt_expand_1()`
+* Corrected spelling mistake: "Ambigous" -> "Ambiguous".
+  * This may affect error output
+
+### Corrected Bugs
+
+* Fixed: [Need to add the possibility to use anchors around patterns #51](https://github.com/clicon/cligen/issues/51):
+  * checked if `^$` already around string, if so, do not add it.
+* Fixed: [Double free when using libxml2 as regex engine #117](https://github.com/clicon/clixon/issues/117)
+* Fixed: [Reading in a file exactly the same size as the buffer could leave the buffer not terminated with a 0 byte](https://github.com/clicon/cligen/pull/49)
 
 ## 4.5.0
 12 May 2020
