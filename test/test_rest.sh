@@ -19,19 +19,21 @@ cat > $fspec <<EOF
 
 EOF
 
-new "$cligen_file -f $fspec"
+newtest "$cligen_file -f $fspec"
 
-new "cligen values aa command"
+newtest "cligen values aa command"
 expectpart "$(echo "values aa" | $cligen_file -f $fspec 2>&1)" 0 "1 name:values type:string value:values" "2 name:aa type:string value:aa"
 
 # DOESNT WORK - DIDNT WORK in 4.4 either phew
-#new "cligen values aa bb rest"
+#newtest "cligen values aa bb rest"
 #expectpart "$(echo "values aa bb" | $cligen_file -f $fspec 2>&1)" 0 "1 name:values type:string value:values" "2 name:x type:rest value:aa bb"
 
-new "cligen values aab rest"
+newtest "cligen values aab rest"
 expectpart "$(echo "values aab" | $cligen_file -f $fspec 2>&1)" 0 "1 name:values type:string value:values" "2 name:x type:rest value:aab"
 
-new "cligen values aab foo rest"
+newtest "cligen values aab foo rest"
 expectpart "$(echo "values aab cde" | $cligen_file -f $fspec 2>&1)" 0 "1 name:values type:string value:values" "2 name:x type:rest value:aab cde"
+
+endtest
 
 rm -rf $dir

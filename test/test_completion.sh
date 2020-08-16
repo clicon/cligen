@@ -20,24 +20,26 @@ cat > $fspec <<EOF
 
 EOF
 
-new "$cligen_file -f $fspec"
+newtest "$cligen_file -f $fspec"
 
-new "empty?"
+newtest "empty?"
 expectpart "$(echo "?" | $cligen_file -f $fspec )" 0 "cli>" "values" "vb"
 
-new "empty<tab>"
+newtest "empty<tab>"
 expectpart "$(echo "	  " | $cligen_file -f $fspec )" 0 "cli> v  " "Ambiguous command"
 
-new "empty<tab><tab>"
+newtest "empty<tab><tab>"
 expectpart "$(echo "		" | $cligen_file -f $fspec )" 0 "cli> v" "values                    vb"
 
-new "v<tab> ambiguous"
+newtest "v<tab> ambiguous"
 expectpart "$(echo "v	  " | $cligen_file -f $fspec )" 0 "values                    vb" "Ambiguous command"
 
-new "v<tab>a<tab> incomplete"
+newtest "v<tab>a<tab> incomplete"
 expectpart "$(echo "v	a	" | $cligen_file -f $fspec)" 0  "values                    vb" "cli> values" 'CLI syntax error in: "values": Incomplete command'
 
-new "v<tab>a<tab>42 OK"
+newtest "v<tab>a<tab>42 OK"
 expectpart "$(echo "v	a	42" | $cligen_file -f $fspec 2>&1)" 0  "cli> values 42" "1 name:values type:string value:values" "2 name:int32 type:int32 value:42" 
+
+endtest
 
 rm -rf $dir

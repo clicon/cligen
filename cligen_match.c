@@ -580,6 +580,9 @@ mr_new(void)
     return mr;
 }
 
+/*! Free a return structure
+ * Dont free the parse tree mr_parsetree
+ */
 static int
 mr_free(match_result *mr)
 {
@@ -980,6 +983,9 @@ match_pattern_sets(cligen_handle h,
 	    if (mrc->mr_len != 1)
 		break;
 	    if (mrcprev != NULL){
+		if (mrcprev->mr_parsetree != ptn &&
+		    mrcprev->mr_parsetree != mrc->mr_parsetree)
+		    pt_free(mrcprev->mr_parsetree, 0);
 		mr_free(mrcprev);
 		mrcprev = NULL;
 	    }
@@ -998,8 +1004,6 @@ match_pattern_sets(cligen_handle h,
     }
     /* Clear all CO_FLAGS_MATCH recursively */
     pt_apply(pt, co_clearflag, (void*)CO_FLAGS_MATCH);
-    if (mrc->mr_parsetree == ptn)
-	ptn = NULL; /* passed to upper layers, dont free here */
     assert(mrc != NULL);
     /* If child match fails, use previous */
     if (mrc->mr_len == 0 && mrcprev){
@@ -1021,6 +1025,9 @@ match_pattern_sets(cligen_handle h,
 	if (mrcprev == mrc)
 	    mrcprev = NULL;
 	mrc = NULL;
+    }
+    if (*mrp && (*mrp)->mr_parsetree == ptn){
+	ptn = NULL; /* passed to upper layers, dont free here */
     }
  ok:
     retval = 0;

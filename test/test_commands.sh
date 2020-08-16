@@ -19,24 +19,26 @@ cat > $fspec <<EOF
   }
 EOF
 
-new "$cligen_file -f $fspec"
+newtest "$cligen_file -f $fspec"
 
-new "b unknown"
+newtest "b unknown"
 expectpart "$(echo "b" | $cligen_file -f $fspec)" 0 "Unknown command"
 
-new "a OK"
+newtest "a OK"
 expectpart "$(echo "a" | $cligen_file -f $fspec 2>&1)" 0 "1 name:a type:string value:a"
 
-new "ab ambiguous"
+newtest "ab ambiguous"
 expectpart "$(echo "ab" | $cligen_file -f $fspec)" 0 "Ambiguous command"
 
-new "ab ambiguous preference mode"
+newtest "ab ambiguous preference mode"
 expectpart "$(echo "ab" | $cligen_file -P -f $fspec 2>&1)" 0 "Ambiguous command"
 
-new "abc ok"
+newtest "abc ok"
 expectpart "$(echo "abc" | $cligen_file -f $fspec 2>&1)" 0 "1 name:abc type:string value:abc"
 
-new "abd incomplete"
+newtest "abd incomplete"
 expectpart "$(echo "abd" | $cligen_file -f $fspec 2>&1)" 0 'CLI syntax error in: "abd": Incomplete command'
+
+endtest
 
 rm -rf $dir
