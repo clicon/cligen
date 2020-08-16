@@ -771,7 +771,7 @@ match_pattern_sets_local(cligen_handle h,
 {
     int         retval = -1;
     cg_obj     *co_match = NULL;
-    cg_obj     *co_orig;
+    cg_obj     *co_orig = NULL;
     int         lasttoken = 0;
     char       *token;
     char       *resttokens;
@@ -865,7 +865,8 @@ match_pattern_sets_local(cligen_handle h,
 	break;
     case 1:
 	assert(co_match);
-	if (co_match->co_type == CO_COMMAND && co_orig->co_type == CO_VARIABLE)
+	if (co_match->co_type == CO_COMMAND &&
+	    co_orig && co_orig->co_type == CO_VARIABLE)
 	    if (co_value_set(co_orig, co_match->co_command) < 0)
 		goto done;
 	break;
