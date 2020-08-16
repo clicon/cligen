@@ -22,15 +22,17 @@ cat > $fspec <<EOF
 
 EOF
 
-new "$cligen_file -f $fspec"
+newtest "$cligen_file -f $fspec"
 
-new "cligen ref 42"
+newtest "cligen ref 42"
 expectpart "$(echo "values ? 42" | $cligen_file -f $fspec 2>&1)" 0 "cli> values" "<int64>" "xx" "2 name:int64 type:int64 value:42"
 
-new "cligen ref xx"
+newtest "cligen ref xx"
 expectpart "$(echo "values xx?" | $cligen_file -f $fspec 2>&1)" 0 "cli> values xx" 'CLI syntax error in: "values xx": Incomplete command'
 
-new "cligen ref xx y<tab>"
+newtest "cligen ref xx y<tab>"
 expectpart "$(echo "values xx y	" | $cligen_file -f $fspec 2>&1)" 0 "cli> values xx yy" "2 name:xx type:string value:xx" "3 name:yy type:string value:yy"
+
+endtest
 
 rm -rf $dir
