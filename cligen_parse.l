@@ -116,7 +116,7 @@ stripdup(char *s0)
 <INITIAL>\(\"             { BEGIN(HELP); return PDQ; /* parenth double-q*/  }
 <INITIAL>\[               { return *yytext; }
 <INITIAL>\]               { return *yytext; }
-<INITIAL>"@{"             { return SETS; /* see USE_SETS */ }
+<INITIAL>"@{"             { return SETS; }
 <INITIAL>\{               { return *yytext; }
 <INITIAL>\}               { return *yytext; }
 <INITIAL>\@               { return *yytext; }

@@ -34,62 +34,62 @@ cat > $fspec <<EOF
    }
 EOF
 
-new "$cligen_file -f $fspec"
+newtest "$cligen_file -f $fspec"
 # First semicolon and "fruit apple ?"
 CMD="fruit apple"
-new "cligen $CMD ?"
+newtest "cligen $CMD ?"
 expectpart "$(echo -n "$CMD ?" | $cligen_file -f $fspec)" 0 "cli> $CMD" "<cr>" "--not--" "size" "taste"
 
-new "cligen -P $CMD ?"
+newtest "cligen -P $CMD ?"
 expectpart "$(echo -n "$CMD ?" | $cligen_file -P -f $fspec)" 0 "cli> $CMD" "<cr>" "--not--" "size" "taste"
 
-new "cligen -e $CMD ?"
+newtest "cligen -e $CMD ?"
 expectpart "$(echo -n "$CMD ?" | $cligen_file -e -f $fspec)" 0 "cli> $CMD" "<cr>" "size" "taste"
 
-new "cligen -e -P $CMD ?"
+newtest "cligen -e -P $CMD ?"
 expectpart "$(echo -n "$CMD ?" | $cligen_file -e -P -f $fspec)" 0 "cli> $CMD" "<cr>" "size" "taste"
 
 # Second: semicolon and "fruit apple<cr>"
 CMD="fruit apple"
-new "cligen $CMD"
-expectpart "$(echo "$CMD" | $cligen_file -f $fspec)" 0 "cli> $CMD" "Ambigous command"
+newtest "cligen $CMD"
+expectpart "$(echo "$CMD" | $cligen_file -f $fspec)" 0 "cli> $CMD" "Ambiguous command"
 
-new "cligen -P $CMD"
+newtest "cligen -P $CMD"
 expectpart "$(echo "$CMD" | $cligen_file -P -f $fspec 2>&1)" 0 "cli> $CMD" "1 name:fruit type:string value:fruit" "2 name:name type:string value:apple"
 
-new "cligen -e $CMD"
+newtest "cligen -e $CMD"
 expectpart "$(echo "$CMD" | $cligen_file -e -f $fspec 2>&1)" 0 "cli> $CMD" "1 name:fruit type:string value:fruit" "2 name:name type:string value:apple"
 
-new "cligen -e -P $CMD"
+newtest "cligen -e -P $CMD"
 expectpart "$(echo "$CMD" | $cligen_file -e -P -f $fspec 2>&1)" 0 "cli> $CMD" "1 name:fruit type:string value:fruit" "2 name:name type:string value:apple"
 
 # Third: semicolon and "fruit apple size 42<cr>"
 CMD="fruit apple size 42"
-new "cligen $CMD"
+newtest "cligen $CMD"
 expectpart "$(echo "$CMD" | $cligen_file -f $fspec)" 0 "cli> $CMD" 'CLI syntax error in: "fruit apple size 42": Unknown command'
 
-new "cligen -P $CMD"
+newtest "cligen -P $CMD"
 expectpart "$(echo "$CMD" | $cligen_file -P -f $fspec 2>&1)" 0 "cli> $CMD" 'CLI syntax error in: "fruit apple size 42": Unknown command'
 
-new "cligen -e $CMD"
+newtest "cligen -e $CMD"
 expectpart "$(echo "$CMD" | $cligen_file -e -f $fspec 2>&1)" 0 "cli> $CMD" "1 name:fruit type:string value:fruit" "2 name:name type:string value:apple" "3 name:size type:string value:size" "4 name:size type:string value:42"
 
-new "cligen -e -P $CMD"
+newtest "cligen -e -P $CMD"
 expectpart "$(echo "$CMD" | $cligen_file -e -P -f $fspec 2>&1)" 0 "cli> $CMD" "1 name:fruit type:string value:fruit" "2 name:name type:string value:apple" "3 name:size type:string value:size" "4 name:size type:string value:42"
 
 # Fourth: semicolon and "fruit auto ?"
 # without -e should be same as "first" above
 CMD="fruit auto"
-new "cligen $CMD ?"
+newtest "cligen $CMD ?"
 expectpart "$(echo -n "$CMD ?" | $cligen_file -f $fspec)" 0 "cli> $CMD" "<cr>" "--not--" "size" "taste"
 
-new "cligen -P $CMD ?"
+newtest "cligen -P $CMD ?"
 expectpart "$(echo -n "$CMD ?" | $cligen_file -P -f $fspec)" 0 "cli> $CMD" "<cr>" "--not--" "size" "taste"
 
-new "cligen -e $CMD ?"
+newtest "cligen -e $CMD ?"
 expectpart "$(echo -n "$CMD ?" | $cligen_file -e -f $fspec)" 0 "cli> $CMD" "<cr>" "size" "taste"
 
-new "cligen -e -P $CMD ?"
+newtest "cligen -e -P $CMD ?"
 expectpart "$(echo -n "$CMD ?" | $cligen_file -e -P -f $fspec)" 0 "cli> $CMD " "<cr>" "size" "taste"
 
 # WITHOUT SEMICOLON (ie no stand-alone command at fruit apple)
@@ -107,62 +107,64 @@ EOF
 # Fifth no semicolon and "fruit apple ?"
 CMD="fruit apple"
 
-new "cligen $CMD ?"
+newtest "cligen $CMD ?"
 # This seems wrong, why does it give <cr>??
 expectpart "$(echo -n "$CMD ?" | $cligen_file -f $fspec)" 0 "cli> $CMD" "<cr>" "--not--" "size" "taste"
 
-new "cligen -P $CMD ?"
+newtest "cligen -P $CMD ?"
 expectpart "$(echo -n "$CMD ?" | $cligen_file -P -f $fspec)" 0 "cli> $CMD" "--not--" "<cr>" "size" "taste"
 
-new "cligen -e $CMD ?"
+newtest "cligen -e $CMD ?"
 expectpart "$(echo -n "$CMD ?" | $cligen_file -e -f $fspec)" 0 "cli> $CMD" "size" "taste" "--not--" "<cr>"
 
-new "cligen -e -P $CMD ?"
+newtest "cligen -e -P $CMD ?"
 expectpart "$(echo -n "$CMD ?" | $cligen_file -e -P -f $fspec)" 0 "cli> $CMD" "size" "taste" "--not--" "<cr>"
 
 # Sixth: no semicolon and "fruit apple<cr>"
 CMD="fruit apple"
-new "cligen $CMD"
-expectpart "$(echo "$CMD" | $cligen_file -f $fspec)" 0 "cli> $CMD" "Ambigous command"
+newtest "cligen $CMD"
+expectpart "$(echo "$CMD" | $cligen_file -f $fspec)" 0 "cli> $CMD" "Ambiguous command"
 
-new "cligen -P $CMD"
+newtest "cligen -P $CMD"
 expectpart "$(echo "$CMD" | $cligen_file -P -f $fspec 2>&1)" 0 "cli> $CMD" 'CLI syntax error in: "fruit apple": Incomplete command'
 
-new "cligen -e $CMD"
+newtest "cligen -e $CMD"
 expectpart "$(echo "$CMD" | $cligen_file -e -f $fspec 2>&1)" 0 "cli> $CMD" 'CLI syntax error in: "fruit apple": Incomplete command'
 
-new "cligen -e -P $CMD"
+newtest "cligen -e -P $CMD"
 expectpart "$(echo "$CMD" | $cligen_file -e -P -f $fspec 2>&1)" 0 "cli> $CMD" 'CLI syntax error in: "fruit apple": Incomplete command'
 
 # Seventh: no semicolon and "fruit apple size 42<cr>"
 CMD="fruit apple size 42"
-new "cligen $CMD"
+newtest "cligen $CMD"
 expectpart "$(echo "$CMD" | $cligen_file -f $fspec)" 0 "cli> $CMD" 'CLI syntax error in: "fruit apple size 42": Unknown command'
 
-new "cligen -P $CMD"
+newtest "cligen -P $CMD"
 expectpart "$(echo "$CMD" | $cligen_file -P -f $fspec 2>&1)" 0 "cli> $CMD" 'CLI syntax error in: "fruit apple size 42": Unknown command'
 
-new "cligen -e $CMD"
+newtest "cligen -e $CMD"
 expectpart "$(echo "$CMD" | $cligen_file -e -f $fspec 2>&1)" 0 "cli> $CMD" "1 name:fruit type:string value:fruit" "2 name:name type:string value:apple" "3 name:size type:string value:size" "4 name:size type:string value:42"
 
-new "cligen -e -P $CMD"
+newtest "cligen -e -P $CMD"
 expectpart "$(echo "$CMD" | $cligen_file -e -P -f $fspec 2>&1)" 0 "cli> $CMD" "1 name:fruit type:string value:fruit" "2 name:name type:string value:apple" "3 name:size type:string value:size" "4 name:size type:string value:42"
 
 # Eigth: no semicolon and "fruit auto ?"
 # without -e should be same as "fifth" above
 CMD="fruit auto"
 
-new "cligen $CMD ?"
+newtest "cligen $CMD ?"
 # This seems wrong, why does it give <cr>??
 expectpart "$(echo -n "$CMD ?" | $cligen_file -f $fspec)" 0 "cli> $CMD" "<cr>" "--not--" "size" "taste"
 
-new "cligen -P $CMD ?"
+newtest "cligen -P $CMD ?"
 expectpart "$(echo -n "$CMD ?" | $cligen_file -P -f $fspec)" 0 "cli> $CMD" "--not--" "<cr>" "size" "taste"
 
-new "cligen -e $CMD ?"
+newtest "cligen -e $CMD ?"
 expectpart "$(echo -n "$CMD ?" | $cligen_file -e -f $fspec)" 0 "cli> $CMD" "size" "taste" "--not--" "<cr>"
 
-new "cligen -e -P $CMD ?"
+newtest "cligen -e -P $CMD ?"
 expectpart "$(echo -n "$CMD ?" | $cligen_file -e -P -f $fspec)" 0 "cli> $CMD" "size" "taste" "--not--" "<cr>"
+
+endtest
 
 rm -rf $dir
