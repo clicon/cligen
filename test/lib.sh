@@ -107,12 +107,14 @@ checkvalgrind(){
     if [ -f $valgrindfile ]; then
 	res=$(cat $valgrindfile | grep -e "Invalid" |awk '{print  $4}' | grep -v '^0$')
 	if [ -n "$res" ]; then
+	    >&2 echo "Memory error in: Test $testi($testnr) [$testname]"
 	    >&2 cat $valgrindfile
 	    sudo rm -f $valgrindfile
 	    exit -1	    
 	fi
 	res=$(cat $valgrindfile | grep -e "reachable" -e "lost:"|awk '{print  $4}' | grep -v '^0$')
 	if [ -n "$res" ]; then
+	    >&2 echo "Memory error in: Test $testi($testnr) [$testname]"
 	    >&2 cat $valgrindfile
 	    sudo rm -f $valgrindfile
 	    exit -1	    
@@ -121,11 +123,18 @@ checkvalgrind(){
     fi
 }
 
-# Increment test number and print a nice string
-new(){
+# NOTE this means there must always be a final new
+endtest()
+{
     if [ $valgrindtest -eq 1 ]; then 
 	checkvalgrind
     fi
+}
+
+# Increment test number and print a nice string
+newtest()
+{
+    endtest # finalize previous test
     testnr=`expr $testnr + 1`
     testi=`expr $testi + 1`
     testname=$1

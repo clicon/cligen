@@ -17,24 +17,24 @@ cat > $fspec <<EOF
   }
 EOF
 
-new "$cligen_tutorial -q -f $fspec"
+newtest "$cligen_tutorial -q -f $fspec"
 
-new "cligen i<tab>"
+newtest "cligen i<tab>"
 expectpart "$(echo "i	" | $cligen_tutorial -q -f $fspec)" 0 "cli> interface " 'CLI syntax error in: "interface": Incomplete command'
 
-new "cligen i<tab><tab>"
-expectpart "$(echo "i		" | $cligen_tutorial -q -f $fspec)" 0 "cli> interface eth" 'Ambigous command'
+newtest "cligen i<tab><tab>"
+expectpart "$(echo "i		" | $cligen_tutorial -q -f $fspec)" 0 "cli> interface eth" 'Ambiguous command'
 
-new "cligen i<tab><tab><tab>"
-expectpart "$(echo "i			" | $cligen_tutorial -q -f $fspec)" 0 "cli> interface eth" "eth0                      eth1" 'Ambigous command'
+newtest "cligen i<tab><tab><tab>"
+expectpart "$(echo "i			" | $cligen_tutorial -q -f $fspec)" 0 "cli> interface eth" "eth0                      eth1" 'Ambiguous command'
 
-new "cligen i<tab><tab>?"
-expectpart "$(echo "i		?" | $cligen_tutorial -q -f $fspec)" 0 "cli> interface eth" "eth0                  Interface A" 'Ambigous command'
+newtest "cligen i<tab><tab>?"
+expectpart "$(echo "i		?" | $cligen_tutorial -q -f $fspec)" 0 "cli> interface eth" "eth0                  Interface A" 'Ambiguous command'
 
-new "cligen interface eth0"
+newtest "cligen interface eth0"
 expectpart "$(echo "interface eth0" | $cligen_tutorial -q -f $fspec 2>&1)" 0 "1 name:ifname type:string value:eth0"
 
-new "cligen interface foo unknown"
+newtest "cligen interface foo unknown"
 expectpart "$(echo "interface foo" | $cligen_tutorial -q -f $fspec)" 0 'CLI syntax error in: "interface foo": Unknown command'
 
 # Here is using an extra variable for new (unknown) expanded variables
@@ -49,10 +49,10 @@ cat > $fspec <<EOF
   }
 EOF
 
-new "cligen interface eth0"
+newtest "cligen interface eth0"
 expectpart "$(echo "interface eth0" | $cligen_tutorial -q -f $fspec 2>&1)" 0 "1 name:ifname type:string value:eth0"
 
-new "cligen interface foo"
+newtest "cligen interface foo"
 expectpart "$(echo "interface foo" | $cligen_tutorial -q -f $fspec 2>&1)" 0 "1 name:ifname type:string value:foo"
 
 # Two overlapping expand sets (there was a problem when the same occurs in two sets, the
@@ -67,17 +67,19 @@ cat > $fspec <<EOF
   a (<x:string>|<x:string exp()>|<x:string other()>) y, callback();
 EOF
 
-new "a foo y"
+newtest "a foo y"
 expectpart "$(echo "a foo y" | $cligen_file -e -f $fspec 2>&1)" 0 "1 name:a type:string value:a" "2 name:x type:string value:foo" "3 name:y type:string value:y"
 
-new "a exp1 y"
+newtest "a exp1 y"
 expectpart "$(echo "a exp1 y" | $cligen_file -e -f $fspec 2>&1)" 0 "1 name:a type:string value:a" "2 name:x type:string value:exp1" "3 name:y type:string value:y"
 
 # XXX: this does not work as expected, you get unknown command,
 # It is a known issue and tricky to fix
 if false; then
-    new "a exp2 y"
+    newtest "a exp2 y"
     expectpart "$(echo "a exp2 y" | $cligen_file -e -f $fspec 2>&1)" 0 "1 name:a type:string value:a" "2 name:x type:string value:exp2" "3 name:y type:string value:y"
 fi
+
+endtest
 
 rm -rf $dir

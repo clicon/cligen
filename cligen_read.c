@@ -55,6 +55,7 @@
 #endif /* WIN32 */
 #define __USE_GNU /* isblank() */
 #include <ctype.h>
+#include <assert.h>
 
 #ifndef isblank
 #define isblank(c) (c==' ')
@@ -240,7 +241,6 @@ column_print(FILE            *fout,
  * @param[in]  fout    This is where the output (help text) is shown.
  * @param[in]  string  Input string to match
  * @param[in]  pt      Vector of commands (array of cligen object pointers (cg_obj)
- * @param[in]  pt_max  Length of the pt array
  * @param[out] cvv     Cligen variable vector containing vars/values pair for completion
  * @retval     0       OK
  * @retval     -1      Error
@@ -289,7 +289,9 @@ show_help_columns(cligen_handle h,
 		      0, /* best: Return all options, not only best */
 		      1, 1,
 		      &ptmatch, 
-		      &matchvec, &matchlen, cvv, NULL) < 0)
+		      &matchvec, &matchlen,
+		      cvv, NULL,
+		      NULL) < 0)
 	goto done;
     if ((level = cligen_cvv_levels(cvt)) < 0)
 	goto done;
@@ -423,9 +425,12 @@ show_help_line(cligen_handle h,
 		      0,        /* best: Return all options, not only best */
 		      1, 1,
 		      &ptmatch,
-		      &matchvec, &matchlen, cvv, NULL) < 0)
+		      &matchvec, &matchlen,
+		      cvv, NULL,
+		      NULL) < 0)
 	goto done;
-
+    if (matchlen) /* sanity */
+	assert(matchvec!= NULL && ptmatch != NULL);
     if ((level =  cligen_cvv_levels(cvt)) < 0)
 	goto done;
 
@@ -454,7 +459,7 @@ show_help_line(cligen_handle h,
 	cvec_del_i(cvr, cvec_len(cvr)-1);
 
 	if (match_pattern_exact(h, cvt, cvr, pt,
-				1, cvv,
+				1, cvv, NULL,
 				NULL, NULL,
 				&result, NULL) < 0)
 	    goto done;
@@ -621,7 +626,7 @@ cliread_parse(cligen_handle  h,
 	      char          *string,
 	      parse_tree    *pt,     /* Orig */
 	      cg_obj       **co_orig,
-	      cvec          *cvv,
+	      cvec          *cvvall,
 	      cligen_result *result,
 	      char         **reason)
 {
@@ -631,9 +636,10 @@ cliread_parse(cligen_handle  h,
     parse_tree *ptmatch = NULL;
     cvec       *cvt = NULL;      /* Tokenized string: vector of tokens */
     cvec       *cvr = NULL;      /* Rest variant,  eg remaining string in each step */
-    cvec       *cvv0 = NULL;     /* Top-level vars/val vector with just command as 0th element */
+    cg_var     *cv;
+    cvec       *cvv = NULL;     /* Top-level vars/val vector with just command as 0th element */
 
-    if (cvv == NULL || cvec_len(cvv) != 0){
+    if (cvvall == NULL || cvec_len(cvvall) != 0){
 	errno = EINVAL;
 	goto done;
     }
@@ -649,12 +655,16 @@ cliread_parse(cligen_handle  h,
 	goto done;
     if (pt_expand_treeref(h, NULL, pt) < 0) /* sub-tree expansion, ie @ */
 	goto done; 
-    if ((cvv0 = cvec_start(string)) == NULL)
+    if ((cv = cvec_add(cvvall, CGV_REST)) == NULL)
 	goto done;
-    if (pt_expand(h, pt, cvv0, 0, 0, ptn) < 0) /* sub-tree expansion, ie choice, expand function */
+    cv_name_set(cv, "cmd"); /* the whole command string */
+    cv_string_set(cv, string); /* the whole command string */
+    if ((cvv = cvec_start(string)) == NULL)
+	goto done;
+    if (pt_expand(h, pt, cvv, 0, 0, ptn) < 0) /* sub-tree expansion, ie choice, expand function */
 	goto done;
     if (match_pattern_exact(h, cvt, cvr,
-			    ptn, 0, cvv0,
+			    ptn, 0, cvv, cvvall,
 			    &match_obj, &ptmatch, 
 			    result, reason) < 0)
 	goto done;
@@ -663,16 +673,14 @@ cliread_parse(cligen_handle  h,
 	*co_orig = match_obj->co_ref;
     else
 	*co_orig = match_obj;
-    if (cvec_match(h, *co_orig, cvt, cvr, cvv) < 0)
-	goto done;
     retval = 0;
   done:
+    if (cvv)
+	cvec_free(cvv);
     if (cvt)
 	cvec_free(cvt);
     if (cvr)
 	cvec_free(cvr);
-    if (cvv0)
-	cvec_free(cvv0);
     if (ptmatch && ptmatch != ptn)
 	if (pt_free(ptmatch, 0) < 0)
 	    return -1;

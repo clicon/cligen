@@ -66,7 +66,6 @@ int     cvec_del_i(cvec *vr, int ix);
 cg_var *cvec_each(cvec *vr, cg_var *prev);
 cg_var *cvec_each1(cvec *vr, cg_var *prev);
 cvec   *cvec_dup(cvec *old);
-int     cvec_match(cligen_handle h, struct cg_obj *co_match, cvec *cvt, cvec *cvr, cvec *vr);
 cvec   *cvec_start(char *cmd);
 int     cvec_print(FILE *f, cvec *vr);
 int     cvec2cbuf(cbuf *cb, cvec *cvv);
@@ -77,6 +76,7 @@ char   *cvec_find_str(cvec *vr, char *name);
 char   *cvec_name_get(cvec *vr);
 char   *cvec_name_set(cvec *vr, char *name);
 int     cv_exclude_keys(int status);
+int     cv_exclude_keys_get(void);
 size_t  cvec_size(cvec *cvv);
 
 #endif /* _CLIGEN_CVEC_H_ */
