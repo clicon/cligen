@@ -1,7 +1,18 @@
 # Cligen Changelog
 	
+## 4.7.0
+Expected: September 2020
+
+### New features
+
+* Changed help strings behaviour on query (?) for long and multi-line help strings.
+  * If multiple strings (eg "\n" in text), indent before each new line
+  * cligen_helpstring_truncate() to wrap or truncate long lines at right terminal width margin
+  * cligen_helpstring_line() to limit number of help string lines
+  * undefine CO_HELPVEC to revert (temporary)
+
 ## 4.6.0
-10 August 2010
+10 August 2020
 
 Again considerable refactoring has been made, with some API changes as
 documented below.

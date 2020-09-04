@@ -78,6 +78,20 @@ static int terminal_rows_set1(int rows);
  */
 static int _terminalrows = 0;
 
+/* Truncate help string on right margin mode
+ * This only applies if you have really long help strings, such as when generating them from a
+ * spec.
+ * @see print_help_line
+ */
+static int _helpstr_truncate = 0;
+
+/* Limit number of lines to show, 0 means unlimited
+ * This only applies if you have multi-line help strings, such as when generating them from a
+ * spec.
+ * @see print_help_line
+ */
+static int _helpstr_lines = 0;
+
 /*! Get window size and set terminal row size
  * @param[in] h       CLIgen handle
  * The only real effect this has is to set the getline width parameter which effects scrolling
@@ -708,6 +722,70 @@ cligen_line_scrolling_set(cligen_handle h,
 
     gl_setscrolling(mode);
     return prev;
+}
+
+/*! Return help string truncate mode (for ?)
+ *
+ * Whether to truncate help string on right margin or wrap long help lines.
+ * This only applies if you have really long help strings, such as when generating them from a
+ * spec.
+ * @param[in] h       CLIgen handle (dummy, need to be called where h is NULL)
+ * @retval    0       Do not truncate help string on right margin (wrap long help lines)
+ * @retval    1       Truncate help string on right margin (do not wrap long help lines)
+ * @see print_help_line
+ */
+int 
+cligen_helpstring_truncate(cligen_handle h)
+{
+    return _helpstr_truncate;
+}
+
+/*! Set help string truncate mode (for ?)
+ *
+ * Whether to truncate help string on right margin or wrap long help lines.
+ * This only applies if you have really long help strings, such as when generating them from a
+ * spec.
+ * @param[in]  h     CLIgen handle (dummy, need to be called where h is NULL)
+ * @param[in]  mode  0: Wrap long help strings, 1: Truncate help string
+ * @retval     0     OK
+ * @see print_help_line
+ */
+int 
+cligen_helpstring_truncate_set(cligen_handle h,
+			       int           mode)
+{
+    _helpstr_truncate = mode;
+    return 0;
+}
+
+/*! Return number of help string lines to display (for ?)
+ *
+ * This only applies if you have multi-line help strings, such as when generating them from a
+ * spec.
+ * @param[in] h       CLIgen handle (dummy, need to be called where h is NULL)
+ * @retval    n       Number of help string lines to display per command, 0 is unlimted
+ * @see print_help_line
+ */
+int 
+cligen_helpstring_lines(cligen_handle h)
+{
+    return _helpstr_lines;
+}
+
+/*! Set help string truncate mode (for ?)
+ *
+ * This only applies if you have multi-line help strings, such as when generating them from a
+ * spec.
+ * @param[in] h       CLIgen handle (dummy, need to be called where h is NULL)
+ * @retval    n       Number of help string lines to display per command, 0 means unlimited.
+ * @see print_help_line
+ */
+int 
+cligen_helpstring_lines_set(cligen_handle h,
+			       int        lines)
+{
+    _helpstr_lines = lines;
+    return 0;
 }
 
 /*! Get tab-mode. 

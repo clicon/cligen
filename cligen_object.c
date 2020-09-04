@@ -529,9 +529,15 @@ co_copy(cg_obj  *co,
 	if (co_pt_set(con, ptn) < 0)
 	    goto done;
     }
+#ifdef CO_HELPVEC
+    if (co->co_helpvec)
+	if ((con->co_helpvec = cvec_dup(co->co_helpvec)) == NULL)
+	    goto done;
+#else
     if (co->co_help)
 	if ((con->co_help = strdup(co->co_help)) == NULL)
 	    goto done;
+#endif
     if (co_value_set(con, co->co_value) < 0) /* XXX: free på co->co_value? */
 	goto done;
     if (co->co_type == CO_VARIABLE){
@@ -739,8 +745,13 @@ co_free(cg_obj *co,
     struct cg_callback *cc;
     parse_tree         *pt;
 
+#ifdef CO_HELPVEC
+    if (co->co_helpvec)
+	cvec_free(co->co_helpvec);
+#else
     if (co->co_help)
 	free(co->co_help);
+#endif
     if (co->co_command)
 	free(co->co_command);
     if (co->co_value)

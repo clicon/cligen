@@ -105,6 +105,12 @@ int cligen_utf8_set(cligen_handle h, int mode);
 int cligen_line_scrolling(cligen_handle h);
 int cligen_line_scrolling_set(cligen_handle h, int mode);
 
+int cligen_helpstring_truncate(cligen_handle h);
+int cligen_helpstring_truncate_set(cligen_handle h, int mode);
+
+int cligen_helpstring_lines(cligen_handle h);
+int cligen_helpstring_lines_set(cligen_handle h, int lines);
+
 int cligen_tabmode(cligen_handle h);
 int cligen_tabmode_set(cligen_handle h, int mode);
 

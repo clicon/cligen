@@ -162,8 +162,9 @@ uint8_t cv_dec64_n_set(cg_var *cv, uint8_t x);
 int64_t cv_dec64_i_get(cg_var *cv);
 int64_t cv_dec64_i_set(cg_var *cv, int64_t x);
 
-char *cv_string_get(cg_var *cv);
-char *cv_string_set(cg_var *cv, char *s0);
+char   *cv_string_get(cg_var *cv);
+char   *cv_string_set(cg_var *cv, char *s0);
+char   *cv_strncpy(cg_var *cv, char *s0, size_t n);
 struct in_addr *cv_ipv4addr_get(cg_var *cv);
 struct in_addr *cv_ipv4addr_set(cg_var *cv, struct in_addr *addr);
 uint8_t cv_ipv4masklen_get(cg_var *cv);

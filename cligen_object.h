@@ -167,7 +167,11 @@ struct cg_obj{
     struct cg_callback *co_callbacks; /* linked list of callbacks and arguments */
     cvec               *co_cvec;      /* List of cligen variables (XXX: not visible to
 					 callbacks) */
+#ifdef CO_HELPVEC
+    cvec               *co_helpvec;   /* Vector of CLIgen helptexts */
+#else
     char	       *co_help;      /* Helptext */
+#endif
     uint32_t            co_flags;     /* General purpose flags, see CO_FLAGS_ above*/
 
     struct cg_obj      *co_ref;       /* Ref to original (if this is expanded) */

@@ -92,6 +92,7 @@
 #include "cligen_cvec.h"
 #include "cligen_parsetree.h"
 #include "cligen_object.h"
+#include "cligen_match.h"
 #include "cligen_syntax.h"
 #include "cligen_handle.h"
 #include "cligen_parse.h"
@@ -597,7 +598,8 @@ cgy_reference(cligen_yacc *cy,
 
 /*! Add comment
  * Assume comment is malloced and not freed by parser 
- * @param[in]  cy  CLIgen yacc parse struct
+ * @param[in]  cy       CLIgen yacc parse struct
+ * @param[in]  comment  Help string, inside ("...")
  */
 static int
 cgy_comment(cligen_yacc *cy,
@@ -608,11 +610,19 @@ cgy_comment(cligen_yacc *cy,
 
     for (cl = cy->cy_list; cl; cl = cl->cl_next){
 	co = cl->cl_obj;
+#ifdef CO_HELPVEC
+	if (co->co_helpvec == NULL && /* Why would it already have a comment? */
+	    cligen_txt2cvv(comment, &co->co_helpvec) < 0){ /* Or just append to existing? */
+	    cligen_parseerror1(cy, "Allocating comment");
+	    return -1;
+	}
+#else
 	if (co->co_help == NULL) /* Why would it already have a comment? */
 	    if ((co->co_help = strdup(comment)) == NULL){
 		cligen_parseerror1(cy, "Allocating comment"); 
 		return -1;
 	    }
+#endif
     }
     return 0;
 }

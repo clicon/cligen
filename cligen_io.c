@@ -62,6 +62,19 @@
 #include "cligen_getline.h"
 
 /*
+ * Constants
+ */
+/* When doing query (?) how large left margin before first command.
+ * For example, the space before foo
+ * @code
+ * > set ?
+ *    foo   <--- number of spaces left of "foo"
+ * @endcode
+ * 
+ */
+#define CLIGEN_HELP_LEFT_MARGIN 3
+
+/*
  * Local variables
  */
 static int d_lines=0; /* XXX: global */
@@ -250,6 +263,69 @@ cligen_exitchar_add(cligen_handle h,
     gl_exitchar_add(c); /* XXX global */
 }
 
+#ifdef CO_HELPVEC
+/*! Display multi help lines on query (?)
+ * Function handles multiple options on how to display help strings at query (?)
+ * This includes indentation, limit on lines, truncation, etc.
+ * @param[in]  h             Cligen handle
+ * @param[in]  fout          File to print to, eg stdout
+ * @param[in]  column_width  Space for first, command width
+ * @param[in]  ch            Help command and string struct
+ */
+static int
+print_help_line(cligen_handle    h,
+		FILE            *fout,
+		int              column_width,
+		struct cmd_help *ch)
+{
+    int     retval = -1;
+    cg_var *cv = NULL;
+    int     w;
+    char   *str;
+    char   *str2;
+    int     j;
+    int     linesmax;
+    int     termwidth;
+    int     truncate;
+	    
+    /* First print command */
+    fprintf(fout, "  %*s", -column_width, ch->ch_cmd);
+    /* Then print help */
+    if (ch->ch_helpvec && cvec_len(ch->ch_helpvec)){
+	linesmax = cligen_helpstring_lines(h);
+	truncate = cligen_helpstring_truncate(h);
+	termwidth = cligen_terminal_width(h);
+	j = 0;
+	while ((cv = cvec_each(ch->ch_helpvec, cv)) != NULL &&
+	       (linesmax==0 || j<linesmax)){
+	    w = termwidth - column_width - CLIGEN_HELP_LEFT_MARGIN;
+	    str = cv_string_get(cv);
+	    if (j > 0) /* skip first line */
+		fprintf(fout, "  %*s", -column_width, "");
+	    if (truncate == 0 ||
+		strlen(str) < w){
+		fprintf(fout, " %*s", -w, str);
+	    }
+	    else {
+		if ((str2 = strdup(str)) == NULL)
+		    goto done;
+		str2[w] = '\0';
+		fprintf(fout, " %*s", -w, str2);
+		free(str2);
+		str2 = NULL;
+	    }
+	    fprintf(fout, "\n");
+	    j++;
+	}
+    }
+    else
+	fprintf(fout, "\n");
+    retval = 0;
+ done:
+    return retval;
+}
+#endif
+
 /*! Print help lines for subset of a parsetree vector
  * @param[in] fout     File to print to, eg stdout
  * @param[in] ptvec    Cligen parse-node vector
@@ -257,11 +333,11 @@ cligen_exitchar_add(cligen_handle h,
  * @param[in] matchlen Length of matchvec
  */
 int
-print_help_lines(FILE      *fout, 
-		 parse_tree *ptmatch, 
-		 int       *matchvec,
-		 size_t     matchlen)
-    
+print_help_lines(cligen_handle h,
+		 FILE         *fout, 
+		 parse_tree   *ptmatch, 
+		 int          *matchvec,
+		 size_t        matchlen)
 {
     int              retval = -1;
     cg_obj          *co;
@@ -314,7 +390,11 @@ print_help_lines(FILE      *fout,
 	    continue;
 	ch = &chvec[nrcmd++];
 	ch->ch_cmd = cmd;
+#ifdef CO_HELPVEC
+	ch->ch_helpvec = co->co_helpvec;
+#else
 	ch->ch_help = co->co_help;
+#endif
 	prev = cmd;
 	/* Compute longest command */
 	maxlen = strlen(cmd)>maxlen?strlen(cmd):maxlen;
@@ -324,10 +404,15 @@ print_help_lines(FILE      *fout,
     /* Actually print */
     for (i = 0; i<nrcmd; i++){
 	ch = &chvec[i];
+#ifdef CO_HELPVEC
+	if (print_help_line(h, fout, column_width, ch) < 0)
+	    goto done;
+#else
 	fprintf(fout, "  %*s %s\n", 
 		 -column_width, 
 		 ch->ch_cmd,
 		 ch->ch_help ? ch->ch_help : "");
+#endif
     }
     fflush(fout);
     retval = 0;
@@ -349,8 +434,9 @@ print_help_lines(FILE      *fout,
  * @param[in] pt    Cligen parse-tree
  */
 int
-cligen_help(FILE       *fout, 
-	    parse_tree *pt)
+cligen_help(cligen_handle h,
+	    FILE         *fout, 
+	    parse_tree   *pt)
 {
     int              retval = -1;
     int              i;
@@ -363,7 +449,7 @@ cligen_help(FILE       *fout,
     }
     for (i=0; i<pt_len_get(pt); i++)
 	matchvec[i] = i;
-    if (print_help_lines(fout, pt, matchvec, pt_len_get(pt)) < 0)
+    if (print_help_lines(h, fout, pt, matchvec, pt_len_get(pt)) < 0)
 	goto done;
     retval = 0;
  done:

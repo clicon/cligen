@@ -402,7 +402,6 @@ show_help_line(cligen_handle h,
 {
     int           retval = -1;
     int           level;
-
     int           matchlen = 0;
     int          *matchvec = NULL;
     cvec         *cvt = NULL;      /* Tokenized string: vector of tokens */
@@ -473,7 +472,7 @@ show_help_line(cligen_handle h,
 	goto done;
     }
     /* ptmatch points to expanded nodes from first match_pattern call */
-    if (print_help_lines(fout, ptmatch, matchvec, matchlen) < 0) 
+    if (print_help_lines(h, fout, ptmatch, matchvec, matchlen) < 0) 
 	goto done;
 
     retval = 0;

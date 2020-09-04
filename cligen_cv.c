@@ -486,8 +486,11 @@ cv_string_get(cg_var *cv)
     return ((cv)->u.varu_string);
 }
 
-/*! Allocate new string from original. Malloc new string and free previous 
+/*! Allocate new string from original NULL-terminated string. Malloc new string and free previous 
  * @param[in] cv     CLIgen variable
+ * @param[in] s0     String to copy from
+ * @retval    NULL   Error
+ * @retval    str    the new (malloced) string
  */
 char *
 cv_string_set(cg_var *cv, 
@@ -507,6 +510,39 @@ cv_string_set(cg_var *cv,
     /* Duplicate s0. Must be done before a free, in case s0 is part of the original */
     if ((s1 = strdup(s0)) == NULL)
 	return NULL; /* error in errno */
+    if (cv->u.varu_string != NULL)
+	free(cv->u.varu_string);
+    cv->u.varu_string = s1;
+    return s1; 
+}
+
+/*! Allocate new string from original by copying using strncpy
+ * @param[in] cv     CLIgen variable
+ * @param[in] s0     String to copy
+ * @param[in] n      Number of characters to copy (excluding NULL).
+ * @retval    NULL   Error
+ * @retval    str    the new (malloced) string
+ */
+char *
+cv_strncpy(cg_var *cv, 
+	   char   *s0,
+	   size_t  n)
+{
+    char *s1 = NULL;
+
+    if (cv == NULL){
+	errno = EINVAL;
+	return NULL;
+    }
+    if (s0 == NULL){
+	errno = EINVAL;
+	return NULL;
+    }
+    /* Allocate s1. and then copy */
+    if ((s1 = malloc(n+1)) == NULL)
+	return NULL; /* error in errno */
+    strncpy(s1, s0, n);
+    s1[n] = '\0';
     if (cv->u.varu_string != NULL)
 	free(cv->u.varu_string);
     cv->u.varu_string = s1;

@@ -373,6 +373,68 @@ cligen_str2cvv(char  *string,
     return retval;
 }
 
+#ifdef CO_HELPVEC
+/*! Transform a single helpstr to a vector of help strings and strip preceeding whitespace
+ *
+ * @param[in]  str  String on the form <str1>\n<str2>
+ * @param[out] cvp  CLIgen variable vector containing a vector of help strings 
+ * @retval     0    OK
+ * @retval    -1    Error
+ * Eg, the string:
+ *     "abcd\n     efgh\nijkl"
+ * is translated to a cvec:
+ * 0: "abcd"
+ * 1: "efgh"
+ * 2: "ijkl"
+ */
+int
+cligen_txt2cvv(char  *str,
+	       cvec **cvp)
+{
+    int     retval = -1;
+    int     i;
+    int     i0;
+    char    c;
+    cvec   *cvv = NULL;
+    cg_var *cv = NULL;
+    int     whitespace = 1;
+    
+    if ((cvv = cvec_new(0)) == NULL)
+	goto done;
+    i0 = 0;
+    for (i=0; i<strlen(str); i++){
+	c = str[i];
+	if (whitespace && isblank(c))
+	    i0 = i+1; /* skip */
+	else if (c == '\n'){
+	    if ((cv = cvec_add(cvv, CGV_STRING)) == NULL)
+		goto done;
+	    if (cv_strncpy(cv, &str[i0], i-i0) == NULL)
+		goto done;
+	    i0 = i+1;
+	    whitespace = 1;
+	}
+	else
+	    whitespace = 0;
+    }
+    /* There may be a case here where last charis \n */
+    if (i-i0){
+	if ((cv = cvec_add(cvv, CGV_STRING)) == NULL)
+	    goto done;
+	if (cv_strncpy(cv, &str[i0], i-i0) == NULL)
+	    goto done;
+    }
+    if (cvp){
+	assert(*cvp == NULL); /* XXX */
+	*cvp = cvv;
+    }
+    retval = 0;
+ done:
+    return retval;
+}
+#endif
+
+
 /*! Returns the total number of "levels" of a CLIgen command string
  *
  * A level is an atomic command delimetered by space or tab.
