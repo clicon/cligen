@@ -49,10 +49,12 @@
 /* Struct for printing command and help */
 struct cmd_help{
     char *ch_cmd;
+#ifdef CO_HELPVEC
+    cvec *ch_helpvec;
+#else
     char *ch_help;
+#endif
 };
-
-
 
 /* CLIgen event register callback type */
 typedef int (cligen_fd_cb_t)(int, void*);
@@ -60,19 +62,19 @@ typedef int (cligen_fd_cb_t)(int, void*);
 /*
  * Prototypes
  */
-int cli_output_reset(void);
+int  cli_output_reset(void);
 #if defined(__GNUC__) && __GNUC__ >= 3
-int cligen_output(FILE *f, const char *templ, ... ) __attribute__ ((format (printf, 2, 3)));
+int  cligen_output(FILE *f, const char *templ, ... ) __attribute__ ((format (printf, 2, 3)));
 #else
-int cligen_output(FILE *f, const char *templ, ... );
+int  cligen_output(FILE *f, const char *templ, ... );
 #endif
-int cligen_regfd(int fd, cligen_fd_cb_t *cb, void *arg);
-int cligen_unregfd(int fd);
+int  cligen_regfd(int fd, cligen_fd_cb_t *cb, void *arg);
+int  cligen_unregfd(int fd);
 void cligen_redraw(cligen_handle h);
-int cligen_susp_hook(cligen_handle h, cligen_susp_cb_t *fn);
-int cligen_interrupt_hook(cligen_handle h, cligen_interrupt_cb_t *fn);
+int  cligen_susp_hook(cligen_handle h, cligen_susp_cb_t *fn);
+int  cligen_interrupt_hook(cligen_handle h, cligen_interrupt_cb_t *fn);
 void cligen_exitchar_add(cligen_handle h, char c);
-int print_help_lines(FILE *fout, parse_tree *ptmatch, int *matchvec, size_t matchlen);
-int cligen_help(FILE *f, parse_tree *pt);
+int  print_help_lines(cligen_handle h, FILE *fout, parse_tree *ptmatch, int *matchvec, size_t matchlen);
+int  cligen_help(cligen_handle h, FILE *f, parse_tree *pt);
 
 #endif /* _CLIGEN_IO_H_ */

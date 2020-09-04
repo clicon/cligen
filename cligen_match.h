@@ -61,6 +61,9 @@ int match_pattern_exact(cligen_handle h, cvec *cvt, cvec *cvr,
 			cligen_result *result,
 			char         **reasonp);
 int cligen_str2cvv(char *string, cvec **cvp, cvec **cvr);
+#ifdef CO_HELPVEC
+int cligen_txt2cvv(char *str, cvec **cvp);
+#endif
 int cligen_cvv_levels(cvec *cvv);
 int match_complete(cligen_handle h, parse_tree *pt,
 		   char **stringp, size_t *slen, cvec *cvec);
