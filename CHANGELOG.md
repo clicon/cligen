@@ -1,7 +1,7 @@
 # Cligen Changelog
 	
 ## 4.7.0
-Expected: September 2020
+14 September 2020
 
 ### New features
 
