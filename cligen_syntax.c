@@ -128,6 +128,7 @@ cligen_parse_str(cligen_handle h,
 	cvec_free(cy.cy_globals);
     /*
      * Remove the fake top level object and remove references to it.
+     * This does not work for (other) trees
      */
     for (i=0; i<pt_len_get(pt); i++){
 	if ((co=pt_vec_i_get(pt, i)) != NULL)

@@ -74,6 +74,12 @@ char* cligen_prompt(cligen_handle h);
 int cligen_prompt_set(cligen_handle h, char *prompt);
 
 parse_tree *cligen_tree_find(cligen_handle h, char *name);
+#if 1 /* CLIGEN_EDIT_MODE */
+parse_tree *cligen_tree_find_workpt(cligen_handle h, char *name);
+cg_obj *cligen_tree_workpt_get(cligen_handle h, char *name);
+int cligen_tree_workpt_set(cligen_handle h, char *name, cg_obj *wp);
+#endif
+
 int cligen_tree_add(cligen_handle h, char *name, parse_tree *pt);
 int cligen_tree_del(cligen_handle h, char *name);
 
