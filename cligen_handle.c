@@ -287,15 +287,17 @@ cligen_prompt_set(cligen_handle h,
 /*! Find a parsetree by its name, if name==NULL, return first parse-tree
  * @param[in] h       CLIgen handle
  * @param[in] name    Name of tree
- * Note name of parse-tree is assigned when you do cligen_tree_add
+ * @retval    pt      Parse-tree
+ * @retval    NULL    Not found
+ * @note name of parse-tree is assigned when you do cligen_tree_add
  */
 parse_tree *
 cligen_tree_find(cligen_handle h, 
 		 char         *name)
 {
+    struct cligen_handle *ch = handle(h);
     parse_tree_list      *ptl;
     parse_tree           *pt;
-    struct cligen_handle *ch = handle(h);
     char                 *ptname;
 
     for (ptl = ch->ch_tree; ptl; ptl = ptl->ptl_next){
@@ -308,6 +310,93 @@ cligen_tree_find(cligen_handle h,
     }
     return NULL;
 }
+
+#ifdef CLIGEN_EDIT_MODE
+/*! Special variant of find tree, using its "working point" shortcut if any
+ * @param[in] h       CLIgen handle
+ * @param[in] name    Name of tree
+ * @retval    pt      Parse-tree
+ * @retval    NULL    Not found
+ * @see cligen_tree_find
+ */
+parse_tree *
+cligen_tree_find_workpt(cligen_handle h, 
+			char         *name)
+{
+    struct cligen_handle *ch = handle(h);
+    parse_tree_list      *ptl;
+    parse_tree           *pt;
+    char                 *ptname;
+    cg_obj               *cow;
+
+    for (ptl = ch->ch_tree; ptl; ptl = ptl->ptl_next){
+	if ((pt = ptl->ptl_parsetree) == NULL)
+	    continue;
+	if ((ptname = pt_name_get(pt)) == NULL)
+	    continue;
+	if (strcmp(ptname, name) != 0)
+	    continue;
+	if ((cow = ptl->ptl_workpt) != NULL)
+	    return co_pt_get(cow);
+	return pt;
+    }
+    return NULL;
+}
+
+/*! Access function to the working point in a tree, shortcut to implement edit modes.
+ * @param[in] h     CLIgen handle
+ * @param[in] name  Name of tree
+ * @retval    wp    Working point cligen object (shortcut - a sub of this tree)
+ * @retval    NULL  No such tree/error
+ */
+cg_obj *
+cligen_tree_workpt_get(cligen_handle h,
+		       char         *name)
+{
+    struct cligen_handle *ch = handle(h);
+    parse_tree_list      *ptl;
+    parse_tree           *pt;
+    char                 *ptname;
+    
+    for (ptl = ch->ch_tree; ptl; ptl = ptl->ptl_next){
+	if ((pt = ptl->ptl_parsetree) == NULL)
+	    continue;
+	if ((ptname = pt_name_get(pt)) == NULL)
+	    continue;
+	if (strcmp(ptname, name) != 0)
+	    continue;
+	return ptl->ptl_workpt;
+    }
+    return NULL;
+}
+
+/*! Access function to the working point in a tree, shortcut to implement edit modes.
+ * @param[in]  pt   Parse tree
+ * @param[in]  wp   Working point identified by a cligen object(actually its parse-tree sub vector)
+ */
+int
+cligen_tree_workpt_set(cligen_handle h,
+		       char         *name,
+		       cg_obj       *wp)
+{
+    struct cligen_handle *ch = handle(h);
+    parse_tree_list      *ptl;
+    parse_tree           *pt;
+    char                 *ptname;
+    
+    for (ptl = ch->ch_tree; ptl; ptl = ptl->ptl_next){
+	if ((pt = ptl->ptl_parsetree) == NULL)
+	    continue;
+	if ((ptname = pt_name_get(pt)) == NULL)
+	    continue;
+	if (strcmp(ptname, name) != 0)
+	    continue;
+	ptl->ptl_workpt = wp;
+    }
+    return 0;
+}
+
+#endif /* CLIGEN_EDIT_MODE */
 
 /*! Add a new parsetree last in list
  * @param[in] h       CLIgen handle

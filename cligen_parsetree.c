@@ -66,7 +66,9 @@
 #include "cligen_handle.h"
 #include "cligen_getline.h"
 
-/* Private definition of parsetree. Public is defined in cligen_parsetree.h */
+/* Private definition of parsetree. Public is defined in cligen_parsetree.h 
+ * @see parse_tree_list which is the upper level of a parse-tree
+ */
 struct parse_tree{
     struct cg_obj     **pt_vec;    /* vector of pointers to parse-tree nodes */
     int                 pt_len;    /* length of vector */
@@ -340,7 +342,7 @@ pt_copy(parse_tree *pt,
     return retval;
 }
 
-/*! Duplicate a  parse-tree redursively
+/*! Duplicate a  parse-tree recursively
  *
  * @param[in]  pt     Original parse-tree
  * @param[in]  parent The parent of the new parsetree. Need not be same as parent of the orignal
@@ -560,3 +562,4 @@ pt_apply(parse_tree   *pt,
   done:
     return retval;
 }
+

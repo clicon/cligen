@@ -325,8 +325,13 @@ pt_dump1(FILE       *f,
 {
     int     i;
     cg_obj *co;
-
-    fprintf(stderr, "%*s %p pt %d\n", indent*3, "", pt, pt_len_get(pt));
+    char   *name;
+    
+    name = pt_name_get(pt);
+    fprintf(stderr, "%*s %p pt %s [%d]\n",
+	    indent*3, "", pt,
+	    name?name:"",
+	    pt_len_get(pt));
     for (i=0; i<pt_len_get(pt); i++){
 	if ((co = pt_vec_i_get(pt, i)) == NULL)
 	    fprintf(stderr, "%*s NULL\n", (indent+1)*3, "");

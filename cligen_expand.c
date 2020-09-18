@@ -294,7 +294,6 @@ pt_reference_trunc(parse_tree *pt)
     return retval;
 }
 
-
 /*! Take a top-object parse-tree (pt0), and expand all tree references one level. 
  * 
  * One level only. Parse-tree is expanded itself (not copy).
@@ -332,7 +331,12 @@ pt_expand_treeref(cligen_handle h,
 	    treename = co->co_command;
 
 	    /* Find the referring tree */
-	    if ((ptref = cligen_tree_find(h, treename)) == NULL){
+#ifdef CLIGEN_EDIT_MODE
+	    if ((ptref = cligen_tree_find_workpt(h, treename)) == NULL)
+#else
+		if ((ptref = cligen_tree_find(h, treename)) == NULL)
+#endif
+		{
 		fprintf(stderr, "CLIgen subtree '%s' not found\n", 
 			treename);
 		goto done;
@@ -355,6 +359,9 @@ pt_expand_treeref(cligen_handle h,
 	    for (j=0; j<pt_len_get(pt1ref); j++)
 		if ((cot = pt_vec_i_get(pt1ref, j)) != NULL){
 		    co_flags_set(cot, CO_FLAGS_TREEREF); /* Mark expanded refd tree */
+#ifdef CLIGEN_EDIT_MODE
+		    cot->co_ref = co; /* Backpointer so we know where this treeref is from */
+#endif
 		    if (co_insert(pt0, cot) == NULL) 
 			goto done;
 		    if (pt_vec_i_clear(pt1ref, j) < 0)

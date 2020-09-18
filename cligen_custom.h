@@ -42,3 +42,7 @@ typedef void *cligen_handle; /* API */
 /* Use a vector of help texts instead of a single string
  */
 #define CO_HELPVEC
+
+/*! Experiment to set a automatic cli modes
+ */
+#define CLIGEN_EDIT_MODE

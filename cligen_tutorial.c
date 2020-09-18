@@ -154,6 +154,69 @@ changetree(cligen_handle h, cvec *cvv, cvec *argv)
     return cligen_tree_active_set(h, treename);
 }
 
+/*! Working point tree
+ */
+int
+wpset(cligen_handle h,
+      cvec         *cvv,
+      cvec         *argv)
+{
+    cg_var     *cv;
+    char       *treename;
+    parse_tree *pt;      /* cligen tree referenced */
+    cg_obj     *co;
+    cg_obj     *coorig;
+
+    cv = cvec_i(argv, 0);
+    treename = cv_string_get(cv);
+    if ((pt = cligen_tree_find(h, treename)) != NULL &&
+	(co = cligen_co_match(h)) != NULL &&
+	(coorig = co->co_treeref_orig) != NULL){
+	cligen_tree_workpt_set(h, treename, coorig);
+    }
+    return 0;
+}
+
+int
+wpshow(cligen_handle h,
+       cvec         *cvv,
+       cvec         *argv)
+{
+    cg_var     *cv;
+    char       *treename;
+    parse_tree *pt;
+    int         i;
+    cg_obj     *co;
+    
+    cv = cvec_i(argv, 0);
+    treename = cv_string_get(cv);
+
+    if ((pt = cligen_tree_find_workpt(h, treename)) != NULL){
+	for (i=0; i<pt_len_get(pt); i++){
+	    co = pt_vec_i_get(pt, i);
+	    if (co)
+		co_print(stderr, co, 1);
+	}
+    }
+    return 0;
+}
+
+int
+wpup(cligen_handle h,
+     cvec         *cvv,
+     cvec         *argv)
+{
+    cg_var     *cv;
+    char       *treename;
+    cg_obj     *co;
+    
+    cv = cvec_i(argv, 0);
+    treename = cv_string_get(cv);
+    if ((co = cligen_tree_workpt_get(h, treename)) != NULL)
+	cligen_tree_workpt_set(h, treename, co_up(co));
+    return 0;
+}
+
 /*! Command without assigned callback
  */
 int
@@ -175,22 +238,28 @@ str2fn(char *name, void *arg, char **error)
     *error = NULL;
     if (strcmp(name, "hello") == 0)
         return hello;
-    if (strcmp(name, "cb") == 0)
+    else     if (strcmp(name, "cb") == 0)
         return cb;
-    if (strcmp(name, "add") == 0)
+    else     if (strcmp(name, "add") == 0)
         return cb;
-    if (strcmp(name, "del") == 0)
+    else     if (strcmp(name, "del") == 0)
         return cb;
-    if (strcmp(name, "letters") == 0)
+    else     if (strcmp(name, "letters") == 0)
         return letters;
-    if (strcmp(name, "secret") == 0)
+    else     if (strcmp(name, "secret") == 0)
         return secret;
-    if (strcmp(name, "setprompt") == 0)
+    else     if (strcmp(name, "setprompt") == 0)
         return setprompt;
-    if (strcmp(name, "quit") == 0)
+    else     if (strcmp(name, "quit") == 0)
         return quit;
-    if (strcmp(name, "changetree") == 0)
+    else if (strcmp(name, "changetree") == 0)
         return changetree;
+    else if (strcmp(name, "wpset") == 0)
+        return wpset;
+    else if (strcmp(name, "wpshow") == 0)
+        return wpshow;
+    else if (strcmp(name, "wpup") == 0)
+        return wpup;
     return unknown; /* allow any function (for testing) */
 }
 
