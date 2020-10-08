@@ -164,6 +164,7 @@ wpset(cligen_handle h,
     cg_var     *cv;
     char       *treename;
     parse_tree *pt;      /* cligen tree referenced */
+    parse_tree_head *ph;  
     cg_obj     *co;
     cg_obj     *coorig;
 
@@ -172,7 +173,8 @@ wpset(cligen_handle h,
     if ((pt = cligen_tree_find(h, treename)) != NULL &&
 	(co = cligen_co_match(h)) != NULL &&
 	(coorig = co->co_treeref_orig) != NULL){
-	cligen_tree_workpt_set(h, treename, coorig);
+	if ((ph = cligen_ph_find(h, treename)) != NULL)
+	    cligen_ph_workpoint_set(ph, coorig);
     }
     return 0;
 }
@@ -182,16 +184,15 @@ wpshow(cligen_handle h,
        cvec         *cvv,
        cvec         *argv)
 {
-    cg_var     *cv;
-    char       *treename;
-    parse_tree *pt;
-    int         i;
-    cg_obj     *co;
+    cg_var          *cv;
+    char            *treename;
+    parse_tree      *pt;
+    int              i;
+    cg_obj          *co;
     
     cv = cvec_i(argv, 0);
     treename = cv_string_get(cv);
-
-    if ((pt = cligen_tree_find_workpt(h, treename)) != NULL){
+    if ((pt = cligen_tree_workpt_pt(h, treename)) != NULL){
 	for (i=0; i<pt_len_get(pt); i++){
 	    co = pt_vec_i_get(pt, i);
 	    if (co)
@@ -209,14 +210,31 @@ wpup(cligen_handle h,
     cg_var     *cv;
     char       *treename;
     cg_obj     *co;
+    parse_tree_head *ph;  
     
     cv = cvec_i(argv, 0);
     treename = cv_string_get(cv);
-    if ((co = cligen_tree_workpt_get(h, treename)) != NULL)
-	cligen_tree_workpt_set(h, treename, co_up(co));
+    if ((ph = cligen_ph_find(h, treename)) != NULL &&
+	(co = cligen_ph_workpoint_get(ph)) != NULL)
+	cligen_ph_workpoint_set(ph, co_up(co));
     return 0;
 }
 
+int
+wptop(cligen_handle h,
+      cvec         *cvv,
+      cvec         *argv)
+{
+    cg_var     *cv;
+    char       *treename;
+    parse_tree_head *ph;
+    
+    cv = cvec_i(argv, 0);
+    treename = cv_string_get(cv);
+    if ((ph = cligen_ph_find(h, treename)) != NULL)
+	cligen_ph_workpoint_set(ph, NULL);
+    return 0;
+}
 /*! Command without assigned callback
  */
 int
@@ -260,6 +278,8 @@ str2fn(char *name, void *arg, char **error)
         return wpshow;
     else if (strcmp(name, "wpup") == 0)
         return wpup;
+    else if (strcmp(name, "wptop") == 0)
+        return wptop;
     return unknown; /* allow any function (for testing) */
 }
 
@@ -347,6 +367,7 @@ main(int argc, char *argv[])
     cligen_handle   h;
     int             retval = -1;
     parse_tree     *pt;
+    parse_tree_head *ph;
     FILE           *f = stdin;
     char           *argv0 = argv[0];
     char           *filename=NULL;
@@ -387,8 +408,9 @@ main(int argc, char *argv[])
 	goto done;
     if (cligen_parse_file(h, f, filename, NULL, globals) < 0)
         goto done;
-    pt = NULL;
-    while ((pt = cligen_tree_each(h, pt)) != NULL) {
+    ph = NULL;
+    while ((ph = cligen_ph_each(h, ph)) != NULL) {
+	pt = cligen_ph_parsetree_get(ph);
 	if (cligen_callbackv_str2fn(pt, str2fn, NULL) < 0) /* map functions */
 	    goto done;
 	if (cligen_expandv_str2fn(pt, str2fn_exp, NULL) < 0)
@@ -405,8 +427,9 @@ main(int argc, char *argv[])
 	    cligen_tabmode_set(h, CLIGEN_TABMODE_COLUMNS);
     cvec_free(globals);
     if (!quiet){
-	pt = NULL;
-	while ((pt = cligen_tree_each(h, pt)) != NULL) {
+	ph = NULL;
+	while ((ph = cligen_ph_each(h, ph)) != NULL) {
+	    pt = cligen_ph_parsetree_get(ph);
 	    printf("Syntax:\n");
 	    pt_print(stdout, pt, 0);
 	}

@@ -59,6 +59,7 @@
 #include "cligen_cv.h"
 #include "cligen_cvec.h"
 #include "cligen_parsetree.h"
+#include "cligen_parsetree_head.h"
 #include "cligen_object.h"
 #include "cligen_io.h"
 #include "cligen_read.h"
@@ -72,7 +73,7 @@
 struct parse_tree{
     struct cg_obj     **pt_vec;    /* vector of pointers to parse-tree nodes */
     int                 pt_len;    /* length of vector */
-    char               *pt_name;
+    char               *pt_name;   /* XXX Is this necessary? */
     char                pt_set;    /* Parse-tree is a SET */ 
 };
 

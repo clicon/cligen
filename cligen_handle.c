@@ -55,6 +55,7 @@
 #include "cligen_cv.h"
 #include "cligen_cvec.h"
 #include "cligen_parsetree.h"
+#include "cligen_parsetree_head.h"
 #include "cligen_object.h"
 #include "cligen_io.h"
 #include "cligen_handle.h"
@@ -66,6 +67,11 @@
 
 #include "cligen_history.h"
 #include "cligen_history_internal.h"
+
+/*
+ * Constants
+ */
+#define TREENAME_KEYWORD_DEFAULT "treename"
 
 /* forward */
 static int terminal_rows_set1(int rows);
@@ -168,7 +174,7 @@ int
 cligen_exit(cligen_handle h)
 {
     struct cligen_handle *ch = handle(h);
-    parse_tree_list *ptl;
+    parse_tree_head      *ph;
 
     hist_exit(h);
     cligen_buf_cleanup(h);
@@ -180,10 +186,10 @@ cligen_exit(cligen_handle h)
 	free(ch->ch_treename_keyword);
     if (ch->ch_fn_str)
 	free(ch->ch_fn_str);
-    while ((ptl = ch->ch_tree) != NULL){
-	ch->ch_tree =  ptl->ptl_next;
-	pt_free(ptl->ptl_parsetree, 1);
-	free(ptl);
+    while ((ph = ch->ch_parsetree_head) != NULL){
+	ch->ch_parsetree_head = ph->ph_next;
+	pt_free(ph->ph_parsetree, 1);
+	free(ph);
     }
     free(ch);
     return 0;
@@ -284,288 +290,51 @@ cligen_prompt_set(cligen_handle h,
     return 0;
 }
 
-/*! Find a parsetree by its name, if name==NULL, return first parse-tree
- * @param[in] h       CLIgen handle
- * @param[in] name    Name of tree
- * @retval    pt      Parse-tree
- * @retval    NULL    Not found
- * @note name of parse-tree is assigned when you do cligen_tree_add
+/*! Get CLIgen parse-tree head holding all parsetrees in the system
  */
-parse_tree *
-cligen_tree_find(cligen_handle h, 
-		 char         *name)
+parse_tree_head *
+cligen_parsetree_head_get(cligen_handle h)
 {
     struct cligen_handle *ch = handle(h);
-    parse_tree_list      *ptl;
-    parse_tree           *pt;
-    char                 *ptname;
 
-    for (ptl = ch->ch_tree; ptl; ptl = ptl->ptl_next){
-	if ((pt = ptl->ptl_parsetree) == NULL)
-	    continue;
-	if ((ptname = pt_name_get(pt)) == NULL)
-	    continue;
-	if (strcmp(ptname, name) == 0)
-	    return pt;
-    }
-    return NULL;
+    return ch->ch_parsetree_head;
 }
 
-#ifdef CLIGEN_EDIT_MODE
-/*! Special variant of find tree, using its "working point" shortcut if any
- * @param[in] h       CLIgen handle
- * @param[in] name    Name of tree
- * @retval    pt      Parse-tree
- * @retval    NULL    Not found
- * @see cligen_tree_find
- */
-parse_tree *
-cligen_tree_find_workpt(cligen_handle h, 
-			char         *name)
-{
-    struct cligen_handle *ch = handle(h);
-    parse_tree_list      *ptl;
-    parse_tree           *pt;
-    char                 *ptname;
-    cg_obj               *cow;
-
-    for (ptl = ch->ch_tree; ptl; ptl = ptl->ptl_next){
-	if ((pt = ptl->ptl_parsetree) == NULL)
-	    continue;
-	if ((ptname = pt_name_get(pt)) == NULL)
-	    continue;
-	if (strcmp(ptname, name) != 0)
-	    continue;
-	if ((cow = ptl->ptl_workpt) != NULL)
-	    return co_pt_get(cow);
-	return pt;
-    }
-    return NULL;
-}
-
-/*! Access function to the working point in a tree, shortcut to implement edit modes.
- * @param[in] h     CLIgen handle
- * @param[in] name  Name of tree
- * @retval    wp    Working point cligen object (shortcut - a sub of this tree)
- * @retval    NULL  No such tree/error
- */
-cg_obj *
-cligen_tree_workpt_get(cligen_handle h,
-		       char         *name)
-{
-    struct cligen_handle *ch = handle(h);
-    parse_tree_list      *ptl;
-    parse_tree           *pt;
-    char                 *ptname;
-    
-    for (ptl = ch->ch_tree; ptl; ptl = ptl->ptl_next){
-	if ((pt = ptl->ptl_parsetree) == NULL)
-	    continue;
-	if ((ptname = pt_name_get(pt)) == NULL)
-	    continue;
-	if (strcmp(ptname, name) != 0)
-	    continue;
-	return ptl->ptl_workpt;
-    }
-    return NULL;
-}
-
-/*! Access function to the working point in a tree, shortcut to implement edit modes.
- * @param[in]  pt   Parse tree
- * @param[in]  wp   Working point identified by a cligen object(actually its parse-tree sub vector)
+/*! Set CLIgen parse-tree head holding all parsetrees in the system
  */
 int
-cligen_tree_workpt_set(cligen_handle h,
-		       char         *name,
-		       cg_obj       *wp)
+cligen_parsetree_head_set(cligen_handle    h,
+			  parse_tree_head *ph)
 {
     struct cligen_handle *ch = handle(h);
-    parse_tree_list      *ptl;
-    parse_tree           *pt;
-    char                 *ptname;
+
+    ch->ch_parsetree_head = ph;
+    return 0;
+}
+
+/*! Delete CLIgen parse-tree head
+ */
+int
+cligen_parsetree_head_del(cligen_handle    h,
+			  parse_tree_head *ph1)
+{
+    struct cligen_handle *ch = handle(h);
+    parse_tree_head      *ph;
+    parse_tree_head     **ph_prev;
     
-    for (ptl = ch->ch_tree; ptl; ptl = ptl->ptl_next){
-	if ((pt = ptl->ptl_parsetree) == NULL)
-	    continue;
-	if ((ptname = pt_name_get(pt)) == NULL)
-	    continue;
-	if (strcmp(ptname, name) != 0)
-	    continue;
-	ptl->ptl_workpt = wp;
-    }
-    return 0;
-}
-
-#endif /* CLIGEN_EDIT_MODE */
-
-/*! Add a new parsetree last in list
- * @param[in] h       CLIgen handle
- * @param[in] name    name of parse-tree
- * @param[in] pt      parse-tree
- * @retval    0       OK
- * @retval   -1       Error
- * Note, if this is the first tree, it is activated by default
- */
-int 
-cligen_tree_add(cligen_handle h, 
-		char         *name, 
-		parse_tree   *pt)
-{
-    parse_tree_list           *ptl;
-    parse_tree_list           *ptlast;
-    parse_tree                *ptn;
-    struct cligen_handle *ch = handle(h);
-
-    if ((ptl = (parse_tree_list *)malloc(sizeof(*ptl))) == NULL){
-	fprintf(stderr, "%s malloc: %s\n", __FUNCTION__, strerror(errno));
-	return -1;
-    }
-    memset(ptl, 0, sizeof(*ptl));
-    ptl->ptl_parsetree = pt;
-    ptn =  ptl->ptl_parsetree;
-    if (pt_name_set(ptn, name) < 0)
-	return -1;
-    if ((ptlast = ch->ch_tree) == NULL){
-	ptl->ptl_active++;
-	ch->ch_tree = ptl;
-    }
-    else {
-	while (ptlast->ptl_next)
-	    ptlast = ptlast->ptl_next;
-	ptlast->ptl_next = ptl;
-    }
-    return 0;
-}
-
-/*! Delete a parsetree list entry not parsetree itself
- * @param[in] h    CLIgen handle
- * @param[in] name 
- */
-int 
-cligen_tree_del(cligen_handle h, 
-		char         *name)
-{
-    parse_tree_list  *ptl;
-    parse_tree_list **ptl_prev;
-    parse_tree       *pt;
-    struct cligen_handle *ch = handle(h);
-
-    for (ptl_prev = &ch->ch_tree, ptl = *ptl_prev; 
-	 ptl; 
-	 ptl_prev = &ptl->ptl_next, ptl = ptl->ptl_next){
-	pt = ptl->ptl_parsetree;
-	if (strcmp(pt_name_get(pt), name) == 0){
-	    *ptl_prev = ptl->ptl_next;
-	    free(ptl);
+    for (ph_prev = &ch->ch_parsetree_head, ph = *ph_prev; 
+	 ph; 
+	 ph_prev = &ph->ph_next, ph = ph->ph_next){
+	if (ph == ph1){
+	    *ph_prev = ph->ph_next;
+	    if (ph->ph_name)
+		free(ph->ph_name);
+	    free(ph);
 	    break;
 	}
     }
     return 0;
 }
-
-/*! Iterate through all parsed cligen trees 
- *
- * @param[in] h   CLIgen handle
- * @param[in] pt  Cligen parse-tree iteration variable. Must be initialized to NULL
- * @retval pt     Next parse-tree structure.
- * @retval NULL   When end of list reached.
- * @code
- *    parse_tree *pt = NULL;
- *    while ((pt = cligen_tree_each(h, pt)) != NULL) {
- *	     ...
- *    }
- * @endcode
- * Note: you may not delete (or add) parse-trees while iterating through them
- * Note: the list contains all parse-trees added by cligen_tree_add()
- */
-parse_tree *
-cligen_tree_each(cligen_handle h, 
-		 parse_tree   *pt0)
-{
-    struct cligen_handle *ch = handle(h);
-    parse_tree_list      *ptl;
-    parse_tree           *pt;
-    int                   next = 0;
-
-    for (ptl = ch->ch_tree; ptl; ptl = ptl->ptl_next){
-	pt = ptl->ptl_parsetree;
-	if (pt0 == NULL || next)
-	    return pt; /* Initial */
-	if (pt == pt0)
-	    next++;
-    }
-    return NULL;
-}
-
-/*! Return i:th parse-tree of parsed cligen trees 
- * @param[in] h  CLIgen handle
- * @param[in] i  Order of element to get
- */
-parse_tree *
-cligen_tree_i(cligen_handle h, 
-	      int           i0)
-{
-    struct cligen_handle *ch = handle(h);
-    parse_tree_list      *ptl;
-    int                   i;
-
-    for (ptl = ch->ch_tree, i=0; ptl; ptl = ptl->ptl_next, i++)
-	if (i==i0)
-	    return ptl->ptl_parsetree;
-    return NULL;
-}
-
-/*! Get name of currently active parsetree.
- * @param[in] h       CLIgen handle
- */
-parse_tree *
-cligen_tree_active_get(cligen_handle h)
-{
-    struct cligen_handle *ch = handle(h);
-    parse_tree_list      *ptl;
-
-    for (ptl = ch->ch_tree; ptl; ptl = ptl->ptl_next)
-	if (ptl->ptl_active)
-	    return ptl->ptl_parsetree;
-    return NULL;
-}
-
-/*! Set currently active parsetree by name
- * @param[in] h       CLIgen handle
- * @retval -1     Parse-tree not found, active tree not changed
- * @retval  1     Parse-tree found and set as active.
- * If parse-tree not found all are inactivated.
- */
-int
-cligen_tree_active_set(cligen_handle h, 
-		       char         *name)
-{
-    struct cligen_handle *ch = handle(h);
-    int                   retval = -1;
-    parse_tree_list      *ptl;
-    parse_tree           *pt = NULL;
-
-    /* First see if there is such a tree, and set it */
-    for (ptl = ch->ch_tree; ptl; ptl = ptl->ptl_next){
-	pt = ptl->ptl_parsetree;
-	if (strcmp(name, pt_name_get(pt)) == 0){
-	    ptl->ptl_active = 1;
-	    break;
-	}
-    }
-    if (ptl != NULL){
-	/*  Then reset all other trees */
-	for (ptl = ch->ch_tree; ptl; ptl = ptl->ptl_next){
-	    pt = ptl->ptl_parsetree;
-	    if (strcmp(name, pt_name_get(pt)) != 0)
-		ptl->ptl_active = 0;
-	}
-	retval = 0;
-    }
-    return retval;
-}
-
-#define TREENAME_KEYWORD_DEFAULT "treename"
 
 /*! Get name of treename keyword used in parsing
  * @param[in] h       CLIgen handle

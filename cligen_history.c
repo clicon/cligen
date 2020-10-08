@@ -65,6 +65,7 @@
 #include "cligen_cv.h"
 #include "cligen_cvec.h"
 #include "cligen_parsetree.h"
+#include "cligen_parsetree_head.h"
 #include "cligen_object.h"
 #include "cligen_io.h"
 #include "cligen_handle.h"
@@ -83,13 +84,13 @@ static char *
 hist_save(char *p)
 {
     char *s = NULL;
-    int   len = strlen(p);
+    int   len = strlen(p)+1;
     char *nl = strchr(p, '\n');
 
     if (nl) {
         if ((s = malloc(len)) == NULL)
 	    goto done;
-	strncpy(s, p, len-1);
+	strcpy(s, p);
 	s[len-1] = 0;
     }
     else {

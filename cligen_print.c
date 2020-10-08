@@ -48,6 +48,7 @@
 #include "cligen_cv.h"
 #include "cligen_cvec.h"
 #include "cligen_parsetree.h"
+#include "cligen_parsetree_head.h"
 #include "cligen_object.h"
 #include "cligen_handle.h"
 #include "cligen_print.h"
@@ -160,6 +161,8 @@ co2cbuf(cbuf   *cb,
     int                 retval = -1;
     struct cg_callback *cc;
     parse_tree         *pt;
+    cg_var             *cv;
+    int                 i;
 
     switch (co->co_type){
     case CO_COMMAND:
@@ -178,7 +181,13 @@ co2cbuf(cbuf   *cb,
 #ifdef CO_HELPVEC
 	if (co->co_helpvec){
 	    cprintf(cb, "(\"");
-	    cvec2cbuf(cb, co->co_helpvec);
+	    cv = NULL;
+	    i = 0;
+	    while ((cv = cvec_each(co->co_helpvec, cv)) != NULL) {
+		if (i++)
+		    cprintf(cb, "\n");
+		cv2cbuf(cv, cb);
+	    }
 	    cprintf(cb, "\")");
 	}
 #else
@@ -190,8 +199,15 @@ co2cbuf(cbuf   *cb,
 	for (cc = co->co_callbacks; cc; cc=cc->cc_next){
 	    if (cc->cc_fn_str){
 		cprintf(cb, ", %s(", cc->cc_fn_str);
-		if (cc->cc_cvec)
-		    cvec2cbuf(cb, cc->cc_cvec);
+		if (cc->cc_cvec){
+		    cv = NULL;
+		    i = 0;
+		    while ((cv = cvec_each(cc->cc_cvec, cv)) != NULL) {
+			if (i++)
+			    cprintf(cb, ",");
+			cprintf(cb, "\"%s\"", cv_string_get(cv));
+		    }
+		}
 		cprintf(cb, ")");
 	    }
 	}
@@ -395,10 +411,13 @@ cligen_print_trees(FILE         *f,
 		   cligen_handle h,
 		   int           brief)
 {
-    int         retval = -1;
-    parse_tree *pt = NULL;
+    int              retval = -1;
+    parse_tree_head *ph;
+    parse_tree      *pt;
 
-    while ((pt = cligen_tree_each(h, pt)) != NULL) {
+    ph = NULL;
+    while ((ph = cligen_ph_each(h, ph)) != NULL) {
+	pt = cligen_ph_parsetree_get(ph);
 	fprintf(stderr, "%s\n", pt_name_get(pt));
 	if (!brief && pt_print(f, pt, brief) < 0)
 	    goto done;

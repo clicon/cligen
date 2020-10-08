@@ -55,17 +55,6 @@
 #define TERM_ROWS_DEFAULT 24
 #define GETLINE_BUFLEN_DEFAULT 64 /* startsize, increased with 2x when run out */
 
-/*! list of cligen parse-trees, can be searched, and activated */
-typedef struct parse_tree_list  { /* Linked list of cligen parse-trees */
-    struct parse_tree_list  *ptl_next;
-    parse_tree              *ptl_parsetree; /* should be free:d */
-    int                      ptl_active;    /* First one is active */
-#ifdef CLIGEN_EDIT_MODE
-    cg_obj                  *ptl_workpt;    /* Shortcut to "working point" cligen object, or more 
-                                               specifically its parse-tree sub vector. */
-#endif
-} parse_tree_list;
-
 #define CLIGEN_MAGIC 0x56ab55aa
 
 /*
@@ -77,7 +66,7 @@ struct cligen_handle{
     char        ch_exiting;      /* Set by callback to request exit of CLIgen */
     char        ch_comment;      /* comment sign - everything behind it is ignored */
     char       *ch_prompt;       /* current prompt used */
-    parse_tree_list *ch_tree;    /* Linked list of parsetrees */
+    parse_tree_head *ch_parsetree_head; /* Linked list of parsetrees */
     char       *ch_treename_keyword; /* Name of treename parsing keyword */
     cg_obj     *ch_co_match;     /* Matching object in latest evaluation */
     char       *ch_fn_str;       /* Name of active callback function */

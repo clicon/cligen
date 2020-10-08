@@ -78,6 +78,7 @@ ex <a:int32 show:number>("A number");
   wpset,wpset("wpset");{ @wptree, wpset("wptree");}         # Example on how to set and change a working point in a tree
   wpshow, wpshow("wptree");
   wpup, wpup("wptree");
+  wptop, wptop("wptop");
 
   treename="sub";           # Small sub-tree refernced in the main tutorial tree
   x{
@@ -97,8 +98,3 @@ ex <a:int32 show:number>("A number");
     }
     c;
   }
-
-
-
-
-

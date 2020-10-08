@@ -199,6 +199,7 @@ main(int argc, char *argv[])
 {
     int         retval = -1;
     parse_tree *pt = NULL;
+    parse_tree_head *ph;
     FILE       *f = stdin;
     char       *argv0 = argv[0];
     char       *filename=NULL;
@@ -258,8 +259,9 @@ main(int argc, char *argv[])
     if (cligen_parse_file(h, f, filename?filename:"stdin", NULL, globals) < 0)
 	goto done;
 
-    pt = cligen_tree_i(h, 0); 
-
+    ph = cligen_ph_i(h, 0); 
+    pt = cligen_ph_parsetree_get(ph);
+    
     /* map functions */
     if (pt) {
 	if (cligen_callbackv_str2fn(pt, str2fn, NULL) < 0)   /* callback */
