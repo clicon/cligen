@@ -91,6 +91,7 @@
 #include "cligen_cv.h"
 #include "cligen_cvec.h"
 #include "cligen_parsetree.h"
+#include "cligen_parsetree_head.h"
 #include "cligen_object.h"
 #include "cligen_match.h"
 #include "cligen_syntax.h"

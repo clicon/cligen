@@ -174,9 +174,7 @@ struct cg_obj{
 #endif
     uint32_t            co_flags;     /* General purpose flags, see CO_FLAGS_HIDE and others above */
     struct cg_obj      *co_ref;       /* Ref to original (if this is expanded) */
-#if 1 /*  CLIGEN_EDIT_MODE */
     struct cg_obj      *co_treeref_orig; /* Ref to original (if this is a tree reference) */
-#endif
     char               *co_value;     /* Expanded value can be a string with a constant. 
 					 Store the constant in the original variable. */
     union {                           /* depends on co_type: */

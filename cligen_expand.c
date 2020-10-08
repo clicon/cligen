@@ -46,6 +46,7 @@
 #include "cligen_cv.h"
 #include "cligen_cvec.h"
 #include "cligen_parsetree.h"
+#include "cligen_parsetree_head.h"
 #include "cligen_object.h"
 #include "cligen_handle.h"
 #include "cligen_match.h"
@@ -329,19 +330,10 @@ pt_expand_treeref(cligen_handle h,
 	    /* Expansion is made in-line so we need to know if already 
 	       expanded */
 	    treename = co->co_command;
-
-	    /* Find the referring tree */
-#ifdef CLIGEN_EDIT_MODE
-	    if ((ptref = cligen_tree_find_workpt(h, treename)) == NULL)
-#else
-		if ((ptref = cligen_tree_find(h, treename)) == NULL)
-#endif
-		{
-		fprintf(stderr, "CLIgen subtree '%s' not found\n", 
-			treename);
+	    if ((ptref = cligen_tree_workpt_pt(h, treename)) == NULL){
+		fprintf(stderr, "CLIgen subtree '%s' not found\n", treename);
 		goto done;
 	    }
-
 	    /* make a copy of ptref -> pt1ref */
 	    co02 = co_up(co);
 
@@ -359,9 +351,7 @@ pt_expand_treeref(cligen_handle h,
 	    for (j=0; j<pt_len_get(pt1ref); j++)
 		if ((cot = pt_vec_i_get(pt1ref, j)) != NULL){
 		    co_flags_set(cot, CO_FLAGS_TREEREF); /* Mark expanded refd tree */
-#ifdef CLIGEN_EDIT_MODE
 		    cot->co_ref = co; /* Backpointer so we know where this treeref is from */
-#endif
 		    if (co_insert(pt0, cot) == NULL) 
 			goto done;
 		    if (pt_vec_i_clear(pt1ref, j) < 0)

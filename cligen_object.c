@@ -59,6 +59,7 @@
 #include "cligen_cv.h"
 #include "cligen_cvec.h"
 #include "cligen_parsetree.h"
+#include "cligen_parsetree_head.h"
 #include "cligen_object.h"
 #include "cligen_io.h"
 #include "cligen_read.h"
@@ -511,12 +512,10 @@ co_copy(cg_obj  *co,
     con->co_ptvec = NULL;
     con->co_pt_len = 0;
     con->co_ref = NULL;
-#ifdef CLIGEN_EDIT_MODE
     if (co->co_treeref_orig)
 	con->co_treeref_orig = co->co_treeref_orig;
     else
 	con->co_treeref_orig = co;
-#endif
     co_flags_reset(con, CO_FLAGS_MARK);
     co_flags_reset(con, CO_FLAGS_REFDONE);
     /* Replace all pointers */
