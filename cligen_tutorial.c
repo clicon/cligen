@@ -151,90 +151,9 @@ changetree(cligen_handle h, cvec *cvv, cvec *argv)
 
     cv = cvec_i(argv, 0);
     treename = cv_string_get(cv);
-    return cligen_tree_active_set(h, treename);
+    return cligen_ph_active_set(h, treename);
 }
 
-/*! Working point tree
- */
-int
-wpset(cligen_handle h,
-      cvec         *cvv,
-      cvec         *argv)
-{
-    cg_var     *cv;
-    char       *treename;
-    parse_tree *pt;      /* cligen tree referenced */
-    parse_tree_head *ph;  
-    cg_obj     *co;
-    cg_obj     *coorig;
-
-    cv = cvec_i(argv, 0);
-    treename = cv_string_get(cv);
-    if ((pt = cligen_tree_find(h, treename)) != NULL &&
-	(co = cligen_co_match(h)) != NULL &&
-	(coorig = co->co_treeref_orig) != NULL){
-	if ((ph = cligen_ph_find(h, treename)) != NULL)
-	    cligen_ph_workpoint_set(ph, coorig);
-    }
-    return 0;
-}
-
-int
-wpshow(cligen_handle h,
-       cvec         *cvv,
-       cvec         *argv)
-{
-    cg_var          *cv;
-    char            *treename;
-    parse_tree      *pt;
-    int              i;
-    cg_obj          *co;
-    
-    cv = cvec_i(argv, 0);
-    treename = cv_string_get(cv);
-    if ((pt = cligen_tree_workpt_pt(h, treename)) != NULL){
-	for (i=0; i<pt_len_get(pt); i++){
-	    co = pt_vec_i_get(pt, i);
-	    if (co)
-		co_print(stderr, co, 1);
-	}
-    }
-    return 0;
-}
-
-int
-wpup(cligen_handle h,
-     cvec         *cvv,
-     cvec         *argv)
-{
-    cg_var     *cv;
-    char       *treename;
-    cg_obj     *co;
-    parse_tree_head *ph;  
-    
-    cv = cvec_i(argv, 0);
-    treename = cv_string_get(cv);
-    if ((ph = cligen_ph_find(h, treename)) != NULL &&
-	(co = cligen_ph_workpoint_get(ph)) != NULL)
-	cligen_ph_workpoint_set(ph, co_up(co));
-    return 0;
-}
-
-int
-wptop(cligen_handle h,
-      cvec         *cvv,
-      cvec         *argv)
-{
-    cg_var     *cv;
-    char       *treename;
-    parse_tree_head *ph;
-    
-    cv = cvec_i(argv, 0);
-    treename = cv_string_get(cv);
-    if ((ph = cligen_ph_find(h, treename)) != NULL)
-	cligen_ph_workpoint_set(ph, NULL);
-    return 0;
-}
 /*! Command without assigned callback
  */
 int
@@ -245,7 +164,6 @@ unknown(cligen_handle h, cvec *cvv, cvec *argv)
     fprintf(stderr, "The command has no assigned callback: %s\n", cv_string_get(cv));
     return 0;
 }
-
 
 /*! Example of static string to function mapper for the callback functions above.
  * Better to use dlopen, mmap or some other more flexible scheme.
@@ -272,14 +190,14 @@ str2fn(char *name, void *arg, char **error)
         return quit;
     else if (strcmp(name, "changetree") == 0)
         return changetree;
-    else if (strcmp(name, "wpset") == 0)
-        return wpset;
-    else if (strcmp(name, "wpshow") == 0)
-        return wpshow;
-    else if (strcmp(name, "wpup") == 0)
-        return wpup;
-    else if (strcmp(name, "wptop") == 0)
-        return wptop;
+    else if (strcmp(name, "cligen_wp_set") == 0)
+        return cligen_wp_set;
+    else if (strcmp(name, "cligen_wp_show") == 0)
+        return cligen_wp_show;
+    else if (strcmp(name, "cligen_wp_up") == 0)
+        return cligen_wp_up;
+    else if (strcmp(name, "cligen_wp_top") == 0)
+        return cligen_wp_top;
     return unknown; /* allow any function (for testing) */
 }
 
@@ -367,7 +285,7 @@ main(int argc, char *argv[])
     cligen_handle   h;
     int             retval = -1;
     parse_tree     *pt;
-    parse_tree_head *ph;
+    pt_head        *ph;
     FILE           *f = stdin;
     char           *argv0 = argv[0];
     char           *filename=NULL;
@@ -435,7 +353,6 @@ main(int argc, char *argv[])
 	}
 	fflush(stdout);
     }
-
     if (cligen_loop(h) < 0)
 	goto done;
     retval = 0;

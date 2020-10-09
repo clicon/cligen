@@ -73,7 +73,7 @@ static inline char * strdup4(char *str)
     len = align4(strlen(str)+1);
     if ((dup = malloc(len)) == NULL)
 	return NULL;
-    strnpy(dup, str);
+    strcpy(dup, str);
     return dup;
 }
 

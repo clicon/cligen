@@ -70,10 +70,10 @@ static char *hello_syntax = "prompt=\"hello> \";\n"
 int
 main(int argc, char *argv[])
 {
-    int                retval = -1;
-    parse_tree        *pt;            /* cligen parse tree */
-    parse_tree_head   *ph;            /* cligen parse tree */
-    cligen_handle      h;
+    int             retval = -1;
+    parse_tree     *pt;            /* cligen parse tree */
+    pt_head        *ph;            /* cligen parse tree head */
+    cligen_handle   h;
 
     if ((h = cligen_init()) == NULL)
 	goto done;

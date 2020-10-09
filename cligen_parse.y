@@ -91,7 +91,7 @@
 #include "cligen_cv.h"
 #include "cligen_cvec.h"
 #include "cligen_parsetree.h"
-#include "cligen_parsetree_head.h"
+#include "cligen_pt_head.h"
 #include "cligen_object.h"
 #include "cligen_match.h"
 #include "cligen_syntax.h"
@@ -214,9 +214,9 @@ cgy_treename(cligen_yacc *cy,
 	break;
     }
     /* Get the top object */
-    cot = co_top(co);
+    cot = co_top(co); /* co and cot can be same object */
     pt = co_pt_get(cot);
-    /* If anything anything parsed */
+    /* If anything parsed */
     if (pt_len_get(pt)){ 
 	/* 2. Add the old parse-tree with old name*/
 	for (i=0; i<pt_len_get(pt); i++){

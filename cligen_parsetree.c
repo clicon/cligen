@@ -59,7 +59,7 @@
 #include "cligen_cv.h"
 #include "cligen_cvec.h"
 #include "cligen_parsetree.h"
-#include "cligen_parsetree_head.h"
+#include "cligen_pt_head.h"
 #include "cligen_object.h"
 #include "cligen_io.h"
 #include "cligen_read.h"
@@ -73,7 +73,9 @@
 struct parse_tree{
     struct cg_obj     **pt_vec;    /* vector of pointers to parse-tree nodes */
     int                 pt_len;    /* length of vector */
-    char               *pt_name;   /* XXX Is this necessary? */
+#if 1 /* OBSOLETE but keep to after 4.8 */
+    char               *pt_name;   /* XXX Should be removed, us ph_name instead but eg clixon uses it */
+#endif
     char                pt_set;    /* Parse-tree is a SET */ 
 };
 
@@ -199,6 +201,7 @@ pt_len_get(parse_tree *pt)
     return pt->pt_len;
 }
 
+#if 1 /* OBSOLETE but keep to after 4.8 */
 char*
 pt_name_get(parse_tree *pt)
 {
@@ -227,6 +230,7 @@ pt_name_set(parse_tree *pt,
 	pt->pt_name = NULL;
     return 0;
 }
+#endif /* OBSOLETE but keep to after 4.8 */
 
 int
 pt_sets_get(parse_tree *pt)

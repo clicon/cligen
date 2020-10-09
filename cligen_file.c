@@ -199,7 +199,7 @@ main(int argc, char *argv[])
 {
     int         retval = -1;
     parse_tree *pt = NULL;
-    parse_tree_head *ph;
+    pt_head    *ph;
     FILE       *f = stdin;
     char       *argv0 = argv[0];
     char       *filename=NULL;
@@ -278,7 +278,7 @@ main(int argc, char *argv[])
     if ((str = cvec_find_str(globals, "comment")) != NULL)
 	cligen_comment_set(h, *str);
     if ((str = cvec_find_str(globals, "mode")) != NULL)
-	cligen_tree_active_set(h, str);
+	cligen_ph_active_set(h, str);
     cvec_free(globals);
 
     if (print_syntax){
