@@ -69,10 +69,11 @@ static inline char * strdup4(char *str)
 {
     char *dup;
     int len;
+
     len = align4(strlen(str)+1);
     if ((dup = malloc(len)) == NULL)
 	return NULL;
-    strncpy(dup, str, len);
+    strcpy(dup, str);
     return dup;
 }
 

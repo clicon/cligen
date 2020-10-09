@@ -158,7 +158,7 @@ typedef struct cg_varspec cg_varspec;
  * @endcode
  */
 struct cg_obj{
-    parse_tree        **co_ptvec;        /* Child parse-tree (see co_next macro below) */
+    parse_tree        **co_ptvec;     /* Child parse-tree (see co_next macro below) */
     int                 co_pt_len;    /* Length of parse-tree vector */
     struct cg_obj      *co_prev;      /* Parent */
     enum cg_objtype     co_type;      /* Type of object: command, variable or tree
@@ -172,14 +172,15 @@ struct cg_obj{
 #else
     char	       *co_help;      /* Helptext */
 #endif
-    uint32_t            co_flags;     /* General purpose flags, see CO_FLAGS_ above*/
-
+    uint32_t            co_flags;     /* General purpose flags, see CO_FLAGS_HIDE and others above */
     struct cg_obj      *co_ref;       /* Ref to original (if this is expanded) */
+    struct cg_obj      *co_treeref_orig; /* Ref to original (if this is a tree reference) */
     char               *co_value;     /* Expanded value can be a string with a constant. 
 					 Store the constant in the original variable. */
-    union {
-	struct {        } cou_cmd;
-	struct cg_varspec cou_var;
+    union {                           /* depends on co_type: */
+	struct {        } cou_cmd;    /* CO_COMMAND */
+	struct cg_varspec cou_var;    /* CO_VARIABLE */
+	//	struct cg_varspec cou_tree;   /* CO_REFERENCE */
     } u;
 };
 

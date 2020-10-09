@@ -59,6 +59,7 @@
 #include "cligen_cv.h"
 #include "cligen_cvec.h"
 #include "cligen_parsetree.h"
+#include "cligen_pt_head.h"
 #include "cligen_object.h"
 #include "cligen_io.h"
 #include "cligen_read.h"
@@ -66,11 +67,15 @@
 #include "cligen_handle.h"
 #include "cligen_getline.h"
 
-/* Private definition of parsetree. Public is defined in cligen_parsetree.h */
+/* Private definition of parsetree. Public is defined in cligen_parsetree.h 
+ * @see parse_tree_list which is the upper level of a parse-tree
+ */
 struct parse_tree{
     struct cg_obj     **pt_vec;    /* vector of pointers to parse-tree nodes */
     int                 pt_len;    /* length of vector */
-    char               *pt_name;
+#if 1 /* OBSOLETE but keep to after 4.8 */
+    char               *pt_name;   /* XXX Should be removed, us ph_name instead but eg clixon uses it */
+#endif
     char                pt_set;    /* Parse-tree is a SET */ 
 };
 
@@ -196,6 +201,7 @@ pt_len_get(parse_tree *pt)
     return pt->pt_len;
 }
 
+#if 1 /* OBSOLETE but keep to after 4.8 */
 char*
 pt_name_get(parse_tree *pt)
 {
@@ -224,6 +230,7 @@ pt_name_set(parse_tree *pt,
 	pt->pt_name = NULL;
     return 0;
 }
+#endif /* OBSOLETE but keep to after 4.8 */
 
 int
 pt_sets_get(parse_tree *pt)
@@ -340,7 +347,7 @@ pt_copy(parse_tree *pt,
     return retval;
 }
 
-/*! Duplicate a  parse-tree redursively
+/*! Duplicate a  parse-tree recursively
  *
  * @param[in]  pt     Original parse-tree
  * @param[in]  parent The parent of the new parsetree. Need not be same as parent of the orignal
@@ -560,3 +567,4 @@ pt_apply(parse_tree   *pt,
   done:
     return retval;
 }
+
