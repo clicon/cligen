@@ -48,7 +48,7 @@
 #include "cligen_cv.h"
 #include "cligen_cvec.h"
 #include "cligen_parsetree.h"
-#include "cligen_parsetree_head.h"
+#include "cligen_pt_head.h"
 #include "cligen_object.h"
 #include "cligen_handle.h"
 #include "cligen_print.h"
@@ -411,14 +411,14 @@ cligen_print_trees(FILE         *f,
 		   cligen_handle h,
 		   int           brief)
 {
-    int              retval = -1;
-    parse_tree_head *ph;
-    parse_tree      *pt;
+    int          retval = -1;
+    pt_head     *ph;
+    parse_tree  *pt;
 
     ph = NULL;
     while ((ph = cligen_ph_each(h, ph)) != NULL) {
+	fprintf(stderr, "%s\n", cligen_ph_name_get(ph));
 	pt = cligen_ph_parsetree_get(ph);
-	fprintf(stderr, "%s\n", pt_name_get(pt));
 	if (!brief && pt_print(f, pt, brief) < 0)
 	    goto done;
     }

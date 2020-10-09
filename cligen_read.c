@@ -65,7 +65,7 @@
 #include "cligen_cv.h"
 #include "cligen_cvec.h"
 #include "cligen_parsetree.h"
-#include "cligen_parsetree_head.h"
+#include "cligen_pt_head.h"
 #include "cligen_object.h"
 #include "cligen_handle.h"
 #include "cligen_print.h"
@@ -104,7 +104,7 @@ cli_qmark_hook(cligen_handle h,
     if ((ptn = pt_new()) == NULL)
 	goto done;
     fputs("\n", stdout);
-    if ((pt = cligen_tree_active_get(h)) == NULL)
+    if ((pt = cligen_ph_active_get(h)) == NULL)
 	goto ok;
     if (pt_expand_treeref(h, NULL, pt) < 0) /* sub-tree expansion */
 	goto done; 
@@ -152,7 +152,7 @@ cli_tab_hook(cligen_handle h,
     if ((ptn = pt_new()) == NULL)
 	goto done;
     old_cursor = *cursorp;  /* Save old location of cursor */
-    if ((pt = cligen_tree_active_get(h)) == NULL)
+    if ((pt = cligen_ph_active_get(h)) == NULL)
 	goto ok;
     if (pt_expand_treeref(h, NULL, pt) < 0) /* sub-tree expansion */
 	goto done;
@@ -800,7 +800,7 @@ cliread_eval(cligen_handle  h,
 	*result = CG_EOF; 
 	goto ok;
     }
-    if ((pt = cligen_tree_active_get(h)) == NULL){
+    if ((pt = cligen_ph_active_get(h)) == NULL){
 	fprintf(stderr, "No active parse-tree found\n");
 	goto done;;
     }

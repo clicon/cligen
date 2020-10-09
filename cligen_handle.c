@@ -55,7 +55,7 @@
 #include "cligen_cv.h"
 #include "cligen_cvec.h"
 #include "cligen_parsetree.h"
-#include "cligen_parsetree_head.h"
+#include "cligen_pt_head.h"
 #include "cligen_object.h"
 #include "cligen_io.h"
 #include "cligen_handle.h"
@@ -64,7 +64,6 @@
 #include "cligen_history.h"
 #include "cligen_getline.h"
 #include "cligen_handle_internal.h"
-
 #include "cligen_history.h"
 #include "cligen_history_internal.h"
 
@@ -174,7 +173,7 @@ int
 cligen_exit(cligen_handle h)
 {
     struct cligen_handle *ch = handle(h);
-    parse_tree_head      *ph;
+    pt_head              *ph;
 
     hist_exit(h);
     cligen_buf_cleanup(h);
@@ -186,10 +185,9 @@ cligen_exit(cligen_handle h)
 	free(ch->ch_treename_keyword);
     if (ch->ch_fn_str)
 	free(ch->ch_fn_str);
-    while ((ph = ch->ch_parsetree_head) != NULL){
-	ch->ch_parsetree_head = ph->ph_next;
-	pt_free(ph->ph_parsetree, 1);
-	free(ph);
+    while ((ph = ch->ch_pt_head) != NULL){
+	ch->ch_pt_head = ph->ph_next;
+	cligen_ph_free(ph);
     }
     free(ch);
     return 0;
@@ -292,47 +290,23 @@ cligen_prompt_set(cligen_handle h,
 
 /*! Get CLIgen parse-tree head holding all parsetrees in the system
  */
-parse_tree_head *
-cligen_parsetree_head_get(cligen_handle h)
+pt_head *
+cligen_pt_head_get(cligen_handle h)
 {
     struct cligen_handle *ch = handle(h);
 
-    return ch->ch_parsetree_head;
+    return ch->ch_pt_head;
 }
 
 /*! Set CLIgen parse-tree head holding all parsetrees in the system
  */
 int
-cligen_parsetree_head_set(cligen_handle    h,
-			  parse_tree_head *ph)
+cligen_pt_head_set(cligen_handle h,
+		   pt_head      *ph)
 {
     struct cligen_handle *ch = handle(h);
 
-    ch->ch_parsetree_head = ph;
-    return 0;
-}
-
-/*! Delete CLIgen parse-tree head
- */
-int
-cligen_parsetree_head_del(cligen_handle    h,
-			  parse_tree_head *ph1)
-{
-    struct cligen_handle *ch = handle(h);
-    parse_tree_head      *ph;
-    parse_tree_head     **ph_prev;
-    
-    for (ph_prev = &ch->ch_parsetree_head, ph = *ph_prev; 
-	 ph; 
-	 ph_prev = &ph->ph_next, ph = ph->ph_next){
-	if (ph == ph1){
-	    *ph_prev = ph->ph_next;
-	    if (ph->ph_name)
-		free(ph->ph_name);
-	    free(ph);
-	    break;
-	}
-    }
+    ch->ch_pt_head = ph;
     return 0;
 }
 

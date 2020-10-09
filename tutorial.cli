@@ -75,11 +75,6 @@ ex <a:int32 show:number>("A number");
   add @sub, add();         # Reference of sub-tree with 'add' callback
   del @sub, del();         # Reference of sub-tree with 'del' callback
 
-  wpset,wpset("wpset");{ @wptree, wpset("wptree");}         # Example on how to set and change a working point in a tree
-  wpshow, wpshow("wptree");
-  wpup, wpup("wptree");
-  wptop, wptop("wptop");
-
   treename="sub";           # Small sub-tree refernced in the main tutorial tree
   x{
     y, fn("a");
@@ -90,11 +85,3 @@ ex <a:int32 show:number>("A number");
       x;
   }
   change tree, changetree("tutorial");
-
-  treename="wptree";           # Example on how to set and change a working point in a tree
-  a; {
-    b; {
-      d;
-    }
-    c;
-  }

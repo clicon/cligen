@@ -18,7 +18,7 @@
 
 % If you want a logo
 % \lhead{\includegraphics[height=9mm]{../../doc/logga_crop.png}}
-\date{Dec, 2019}
+\date{Oct, 2020}
 \maketitle
 \setcounter{tocdepth}{2}
 \tableofcontents
@@ -354,7 +354,7 @@ which means that the following sentences are valid commands:
   foo
   recurse foo
   recurse recurse foo
-  recurse recusre recurse foo
+  recurse recurse recurse foo
 \end{verbatim}
 and so on.
 
@@ -399,6 +399,77 @@ data (x y) is the same but the operation(add/del) is different.
 In the example, the 'treename' variable is used to define a new CLIgen
 tree. It is possible using the C-API to change this keyword to
 something else by using the API function {\tt cligen\_treename\_keyword}.
+
+\subsubsection{Tree workpoints}
+
+When using tree references it is possible to set an active {\em
+  workpoint} for that tree, which can change dynamically. In this way,
+auser can navigate up and down the tree in its references for it. This
+is useful when implementing automatic modes for example.
+
+To achieve this, a couple of C-API callbacks are available:
+\begin{itemize}
+  \item {\tt cligen\_wp\_set(<tree>)} - Set the workpoint
+  \item {\tt cligen\_wp\_show(<tree>)} - Show the tree at the active workpoint
+  \item {\tt cligen\_wp\_up(<tree>)} - Navigate up in the tree
+  \item {\tt cligen\_wp\_top(<tree>)} - Navigate to top of tree
+\end{itemize}
+
+Assume first a tree ``T'' is created that will be navigated in using workpoints:
+\begin{verbatim}
+     treename="T";
+     a; {
+       b <v:int32>; {
+         d;
+       }
+       c;
+     }
+\end{verbatim}
+
+Then, some main syntax for navigating in three is added in the main CLIgen spec:
+
+\begin{verbatim}
+  edit, cligen_wp_set("T");{
+    @T, cligen_wp_set("T");
+  }
+  show, cligen_wp_show("T");
+  up, cligen_wp_up("T");
+  top, cligen_wp_top("T");
+\end{verbatim}
+
+It is now possible to traverse the tree using the ``T'' tree as the following example illustrates (the prompt shows the location of the active workpoint):
+\begin{verbatim}
+     cli:/> show 
+     a;{
+        b <v>;{
+              d;
+           }
+        c;
+     }
+     cli:/> edit a 
+     cli:/a> show 
+     b <v>;{
+           d;
+        }
+     c;
+     cli:/a> edit b 23
+     cli:/a/b/23> show 
+     d;
+     cli:/a/b/23> up
+     cli:/a/b> show 
+     <v>;{
+        d;
+     }
+     cli> top
+     cli:/> show 
+     a;{
+        b <v>;{
+              d;
+           }
+        c;
+     }
+     cli:/> 
+\end{verbatim}
 
 \subsection{Sets}
 

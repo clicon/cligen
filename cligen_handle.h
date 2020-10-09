@@ -73,9 +73,8 @@ int cligen_comment_set(cligen_handle h, char c);
 char* cligen_prompt(cligen_handle h);
 int cligen_prompt_set(cligen_handle h, char *prompt);
 
-parse_tree_head *cligen_parsetree_head_get(cligen_handle h);
-int cligen_parsetree_head_set(cligen_handle h, parse_tree_head *ph);
-int cligen_parsetree_head_del(cligen_handle h, parse_tree_head *ph);
+pt_head *cligen_pt_head_get(cligen_handle h);
+int cligen_pt_head_set(cligen_handle h, pt_head *ph);
 
 char *cligen_treename_keyword(cligen_handle h);
 int cligen_treename_keyword_set(cligen_handle h, char *name);
