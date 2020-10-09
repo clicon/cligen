@@ -59,13 +59,13 @@
 #include "cligen_cv.h"
 #include "cligen_cvec.h"
 #include "cligen_parsetree.h"
+#include "cligen_pt_head.h"
 #include "cligen_object.h"
 #include "cligen_io.h"
 #include "cligen_read.h"
 #include "cligen_parse.h"
 #include "cligen_handle.h"
 #include "cligen_getline.h"
-
 
 /* Access macro */
 cg_obj* 
@@ -512,6 +512,10 @@ co_copy(cg_obj  *co,
     con->co_ptvec = NULL;
     con->co_pt_len = 0;
     con->co_ref = NULL;
+    if (co->co_treeref_orig)
+	con->co_treeref_orig = co->co_treeref_orig;
+    else
+	con->co_treeref_orig = co;
     co_flags_reset(con, CO_FLAGS_MARK);
     co_flags_reset(con, CO_FLAGS_REFDONE);
     /* Replace all pointers */
@@ -797,7 +801,7 @@ co_free(cg_obj *co,
  * @param[in]  pt      CLIgen parse-tree
  * @param[in]  name    Name of node
  * @param[in]  low     Lower bound
- * @param[in]  upper    Upper bound
+ * @param[in]  upper   Upper bound
  * @retval     co      Object found
  * @retval     NULL    Not found
  * @see co_insert Main function

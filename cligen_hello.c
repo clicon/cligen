@@ -70,9 +70,10 @@ static char *hello_syntax = "prompt=\"hello> \";\n"
 int
 main(int argc, char *argv[])
 {
-    int                retval = -1;
-    parse_tree        *pt;            /* cligen parse tree */
-    cligen_handle      h;
+    int             retval = -1;
+    parse_tree     *pt;            /* cligen parse tree */
+    pt_head        *ph;            /* cligen parse tree head */
+    cligen_handle   h;
 
     if ((h = cligen_init()) == NULL)
 	goto done;
@@ -82,8 +83,9 @@ main(int argc, char *argv[])
     cligen_prompt_set(h, "hello> ");
     cligen_comment_set(h, '#');
     /* Get the default (first) parse-tree */
-    if ((pt = cligen_tree_i(h, 0)) == NULL)
+    if ((ph = cligen_ph_i(h, 0)) == NULL)
 	goto done;
+    pt = cligen_ph_parsetree_get(ph);
     /* Bind callback (hello_cb) to all commands */
     if (cligen_callbackv_str2fn(pt, str2fn, NULL) < 0)     
 	goto done;

@@ -151,7 +151,7 @@ changetree(cligen_handle h, cvec *cvv, cvec *argv)
 
     cv = cvec_i(argv, 0);
     treename = cv_string_get(cv);
-    return cligen_tree_active_set(h, treename);
+    return cligen_ph_active_set(h, treename);
 }
 
 /*! Command without assigned callback
@@ -165,7 +165,6 @@ unknown(cligen_handle h, cvec *cvv, cvec *argv)
     return 0;
 }
 
-
 /*! Example of static string to function mapper for the callback functions above.
  * Better to use dlopen, mmap or some other more flexible scheme.
  */
@@ -175,22 +174,30 @@ str2fn(char *name, void *arg, char **error)
     *error = NULL;
     if (strcmp(name, "hello") == 0)
         return hello;
-    if (strcmp(name, "cb") == 0)
+    else     if (strcmp(name, "cb") == 0)
         return cb;
-    if (strcmp(name, "add") == 0)
+    else     if (strcmp(name, "add") == 0)
         return cb;
-    if (strcmp(name, "del") == 0)
+    else     if (strcmp(name, "del") == 0)
         return cb;
-    if (strcmp(name, "letters") == 0)
+    else     if (strcmp(name, "letters") == 0)
         return letters;
-    if (strcmp(name, "secret") == 0)
+    else     if (strcmp(name, "secret") == 0)
         return secret;
-    if (strcmp(name, "setprompt") == 0)
+    else     if (strcmp(name, "setprompt") == 0)
         return setprompt;
-    if (strcmp(name, "quit") == 0)
+    else     if (strcmp(name, "quit") == 0)
         return quit;
-    if (strcmp(name, "changetree") == 0)
+    else if (strcmp(name, "changetree") == 0)
         return changetree;
+    else if (strcmp(name, "cligen_wp_set") == 0)
+        return cligen_wp_set;
+    else if (strcmp(name, "cligen_wp_show") == 0)
+        return cligen_wp_show;
+    else if (strcmp(name, "cligen_wp_up") == 0)
+        return cligen_wp_up;
+    else if (strcmp(name, "cligen_wp_top") == 0)
+        return cligen_wp_top;
     return unknown; /* allow any function (for testing) */
 }
 
@@ -278,6 +285,7 @@ main(int argc, char *argv[])
     cligen_handle   h;
     int             retval = -1;
     parse_tree     *pt;
+    pt_head        *ph;
     FILE           *f = stdin;
     char           *argv0 = argv[0];
     char           *filename=NULL;
@@ -318,8 +326,9 @@ main(int argc, char *argv[])
 	goto done;
     if (cligen_parse_file(h, f, filename, NULL, globals) < 0)
         goto done;
-    pt = NULL;
-    while ((pt = cligen_tree_each(h, pt)) != NULL) {
+    ph = NULL;
+    while ((ph = cligen_ph_each(h, ph)) != NULL) {
+	pt = cligen_ph_parsetree_get(ph);
 	if (cligen_callbackv_str2fn(pt, str2fn, NULL) < 0) /* map functions */
 	    goto done;
 	if (cligen_expandv_str2fn(pt, str2fn_exp, NULL) < 0)
@@ -336,14 +345,14 @@ main(int argc, char *argv[])
 	    cligen_tabmode_set(h, CLIGEN_TABMODE_COLUMNS);
     cvec_free(globals);
     if (!quiet){
-	pt = NULL;
-	while ((pt = cligen_tree_each(h, pt)) != NULL) {
+	ph = NULL;
+	while ((ph = cligen_ph_each(h, ph)) != NULL) {
+	    pt = cligen_ph_parsetree_get(ph);
 	    printf("Syntax:\n");
 	    pt_print(stdout, pt, 0);
 	}
 	fflush(stdout);
     }
-
     if (cligen_loop(h) < 0)
 	goto done;
     retval = 0;

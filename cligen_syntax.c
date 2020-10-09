@@ -43,9 +43,9 @@
 #include "cligen_cv.h"
 #include "cligen_cvec.h"
 #include "cligen_parsetree.h"
+#include "cligen_pt_head.h"
 #include "cligen_object.h"
 #include "cligen_parse.h"
-#include "cligen_print.h" /* XXX */
 #include "cligen_handle.h"
 #include "cligen_read.h"
 #include "cligen_syntax.h"
@@ -77,11 +77,11 @@ cligen_parse_str(cligen_handle h,
     int                i;
     cligen_yacc        cy = {0,};
     cg_obj            *co;
-    cg_obj            *co_top = NULL;
+    cg_obj            *cot = NULL;
     parse_tree        *pt = NULL; 
     
     /* "Fake" top-level object that is removed on exit */
-    if ((co_top = co_new(NULL, NULL)) == NULL)
+    if ((cot = co_new(NULL, NULL)) == NULL)
 	goto done;
     cy.cy_handle       = h; /* cligen_handle */
     cy.cy_name         = name;
@@ -94,7 +94,7 @@ cligen_parse_str(cligen_handle h,
     else
 	if ((pt = pt_new()) == NULL)
 	    goto done;
-    co_pt_set(co_top, pt);
+    co_pt_set(cot, pt);
     if (cvv)
 	cy.cy_globals  = cvv; 
     else
@@ -105,18 +105,20 @@ cligen_parse_str(cligen_handle h,
     if (strlen(str)){ /* Not empty */
 	if (cgl_init(&cy) < 0)
 	    goto done;
-	if (cgy_init(&cy, co_top) < 0)
+	if (cgy_init(&cy, cot) < 0)
 	    goto done;
 	if (cligen_parseparse(&cy) != 0) { /* yacc returns 1 on error */
 	    cgy_exit(&cy);
 	    cgl_exit(&cy);
 	    goto done;
 	}
-	/* Note pt/ptp is stale after parsing due to treename that replaces co_top->pt 
-	   Add final tree */
-	if (ptp == NULL)
-	    if (cligen_tree_add(cy.cy_handle, cy.cy_treename, co_pt_get(co_top)) < 0)
+	/* Note pt/ptp is stale after parsing due to treename that replaces cot->pt 
+	 * Add final tree */
+	pt = co_pt_get(cot);
+	if (ptp == NULL){
+	    if (cligen_tree_add(cy.cy_handle, cy.cy_treename, pt) < 0)
 		goto done;
+	}
 	if (cgy_exit(&cy) < 0)
 	    goto done;		
 	if (cgl_exit(&cy) < 0)
@@ -128,6 +130,7 @@ cligen_parse_str(cligen_handle h,
 	cvec_free(cy.cy_globals);
     /*
      * Remove the fake top level object and remove references to it.
+     * This does not work for (other) trees
      */
     for (i=0; i<pt_len_get(pt); i++){
 	if ((co=pt_vec_i_get(pt, i)) != NULL)
@@ -135,8 +138,8 @@ cligen_parse_str(cligen_handle h,
     }
     retval = 0;
   done:
-    if (co_top)
-	co_free(co_top, 0);
+    if (cot)
+	co_free(cot, 0);
     if (cy.cy_treename)
 	free (cy.cy_treename);
     return retval;

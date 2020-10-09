@@ -59,6 +59,7 @@ extern "C" {
 #include <cligen/cligen_cv.h>
 #include <cligen/cligen_cvec.h>
 #include <cligen/cligen_parsetree.h>
+#include <cligen/cligen_pt_head.h>
 #include <cligen/cligen_object.h>
 #include <cligen/cligen_handle.h>
 #include <cligen/cligen_print.h>

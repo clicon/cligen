@@ -46,6 +46,7 @@
 #include "cligen_cv.h"
 #include "cligen_cvec.h"
 #include "cligen_parsetree.h"
+#include "cligen_pt_head.h"
 #include "cligen_object.h"
 #include "cligen_handle.h"
 #include "cligen_match.h"
@@ -294,7 +295,6 @@ pt_reference_trunc(parse_tree *pt)
     return retval;
 }
 
-
 /*! Take a top-object parse-tree (pt0), and expand all tree references one level. 
  * 
  * One level only. Parse-tree is expanded itself (not copy).
@@ -321,6 +321,8 @@ pt_expand_treeref(cligen_handle h,
     cg_obj     *cot;            /* treeref object */
     char       *treename;
     cg_obj     *co02;
+    cg_obj     *cow;
+    pt_head    *ph;
 
  again: /* XXX ugly goto , try to replace with a loop */
     for (i=0; i<pt_len_get(pt0); i++){ /*  */
@@ -330,13 +332,16 @@ pt_expand_treeref(cligen_handle h,
 	    /* Expansion is made in-line so we need to know if already 
 	       expanded */
 	    treename = co->co_command;
-
-	    /* Find the referring tree */
-	    if ((ptref = cligen_tree_find(h, treename)) == NULL){
-		fprintf(stderr, "CLIgen subtree '%s' not found\n", 
-			treename);
+	    /* Get parse tree header */
+	    if ((ph = cligen_ph_find(h, treename)) == NULL){
+		fprintf(stderr, "CLIgen tree '%s' not found\n", treename);
 		goto done;
 	    }
+	    /* Get working point of tree, if any */
+	    if ((cow = cligen_ph_workpoint_get(ph)) != NULL)
+		ptref = co_pt_get(cow);
+	    else
+		ptref = cligen_ph_parsetree_get(ph);	    
 
 	    /* make a copy of ptref -> pt1ref */
 	    co02 = co_up(co);
@@ -355,6 +360,7 @@ pt_expand_treeref(cligen_handle h,
 	    for (j=0; j<pt_len_get(pt1ref); j++)
 		if ((cot = pt_vec_i_get(pt1ref, j)) != NULL){
 		    co_flags_set(cot, CO_FLAGS_TREEREF); /* Mark expanded refd tree */
+		    cot->co_ref = co; /* Backpointer so we know where this treeref is from */
 		    if (co_insert(pt0, cot) == NULL) 
 			goto done;
 		    if (pt_vec_i_clear(pt1ref, j) < 0)

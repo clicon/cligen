@@ -85,10 +85,3 @@ ex <a:int32 show:number>("A number");
       x;
   }
   change tree, changetree("tutorial");
-
-
-
-
-
-
-
