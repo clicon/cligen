@@ -79,6 +79,7 @@ cligen_parse_str(cligen_handle h,
     cg_obj            *co;
     cg_obj            *cot = NULL;
     parse_tree        *pt = NULL; 
+    pt_head           *ph;
     
     /* "Fake" top-level object that is removed on exit */
     if ((cot = co_new(NULL, NULL)) == NULL)
@@ -116,7 +117,9 @@ cligen_parse_str(cligen_handle h,
 	 * Add final tree */
 	pt = co_pt_get(cot);
 	if (ptp == NULL){
-	    if (cligen_tree_add(cy.cy_handle, cy.cy_treename, pt) < 0)
+	    if ((ph = cligen_ph_add(cy.cy_handle, cy.cy_treename)) == NULL)
+		goto done;
+	    if (cligen_ph_parsetree_set(ph, pt) < 0)
 		goto done;
 	}
 	if (cgy_exit(&cy) < 0)

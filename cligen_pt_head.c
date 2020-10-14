@@ -185,7 +185,6 @@ cligen_ph_workpoint_set(pt_head *ph,
  * @param[in] name    Name of tree
  * @retval    ph      Parse-tree header
  * @retval    NULL    Not found
- * @note name of parse-tree is assigned when you do cligen_tree_add
  */
 pt_head *
 cligen_ph_find(cligen_handle h,
@@ -297,8 +296,7 @@ cligen_ph_add(cligen_handle h,
  *	     ...
  *    }
  * @endcode
- * Note: you may not delete (or add) parse-trees while iterating through them
- * Note: the list contains all parse-trees added by cligen_tree_add()
+ * Note: you may not delete (or add) parse-tree-heads while iterating through them
  */
 pt_head *
 cligen_ph_each(cligen_handle h, 
@@ -480,7 +478,7 @@ cligen_wp_top(cligen_handle h,
  * @param[in] name    Name of tree
  * @retval    pt      Parse-tree
  * @retval    NULL    Not found
- * @note name of parse-tree is assigned when you do cligen_tree_add
+ * @note OBSOLETE, keep for backward compat , remove after 4.8
  */
 parse_tree *
 cligen_tree_find(cligen_handle h, 
@@ -500,6 +498,7 @@ cligen_tree_find(cligen_handle h,
  * @retval     0     OK
  * @retval    -1     Error
  * Note, if this is the first tree, it is activated by default
+ * @note OBSOLETE, keep for backward compat , remove after 4.8
  */
 int 
 cligen_tree_add(cligen_handle h, 
@@ -508,7 +507,7 @@ cligen_tree_add(cligen_handle h,
 {
     pt_head  *ph;
     
-    if ((ph = cligen_ph_add(h, name)) < 0)
+    if ((ph = cligen_ph_add(h, name)) == NULL)
 	return -1;
     if (cligen_ph_parsetree_set(ph, pt) < 0)
 	return -1;
