@@ -207,7 +207,8 @@ cgy_treename(cligen_yacc *cy,
     int                retval = -1;
     int                i;
     parse_tree        *pt;
-
+    pt_head           *ph;
+    
     /* Get the first object */
     for (cl=cy->cy_list; cl; cl = cl->cl_next){
 	co = cl->cl_obj;
@@ -223,7 +224,9 @@ cgy_treename(cligen_yacc *cy,
 	    if ((co=pt_vec_i_get(pt, i)) != NULL)
 		co_up_set(co, NULL);
 	}
-	if (cligen_tree_add(cy->cy_handle, cy->cy_treename, pt) < 0)
+	if ((ph = cligen_ph_add(cy->cy_handle, cy->cy_treename)) == NULL)
+	    goto done;
+	if (cligen_ph_parsetree_set(ph, pt) < 0)
 	    goto done;
 	/* 3. Create new parse-tree XXX */
 	if ((pt = pt_new()) == NULL)

@@ -71,10 +71,11 @@ int         cligen_wp_show(cligen_handle h, cvec *cvv, cvec *argv);
 int         cligen_wp_up(cligen_handle h, cvec *cvv, cvec *argv);
 int         cligen_wp_top(cligen_handle h, cvec *cvv, cvec *argv);
 
-/* OBSOLETE, keep for backward compat , remove after 4.8 */
+#if 1 /* OBSOLETE, keep for backward compat , remove after 4.8 */
 parse_tree *cligen_tree_find(cligen_handle h, char *name);
 int         cligen_tree_add(cligen_handle h, char *name, parse_tree *pt);
 #define     cligen_tree_active_get(h)       cligen_ph_active_get(h)
 #define     cligen_tree_active_set(h, name) cligen_ph_active_set((h), (name))
+#endif
 
 #endif /* _CLIGEN_PT_HEAD_H_ */
