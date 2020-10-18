@@ -1,12 +1,12 @@
 # Cligen Changelog
 	
 ## 4.8.0
-Expected: 15 October 2020
+18 October 2020
 
 ### New features
 
-* Tree reference mode support.
-  * Add a tree "working point" which can be moved up and down, which enables "modes".
+* Tree reference workpoint and mode support.
+  * When using tree references it is possible to set an active _workpoint_ for that tree, which can change dynamically. In this way, a user can navigate up and down the tree in its references for it. This is useful when implementing automatic modes for example.
 
 ### C/CLI-API changes on existing features
 
@@ -14,7 +14,6 @@ Developers may need to change their code
 
 * Code restructure: exposed "parse_tree_head" as a first class object that was previously hidden in cligen_handle code.
   * For example, `pt = cligen_tree_i` -> `ph = cligen_ph_i(h, 0); pt = cligen_ph_parsetree_get(ph);`
-
 
 ## 4.7.0
 14 September 2020
