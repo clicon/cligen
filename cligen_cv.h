@@ -198,6 +198,7 @@ int parse_uint16(char *str, uint16_t *val, char **reason);
 int parse_uint32(char *str, uint32_t *val, char **reason);
 int parse_uint64(char *str, uint64_t *val, char **reason);
 int parse_dec64(char *str, uint8_t n, int64_t *dec64_i, char **reason);
+int parse_bool(char *str, uint8_t *val, char **reason);
 
 int str2urlproto(char *str);
 int str2uuid(char *in, uuid_t u);

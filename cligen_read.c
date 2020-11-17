@@ -423,7 +423,8 @@ show_help_line(cligen_handle h,
 		      cvt, cvr, /* token string */
 		      pt,       /* command vector */
 		      0,        /* best: Return all options, not only best */
-		      1, 1,
+		      1,        /* hide */
+		      1,        /* expandvar */
 		      &ptmatch,
 		      &matchvec, &matchlen,
 		      cvv, NULL,
@@ -608,7 +609,7 @@ cli_trim(char **line,
  * @param[in]  string    Input string to match
  * @param[in]  pt        Parse-tree
  * @param[out] co_orig   Object that matches (if retval == 1).
- * @param[out] cvv       Variable vector (if retval == 1).
+ * @param[out] cvvall    Variable vector (if retval == 1).
  * @param[out] result    Result, < 0: errors, >=0 number of matches
  * @param[out] reason    Error reason if result is nomatch. Need to be free:d 
  * @retval     0         OK
@@ -659,6 +660,7 @@ cliread_parse(cligen_handle  h,
 	goto done;
     cv_name_set(cv, "cmd"); /* the whole command string */
     cv_string_set(cv, string); /* the whole command string */
+    /* Why is this created separately from cvvall? */
     if ((cvv = cvec_start(string)) == NULL)
 	goto done;
     if (pt_expand(h, pt, cvv, 0, 0, ptn) < 0) /* sub-tree expansion, ie choice, expand function */

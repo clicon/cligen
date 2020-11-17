@@ -1,5 +1,11 @@
 # Cligen Changelog
 	
+## 4.9.0 Expected: 15 Dec 2020
+
+### Corrected Bugs
+
+* Recursive sets did not work properly, especially competion and query.
+
 ## 4.8.0
 18 October 2020
 
