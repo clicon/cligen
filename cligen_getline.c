@@ -1147,14 +1147,14 @@ gl_fixup_noscroll(cligen_handle h,
 	gl_pos = gl_cnt = fixup_gl_shift = fixup_off_right = fixup_off_left = 0;
 	gl_putc('\r');
 	gl_puts(prompt);
-	strncpy(fixup_last_prompt, prompt, sizeof(fixup_last_prompt));
+	strncpy(fixup_last_prompt, prompt, sizeof(fixup_last_prompt)-1);
 	change = 0;
         gl_width = gl_termw - gl_strlen(prompt);
     } else if (strcmp(prompt, fixup_last_prompt) != 0) {
 	l1 = gl_strlen(fixup_last_prompt);
 	l2 = gl_strlen(prompt);
 	gl_cnt = gl_cnt + l1 - l2;
-	strncpy(fixup_last_prompt, prompt, sizeof(fixup_last_prompt));
+	strncpy(fixup_last_prompt, prompt, sizeof(fixup_last_prompt)-1);
 	gl_putc('\r');
 	gl_puts(prompt);
 	gl_pos = fixup_gl_shift;
@@ -1262,14 +1262,14 @@ gl_fixup_scroll(cligen_handle h,
 	gl_pos = gl_cnt = fixup_gl_shift = fixup_off_right = fixup_off_left = 0;
 	gl_putc('\r');
 	gl_puts(prompt);
-	strncpy(fixup_last_prompt, prompt, sizeof(fixup_last_prompt));
+	strncpy(fixup_last_prompt, prompt, sizeof(fixup_last_prompt)-1);
 	change = 0;
         gl_width = gl_termw - gl_strlen(prompt);
     } else if (strcmp(prompt, fixup_last_prompt) != 0) {
 	l1 = gl_strlen(fixup_last_prompt);
 	l2 = gl_strlen(prompt);
 	gl_cnt = gl_cnt + l1 - l2;
-	strncpy(fixup_last_prompt, prompt, sizeof(fixup_last_prompt));
+	strncpy(fixup_last_prompt, prompt, sizeof(fixup_last_prompt)-1);
 	gl_putc('\r');
 	gl_puts(prompt);
 	gl_pos = fixup_gl_shift;
