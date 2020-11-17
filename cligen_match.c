@@ -74,9 +74,9 @@
 /*! Result vector from match_pattern_* family of functions
  */
 struct match_result{
-    uint32_t     mr_len;
-    uint32_t     mr_size;
-    int         *mr_vec;
+    uint32_t     mr_len;    /* Length of mr_vec (significant entries) */
+    uint32_t     mr_size;   /* Size of allocated space of mr_vec */
+    int         *mr_vec;    /* (Indirect) vector of integers that identify indexes into mr_parsetree */
     int          mr_level;
     parse_tree  *mr_parsetree;
     int          mr_last;
@@ -562,7 +562,6 @@ add_cov_to_cvec(cligen_handle h,
     return cv;
 }
 
-
 /*! Append int vector with one index
  */
 static int
@@ -714,6 +713,19 @@ match_vec(cligen_handle h,
 		tmpreason = NULL;
 	    }
 	}
+#if 1
+	/* An alternative is to sort away these after the call in match_pattern_sets_local */
+	else if (co_flags_get(co, CO_FLAGS_MATCH)){
+	    p = 1; /* XXX lower than any variables*/
+	    if (p < pref_lower){
+		char *r;
+		pref_lower = p;
+		if ((r = strdup("Already matched")) == NULL)
+		    goto done;
+		mr_reason_set(mr, r);
+	    }
+	}
+#endif
 	else { /* Match: if best compare and save highest preference */
 	    assert(tmpreason == NULL);
 	    if (best){ /* only save best match */
@@ -904,6 +916,7 @@ match_pattern_sets_local(cligen_handle h,
 
     /* Do it if not last or best */
     if (!lasttoken || best){
+	/* Bind vars and constants to variable vectors used for completion and callbacks */
 	if (match_bindvars(h, co_match, 
 			   ISREST(co_match)?resttokens:token,
 			   cvv, cvvall) < 0)
@@ -953,7 +966,6 @@ match_pattern_sets_local(cligen_handle h,
     return retval;
 } /* match_pattern_sets_local */
 
-
 /*! Matchpattern sets
  *
  * @param[in]     h         CLIgen handle
@@ -997,16 +1009,18 @@ match_pattern_sets(cligen_handle h,
     token = cvec_i_str(cvt, level+1); /* for debugging */
     if (0)
 	fprintf(stderr, "%s %s\n", __FUNCTION__, token);
+    /* Match the current token */
     if (match_pattern_sets_local(h, cvt, cvr, pt, level, best, hide, expandvar,
 				 cvv, cvvall, &mr0) < 0)
 	goto done;
-    if (mr0->mr_len != 1){
+    if (mr0->mr_len != 1){ /* If not unique match exit here */
 	*mrp = mr0;
 	mr0 = NULL;
 	goto ok;
     }
+    /* Unique match */
     co_match = pt_vec_i_get(pt, mr0->mr_vec[0]);
-    if (mr0->mr_last){
+    if (mr0->mr_last && (strcmp(token,"") != 0)){
 	co_flags_set(co_match, CO_FLAGS_MATCH);
 	*mrp = mr0;
 	mr0 = NULL;
@@ -1056,6 +1070,11 @@ match_pattern_sets(cligen_handle h,
 	    mrcprev = mrc;
 	    level = mrc->mr_level;
 	}
+	if (mrc == NULL){
+	    *mrp = mr0;
+	    mr0 = NULL;
+	    goto ok;
+	}
     }
     else{
 	if (match_pattern_sets(h, cvt, cvr, ptn,
@@ -1071,6 +1090,9 @@ match_pattern_sets(cligen_handle h,
     assert(mrc != NULL);
     /* If child match fails, use previous */
     if (mrc->mr_len == 0 && mrcprev){
+	/* Transfer match flags from ptn to pt if this tree has no more matches */
+	if (mrc->mr_len == 0)
+	    co_flags_set(co_match, CO_FLAGS_MATCH);	    
 	mr_mv_reason(mrc, mrcprev); 	/* transfer error reason if any from child */
 	*mrp = mrcprev;
 	mrcprev = NULL;
@@ -1123,11 +1145,12 @@ match_pattern_sets(cligen_handle h,
  * @param[out] matchvec  A vector of integers containing indexes in covec which match
  * @param[out] matchlen  Number of matches in matchvec, (if retval is 0)
  * @param[out] cvv       cligen variable vector containing vars/values pair for completion
+ * @param[out] cvvall    cligen variable vector containing vars/values + keywords for callbacks
  * @param[out] reasonp   If retval = 0, this may be malloced to indicate reason for 
  *                       not matching variables, if given. Neeed to be free:d
  *
  * @retval -1   error.
- * @retval nr   The number of matches (0-n) in pt or -1 on error. See matchlen below.
+ * @retval  0   OK
  *
  * All options are ordered by PREFERENCE, where 
  *       command > ipv4,mac > string > rest
@@ -1147,7 +1170,7 @@ match_pattern(cligen_handle h,
 	      cvec         *cvvall,
 	      char        **reasonp)
 {
-    int retval = -1;
+    int           retval = -1;
     match_result *mr = NULL;
     
     if (ptmatch == NULL || cvt == NULL || cvr == NULL || matchvec == NULL || matchlen == NULL){
@@ -1244,10 +1267,12 @@ match_pattern_exact(cligen_handle  h,
     int           i;
     parse_tree   *ptc;
 
-    if ((match_pattern(h, cvt, cvr,
-		       pt,
-		       1, /* best: Return only best option */
-		       0, 1,
+    if ((match_pattern(h,
+		       cvt, cvr, /* token string */
+		       pt,       /* command vector */
+		       1,        /* best: Return only best option */
+		       0,        /* hide */
+		       1,        /* expandvar */
 		       &ptmatch, 
 		       &matchvec,
 		       &matchlen, 

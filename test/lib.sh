@@ -143,7 +143,7 @@ newtest()
 
 # Evaluate and return
 # like expecteq but partial match is OK
-# Example: expectpart $(fn arg) 0 "my return" -- "foo"
+# Example: expectpart $(fn arg) 0 "my return" --not-- "foo"
 # - evaluated expression
 # - expected command return value (0 if OK)
 # - expected stdout outcome*
@@ -170,7 +170,7 @@ expectpart(){
   fi
   # Loop over all variable args expect strings (skip first two args)
   # note that "expect" var is never actually used
-  # Then test positive for strings, if the token --neg-- is detected, then test negative for the rest
+  # Then test positive for strings, if the token --not-- is detected, then test negative for the rest
   positive=true;
   let i=0;
   for exp in "$@"; do

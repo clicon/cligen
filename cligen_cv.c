@@ -1329,7 +1329,7 @@ parse_dec64(char    *str,
  * @retval 0              parse error, reason in reason
  * @retval 1              OK
  */
-static int
+int
 parse_bool(char    *str, 
 	   uint8_t *val, 
 	   char   **reason)
