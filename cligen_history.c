@@ -85,7 +85,7 @@ hist_save(char *p)
 {
     char *s = NULL;
     int   len = strlen(p)+1;
-    char *nl = strchr(p, '\n');
+    char *nl = strchr(p, '\n'); /* newline */
 
     if (nl) {
         if ((s = malloc(len)) == NULL)
@@ -94,9 +94,8 @@ hist_save(char *p)
 	s[len-1] = 0;
     }
     else {
-        if ((s = malloc(len+1)) == NULL)
+	if ((s = strdup(p)) == NULL)
 	    goto done;
-	strncpy(s, p, len+1);
     }
  done:
     return s;
