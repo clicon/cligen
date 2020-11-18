@@ -282,13 +282,14 @@ selectable and may be selected if you type it. This can be useful if there are
 commands that should be known only by expert users.
 \end{itemize}
 
-In the following example, {\tt aa bb ca} is not visible:
+In the following example, {\tt aa bb cb dd} and {\tt aa bb cc} are not visible:
 \begin{verbatim}
   aa bb{
-    ca,hide;
-    cb;{
+    ca;
+    cb,hide{
       dd;
     }
+    cc,hide;
   }
 \end{verbatim}
 

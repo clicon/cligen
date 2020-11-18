@@ -1,0 +1,10 @@
+  prompt="cli> ";              # Assignment of prompt
+  comment="#";                 # Same comment as in syntax
+  treename="tutorial";         # Name of syntax (used when referencing)
+
+  a,callback();
+  abc,callback();
+  abd {
+    a,callback();
+    b,callback();
+  }
