@@ -2,6 +2,10 @@
 	
 ## 4.9.0 Expected: 15 Dec 2020
 
+### New features
+
+* Fuzzing using AFL scripts added, see [fuzz](fuzz).
+
 ### Corrected Bugs
 
 * Recursive sets did not work properly, especially competion and query.

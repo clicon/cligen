@@ -63,12 +63,12 @@ static inline void gl_fixup(cligen_handle h, char*,int,int);/* fixup state varia
 static int      gl_getc(cligen_handle h);	        /* read one char from terminal */
 static void     gl_kill(cligen_handle h, int pos);	/* delete to EOL */
 static void     gl_kill_begin(cligen_handle h, int pos);	/* delete to BEGIN of line */
-static void     gl_kill_word(cligen_handle h, int pos);	/* delete word */
+static int      gl_kill_word(cligen_handle h, int pos);	/* delete word */
 static void     gl_newline(cligen_handle);	/* handle \n or \r */
 static int      gl_puts(char *buf);	/* write a line to terminal */
 
 static void     gl_transpose(cligen_handle h);	/* transpose two chars */
-static void     gl_yank(cligen_handle h);		/* yank killed text */
+static int      gl_yank(cligen_handle h);		/* yank killed text */
 static void     gl_word(cligen_handle h, int dir);	/* move a word */
 
 static void     search_addchar(cligen_handle h, int c);	/* increment search string */
@@ -691,9 +691,9 @@ gl_getline(cligen_handle h,
 		break;
 	    case '\025': gl_kill_begin(h, gl_pos);		/* ^U */
 		break;
-	    case '\027': gl_kill_word(h, gl_pos);		/* ^W */
+	    case '\027': if (gl_kill_word(h, gl_pos) < 0) goto err;/* ^W */
 		break;
-	    case '\031': gl_yank(h);				/* ^Y */
+	    case '\031': if (gl_yank(h) < 0) goto err;		/* ^Y */
 		break;
 	    case '\032':                                      /* ^Z */
 		if(gl_susp_hook) {
@@ -839,7 +839,7 @@ gl_addchar(cligen_handle h,
 /*! Add the kill buffer to the input buffer at current location 
  * @param[in]  h     CLIgen handle
  */
-static void
+static int
 gl_yank(cligen_handle h)
 {
     int  i, len;
@@ -855,7 +855,8 @@ gl_yank(cligen_handle h)
             gl_fixup(h, cligen_prompt(h), gl_pos, gl_pos+len);
 	} else {
 	    if (gl_pos + len > gl_cnt) {
-	        cligen_buf_increase(h, gl_pos + len + 1);
+	        if (cligen_buf_increase(h, gl_pos + len + 1) < 0)
+		    return -1;
 		cligen_buf(h)[gl_pos + len] = 0;
             }
 	    for (i=0; i < len; i++)
@@ -865,6 +866,7 @@ gl_yank(cligen_handle h)
 	}
     } else
 	gl_putc('\007');
+    return 0;
 }
 
 /*! Switch character under cursor and to left of cursor 
@@ -978,7 +980,7 @@ gl_kill_begin(cligen_handle h,
  * @param[in]  h     CLIgen handle
  * @param[in]  pos   Delete one previous word from pos 
  */
-static void
+static int
 gl_kill_word(cligen_handle h, 
 	     int           pos)
 {
@@ -996,9 +998,11 @@ gl_kill_word(cligen_handle h,
 	    pos--;
 	if (pos < gl_cnt && isspace((int)cligen_buf(h)[pos]))   /* move onto word */
 	    pos++;
-	cligen_killbuf_increase(h, wpos-pos);
+	if (cligen_killbuf_increase(h, wpos-pos) < 0)
+	    return -1;
 	strncpy(cligen_killbuf(h), cligen_buf(h)+pos, wpos-pos);
 	cligen_killbuf(h)[wpos-pos] = '\0';
+	// XXX This gives memory error in fuzz v
 	memmove(cligen_buf(h)+pos, cligen_buf(h) + wpos, wpos-pos+1);
 	gl_fixup(h, cligen_prompt(h), wpos, pos);
 	for (i=gl_pos; i < gl_cnt; i++)
@@ -1006,6 +1010,7 @@ gl_kill_word(cligen_handle h,
 	gl_fixup(h, cligen_prompt(h), -2, pos);
 
     }
+    return 0;
 }
 
 

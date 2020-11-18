@@ -1,0 +1,18 @@
+  prompt="cli> ";              # Assignment of prompt
+  comment="#";                 # Same comment as in syntax
+  treename="sets";         # Name of syntax (used when referencing)
+
+  a @{
+    <v:int32> <u:int32> <w:int32>, callback();
+    b b2, callback();
+    c, callback();
+    d, callback();
+    e <v:int32>, callback();
+  }
+  b,callback(); @{
+    c, callback(); @{
+      d, callback();
+      e, callback();
+    } 
+    f,callback(); 
+  }
