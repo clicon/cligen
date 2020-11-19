@@ -12,6 +12,11 @@ You may have to change cpu frequency:
   echo performance | tee cpu?/cpufreq/scaling_governor
 ```
 
+And possibly change core behaviour:
+```
+  echo core >/proc/sys/kernel/core_pattern
+```
+
 ## Build
 
 CLIgen must be built statically, eg as follows:

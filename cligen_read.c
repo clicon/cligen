@@ -555,21 +555,26 @@ void
 cli_trim(char **line, 
 	 char   comment)
 {
-    int		point;
-    int		whitespace = 0;
-    char	*s = *line;
-    char	*s1 = s;
-
+    size_t  point;
+    int	    whitespace = 0;
+    char   *s = *line;
+    char   *s1 = s;
+    char    ch;
+    size_t  len;
+    
     if (!isascii(comment))
 	comment = 0;
-    for (point = 0; point <= strlen(s) ; point++) {
-	if (comment && s[point] == comment){
+
+    len = strlen(s);
+    for (point = 0; point <= len ; point++) {
+	ch = s[point];
+	if (comment && ch == comment){
 	    *s1++ = '\n';
 	    *s1++ = '\0';
 	    break;
 	}
 	else
-	    if (isblank(s[point])) {
+	    if (isblank(ch)) {
 		if (whitespace)
 		    continue;
 		else {
@@ -578,10 +583,9 @@ cli_trim(char **line,
 		}
 	    } else {
 		whitespace = 0;
-		*s1++ = s[point];
+		*s1++ = ch;
 	    }
     }
-    
     /* strip heading whites */
     while ((strlen(s) > 0) && isblank(*s))
 	s++;
@@ -589,7 +593,6 @@ cli_trim(char **line,
     /* strip trailing whites and newlines */
     while ((strlen(s) > 0) && (isblank(*(s+strlen(s)-1)) || *(s+strlen(s)-1) == '\n'))
 	*(s + strlen(s) - 1) = '\0';
-    
     
     *line = s;    
 }

@@ -1077,7 +1077,12 @@ match_pattern_sets(cligen_handle h,
 	}
     }
     else{
-	if (match_pattern_sets(h, cvt, cvr, ptn,
+	if (last_level(cvt, level)){
+	    *mrp = mr0;
+	    mr0 = NULL;
+	    goto ok;    
+	}
+	else if (match_pattern_sets(h, cvt, cvr, ptn,
 			       level+1, 
 			       best, hide, expandvar,
 			       cvv,
@@ -1085,9 +1090,9 @@ match_pattern_sets(cligen_handle h,
 			       &mrc) < 0)
 	    goto done;
     }
+    assert(mrc != NULL);
     /* Clear all CO_FLAGS_MATCH recursively */
     pt_apply(pt, co_clearflag, (void*)CO_FLAGS_MATCH);
-    assert(mrc != NULL);
     /* If child match fails, use previous */
     if (mrc->mr_len == 0 && mrcprev){
 	/* Transfer match flags from ptn to pt if this tree has no more matches */
