@@ -57,7 +57,7 @@ void            gl_char_cleanup(void);	/* undo gl_char_init */
 static size_t 	(*gl_strlen)() = (size_t(*)())strlen; 
 					/* returns printable prompt width */
 
-static void     gl_addchar(cligen_handle h, int c);	/* install specified char */
+static int      gl_addchar(cligen_handle h, int c);	/* install specified char */
 static void     gl_del(cligen_handle h, int loc);	/* del, either left (-1) or cur (0) */
 static inline void gl_fixup(cligen_handle h, char*,int,int);/* fixup state variables and screen */
 static int      gl_getc(cligen_handle h);	        /* read one char from terminal */
@@ -611,7 +611,8 @@ gl_getline(cligen_handle h,
 		    if (gl_search_mode)
 			search_addchar(h, c);
 		    else
-			gl_addchar(h, c);
+			if (gl_addchar(h, c) < 0)
+			    goto err;
 		}
 	    }
 	} else {
@@ -743,8 +744,10 @@ gl_getline(cligen_handle h,
 		    int c2;
 		    c2 = gl_getc(h);
 		    if (gl_utf8){
-			gl_addchar(h, c);
-			gl_addchar(h, c2);
+			if (gl_addchar(h, c) < 0)
+			    goto err;
+			if (gl_addchar(h, c2) < 0)
+			    goto err;
 		    }
 		}
 		else if ((c & 0xf0) == 0xe0){ /* UTF-2 */
@@ -752,9 +755,12 @@ gl_getline(cligen_handle h,
 		    c2 = gl_getc(h);
 		    c3 = gl_getc(h);
 		    if (gl_utf8){
-			gl_addchar(h, c);
-			gl_addchar(h, c2);
-			gl_addchar(h, c3);
+			if (gl_addchar(h, c) < 0)
+			    goto err;
+			if (gl_addchar(h, c2) < 0)
+			    goto err;
+			if (gl_addchar(h, c3) < 0)
+			    goto err;
 		    }
 		}
 		else if ((c & 0xf8) == 0xf0){ /* UTF-3 */
@@ -763,10 +769,14 @@ gl_getline(cligen_handle h,
 		    c3 = gl_getc(h);
 		    c4 = gl_getc(h);
 		    if (gl_utf8){
-			gl_addchar(h, c);
-			gl_addchar(h, c2);
-			gl_addchar(h, c3);
-			gl_addchar(h, c4);
+			if (gl_addchar(h, c) < 0)
+			    goto err;
+			if (gl_addchar(h, c2) < 0)
+			    goto err;
+			if (gl_addchar(h, c3) < 0)
+			    goto err;
+			if (gl_addchar(h, c4) < 0)
+			    goto err;
 		    }
 		}
 	        if (c > 0) {	/* ignore 0 (reset above) */
@@ -817,13 +827,14 @@ gl_getline(cligen_handle h,
  * @param[in]  h     CLIgen handle
  * @param[in]  c     Character
  */
-static void
+static int
 gl_addchar(cligen_handle h, 
 	   int           c)
 {
     int  i;
 
-    cligen_buf_increase(h, gl_cnt+1); /* assume increase enough for gl_pos-gl_cnt */
+    if (cligen_buf_increase(h, gl_cnt+1) < 0) /* assume increase enough for gl_pos-gl_cnt */
+	return -1;
     if (gl_overwrite == 0 || gl_pos == gl_cnt) {
         for (i=gl_cnt; i >= gl_pos; i--)
             cligen_buf(h)[i+1] = cligen_buf(h)[i];
@@ -834,6 +845,7 @@ gl_addchar(cligen_handle h,
 	gl_extent = 1;
         gl_fixup(h, cligen_prompt(h), gl_pos, gl_pos+1);
     }
+    return 0;
 }
 
 /*! Add the kill buffer to the input buffer at current location 
@@ -847,7 +859,8 @@ gl_yank(cligen_handle h)
     len = strlen(cligen_killbuf(h));
     if (len > 0) {
 	if (gl_overwrite == 0) {
-	    cligen_buf_increase(h, gl_cnt + len + 1);
+	    if (cligen_buf_increase(h, gl_cnt + len + 1) < 0)
+		return -1;
             for (i=gl_cnt; i >= gl_pos; i--)
                 cligen_buf(h)[i+len] = cligen_buf(h)[i];
 	    for (i=0; i < len; i++)
@@ -1002,17 +1015,14 @@ gl_kill_word(cligen_handle h,
 	    return -1;
 	strncpy(cligen_killbuf(h), cligen_buf(h)+pos, wpos-pos);
 	cligen_killbuf(h)[wpos-pos] = '\0';
-	// XXX This gives memory error in fuzz v
-	memmove(cligen_buf(h)+pos, cligen_buf(h) + wpos, wpos-pos+1);
+	memmove(cligen_buf(h)+pos, cligen_buf(h) + wpos, gl_cnt-wpos+1);
 	gl_fixup(h, cligen_prompt(h), wpos, pos);
 	for (i=gl_pos; i < gl_cnt; i++)
             gl_putc(cligen_buf(h)[i]);
 	gl_fixup(h, cligen_prompt(h), -2, pos);
-
     }
     return 0;
 }
-
 
 /*! Move forward or backword one word 
  * @param[in]  h          CLIgen handle

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Runn a fuzzing test using american fuzzy lop
+# Run a fuzzing test using american fuzzy lop
 set -eux
 
 if [ $# -ne 2 ]; then 
