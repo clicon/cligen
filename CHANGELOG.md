@@ -5,6 +5,8 @@
 ### New features
 
 * Fuzzing using AFL scripts added, see [fuzz](fuzz).
+* [Change CLIgen comments](https://github.com/clicon/cligen/issues/55)
+  * change from removing after # anywhere to beginning of _word_
 
 ### Corrected Bugs
 
