@@ -546,10 +546,12 @@ cli_complete(cligen_handle h,
     return retval;
 }
 
-/*! Trim command line. Remove any leading, trailing and multiple whitespace
- * comment is a character (eg '#')
+/*! Trim command line. Remove any leading, trailing and multiple whitespace, remove comments
+ * 
+ * comment is a character (eg '#'), using "bash" comment rule:
+ #  Word beginning with # causes that word and all remaining characters on that line to be ignored
  * @param[out]  line
- * @param[in]   comment
+ * @param[in]   comment character
  */
 void
 cli_trim(char **line, 
@@ -568,7 +570,7 @@ cli_trim(char **line,
     len = strlen(s);
     for (point = 0; point <= len ; point++) {
 	ch = s[point];
-	if (comment && ch == comment){
+	if (comment && ch == comment && (whitespace || point == 0 )){
 	    *s1++ = '\n';
 	    *s1++ = '\0';
 	    break;
