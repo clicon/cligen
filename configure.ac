@@ -39,6 +39,7 @@ AC_INIT(cligen.h)
 # Default CFLAGS unless set by environment.
 : ${CFLAGS="-O2 -Wall"}
 : ${INSTALLFLAGS="-s"}
+: ${LINKAGE=dynamic}
 
 # where autotool scripts are: install-sh, config.sub, config.guess
 AC_CONFIG_AUX_DIR(aux)
@@ -78,7 +79,7 @@ AC_SUBST(INSTALL_DATA)
 AC_SUBST(INSTALL_PROGRAM)
 AC_SUBST(INSTALLFLAGS)
 AC_SUBST(LN_S)
-#
+AC_SUBST(LINKAGE)
 
 echo "$host_cpu $host_vendor $host_os"
 

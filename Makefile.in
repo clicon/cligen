@@ -43,11 +43,18 @@ srcdir		= @srcdir@
 includedir	= @includedir@/cligen
 
 CC		= @CC@
-CFLAGS		= -fPIC @CPPFLAGS@ @CFLAGS@
+LINKAGE         = @LINKAGE@
+ifeq ($(LINKAGE),dynamic)
+	CFLAGS		= -fPIC @CPPFLAGS@ @CFLAGS@
+	SH_SUFFIX	= @SH_SUFFIX@
+else
+	CFLAGS		= @CPPFLAGS@ @CFLAGS@
+	SH_SUFFIX	= a
+endif
 LDFLAGS		= @LDFLAGS@
 LIBS		= @LIBS@
 INCLUDES	= -I. -I@srcdir@ @INCLUDES@
-SH_SUFFIX	= @SH_SUFFIX@
+
 HOST_VENDOR     = @host_vendor@
 
 INSTALL         = @INSTALL@
@@ -64,9 +71,15 @@ CLIGEN_MINOR   = @CLIGEN_VERSION_MINOR@
 # Linker-name: libcligen.so
 # so-name: libcligen.so.3
 # real-name: libcligen.so.3.0
-MYLIB        = libcligen$(SH_SUFFIX).$(CLIGEN_MAJOR).$(CLIGEN_MINOR)
+MYLIBDYNAMIC = libcligen$(SH_SUFFIX).$(CLIGEN_MAJOR).$(CLIGEN_MINOR)
 MYLIBSO      = libcligen$(SH_SUFFIX).$(CLIGEN_MAJOR)
-MYLIBLINK    = libcligen$(SH_SUFFIX)
+MYLIBSTATIC  = libcligen.a
+
+ifeq ($(LINKAGE),dynamic)
+	MYLIB        = $(MYLIBDYNAMIC)
+else
+	MYLIB        = $(MYLIBSTATIC)
+endif
 
 SRC		= cligen_object.c cligen_parsetree.c cligen_pt_head.c \
                   cligen_handle.c cligen_cv.c cligen_match.c \
@@ -88,7 +101,7 @@ APPS		= cligen_hello cligen_file cligen_tutorial
 YACC		= @YACC@
 LEX		= @LEX@
 
-all:	cligen $(MYLIB) $(MYLIBLINK) $(APPS)
+all:	cligen $(MYLIB) $(APPS)
 
 .PHONY: TAGS test
 TAGS:
@@ -173,8 +186,9 @@ install-bin: $(APPS)
 install-lib: $(MYLIB)
 	$(INSTALL) -m 0755 -d $(DESTDIR)$(libdir)
 	$(INSTALL) -m 0644 $(INSTALLFLAGS) $(MYLIB) $(DESTDIR)$(libdir)
+ifeq ($(LINKAGE),dynamic)
 	(cd $(DESTDIR)$(libdir) && $(LN_S) -f $(MYLIB) $(MYLIBSO))     # -l:libcligen.so.3
-	(cd $(DESTDIR)$(libdir) && $(LN_S) -f $(MYLIBSO) $(MYLIBLINK)) # -l:libcligen.so
+endif
 
 # Installs include files in subdir called 'cligen'. Applications should include
 # <cligen/cligen.h>
@@ -195,7 +209,7 @@ YACCOBJS := lex.cligen_parse.o cligen_parse.tab.o
 
 clean:  
 	rm -f $(APPS) $(OBJS) $(YACCOBJS) 
-	rm -f $(MYLIB) $(MYLIBSO) $(MYLIBLINK) 
+	rm -f $(MYLIB) $(MYLIBSO)
 	rm -f *.tab.c *.tab.h *.tab.o 
 	rm -f lex.*.c lex.*.o cligen
 
@@ -234,14 +248,13 @@ endif
 # link-name is needed for application linking
 $(MYLIBSO) : $(MYLIB)
 
-$(MYLIBLINK) : $(MYLIB)
-#	ln -sf $(MYLIB) $@
+$(MYLIBSTATIC) : $(OBJS) $(YACCOBJS)
+	ar -crs $@ $(OBJS) $(YACCOBJS)
 
 # recursive link to handle application include files, if you have not installed
 # .h files in $(includefile)
 cligen : 
 	cd $(srcdir) && rm -rf $@ && ln -sf . $@
-
 
 .PHONY: doc
 doc : 

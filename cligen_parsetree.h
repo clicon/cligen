@@ -52,7 +52,13 @@ typedef struct cg_obj cg_obj;
 
 typedef struct parse_tree parse_tree; /* struct defined internally in cligen_parsetree.c */
 
-/* Callback for pt_apply() */
+/* Callback for pt_apply() 
+ * @param[in]  co   CLIgen parse-tree object
+ * @param[in]  arg  Argument, cast to application-specific info
+ * @retval     -1   Error: break and return
+ * @retval     0    OK and continue
+ * @retval     1    OK and return (abort iteration)
+*/
 typedef int (cg_applyfn_t)(cg_obj *co, void *arg);
 
 /*
