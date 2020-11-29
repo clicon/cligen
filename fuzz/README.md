@@ -21,11 +21,9 @@ And possibly change core behaviour:
 
 CLIgen must be built statically, eg as follows:
 ```
-  CC=/usr/bin/afl-gcc CXX=/usr/bin/afl-g++ ./configure
+  CC=/usr/bin/afl-gcc CXX=/usr/bin/afl-g++ LINKAGE=static ./configure
   make clean
   make
-  ar rcs libcligen.a cligen_object.o cligen_parsetree.o cligen_pt_head.o cligen_handle.o cligen_cv.o cligen_match.o cligen_read.o cligen_io.o cligen_expand.o cligen_syntax.o cligen_print.o cligen_cvec.o cligen_buf.o cligen_util.o cligen_history.o cligen_regex.o cligen_getline.o build.o  lex.cligen_parse.o cligen_parse.tab.o
-  /usr/bin/afl-gcc -DHAVE_CONFIG_H -O2 -Wall -I. -I. cligen_file.c  -L. -o cligen_file libcligen.a
 ```
 
 ## Run tests

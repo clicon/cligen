@@ -46,11 +46,10 @@ CC		= @CC@
 LINKAGE         = @LINKAGE@
 ifeq ($(LINKAGE),dynamic)
 	CFLAGS		= -fPIC @CPPFLAGS@ @CFLAGS@
-	SH_SUFFIX	= @SH_SUFFIX@
 else
 	CFLAGS		= @CPPFLAGS@ @CFLAGS@
-	SH_SUFFIX	= a
 endif
+SH_SUFFIX	= @SH_SUFFIX@
 LDFLAGS		= @LDFLAGS@
 LIBS		= @LIBS@
 INCLUDES	= -I. -I@srcdir@ @INCLUDES@
@@ -73,6 +72,7 @@ CLIGEN_MINOR   = @CLIGEN_VERSION_MINOR@
 # real-name: libcligen.so.3.0
 MYLIBDYNAMIC = libcligen$(SH_SUFFIX).$(CLIGEN_MAJOR).$(CLIGEN_MINOR)
 MYLIBSO      = libcligen$(SH_SUFFIX).$(CLIGEN_MAJOR)
+MYLIBLINK    = libcligen$(SH_SUFFIX)
 MYLIBSTATIC  = libcligen.a
 
 ifeq ($(LINKAGE),dynamic)
@@ -188,6 +188,7 @@ install-lib: $(MYLIB)
 	$(INSTALL) -m 0644 $(INSTALLFLAGS) $(MYLIB) $(DESTDIR)$(libdir)
 ifeq ($(LINKAGE),dynamic)
 	(cd $(DESTDIR)$(libdir) && $(LN_S) -f $(MYLIB) $(MYLIBSO))     # -l:libcligen.so.3
+	(cd $(DESTDIR)$(libdir) && $(LN_S) -f $(MYLIBSO) $(MYLIBLINK)) # -l:libcligen.so
 endif
 
 # Installs include files in subdir called 'cligen'. Applications should include
@@ -209,7 +210,7 @@ YACCOBJS := lex.cligen_parse.o cligen_parse.tab.o
 
 clean:  
 	rm -f $(APPS) $(OBJS) $(YACCOBJS) 
-	rm -f $(MYLIB) $(MYLIBSO)
+	rm -f $(MYLIB) $(MYLIBSO) $(MYLIBLINK) 
 	rm -f *.tab.c *.tab.h *.tab.o 
 	rm -f lex.*.c lex.*.o cligen
 
@@ -238,7 +239,7 @@ cligen_file :	$(srcdir)/cligen_file.c cligen $(MYLIB)
 cligen_tutorial :$(srcdir)/cligen_tutorial.c cligen $(MYLIB) 
 	$(CC) $(CFLAGS) $(INCLUDES) $< $(LDFLAGS) $(LIBS) -o $@ $(MYLIB)
 
-$(MYLIB) : $(OBJS) $(YACCOBJS)
+$(MYLIBDYNAMIC) : $(OBJS) $(YACCOBJS)
 ifeq ($(HOST_VENDOR),apple)
 	$(CC) -shared -o $@ $(OBJS) $(YACCOBJS) -undefined dynamic_lookup -o $(MYLIB) $(LIBS)
 else
@@ -247,6 +248,8 @@ endif
 
 # link-name is needed for application linking
 $(MYLIBSO) : $(MYLIB)
+
+$(MYLIBLINK) : $(MYLIB)
 
 $(MYLIBSTATIC) : $(OBJS) $(YACCOBJS)
 	ar -crs $@ $(OBJS) $(YACCOBJS)
