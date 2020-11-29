@@ -552,14 +552,17 @@ pt_apply(parse_tree   *pt,
     cg_obj *co;
     int     i;
     int     retval = -1;
+    int     ret;
 
     if (pt->pt_vec == NULL)
 	return 0;
     for (i=0; i<pt_len_get(pt); i++){
 	if ((co = pt_vec_i_get(pt, i)) == NULL)
 	    continue;
-	if (fn(co, arg) < 0)
+	if ((ret = fn(co, arg)) < 0)
 	    goto done;
+	if (ret == 1) /* done */
+	    break;
 	if (pt_apply(co_pt_get(co), fn, arg) < 0)
 	    goto done;
     }

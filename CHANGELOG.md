@@ -5,8 +5,10 @@
 ### New features
 
 * Fuzzing using AFL scripts added, see [fuzz](fuzz).
-* [Change CLIgen comments](https://github.com/clicon/cligen/issues/55)
-  * change from removing after # anywhere to beginning of _word_
+* Change comment character to be active anywhere to beginning of _word_ only.
+  * See [Change CLIgen comments](https://github.com/clicon/cligen/issues/55)
+* Support for building static lib: `LINKAGE=static configure`
+
 
 ### Corrected Bugs
 

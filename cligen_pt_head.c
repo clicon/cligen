@@ -247,8 +247,6 @@ cligen_ph_del(cligen_handle h,
 }
 #endif
 
-
-
 /*! Append a new parsetree header
  * @param[in]  h     CLIgen handle
  * @param[in]  name  Name of this tree 

@@ -623,6 +623,7 @@ ac_subst_vars='LTLIBOBJS
 LIBOBJS
 EGREP
 GREP
+LINKAGE
 INSTALLFLAGS
 INSTALL
 RANLIB
@@ -2141,6 +2142,8 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 # Default CFLAGS unless set by environment.
 : ${CFLAGS="-O2 -Wall"}
 : ${INSTALLFLAGS="-s"}
+: ${LINKAGE=dynamic}
+
 
 # where autotool scripts are: install-sh, config.sub, config.guess
 ac_aux_dir=
@@ -3507,7 +3510,7 @@ fi
 
 
 
-#
+
 
 echo "$host_cpu $host_vendor $host_os"
 

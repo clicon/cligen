@@ -3,7 +3,11 @@ language: c
 branches:
   only:
   - master
-script: ./configure && make && sudo make install && sudo ldconfig && make test
+script:
+- LINKAGE=static CFLAGS="-O2 -Wall -coverage" ./configure && make && sudo make install && sudo ldconfig && make test
+#- ./configure && make && sudo make install && sudo ldconfig && make test
 arch:
 - amd64
-- arm64
+#- arm64
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
