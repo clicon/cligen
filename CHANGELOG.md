@@ -9,7 +9,6 @@
   * See [Change CLIgen comments](https://github.com/clicon/cligen/issues/55)
 * Support for building static lib: `LINKAGE=static configure`
 
-
 ### Corrected Bugs
 
 * Recursive sets did not work properly, especially competion and query.

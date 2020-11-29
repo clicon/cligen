@@ -2802,7 +2802,7 @@ cv_parse1(char   *str0,
     int    retval = -1;
     char  *str;
     char  *mask;
-    int    masklen;
+    int    masklen = 0;
     int    i, j;
 
     if (reason && (*reason != NULL)){
