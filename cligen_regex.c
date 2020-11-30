@@ -89,14 +89,25 @@ cligen_regex_posix_compile(char  *regexp,
     len0 = strlen(regexp);
     if ((cb = cbuf_new()) == NULL)
 	goto done;
-    /* Check if prepended by ^( */
+    /* Check if prepended by ^ */
     if (len0 > 0 && regexp[0] == '^'){
-	if (regexp[len0-1] != '$')
-	    goto fail;
-	cprintf(cb, "%s", regexp);
+	if (regexp[len0-1] == '$')
+	    cprintf(cb, "%s", regexp);
+	else if (len0 > 1 && regexp[1] == '(')
+	    cprintf(cb, "%s)$", regexp);
+	else
+	    cprintf(cb, "%s$", regexp);
     }
-    else
+    /* Check if terminated by $ only */
+    else if (len0 > 0 && regexp[len0-1] == '$'){
+	if (len0 > 1 && regexp[len0-2] == ')')
+	    cprintf(cb, "^(%s", regexp);
+	else
+	    cprintf(cb, "^%s", regexp);
+    }
+    else /* Neither ^or $ */
 	cprintf(cb, "^(%s)$", regexp);
+
     if ((re = malloc(sizeof(regex_t))) == NULL)
 	goto done;
     memset(re, 0, sizeof(regex_t));

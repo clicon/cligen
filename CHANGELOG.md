@@ -11,6 +11,7 @@
 
 ### Corrected Bugs
 
+* [Using a regular expression with either ^ OR $ breaks the regular expression match logic](https://github.com/clicon/cligen/issues/53)
 * Recursive sets did not work properly, especially competion and query.
 
 ## 4.8.0
