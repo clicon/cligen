@@ -375,7 +375,7 @@ cligen_str2cvv(char  *string,
 }
 
 #ifdef CO_HELPVEC
-/*! Transform a single helpstr to a vector of help strings and strip preceeding whitespace
+/*! Transform a single helpstr to a vector of help strings and strip preceding whitespace
  *
  * @param[in]  str  String on the form <str1>\n<str2>
  * @param[out] cvp  CLIgen variable vector containing a vector of help strings 
