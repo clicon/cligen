@@ -22,10 +22,10 @@ cat > $fspec <<EOF
   i1  <v:int16>;
   i2  <v:int32>;
   i3  <v:int64>;
-  u0  <v:uint8>;
-  u1  <v:uint16>;
-  u2  <v:uint32>;
-  u3  <v:uint64>;
+  ui0 <v:uint8>;
+  ui1 <v:uint16>;
+  ui2 <v:uint32>;
+  ui3 <v:uint64>;
   d0  <v:decimal64 fraction-digits:4 range[0.1:10]>;
   b0  <v:bool>;
   a0  <v:ipv4addr>;
@@ -54,11 +54,11 @@ for x in 0 1 2 3; do
 done
 
 for x in 0 1 2 3; do
-    newtest "uint u$x"
-    expectpart "$(echo "u$x 77" | $cligen_file -f $fspec)" 0 "cli> u$x 77" --not-- "CLI syntax error"
+    newtest "uint ui$x"
+    expectpart "$(echo "ui$x 77" | $cligen_file -f $fspec)" 0 "cli> ui$x 77" --not-- "CLI syntax error"
 
-    newtest "uint u$x fail"
-    expectpart "$(echo "u$x -77" | $cligen_file -f $fspec)" 0 "cli> u$x -77" "CLI syntax error"
+    newtest "uint ui$x fail"
+    expectpart "$(echo "ui$x -77" | $cligen_file -f $fspec)" 0 "cli> ui$x -77" "CLI syntax error"
 done
 
 newtest "bool b0"
@@ -69,6 +69,9 @@ expectpart "$(echo "b0 xxx" | $cligen_file -f $fspec)" 0 "cli> b0 xxx" "CLI synt
 
 newtest "dec64 d0"
 expectpart "$(echo "d0 1.6742" | $cligen_file -f $fspec)" 0 "cli> d0 1.6742" --not-- "CLI syntax error"
+
+newtest "dec64 d0 fail"
+expectpart "$(echo "d0 17438598437598437598743" | $cligen_file -f $fspec)" 0 "CLI syntax error"
 
 newtest "dec64 d0 fail"
 expectpart "$(echo "d0 1.67425" | $cligen_file -f $fspec)" 0 "cli> d0 1.67425" "CLI syntax error"

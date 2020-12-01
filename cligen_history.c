@@ -298,9 +298,7 @@ hist_copy_next(cligen_handle h)
  * init. But you can also call it later to resize, but that will erase all
  * existing entries.
  * @param[in] h         CLIgen handle
- * @param[in] line      Number of lines in history
- * @param[in] filename  Name of history file (or NULL if no history file)
- * @note if filename is NULL, history will be initialized with NULL
+ * @param[in] lines     Number of lines in history
  */
 int
 cligen_hist_init(cligen_handle h,
@@ -316,7 +314,7 @@ cligen_hist_init(cligen_handle h,
 	goto done;
     }
     old_size = ch->ch_hist_size;
-    ch->ch_hist_size = lines;
+    ch->ch_hist_size = lines+1; /* circular buffer needs an extra element */
     for (i=0; i < old_size; i++)
 	if (ch->ch_hist_buf[i]){
 	    if (strlen(ch->ch_hist_buf[i]))
