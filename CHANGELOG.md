@@ -1,6 +1,7 @@
 # Cligen Changelog
 	
-## 4.9.0 Expected: 15 Dec 2020
+## 4.9.0
+18 Dec 2020
 
 ### New features
 
@@ -14,7 +15,7 @@
 * Fixed bug regarding number of lines in CLIgen history.
   * The line number given to `cligen_hist_init()` saved one less than the number given.
 * [Using a regular expression with either ^ OR $ breaks the regular expression match logic](https://github.com/clicon/cligen/issues/53)
-* Recursive sets did not work properly, especially competion and query.
+* Recursive sets did not work properly, especially completion and query.
 
 ## 4.8.0
 18 October 2020
