@@ -543,14 +543,6 @@ add_cov_to_cvec(cligen_handle h,
 
     if ((cv = cvec_add(cvv, co->co_vtype)) == NULL)
 	return NULL;
-#if 1
-    //    if (co->co_show)
-    //	cv->var_show = strdup4(co->co_show);
-    /* If translator function defined, here translate value */
-    if (co->co_translate_fn != NULL &&
-	co->co_translate_fn(h, cv) < 0)
-	return NULL;
-#endif
     cv_name_set(cv, co->co_command);
     if (co->co_vtype == CGV_DEC64) /* XXX: Seems misplaced? / too specific */
 	cv_dec64_n_set(cv, co->co_dec64_n);
@@ -559,6 +551,12 @@ add_cov_to_cvec(cligen_handle h,
 	cvec_del(cvv, cv);
 	return NULL;
     }
+    //    if (co->co_show)
+    //	cv->var_show = strdup4(co->co_show);
+    /* If translator function defined, here translate value */
+    if (co->co_translate_fn != NULL &&
+	co->co_translate_fn(h, cv) < 0)
+	return NULL;
     return cv;
 }
 
