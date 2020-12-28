@@ -1,5 +1,12 @@
 # Cligen Changelog
 	
+## 4.10.0
+Expected: February 2021
+
+### Corrected Bugs
+
+* Fixed CLI translator bug
+
 ## 4.9.0
 18 Dec 2020
 
