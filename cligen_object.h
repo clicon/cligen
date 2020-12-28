@@ -83,8 +83,12 @@ typedef int (expandv_cb)(cligen_handle h,       /* handler: cligen or userhandle
 			 cvec         *helptexts /* vector of help-texts */
 			     );
 
-/* Translate callback. Translate a variable, eg from cleartext to
-   encrypted passwords The variable type must be kept */
+/*! Callback for translating a variable, 
+ * Typical usecase is translate a cleartext to encrypt passwords. 
+ * The variable type must be the same.
+ * @param[in]  h   CLIgen handle
+ * @param[in]  cv  CLIgen variable
+ */
 typedef int (translate_cb_t)(cligen_handle h, cg_var *cv);
 
 /*! Cligen ^Z suspension callback
