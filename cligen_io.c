@@ -264,7 +264,6 @@ cligen_exitchar_add(cligen_handle h,
     gl_exitchar_add(c); /* XXX global */
 }
 
-#ifdef CO_HELPVEC
 /*! Display multi help lines on query (?)
  * Function handles multiple options on how to display help strings at query (?)
  * This includes indentation, limit on lines, truncation, etc.
@@ -325,7 +324,6 @@ print_help_line(cligen_handle    h,
  done:
     return retval;
 }
-#endif
 
 /*! Print help lines for subset of a parsetree vector
  * @param[in] fout     File to print to, eg stdout
@@ -391,11 +389,7 @@ print_help_lines(cligen_handle h,
 	    continue;
 	ch = &chvec[nrcmd++];
 	ch->ch_cmd = cmd;
-#ifdef CO_HELPVEC
 	ch->ch_helpvec = co->co_helpvec;
-#else
-	ch->ch_help = co->co_help;
-#endif
 	prev = cmd;
 	/* Compute longest command */
 	maxlen = strlen(cmd)>maxlen?strlen(cmd):maxlen;
@@ -405,15 +399,8 @@ print_help_lines(cligen_handle h,
     /* Actually print */
     for (i = 0; i<nrcmd; i++){
 	ch = &chvec[i];
-#ifdef CO_HELPVEC
 	if (print_help_line(h, fout, column_width, ch) < 0)
 	    goto done;
-#else
-	fprintf(fout, "  %*s %s\n", 
-		 -column_width, 
-		 ch->ch_cmd,
-		 ch->ch_help ? ch->ch_help : "");
-#endif
     }
     fflush(fout);
     retval = 0;

@@ -49,11 +49,7 @@
 /* Struct for printing command and help */
 struct cmd_help{
     char *ch_cmd;
-#ifdef CO_HELPVEC
     cvec *ch_helpvec;
-#else
-    char *ch_help;
-#endif
 };
 
 /* CLIgen event register callback type */
