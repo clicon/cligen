@@ -55,6 +55,13 @@ struct cmd_help{
 /* CLIgen event register callback type */
 typedef int (cligen_fd_cb_t)(int, void*);
 
+#ifdef CLIGEN_OUTPUT_PIPE
+/*
+ * Variables
+ */
+extern FILE *_cligen_fout;
+#endif
+
 /*
  * Prototypes
  */

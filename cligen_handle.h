@@ -58,6 +58,16 @@
 #define CLIGEN_TABMODE_STEPS    0x04
 
 /*
+ * Types
+ */
+#ifdef CLIGEN_OUTPUT_PIPE
+typedef struct cligen_pipe  { /* Linked list of output pipe entries */
+    struct cligen_pipe *cp_next;
+    char               *cp_syscmd; /* System command path */
+} cligen_pipe;
+#endif /* CLIGEN_OUTPUT_PIPE */
+
+/*
  * Prototypes
  */
 cligen_handle cligen_init(void);
@@ -75,6 +85,14 @@ int cligen_prompt_set(cligen_handle h, char *prompt);
 
 pt_head *cligen_pt_head_get(cligen_handle h);
 int cligen_pt_head_set(cligen_handle h, pt_head *ph);
+
+#ifdef CLIGEN_OUTPUT_PIPE
+cligen_pipe *cligen_pipe_add(cligen_handle h, char *syscmd);
+cligen_pipe *cligen_pipe_each(cligen_handle h, cligen_pipe *cp0);
+int          cligen_pipe_delete_all(cligen_handle h);
+int          cligen_pipe_fork(char *syscmd, pid_t *pid, int *fdout);
+int          cligen_pipe_kill(cligen_handle h);
+#endif /* CLIGEN_OUTPUT_PIPE */
 
 char *cligen_treename_keyword(cligen_handle h);
 int cligen_treename_keyword_set(cligen_handle h, char *name);

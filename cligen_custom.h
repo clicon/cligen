@@ -38,3 +38,9 @@ typedef struct {int a;} *cligen_handle;
 #else
 typedef void *cligen_handle; /* API */
 #endif
+
+/*! Spawn output pipe using more/less etc for cligen output
+ * For every stdout command fork/exec processes in a pipe to process output.
+ * Instead of using in-process cligen_output more functionality
+ */
+#define CLIGEN_OUTPUT_PIPE

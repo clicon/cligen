@@ -189,6 +189,9 @@ cligen_exit(cligen_handle h)
 	ch->ch_pt_head = ph->ph_next;
 	cligen_ph_free(ph);
     }
+#ifdef CLIGEN_OUTPUT_PIPE
+    cligen_pipe_delete_all(h);
+#endif
     free(ch);
     return 0;
 }
@@ -309,6 +312,131 @@ cligen_pt_head_set(cligen_handle h,
     ch->ch_pt_head = ph;
     return 0;
 }
+
+#ifdef CLIGEN_OUTPUT_PIPE
+/*! Append a new cligen pipe command
+ * @param[in]  h      CLIgen handle
+ * @param[in]  syscmd New 
+ * @retval     cp     The new entry
+ * @retval     NULL   Error
+ */
+cligen_pipe *
+cligen_pipe_add(cligen_handle h, 
+		char         *syscmd)
+{
+    struct cligen_handle *ch = handle(h);
+    cligen_pipe          *cp;
+    cligen_pipe          *cplast;
+    
+    if ((cp = (cligen_pipe *)malloc(sizeof(*cp))) == NULL)
+	goto done;
+    memset(cp, 0, sizeof(*cp));    
+    if ((cp->cp_syscmd = strdup(syscmd)) == NULL){
+	free(cp);
+	cp = NULL;
+	goto done;
+    }
+    if ((cplast = ch->ch_pipe) == NULL){
+	ch->ch_pipe = cp;
+    }
+    else {
+	while (cplast->cp_next)
+	    cplast = cplast->cp_next;
+	cplast->cp_next = cp;
+    }
+ done:
+    return cp;
+}
+
+/*! Iterate through all cligen output pipe entries
+ *
+ * @param[in] h      CLIgen handle
+ * @param[in] cp0    Previous cligen pipe entry
+ * @retval    cp     Next cligen pipe entry
+ * @retval    NULL   When end of list reached.
+ * @code
+ *    cligen_pipe *cp = NULL;
+ *    while ((cp = cligen_pipe_each(h, cp)) != NULL) {
+ *	     ...
+ *    }
+ * @endcode
+ */
+cligen_pipe *
+cligen_pipe_each(cligen_handle h, 
+		 cligen_pipe  *cp0)
+{
+    struct cligen_handle *ch = handle(h);
+    cligen_pipe          *cp = NULL;
+    
+    if (cp0 == NULL)
+	cp = ch->ch_pipe;
+    else
+	cp = cp0->cp_next;
+    return cp;
+}
+
+int
+cligen_pipe_delete_all(cligen_handle h)
+{
+    struct cligen_handle *ch = handle(h);
+    cligen_pipe          *cp;        /* Linked list of output pipe entries */
+    
+    while ((cp = ch->ch_pipe) != NULL){
+	ch->ch_pipe = cp->cp_next;
+	if (cp->cp_syscmd)
+	    free(cp->cp_syscmd);
+	free(cp);
+    }
+    return 0;
+}
+
+/*!
+ *  master   -->   child
+ *    pipe[0,0]
+ *  child
+ * If the parent wants to send data to the child, it should close fd0, and the child should
+ * close fd1.
+ */
+int
+cligen_pipe_fork(char *syscmd,
+		 pid_t *pid,
+		 int   *fdout)
+{
+    int      retval = -1;
+    int      fd[2] = { -1, -1 };
+    pid_t    child;
+    
+    if (pipe(fd) == -1)
+	goto done;
+    if ((child = fork()) < 0) 
+	goto done;
+    if (child == 0) {	/* Child */
+	close(fd[1]);	/* Close unused read ends */
+	/* Divert stdout and stderr to pipes */
+	dup2(fd[0], 0);
+
+	if (system(syscmd)< 0)
+	    perror("system");
+	exit(0);    
+    }
+    /* Close unused write ends */
+    close(fd[0]);	/* Close unused read ends */
+    //    dup2(1, fd[1]);
+
+    *pid = child;
+    *fdout = fd[1];
+    retval = 0;
+ done:
+    return retval;
+}
+
+int
+cligen_pipe_kill(cligen_handle h)
+{
+    return 0;
+}
+
+#endif /* CLIGEN_OUTPUT_PIPE */
 
 /*! Get name of treename keyword used in parsing
  * @param[in] h       CLIgen handle

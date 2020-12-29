@@ -75,6 +75,13 @@
  */
 #define CLIGEN_HELP_LEFT_MARGIN 3
 
+#ifdef CLIGEN_OUTPUT_PIPE
+/*
+ * Variables
+ */
+FILE *_cligen_fout = NULL;
+#endif
+
 /*
  * Local variables
  */
@@ -121,6 +128,10 @@ cligen_output(FILE       *f,
     int     term_rows;
     int     len;
 
+#ifdef CLIGEN_OUTPUT_PIPE
+    if (_cligen_fout)
+	f = _cligen_fout;
+#endif
     term_rows = cligen_terminal_rows(NULL);
     /* form a string in buf from all args */
 
@@ -153,7 +164,12 @@ cligen_output(FILE       *f,
 		if (end < bufend)
 		    start = end+1;
 	      
-		if (d_lines >= (term_rows -1)){		    
+#ifdef CLIGEN_OUTPUT_PIPE
+		if (0)
+#else
+		if (d_lines >= (term_rows -1))
+#endif
+		    {
 		    gl_char_init();
 
 		    fprintf(f, "--More--");

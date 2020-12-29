@@ -56,6 +56,9 @@
 #define __USE_GNU /* isblank() */
 #include <ctype.h>
 #include <assert.h>
+#ifdef CLIGEN_OUTPUT_PIPE
+#include <wait.h>
+#endif
 
 #ifndef isblank
 #define isblank(c) (c==' ')
@@ -847,31 +850,57 @@ cligen_eval(cligen_handle h,
 	    cg_obj       *co, 
 	    cvec         *cvv)
 {
+    int                 retval = -1;
     struct cg_callback *cc;
-    int                 retval = 0;
     cvec               *argv;
-
+#ifdef CLIGEN_OUTPUT_PIPE
+    int                 status;
+    pid_t               pid = 0;
+    int                 fdout;
+#endif
     if (h)
 	cligen_co_match_set(h, co);
+#ifdef CLIGEN_OUTPUT_PIPE
+    {
+	cligen_pipe *cp = NULL;
+
+	while ((cp = cligen_pipe_each(h, cp)) != NULL) {
+	    fprintf(stderr, "%s %s\n", __FUNCTION__, cp->cp_syscmd);
+	    if (cligen_pipe_fork(cp->cp_syscmd, &pid, &fdout) < 0)
+		goto done;
+	    _cligen_fout = fdopen(fdout, "w");
+	}
+    }
+#endif /* CLIGEN_OUTPUT_PIPE */
     for (cc = co->co_callbacks; cc; cc=cc->cc_next){
 	/* Vector cvec argument to callback */
     	if (cc->cc_fn_vec){
 	    argv = cc->cc_cvec ? cvec_dup(cc->cc_cvec) : NULL;
 	    cligen_fn_str_set(h, cc->cc_fn_str);
-	    if ((retval = (*cc->cc_fn_vec)(
-					cligen_userhandle(h)?cligen_userhandle(h):h, 
-					cvv, 
-					argv)) < 0){
+	    if ((*cc->cc_fn_vec)(cligen_userhandle(h)?cligen_userhandle(h):h, 
+				 cvv, argv) < 0){
+
 		if (argv != NULL)
 		    cvec_free(argv);
 		cligen_fn_str_set(h, NULL);
-		break;
+		goto done;
 	    }
 	    if (argv != NULL)
 		cvec_free(argv);
 	    cligen_fn_str_set(h, NULL);
 	}
     }
+#ifdef CLIGEN_OUTPUT_PIPE
+    fprintf(stderr,"done\n");
+    close(fdout);
+    _cligen_fout = NULL;
+    if(pid && waitpid(pid, &status, 0) == pid)
+	; //ret = WEXITSTATUS(status);
+    if (cligen_pipe_kill(h) < 0)
+	goto done;
+#endif /* CLIGEN_OUTPUT_PIPE */
+    retval = 0;
+ done:
     return retval;
 }
 
