@@ -38,7 +38,3 @@ typedef struct {int a;} *cligen_handle;
 #else
 typedef void *cligen_handle; /* API */
 #endif
-
-/* Use a vector of help texts instead of a single string
- */
-#define CO_HELPVEC

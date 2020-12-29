@@ -374,7 +374,6 @@ cligen_str2cvv(char  *string,
     return retval;
 }
 
-#ifdef CO_HELPVEC
 /*! Transform a single helpstr to a vector of help strings and strip preceding whitespace
  *
  * @param[in]  str  String on the form <str1>\n<str2>
@@ -433,8 +432,6 @@ cligen_txt2cvv(char  *str,
  done:
     return retval;
 }
-#endif
-
 
 /*! Returns the total number of "levels" of a CLIgen command string
  *

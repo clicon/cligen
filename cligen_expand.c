@@ -93,17 +93,9 @@ co_expand_sub(cg_obj  *co,
 	con->co_cvec = cvec_dup(co->co_cvec);
     if (co_callback_copy(co->co_callbacks, &con->co_callbacks) < 0)
 	return -1;
-#ifdef CO_HELPVEC
     if (co->co_helpvec)
 	if ((con->co_helpvec = cvec_dup(co->co_helpvec)) == NULL)
 	    return -1;
-#else
-    if (co->co_help)
-	if ((con->co_help = strdup(co->co_help)) == NULL){
-	    fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
-	    return -1;
-	}
-#endif
     if (co->co_type == CO_VARIABLE){
 	if (co->co_expand_fn_str)
 	    if ((con->co_expand_fn_str = strdup(co->co_expand_fn_str)) == NULL){
@@ -161,7 +153,6 @@ transform_var_to_cmd(cg_obj *co,
 	free(co->co_command);
     co->co_command = cmd; 
     if (helptext){
-#ifdef CO_HELPVEC
 	if (co->co_helpvec){
 	    cvec_free(co->co_helpvec);
 	    co->co_helpvec = NULL;
@@ -169,11 +160,6 @@ transform_var_to_cmd(cg_obj *co,
 	/* helpstr can be on the form "txt1\n    txt2" */
 	if (cligen_txt2cvv(helptext, &co->co_helpvec) < 0)
 	    return -1;
-#else
-	if (co->co_help)
-	    free(co->co_help);
-	co->co_help = helptext; 
-#endif
     }
     if (co->co_expandv_fn)
 	co->co_expandv_fn = NULL;
@@ -442,12 +428,10 @@ pt_expand_fnv(cligen_handle h,
 	/* 'escaped' always points to mutable string */
 	if (transform_var_to_cmd(con, (char*)escaped, helpstr) < 0)
 	    goto done;
-#ifdef CO_HELPVEC
 	if (helpstr){
 	    free(helpstr);
 	    helpstr = NULL;
 	}
-#endif
     }
     if (commands)
 	cvec_free(commands);

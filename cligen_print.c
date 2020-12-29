@@ -178,7 +178,6 @@ co2cbuf(cbuf   *cb,
 	break;
     }
     if (brief == 0){
-#ifdef CO_HELPVEC
 	if (co->co_helpvec){
 	    cprintf(cb, "(\"");
 	    cv = NULL;
@@ -190,10 +189,6 @@ co2cbuf(cbuf   *cb,
 	    }
 	    cprintf(cb, "\")");
 	}
-#else
-	if (co->co_help)
-	    cprintf(cb, "(\"%s\")", co->co_help);
-#endif
 	if (co_flags_get(co, CO_FLAGS_HIDE))
 	    cprintf(cb, ", hide");
 	for (cc = co->co_callbacks; cc; cc=cc->cc_next){
