@@ -137,7 +137,8 @@ typedef struct cg_varspec cg_varspec;
 
 /* General purpose flags for cg_obj co_flags type 
  */
-#define CO_FLAGS_HIDE      0x01  /* Don't show in help/completion */
+#define CO_FLAGS_HIDE_AUTO_COMPLETION  0x01  /* Don't show in help/completion */
+#define CO_FLAGS_HIDE_DATABASE         0x40  /* Don't show database */
 #define CO_FLAGS_MARK      0x02  /* Only used internally (for recursion avoidance) */
 #define CO_FLAGS_TREEREF   0x04  /* This node is top of expanded sub-tree */
 #define CO_FLAGS_REFDONE   0x08  /* This reference has already been expanded */

@@ -349,7 +349,7 @@ pt_expand_treeref(cligen_handle h,
 	    if ((pt1ref = pt_dup(ptref, co02)) == NULL) /* From ptref -> pt1ref */
 		goto done;
 	    /* Recursively add extra NULLs in non-terminals */
-	    if (co_flags_get(co, CO_FLAGS_HIDE) && /* XXX: hide to trunk? */
+	    if (co_flags_get(co, CO_FLAGS_HIDE_AUTO_COMPLETION) && /* XXX: hide to trunk? */
 		pt_reference_trunc(pt1ref) < 0)
 		goto done;
 	    /* Recursively install callback all through the referenced tree */
@@ -533,7 +533,7 @@ pt_expand(cligen_handle h,
 	if ((co = pt_vec_i_get(pt, i)) != NULL){
 	    if (co_value_set(co, NULL) < 0)
 		goto done;
-	    if (hide && co_flags_get(co, CO_FLAGS_HIDE))
+	    if (hide && co_flags_get(co, CO_FLAGS_HIDE_AUTO_COMPLETION))
 		continue;
 	    /*
 	     * Choice variable - Insert the static choices as commands in place
