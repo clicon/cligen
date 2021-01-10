@@ -687,7 +687,7 @@ cgy_terminal(cligen_yacc *cy)
 	/* variables: special case "hide-auto-completion", "hide-database" and "hide-database-auto-completion" */
 	if (cy->cy_cvec){
 	    if (cvec_find(cy->cy_cvec, "hide-auto-completion") != NULL)
-		co_flags_set(co, CO_FLAGS_HIDE);	        co_flags_set(co, CO_FLAGS_HIDE_AUTO_COMPLETION);
+		co_flags_set(co, CO_FLAGS_HIDE_AUTO_COMPLETION);
         if (cvec_find(cy->cy_cvec, "hide-database") != NULL)
         co_flags_set(co, CO_FLAGS_HIDE_DATABASE);
         if (cvec_find(cy->cy_cvec, "hide-database-auto-completion") != NULL) {
