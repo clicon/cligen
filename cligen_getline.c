@@ -728,6 +728,11 @@ gl_getline(cligen_handle h,
 		        break;
 		    case 'D': gl_fixup(h, gl_prompt, -1, gl_pos-1); /* left */
 		        break;
+		    case '3': /* del */
+			if (gl_getc(h) != '~')
+			    break;
+			gl_del(h, 0);
+			break;
 		    default: gl_putc('\007');         /* who knows */
 		        break;
 		    }
