@@ -1,7 +1,7 @@
 /*
   ***** BEGIN LICENSE BLOCK *****
  
-  Copyright (C) 2001-2020 Olof Hagsand
+  Copyright (C) 2001-2021 Olof Hagsand
 
   This file is part of CLIgen.
 
