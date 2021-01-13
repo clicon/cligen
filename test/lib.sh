@@ -1,15 +1,6 @@
 #!/usr/bin/env bash
 # CLIgen tests
 # Create working dir as variable "dir"
-# The functions are somewhat wildgrown, a little too many:
-# - expectfn
-# - expecteq
-# - expecteof
-# - expecteofeq
-# - expecteofx
-# - expecteof_file
-# - expectwait
-# - expectmatch
 
 #set -e
 # : ${A=B} vs : ${A:=B} # colon also checks for NULL
