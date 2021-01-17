@@ -57,6 +57,9 @@ expectpart "$(echo "a c ?" | $cligen_file -f $fspec  2>&1)" 0 "cli>" "  b" "  d"
 newtest "a c d ?"
 expectpart "$(echo "a c d ?" | $cligen_file -f $fspec  2>&1)" 0 "cli>" "  b" "  e" "<v>" --not-- "  c" "  d"
 
+newtest "a c b b2 ?"
+expectpart "$(echo "a c b b2 ?" | $cligen_file -f $fspec  2>&1)" 0 "cli>" "  d" "  e" "<v>" --not-- "  b" "  c"
+
 # subtree a
 newtest "a b b2"
 expectpart "$(echo "a b b2" | $cligen_file -f $fspec 2>&1)" 0 "1 name:a type:string value:a" "2 name:b type:string value:b" "3 name:b2 type:string value:b2"
