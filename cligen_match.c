@@ -973,9 +973,9 @@ match_pattern_sets_local(cligen_handle h,
  *                          all possible options. Only called from match_pattern_exact()
  * @param[in]     hide      Respect hide setting of commands (dont show)
  * @param[in]     expandvar Set if VARS should be expanded, eg ? <tab>
- * @param[out]    mrp       Match result including how many matches, level, reason for nomatc, etc
  * @param[in,out] cvv       cligen variable vector containing vars/values pair for completion
  * @param[in,out] cvvall    cligen variable vector containing vars/values + keywords for callbacks
+ * @param[out]    mrp       Match result including how many matches, level, reason for nomatc, etc
  * @retval        0         OK. result returned in mrp
  * @retval        -1        Error
  */
@@ -1064,7 +1064,7 @@ match_pattern_sets(cligen_handle h,
 	    }
 	    mrcprev = mrc;
 	    level = mrc->mr_level;
-	}
+	} /* while */
 	if (mrc == NULL){
 	    *mrp = mr0;
 	    mr0 = NULL;
@@ -1087,7 +1087,7 @@ match_pattern_sets(cligen_handle h,
     }
     assert(mrc != NULL);
     /* Clear all CO_FLAGS_MATCH recursively */
-    pt_apply(pt, co_clearflag, (void*)CO_FLAGS_MATCH);
+    pt_apply(ptn, co_clearflag, (void*)CO_FLAGS_MATCH);
     /* If child match fails, use previous */
     if (mrc->mr_len == 0 && mrcprev){
 	/* Transfer match flags from ptn to pt if this tree has no more matches */
@@ -1120,6 +1120,11 @@ match_pattern_sets(cligen_handle h,
  done:
     if (mrcprev && mrcprev != mrc){
 	assert(mrcprev != *mrp);
+	if (mrcprev->mr_parsetree &&
+	    mrcprev->mr_parsetree != ptn &&
+	    *mrp &&
+	    mrcprev->mr_parsetree != (*mrp)->mr_parsetree)
+	    pt_free(mrcprev->mr_parsetree, 0);
 	mr_free(mrcprev);
     }
     if (ptn)

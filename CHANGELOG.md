@@ -5,6 +5,9 @@ Expected: February 2021
 
 ### Corrected Bugs
 
+* Fixed CLI sets bug:
+  * In syntax: `a @{ b b2; c; }`, the following did not work: `a c b b2 ?` (c was again possible)
+
 * Fixed CLI translator bug
 
 ## 4.9.0
