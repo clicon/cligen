@@ -116,7 +116,7 @@ match_variable(cligen_handle h,
 	goto done;
     /* here retval should be 1 */
     /* Validate value */
-    if ((retval = cv_validate(h, cv, cs, reason)) <= 0)
+    if ((retval = cv_validate(h, cv, cs, co->co_command, reason)) <= 0)
 	goto done;
     /* here retval should be 1 */
   done:

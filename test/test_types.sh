@@ -42,10 +42,10 @@ newtest "$cligen_file -f $fspec"
 
 for x in 0 1 2 3 4 5; do
     newtest "regexp r$x"
-    expectpart "$(echo "r$x a42" | $cligen_file -f $fspec)" 0 "cli> r$x a42" --not-- "regexp match fail"
+    expectpart "$(echo "r$x a42" | $cligen_file -f $fspec)" 0 "cli> r$x a42" --not-- "is invalid input for cli command"
 
     newtest "regexp $x fail"
-    expectpart "$(echo "r$x ax42" | $cligen_file -f $fspec)" 0 "cli> r$x ax42" "regexp match fail"
+    expectpart "$(echo "r$x ax42" | $cligen_file -f $fspec)" 0 "cli> r$x ax42" "is invalid input for cli command"
 done
 
 for x in 0 1 2 3; do
