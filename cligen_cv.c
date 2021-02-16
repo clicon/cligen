@@ -3098,8 +3098,10 @@ outoflength(uint64_t    u64,
 
 /*! Validate cligen variable cv using the spec in cs.
  *
+ * @param[in]  h       CLIgen handle
  * @param[in]  cv      A cligen variable to validate. This is a correctly parsed cv.
  * @param[in]  cs      A cligen variable specification object that defines the cv.
+ * @param[in]  cmd     Command for help and debug
  * @param[out] reason  If given, and if return value is 0, contains a malloced string
  *                      describing the reason why the validation failed.
  * @retval -1  Error (fatal), with errno set to indicate error
@@ -3108,9 +3110,10 @@ outoflength(uint64_t    u64,
  */
 int
 cv_validate(cligen_handle h,
-	    cg_var     *cv, 
-	    cg_varspec *cs, 
-	    char      **reason)
+	    cg_var       *cv, 
+	    cg_varspec   *cs, 
+	    char         *cmd,
+	    char        **reason)
 {
     int      retval = 1; /* OK */
     int32_t  i = 0;
@@ -3297,8 +3300,8 @@ cv_validate(cligen_handle h,
 		    break;
 		if (retval == 0){
 		    if (reason)
-			*reason = cligen_reason("regexp match fail: %s does not match %s",
-						str, regexp);
+			*reason = cligen_reason("\"%s\" is invalid input for cli command: %s",
+						str, cmd);
 		    retval = 0;
 		    break; /* from the while */
 		}

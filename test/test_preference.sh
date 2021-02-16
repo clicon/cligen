@@ -38,7 +38,7 @@ expectpart "$(echo "values 427438287432" | $cligen_file -f $fspec 2>&1)" 0 "cli>
 
 # Maybe failure should be string regexp failure?
 newtest "cligen pref no match"
-expectpart "$(echo "values 9aa" | $cligen_file -f $fspec 2>&1)" 0 "CLI syntax error in: \"values 9aa\": regexp match fail: 9aa does not match \[a-z\]\[0-9\]*"
+expectpart "$(echo "values 9aa" | $cligen_file -f $fspec 2>&1)" 0 "CLI syntax error in: \"values 9aa\": \"9aa\" is invalid input for cli command: string"
 
 endtest
 
