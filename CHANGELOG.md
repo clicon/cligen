@@ -1,7 +1,9 @@
 # Cligen Changelog
 	
-## 4.10.0
-Expected: February 2021
+## 5.0.0
+26 February 2021
+
+Mainly a release to keep in sync with Clixon major new 5.0 release
 
 ### Minor changes
 
