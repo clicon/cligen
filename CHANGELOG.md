@@ -1,5 +1,12 @@
 # Cligen Changelog
 	
+## 5.1.0
+Expected: April
+
+### Corrected Bugs
+
+* Changed winsize default to: non-scrolling, term width 80
+
 ## 5.0.0
 26 February 2021
 
