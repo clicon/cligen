@@ -100,6 +100,16 @@ static int _helpstr_lines = 0;
 /*! Get window size and set terminal row size
  * @param[in] h       CLIgen handle
  * The only real effect this has is to set the getline width parameter which effects scrolling
+ * man ioctl_tty(2)
+  Get and set window size
+       Window  sizes  are  kept in the kernel, but not used by the kernel (except in the
+       case of virtual consoles, where the kernel will update the window size  when  the
+       size of the virtual console changes, for example, by loading a new font).
+
+       The following constants and structure are defined in <sys/ioctl.h>.
+
+       TIOCGWINSZ     struct winsize *argp
+              Get window size.
  */
 static int
 cligen_gwinsz(cligen_handle h)
@@ -473,30 +483,34 @@ cligen_terminal_width(cligen_handle h)
 {
 //    struct cligen_handle *ch = handle(h);
 
-    return gl_getwidth();
+    return gl_getwidth()==0xffff?80:gl_getwidth();
 }
 
 /*! Set width of a CLIgen line in characters, ie, the number of 'columns' in a line
  *
  * @param[in] h       CLIgen handle
- * @param[in] length  Number of characters in a line - x-direction (see notes)
+ * @param[in] width   Number of characters in a line - x-direction (see notes)
  * @note if length = 0, then set it to 65535 to effectively disable all scrolling mechanisms
  * @note if length < 21 set it to 21, which is getline's limit.
  */
 int 
 cligen_terminal_width_set(cligen_handle h, 
-			   int           length)
+			  int           width)
 {
     //    struct cligen_handle *ch = handle(h);
     int retval = -1;
 
-    /* if length = 0, then set it to 65535 to effectively disable all scrolling mechanisms */
-    if (length == 0)
-	length = 0xffff;
-    /* if length < 21 set it to 21, which is getline's limit. */
-    else if (length < TERM_MIN_SCREEN_WIDTH)
-	length = TERM_MIN_SCREEN_WIDTH;
-    if (gl_setwidth(length) < 0)
+    /* if width = 0, then set it to 65535 to effectively disable all scrolling mechanisms 
+     * This is somewhat complex and there may be some missed cornercases:
+     * - Set very high width to disable horizontal scrolling
+     * - But return 80 width see cligen_terminal_width
+     */
+    if (width == 0)
+	width = 0xffff;
+    /* if width < 21 set it to 21, which is getline's limit. */
+    else if (width < TERM_MIN_SCREEN_WIDTH)
+	width = TERM_MIN_SCREEN_WIDTH;
+    if (gl_setwidth(width) < 0)
 	goto done; /* shouldnt happen */
     retval = 0;
  done:
