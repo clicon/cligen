@@ -198,9 +198,9 @@ co_sets_get(cg_obj *co)
     parse_tree *pt;
 
     if ((pt = co_pt_get(co)) != NULL)
-	return 0;
-    else
 	return pt_sets_get(pt);
+    else
+	return 0;
 }
 
 void

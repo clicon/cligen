@@ -339,10 +339,11 @@ pt_dump1(FILE       *f,
     char   *name;
     
     name = pt_name_get(pt);
-    fprintf(stderr, "%*s %p pt %s [%d]\n",
+    fprintf(stderr, "%*s %p pt %s [%d]",
 	    indent*3, "", pt,
 	    name?name:"",
 	    pt_len_get(pt));
+    fprintf(stderr, "\n");
     for (i=0; i<pt_len_get(pt); i++){
 	if ((co = pt_vec_i_get(pt, i)) == NULL)
 	    fprintf(stderr, "%*s NULL\n", (indent+1)*3, "");
@@ -361,7 +362,10 @@ co_dump1(FILE    *f,
 
     switch (co->co_type){
     case CO_COMMAND:
-	fprintf(stderr, "%*s %p co %s\n", indent*3, "", co, co->co_command);
+	fprintf(stderr, "%*s %p co %s", indent*3, "", co, co->co_command);
+	if (co_sets_get(co))
+	    fprintf(stderr, " SETS");
+	fprintf(stderr, "\n");
 	break;
     case CO_REFERENCE:
 	fprintf(stderr, "%*s %p co @%s\n", indent*3, "", co, co->co_command);
