@@ -5,6 +5,7 @@ Expected: April
 
 ### Corrected Bugs
 
+* Fixed: [cli will hang in match_complete with CLICON_CLI_TAB_MODE equal 4 #196](https://github.com/clicon/clixon/issues/196)
 * Changed winsize default to: non-scrolling, term width 80
 
 ## 5.0.0

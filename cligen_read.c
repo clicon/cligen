@@ -145,13 +145,13 @@ cli_tab_hook(cligen_handle h,
 {
     int           retval = -1;
     int	          old_cursor;
+    int	          prev_cursor;
     parse_tree   *pt = NULL;     /* Orig */
     parse_tree   *ptn = NULL;    /* Expanded */
     cvec         *cvv = NULL;
 
     if ((ptn = pt_new()) == NULL)
 	goto done;
-    old_cursor = *cursorp;  /* Save old location of cursor */
     if ((pt = cligen_ph_active_get(h)) == NULL)
 	goto ok;
     if (pt_expand_treeref(h, NULL, pt) < 0) /* sub-tree expansion */
@@ -161,19 +161,21 @@ cli_tab_hook(cligen_handle h,
     if (pt_expand(h, pt, cvv, 1, 0, ptn) < 0)      /* expansion */
 	goto done;
     /* Note, can change cligen buf pointer (append and increase) */
-    if (cli_complete(h, cursorp, ptn, cvv) < 0) /* XXX expand-cleanup must be done here before show commands */
-	goto done;
-    else {
-	if (old_cursor == *cursorp) { 	/* Cursor hasnt changed */
-	    fputs("\n", stdout);
-	    if (cligen_tabmode(h)&CLIGEN_TABMODE_COLUMNS){
-		if (show_help_line(h, stdout, cligen_buf(h), ptn, cvv) < 0)
-		    goto done;
-	    }
-	    else{
-		if (show_help_columns(h, stdout, cligen_buf(h), ptn, cvv) < 0)
-		    goto done;
-	    }
+    old_cursor = *cursorp;  /* Save old location of cursor */
+    do {
+	prev_cursor = *cursorp;
+	if (cli_complete(h, cursorp, ptn, cvv) < 0) /* XXX expand-cleanup must be done here before show commands */
+	    goto done;
+    } while (cligen_tabmode(h)&CLIGEN_TABMODE_STEPS && prev_cursor != *cursorp);
+    if (old_cursor == *cursorp) { 	/* Cursor hasnt changed */
+	fputs("\n", stdout);
+	if (cligen_tabmode(h) & CLIGEN_TABMODE_COLUMNS){
+	    if (show_help_line(h, stdout, cligen_buf(h), ptn, cvv) < 0)
+		goto done;
+	}
+	else{
+	    if (show_help_columns(h, stdout, cligen_buf(h), ptn, cvv) < 0)
+		goto done;
 	}
     }
  ok:

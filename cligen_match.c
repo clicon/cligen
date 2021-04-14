@@ -1417,7 +1417,6 @@ match_complete(cligen_handle h,
     s = string;
     while ((strlen(s) > 0) && isblank(*s))
 	s++;
- again: /* XXX ugly goto usage, replace with loop */
     matchlen = 0;
     if (match_pattern(h, cvt, cvr,
 		      pt,
@@ -1448,9 +1447,10 @@ match_complete(cligen_handle h,
 	    retval = 0;
 	    goto done;
 	}
-	if ((cligen_tabmode(h) & CLIGEN_TABMODE_VARS) == 0)
+	if ((cligen_tabmode(h) & CLIGEN_TABMODE_VARS) == 0){
 	    if (co->co_type != CO_COMMAND)
 		continue;
+	}
 	if (co1 == NULL){
 	    minmatch = strlen(co->co_command);
 	    co1 = co;
@@ -1485,12 +1485,6 @@ match_complete(cligen_handle h,
 	level++;
 	slen = 0;
 	co1 = NULL;
-	if (cligen_tabmode(h)&CLIGEN_TABMODE_STEPS){
-	    if (matchvec)
-		free(matchvec);
-	    matchvec = NULL;
-	    goto again;
-	}
     }
     retval = append?1:0;
   done:

@@ -188,6 +188,7 @@ usage(char *argv)
 	    "\t-p \t\tPrint syntax\n"
 	    "\t-e \t\tSet automatic expansion/completion for all expand() functions\n"
 	    "\t-P \t\tSet preference mode to 1, ie return first if several have same pref\n"
+	    "\t-t <nr> \tSet tab mode: 1:columns, 2: same pref for vars, 4: all steps\n"
 	    ,
 	    argv);
     exit(0);
@@ -210,6 +211,7 @@ main(int argc, char *argv[])
     int         print_syntax = 0;
     int         set_expand = 0;
     int         set_preference = 0;
+    int         tabmode = 0;
 
     argv++;argc--;
     for (;(argc>0)&& *argv; argc--, argv++){
@@ -242,6 +244,10 @@ main(int argc, char *argv[])
 		exit(1);
 	    }
 	    break;
+	case 't': /* tab mode */
+	    argc--;argv++;
+	    tabmode = atoi(*argv);
+	    break;
 	default:
 	    usage(argv0);
 	    break;
@@ -272,7 +278,9 @@ main(int argc, char *argv[])
     }
     if ((str = cvec_find_str(globals, "prompt")) != NULL)
 	cligen_prompt_set(h, str);
-    if ((str = cvec_find_str(globals, "tabmode")) != NULL)
+    if (tabmode != 0)
+	cligen_tabmode_set(h, tabmode);
+    else if ((str = cvec_find_str(globals, "tabmode")) != NULL)
 	if (strcmp(str,"long") == 0)
 	    cligen_tabmode_set(h, CLIGEN_TABMODE_COLUMNS);
     if ((str = cvec_find_str(globals, "comment")) != NULL)

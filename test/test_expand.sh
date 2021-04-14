@@ -61,7 +61,7 @@ expectpart "$(echo "interface foo" | $cligen_tutorial -q -f $fspec 2>&1)" 0 "1 n
 cat > $fspec <<EOF
   prompt="cli> ";              # Assignment of prompt
   comment="#";                 # Same comment as in syntax
-  treename="example";         # Name of syntax (used when referencing)
+  treename="example";          # Name of syntax (used when referencing)
 
   # Expand example using cligen_file special expand functions that give different sets
   a (<x:string>|<x:string exp()>|<x:string other()>) y, callback();
@@ -79,6 +79,49 @@ if false; then
     newtest "a exp2 y"
     expectpart "$(echo "a exp2 y" | $cligen_file -e -f $fspec 2>&1)" 0 "1 name:a type:string value:a" "2 name:x type:string value:exp2" "3 name:y type:string value:y"
 fi
+
+# Tab modes
+# See description in cligen_handle.c
+cat > $fspec <<EOF
+  prompt="cli> ";              # Assignment of prompt
+  comment="#";                 # Same comment as in syntax
+  treename="example";          # Name of syntax (used when referencing)
+
+  # Expand example using cligen_file special expand functions that give different sets
+
+  abbb("First command"), callback();
+  accc("Second command"), callback();
+   x {
+    b, callback();
+    <c:int32>, callback();
+   }	     
+   za zb zc, callback();
+EOF
+
+# Double tab tests
+# CLIGEN_TABMODE_COLUMNS
+newtest "cligen a<tab><tab> tabmode:0"
+expectpart "$(echo "a		b" | $cligen_file -t 0 -e -f $fspec 2>&1)" 0 "abbb                      accc" "1 name:abbb type:string value:abbb"
+
+newtest "cligen a<tab><tab> tabmode:1"
+expectpart "$(echo "a		b" | $cligen_file -t 1 -e -f $fspec 2>&1)" 0 "1 name:abbb type:string value:abbb" "abbb                  First command"  "accc                  Second command" --not-- "abbb                      accc" 
+
+# CLIGEN_TABMODE_VARS
+newtest "cligen x<tab><tab> tabmode:0"
+expectpart "$(echo "x		" | $cligen_file -t 0 -e -f $fspec 2>&1)" 0 "1 name:x type:string value:x" "2 name:b type:string value:b"
+
+newtest "cligen x <tab><tab> tabmode:2"
+expectpart "$(echo "x		" | $cligen_file -t 2 -e -f $fspec 2>&1)" 0 'CLI syntax error in: "x": Incomplete command'
+
+newtest "cligen x <tab><tab> tabmode:2"
+expectpart "$(echo "x		b" | $cligen_file -t 2 -e -f $fspec 2>&1)" 0 "1 name:x type:string value:x" "2 name:b type:string value:b" --not-- 'CLI syntax error in: "x": Incomplete command'
+
+# CLIGEN_TABMODE_STEPS
+newtest "cligen z<tab> tabmode:0"
+expectpart "$(echo "z	" | $cligen_file -t 0 -e -f $fspec 2>&1)" 0 'CLI syntax error in: "za": Incomplete command' --not-- "za zb zc"
+
+newtest "cligen z<tab> tabmode:4"
+expectpart "$(echo "z	" | $cligen_file -t 4 -e -f $fspec 2>&1)" 0 "za zb zc" "1 name:za type:string value:za" "2 name:zb type:string value:zb" "3 name:zc type:string value:zc"
 
 endtest
 
