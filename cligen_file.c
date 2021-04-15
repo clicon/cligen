@@ -98,12 +98,12 @@ callback(cligen_handle handle, cvec *cvv, cvec *argv)
     cg_var *cv;
     char    buf[64];
 
-    fprintf(stderr, "function: %s\n", cligen_fn_str_get(handle));
-    fprintf(stderr, "variables:\n");
+    cligen_output(stderr, "function: %s\n", cligen_fn_str_get(handle));
+    cligen_output(stderr, "variables:\n");
     cv = NULL;
     while ((cv = cvec_each1(cvv, cv)) != NULL) {
 	cv2str(cv, buf, sizeof(buf)-1);
-	fprintf(stderr, "\t%d name:%s type:%s value:%s\n", 
+	cligen_output(stderr, "\t%d name:%s type:%s value:%s\n", 
 		i++, 
 		cv_name_get(cv),
 		cv_type2str(cv_type_get(cv)),
@@ -115,7 +115,7 @@ callback(cligen_handle handle, cvec *cvv, cvec *argv)
 	    i=0;
 	    while ((cv = cvec_each(argv, cv)) != NULL) {
 		cv2str(cv, buf, sizeof(buf)-1);
-		fprintf(stderr, "arg %d: %s\n", i++, buf);
+		cligen_output(stderr, "arg %d: %s\n", i++, buf);
 	    }
 	}
     return 0;
@@ -189,6 +189,7 @@ usage(char *argv)
 	    "\t-e \t\tSet automatic expansion/completion for all expand() functions\n"
 	    "\t-P \t\tSet preference mode to 1, ie return first if several have same pref\n"
 	    "\t-t <nr> \tSet tab mode: 1:columns, 2: same pref for vars, 4: all steps\n"
+	    "\t-s <nr> \tScrolling 0: disable line scrolling, 1: enable line scrolling (default 1)\n"
 	    ,
 	    argv);
     exit(0);
@@ -212,6 +213,7 @@ main(int argc, char *argv[])
     int         set_expand = 0;
     int         set_preference = 0;
     int         tabmode = 0;
+    int         scrollmode = 0;
 
     argv++;argc--;
     for (;(argc>0)&& *argv; argc--, argv++){
@@ -243,6 +245,10 @@ main(int argc, char *argv[])
 		fprintf(stderr, "fopen(%s): %s\n", filename, strerror(errno));
 		exit(1);
 	    }
+	    break;
+	case 's': /* line scrolling mode */
+	    argc--;argv++;
+	    scrollmode = atoi(*argv);
 	    break;
 	case 't': /* tab mode */
 	    argc--;argv++;
@@ -283,6 +289,7 @@ main(int argc, char *argv[])
     else if ((str = cvec_find_str(globals, "tabmode")) != NULL)
 	if (strcmp(str,"long") == 0)
 	    cligen_tabmode_set(h, CLIGEN_TABMODE_COLUMNS);
+    cligen_line_scrolling_set(h, scrollmode);
     if ((str = cvec_find_str(globals, "comment")) != NULL)
 	cligen_comment_set(h, *str);
     if ((str = cvec_find_str(globals, "mode")) != NULL)
