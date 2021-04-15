@@ -37,17 +37,20 @@ expectpart "$(echo -n "ruled over the" | $cligen_file -f $fspec 2>&1)" 0 "rule
 newtest "^pn"
 expectpart "$(echo -n "ruledTheo				" | $cligen_file -f $fspec)" 0 "Theodoric the bold "
 
-#newtest "^L"
-#expectpart "$(echo -n "ruledTheo	" | $cligen_file -f $fspec 2>&1)" 0 "ruled over the"
-
 newtest "^ut"
 expectpart "$(echo -n "the Theodorcib		bold" | $cligen_file -f $fspec)" 0 ""
 
-newtest "^Yscroll"
-expectpart "$(echo -n "ruled over the shores of the Hreiðsea" | $cligen_file -f $fspec)" 0 "the shores of the Hreisea"
+newtest "^Y line scroll"
+expectpart "$(echo -n "ruled over the shores of the Hreiðsea" | $cligen_file -s 1 -f $fspec)" 0 "the shores of the Hreisea"
+
+newtest "^Y page scroll"
+expectpart "$(echo -n "ruled over the shores of the Hreiðsea" | $cligen_file -s 0 -f $fspec)" 0 "the shores of the Hreisea"
 
 newtest "search ^R"
 expectpart "$(echo -n "Theodoric ruledTheo 		" | $cligen_file -f $fspec)" 0 "Theodoric the bold"
+
+newtest "^W"
+expectpart "$(echo -n "TheodoricThe			" | $cligen_file -f $fspec)" 0 "Theodoric the bold"
 
 endtest
 
