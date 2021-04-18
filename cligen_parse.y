@@ -757,7 +757,7 @@ ctx_push(cligen_yacc *cy,
     if (cvec_find(cy->cy_cvec, "hide-database") != NULL)
         co_flags_set(co, CO_FLAGS_HIDE_DATABASE);
     if (cvec_find(cy->cy_cvec, "hide-database-auto-completion") != NULL) {
-        co_flags_set(co, CO_FLAGS_HIDE_HIDE_DATABASE);
+        co_flags_set(co, CO_FLAGS_HIDE_DATABASE);
         co_flags_set(co, CO_FLAGS_HIDE);
     }
 	if (sets)
