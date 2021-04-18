@@ -683,10 +683,16 @@ cgy_terminal(cligen_yacc *cy)
 	    if (co_callback_copy(cy->cy_callbacks, ccp) < 0)
 		goto done;
 	}
-	/* variables: special case "hide" */
+	/* variables: special case "hide", "hide-database" and "hide-database-auto-completion" */
 	if (cy->cy_cvec){
 	    if (cvec_find(cy->cy_cvec, "hide") != NULL)
 		co_flags_set(co, CO_FLAGS_HIDE);
+        if (cvec_find(cy->cy_cvec, "hide-database") != NULL)
+        co_flags_set(co, CO_FLAGS_HIDE_DATABASE);
+        if (cvec_find(cy->cy_cvec, "hide-database-auto-completion") != NULL) {
+            co_flags_set(co, CO_FLAGS_HIDE);
+            co_flags_set(co, CO_FLAGS_HIDE_DATABASE);
+        }
 	    /* generic variables */
 	    if ((co->co_cvec = cvec_dup(cy->cy_cvec)) == NULL){
 		fprintf(stderr, "%s: cvec_dup: %s\n", __FUNCTION__, strerror(errno));
@@ -748,6 +754,12 @@ ctx_push(cligen_yacc *cy,
 	co = cl->cl_obj;
 	if (cvec_find(cy->cy_cvec, "hide") != NULL)
 	    co_flags_set(co, CO_FLAGS_HIDE);
+    if (cvec_find(cy->cy_cvec, "hide-database") != NULL)
+        co_flags_set(co, CO_FLAGS_HIDE_DATABASE);
+    if (cvec_find(cy->cy_cvec, "hide-database-auto-completion") != NULL) {
+        co_flags_set(co, CO_FLAGS_HIDE_HIDE_DATABASE);
+        co_flags_set(co, CO_FLAGS_HIDE);
+    }
 	if (sets)
 	    co_sets_set(co, 1);
     	if (cgy_list_push(co, &cs->cs_list) < 0) 
