@@ -216,6 +216,7 @@ clean:
 	rm -f $(MYLIB) $(MYLIBSO) $(MYLIBLINK) 
 	rm -f *.tab.c *.tab.h *.tab.o 
 	rm -f lex.*.c lex.*.o cligen
+	rm -f *.gcda *.gcno *.gcov # coverage
 
 %.c : %.y  # cancel implicit yacc rule
 %.c : %.l  # cancel implicit lex rule
