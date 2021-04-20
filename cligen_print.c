@@ -191,6 +191,10 @@ co2cbuf(cbuf   *cb,
 	}
 	if (co_flags_get(co, CO_FLAGS_HIDE))
 	    cprintf(cb, ", hide");
+	if ((!co_flags_get(co, CO_FLAGS_HIDE)) && (co_flags_get(co, CO_FLAGS_HIDE_DATABASE)))
+		cprintf(cb, ", hide-database");
+	if ((co_flags_get(co, CO_FLAGS_HIDE)) && (co_flags_get(co, CO_FLAGS_HIDE_DATABASE)))
+		cprintf(cb, ", hide-database-auto-completion");
 	for (cc = co->co_callbacks; cc; cc=cc->cc_next){
 	    if (cc->cc_fn_str){
 		cprintf(cb, ", %s(", cc->cc_fn_str);

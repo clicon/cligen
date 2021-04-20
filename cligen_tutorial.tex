@@ -273,23 +273,29 @@ You can assign values to \emph{global} and \emph{local}
 variables. Global variables are valid for the whole syntax, while
 local variables only apply to a single command.
 
-In the current release, there is one pre-defined local variable: 
+In the current release, there are three pre-defined local variable: 
 \begin{itemize}
 \item
-{\tt hide} specifies that a command is not visible when listing or
-completing commands with '?' and 'TAB'.  Still, the command is
-selectable and may be selected if you type it. This can be useful if there are
-commands that should be known only by expert users.
+{\tt <hide-variable>} 
+<hide-variable> can be one of three options:
+hide-database : specifies that a command is not visible in database. This can be 
+                useful for setting passwords and not exposing them to users.
+hide : specifies that a command is not visible in auto completion, meaning 
+       when listing or completing commands with '?' and 'TAB'. This can be useful if there are
+       commands that should be known only by expert users.
+hide-database-auto-completion : specifies that a command is not visible in database and in auto completion.
+                                This can be useful for a password that was put in device by super user, not be changed.
 \end{itemize}
 
-In the following example, {\tt aa bb cb dd} and {\tt aa bb cc} are not visible:
+In the following example, {\tt aa bb cb dd} and {\tt aa bb cc} are not visible in database and/or auto completion
+depending on the variable used as mentioned above :
 \begin{verbatim}
   aa bb{
     ca;
-    cb,hide{
+    cb,<hide-variable>{
       dd;
     }
-    cc,hide;
+    cc,<hide-variable>;
   }
 \end{verbatim}
 
@@ -376,9 +382,9 @@ The following examples shows a main tree and a sub-tree.
   }
 \end{verbatim}
 
-% (1) funktionen från anropet används alltid, dvs fn i @sub,fn(arg)
-% (2) Om det finns en funktion i ur-trädet, så används dess parameter-lista. Dvs arg i fn(arg).
-% (3) Om det inte finns en funktion i ur-trädet, så används både funktionen och argument-listan från anropet, dvs fn(arg) i @sub,fn(arg)
+% (1) funktionen frï¿½n anropet anvï¿½nds alltid, dvs fn i @sub,fn(arg)
+% (2) Om det finns en funktion i ur-trï¿½det, sï¿½ anvï¿½nds dess parameter-lista. Dvs arg i fn(arg).
+% (3) Om det inte finns en funktion i ur-trï¿½det, sï¿½ anvï¿½nds bï¿½de funktionen och argument-listan frï¿½n anropet, dvs fn(arg) i @sub,fn(arg)
 
 The main tree references the subtree twice. In the first reference,
 {\tt add("a")} is called when invoking the command {\tt add x y}. In the
