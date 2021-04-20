@@ -1,5 +1,14 @@
 # Cligen Changelog
 	
+## 5.2.0
+Expected: June 2021
+
+### New Features
+
+* Two new hide variables added (thanks: shmuelnatan)
+  * hide-database : specifies that a command is not visible in database. This can be useful for setting passwords and not exposing them to users.
+  * hide-database-auto-completion : specifies that a command is not visible in database and in auto completion. This can be useful for a password that was put in device by super user, not be changed.
+
 ## 5.1.0
 15 April 2021
 
@@ -13,7 +22,7 @@
 
 Mainly a release to keep in sync with Clixon major new 5.0 release
 
-### Minor changes
+### New Features
 
 * [Simplifying error messages for regex validations. #174](https://github.com/clicon/clixon/issues/174)
 
