@@ -204,7 +204,7 @@ co2cbuf(cbuf   *cb,
 		    while ((cv = cvec_each(cc->cc_cvec, cv)) != NULL) {
 			if (i++)
 			    cprintf(cb, ",");
-			cprintf(cb, "\"%s\"", cv_string_get(cv));
+			cv2cbuf(cv, cb);
 		    }
 		}
 		cprintf(cb, ")");

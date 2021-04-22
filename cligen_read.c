@@ -83,27 +83,27 @@ static int show_help_columns(cligen_handle h, FILE *fout, char *s, parse_tree *p
 static int show_help_line(cligen_handle h, FILE *fout, char *s, parse_tree *pt, cvec *);
 static int cli_complete(cligen_handle h, int *lenp, parse_tree *pt, cvec *cvv);
 
-/*! Callback from getline: '?' has been typed on command line
- * Just show help by calling long help show function. 
- * @param[in]  string Input string to match
- * @param[in]  cursor_loc - Location of cursor
- * @retval  0 OK: required by getline
- * @retval -1 Error
- * @note Flaw related to getline: Errors from sub-functions are ignored
- * @see cli_tab_hook
+/*! Show help strings 
+ *
+ * @param[in]  h       CLIgen handle Input string to match
+ * @param[in]  string  Input string
+ * @param[in]  column  If 0: short/ios (column) mode, 1: long/junos (row) mode (cf CLIGEN_TABMODE_COLUMNS)
+ * @retval     0       OK
+ * @retval    -1       Error
  */
 static int
-cli_qmark_hook(cligen_handle h,
-	       char         *string)
+cli_show_help_commands(cligen_handle h,
+		       char         *string,
+		       int           column)
 {
     int           retval = -1;
     parse_tree   *pt=NULL;     /* Orig parse-tree */
     parse_tree   *ptn = NULL;    /* Expanded */
     cvec         *cvv = NULL;
 
+    fputs("\n", stdout);
     if ((ptn = pt_new()) == NULL)
 	goto done;
-    fputs("\n", stdout);
     if ((pt = cligen_ph_active_get(h)) == NULL)
 	goto ok;
     if (pt_expand_treeref(h, NULL, pt) < 0) /* sub-tree expansion */
@@ -111,9 +111,13 @@ cli_qmark_hook(cligen_handle h,
     if ((cvv = cvec_start(string)) == NULL)
 	goto done;
     if (pt_expand(h, pt, cvv, 1, 0, ptn) < 0)      /* expansion */
-	return -1;
-    if (show_help_line(h, stdout, string, ptn, cvv) <0)
 	goto done;
+    if (column){
+	if (show_help_line(h, stdout, string, ptn, cvv) <0)
+	goto done;
+    }
+    else if (show_help_columns(h, stdout, cligen_buf(h), ptn, cvv) < 0)
+	    goto done;
  ok:
     retval = 0;
   done:
@@ -128,20 +132,20 @@ cli_qmark_hook(cligen_handle h,
     return retval;
 }
 
-/*! Callback from getline: TAB has been typed on keyboard
- * First try to complete the string if the possibilities
- * allow that (at least one unique common character). 
- * If no completion was made, then show the command alternatives.
+/*!Try to complete the string if the possibilities
+ *
+ * Allow that (at least one unique common character). 
+ * If no completion was made, return 0 in "completed parameter"
  * @param[in]     h            CLIgen handle
  * @param[in,out] cursorp      Pointer to location of cursor on entry and exit
- * @retval  -1    Error
- * @retval  -2    (value != -1 required by getline)
- * @note Flaw related to getline: Errors from sub-functions are ignored
- * @see cli_qmark_hook
+ * @param[out]    completed    0: Nothing changed by the TAB, eg position/cursor unmoved
+ * @retval        0            OK
+ * @retval       -1            Error
  */
-static int 
-cli_tab_hook(cligen_handle h,
-	     int          *cursorp)
+static int
+cli_try_complete(cligen_handle h,
+		 int          *cursorp,
+		 int          *done)
 {
     int           retval = -1;
     int	          old_cursor;
@@ -168,15 +172,7 @@ cli_tab_hook(cligen_handle h,
 	    goto done;
     } while (cligen_tabmode(h)&CLIGEN_TABMODE_STEPS && prev_cursor != *cursorp);
     if (old_cursor == *cursorp) { 	/* Cursor hasnt changed */
-	fputs("\n", stdout);
-	if (cligen_tabmode(h) & CLIGEN_TABMODE_COLUMNS){
-	    if (show_help_line(h, stdout, cligen_buf(h), ptn, cvv) < 0)
-		goto done;
-	}
-	else{
-	    if (show_help_columns(h, stdout, cligen_buf(h), ptn, cvv) < 0)
-		goto done;
-	}
+	
     }
  ok:
     retval = 0; 
@@ -192,6 +188,51 @@ cli_tab_hook(cligen_handle h,
 	    return -1;
     }
     return retval;	
+}
+
+/*! Callback from getline: '?' has been typed on command line
+ * Just show help by calling long help show function. 
+ * @param[in]  string Input string to match
+ * @param[in]  cursor_loc - Location of cursor
+ * @retval  0 OK: required by getline
+ * @retval -1 Error
+ * @note Flaw related to getline: Errors from sub-functions are ignored
+ * @see cli_tab_hook
+ */
+static int
+cli_qmark_hook(cligen_handle h,
+	       char         *string)
+{
+    return cli_show_help_commands(h, string, 1);
+}
+
+/*! Callback from getline: TAB has been typed on keyboard
+ * First try to complete the string if the possibilities
+ * allow that (at least one unique common character). 
+ * If no completion was made, then show the command alternatives.
+ * @param[in]     h            CLIgen handle
+ * @param[in,out] cursorp      Pointer to location of cursor on entry and exit
+ * @retval  -1    Error
+ * @retval  -2    (value != -1 required by getline)
+ * @note Flaw related to getline: Errors from sub-functions are ignored
+ * @see cli_qmark_hook
+ */
+static int 
+cli_tab_hook(cligen_handle h,
+	     int          *cursorp)
+{
+    int retval = -1;
+    int completed = 0;
+
+    if (cli_try_complete(h, cursorp, &completed) < 0)
+	goto done;
+    if (!completed){
+	if (cli_show_help_commands(h, cligen_buf(h), cligen_tabmode(h) & CLIGEN_TABMODE_COLUMNS) < 0)
+	    goto done;
+    }
+    retval = 0; 
+ done:
+    return retval;
 }
 
 /*! Initialize this module
