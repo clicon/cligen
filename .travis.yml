@@ -4,7 +4,7 @@ branches:
   only:
   - master
 script:
-- LINKAGE=static CFLAGS="-O2 -Wall -coverage" ./configure && make && sudo make install && sudo ldconfig && make test
+- CFLAGS="-O2 -Wall -coverage" ./configure && make && sudo make install && sudo ldconfig && make test
 #- ./configure && make && sudo make install && sudo ldconfig && make test
 arch:
 - amd64
