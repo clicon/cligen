@@ -369,6 +369,60 @@ pt_expand_treeref(cligen_handle h,
     return retval;
 }
 
+/*! Escape special characters in a string for its usage as CLI keyword.
+ *  If no escaping is required, return original string.
+ *  Otherwise, allocate a new string for escaped result.
+ *
+ * @param[in]   s   Raw string.
+ *
+ * @return  Either original string equal to @paramref s
+ *          or a escaped string which must be freed by the caller.
+ **/
+static const char*
+cligen_escape(const char* s)
+{
+	char       *copy;
+	size_t      len;
+	int         chars_to_escape = 0;
+	const char *spec;
+	int         i, j;
+
+	spec = s;
+	//	while ((spec = strpbrk(spec, "?\\"))) {
+	while ((spec = strpbrk(spec, "?\\ \t"))) {
+		if (chars_to_escape == 0) {
+			chars_to_escape = 2; /* escapes */
+		}
+		if (!isspace(*spec)) {
+			chars_to_escape++;
+		}
+		spec++;
+	}
+
+	if (!chars_to_escape) {
+		return s;
+	}
+
+	len = strlen(s);
+
+	copy = (char*)malloc(len + 1 + chars_to_escape);
+	if (!copy) {
+		return NULL;
+	}
+
+	copy[0] = '"';
+	for (i = 0, j = 1; i < len; i++, j++) {
+		if ((s[i] == '?') || (s[i] == '\\')) {
+			copy[j++] = '\\';
+		}
+		copy[j] = s[i];
+	}
+	copy[j++] = '"';
+	copy[j] = '\0';
+
+	return copy;
+}
+
 /*! Call expand callback and insert expanded commands in place of variable
  * variable argument callback variant
  * @param[in]  h       CLIgen handle
@@ -668,55 +722,3 @@ reference_path_match(cg_obj     *co1,
     return 0;
 }
 
-/*! Escape special characters in a string for its usage as CLI keyword.
- *  If no escaping is required, return original string.
- *  Otherwise, allocate a new string for escaped result.
- *
- * @param[in]   s   Raw string.
- *
- * @return  Either original string equal to @paramref s
- *          or a escaped string which must be freed by the caller.
- **/
-const char*
-cligen_escape(const char* s)
-{
-	char       *copy;
-	size_t      len;
-	int         chars_to_escape = 0;
-	const char *spec;
-	int         i, j;
-
-	spec = s;
-	while ((spec = strpbrk(spec, "?\\ \t"))) {
-		if (chars_to_escape == 0) {
-			chars_to_escape = 2; /* escapes */
-		}
-		if (!isspace(*spec)) {
-			chars_to_escape++;
-		}
-		spec++;
-	}
-
-	if (!chars_to_escape) {
-		return s;
-	}
-
-	len = strlen(s);
-
-	copy = (char*)malloc(len + 1 + chars_to_escape);
-	if (!copy) {
-		return NULL;
-	}
-
-	copy[0] = '"';
-	for (i = 0, j = 1; i < len; i++, j++) {
-		if ((s[i] == '?') || (s[i] == '\\')) {
-			copy[j++] = '\\';
-		}
-		copy[j] = s[i];
-	}
-	copy[j++] = '"';
-	copy[j] = '\0';
-
-	return copy;
-}
