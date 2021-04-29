@@ -11,6 +11,7 @@ Expected: June 2021
 
 ### Corrected Bugs
 
+* Fixed: [Auto completion does not work for strings including space. Seen only when autocompletion is strict and is via customary callback in .cli file #221](https://github.com/clicon/clixon/issues/221)
 * Fixed: [Auto Completion does not display options on pressing TAB for inner hierarchical nodes . #208](https://github.com/clicon/clixon/issues/208)
 
 ## 5.1.0

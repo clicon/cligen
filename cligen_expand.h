@@ -51,7 +51,6 @@ int pt_expand_treeref_cleanup(parse_tree *pt);
 int pt_expand_cleanup(parse_tree *pt);
 int reference_path_match(cg_obj *co1, parse_tree *pt0, cg_obj **co0p);
 int transform_var_to_cmd(cg_obj *co, char *cmd, char *comment);
-const char* cligen_escape(const char* s);
 
 #endif /* _CLIGEN_EXPAND_H_ */
 

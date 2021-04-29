@@ -128,6 +128,7 @@ match_variable(cligen_handle h,
 /*! Given a string and one cligen object, return if the string matches
  * @param[in]  string  Input string to match (NULL is match)
  * @param[in]  co      cligen object
+ * @param[in]  best    Only return best match (for command evaluation) instead of all possible options
  * @param[out] exact   1 if match is exact (CO_COMMANDS). VARS is 0.
  * @param[out] reason  if not match and co type is 0, reason points to a (malloced) 
  *                     string containing an error explanation string. If reason is
@@ -140,7 +141,8 @@ match_variable(cligen_handle h,
 static int 
 match_object(cligen_handle h,
 	     char         *str,
-	     cg_obj       *co, 
+	     cg_obj       *co,
+	     int           best, 
 	     int          *exact,
 	     char        **reason)
 {
@@ -158,9 +160,16 @@ match_object(cligen_handle h,
       if (str == NULL)
 	  match++;
       else{
-	  match = (strncmp(co->co_command, str, len) == 0);
-	  if (exact)
-	      *exact = strlen(co->co_command) == len;
+	  if (best && *co->co_command == '\"'){ /* escaped */
+	      match = (strncmp(co->co_command+1, str, len) == 0);
+	      if (exact)
+		  *exact = strlen(co->co_command+1) == len;
+	  }
+	  else{
+	      match = (strncmp(co->co_command, str, len) == 0);
+	      if (exact)
+		  *exact = strlen(co->co_command) == len;
+	  }
 	  if (match == 0 && reason){
 	      if ((*reason = strdup("Unknown command")) == NULL)
 		  return -1;
@@ -688,7 +697,7 @@ match_vec(cligen_handle h,
 	tmpreason = NULL;
 	if ((match = match_object(h,
 				  ISREST(co)?resttokens:token,
-				  co, &exact,
+				  co, best, &exact,
 				  &tmpreason      /* if match == 0 */
 				  )) < 0)
 	    goto done;
@@ -834,7 +843,6 @@ match_pattern_sets_local(cligen_handle h,
 			 int           level,
 			 int           best,
 			 int           hide,
-			 int           expandvar,
 			 cvec         *cvv,
 			 cvec         *cvvall,
 			 match_result **mrp)
@@ -972,7 +980,6 @@ match_pattern_sets_local(cligen_handle h,
  * @param[in]     best      Only return best match (for command evaluation) instead of 
  *                          all possible options. Only called from match_pattern_exact()
  * @param[in]     hide      Respect hide setting of commands (dont show)
- * @param[in]     expandvar Set if VARS should be expanded, eg ? <tab>
  * @param[in,out] cvv       cligen variable vector containing vars/values pair for completion
  * @param[in,out] cvvall    cligen variable vector containing vars/values + keywords for callbacks
  * @param[out]    mrp       Match result including how many matches, level, reason for nomatc, etc
@@ -987,7 +994,6 @@ match_pattern_sets(cligen_handle h,
 		   int           level,
 		   int           best,
 		   int           hide,
-		   int           expandvar,
 		   cvec         *cvv,
 		   cvec         *cvvall,
 		   match_result **mrp)
@@ -1005,7 +1011,7 @@ match_pattern_sets(cligen_handle h,
     if (0)
 	fprintf(stderr, "%s %s\n", __FUNCTION__, token);
     /* Match the current token */
-    if (match_pattern_sets_local(h, cvt, cvr, pt, level, best, hide, expandvar,
+    if (match_pattern_sets_local(h, cvt, cvr, pt, level, best, hide, 
 				 cvv, cvvall, &mr0) < 0)
 	goto done;
     if (mr0->mr_len != 1){ /* If not unique match exit here */
@@ -1025,7 +1031,7 @@ match_pattern_sets(cligen_handle h,
 	goto done;
     if ((ptn = pt_new()) == NULL)
 	goto done;
-    if (pt_expand(h, co_pt_get(co_match), cvv, hide, expandvar, ptn) < 0) /* expand/choice variables */
+    if (pt_expand(h, co_pt_get(co_match), cvv, hide, 1, ptn) < 0) /* expand/choice variables */
 	goto done;
     /* Check termination criteria */
     lastsyntax = last_pt(ptn); /* 0, 1 or 2 */
@@ -1048,7 +1054,7 @@ match_pattern_sets(cligen_handle h,
 		mrc = NULL;
 	    if (match_pattern_sets(h, cvt, cvr, ptn,
 				   level+1,
-				   best, hide, expandvar,
+				   best, hide, 
 				   cvv,
 				   cvvall,
 				   &mrc) < 0)
@@ -1079,7 +1085,7 @@ match_pattern_sets(cligen_handle h,
 	}
 	else if (match_pattern_sets(h, cvt, cvr, ptn,
 			       level+1, 
-			       best, hide, expandvar,
+			       best, hide, 
 			       cvv,
 			       cvvall,
 			       &mrc) < 0)
@@ -1145,7 +1151,6 @@ match_pattern_sets(cligen_handle h,
  * @param[in]  best      Only return best match (for command evaluation) instead of 
  *                       all possible options
  * @param[in]  hide      Respect hide setting of commands (dont show)
- * @param[in]  expandvar Set if VARS should be expanded, eg ? <tab>
  * @param[out] ptmatch   Returns the parsetree at the place of matching
  * @param[out] matchvec  A vector of integers containing indexes in covec which match
  * @param[out] matchlen  Number of matches in matchvec, (if retval is 0)
@@ -1167,7 +1172,6 @@ match_pattern(cligen_handle h,
 	      parse_tree   *pt, 
 	      int           best,
 	      int           hide,
-	      int           expandvar,
 	      parse_tree  **ptmatch, 
 	      int          *matchvec[],
 	      int          *matchlen, 
@@ -1187,7 +1191,7 @@ match_pattern(cligen_handle h,
     if (match_pattern_sets(h, cvt, cvr,
 			   pt,
 			   0,
-			   best, hide, expandvar,
+			   best, hide, 
 			   cvv, cvvall,
 			   &mr) < 0)
 	goto done;
@@ -1240,7 +1244,6 @@ match_pattern(cligen_handle h,
  * @param[in]  cvt       Tokenized string: vector of tokens
  * @param[in]  cvr       Rest variant,  eg remaining string in each step
  * @param[in]  pt        CLIgen parse tree, vector of cligen objects.
- * @param[in]  expandvar Set if VARS should be expanded, eg ? <tab>
  * @param[out] cvv       CLIgen variable vector containing vars for matching path
  * @param[out] cvvall    CLIgen variable vector containing vars and constants for matching vars
  * @param[out] match_obj Exact object to return
@@ -1256,7 +1259,6 @@ match_pattern_exact(cligen_handle  h,
 		    cvec          *cvt,
 		    cvec          *cvr,
 		    parse_tree    *pt, 
-		    int            expandvar,
 		    cvec          *cvv,
 		    cvec          *cvvall,
 		    cg_obj       **match_obj,
@@ -1277,13 +1279,13 @@ match_pattern_exact(cligen_handle  h,
 		       pt,       /* command vector */
 		       1,        /* best: Return only best option */
 		       0,        /* hide */
-		       1,        /* expandvar */
 		       &ptmatch, 
 		       &matchvec,
 		       &matchlen, 
 		       cvv, cvvall,
-		       reason)) < 0)
+		       reason)) < 0){
 	goto done;
+    }
     assert(matchlen != -1);
     /* If no match fix an error message */
     if (matchlen == 0){
@@ -1422,7 +1424,6 @@ match_complete(cligen_handle h,
 		      pt,
 		      0, /* best: Return all options, not only best */
 		      1,
-		      1, /* expandvar: Must be one for interactive TAB to work*/
 		      &ptmatch, 
 		      &matchvec, &matchlen,
 		      cvv, NULL,
