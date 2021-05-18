@@ -132,68 +132,10 @@ cli_show_help_commands(cligen_handle h,
     return retval;
 }
 
-/*!Try to complete the string if the possibilities
- *
- * Allow that (at least one unique common character). 
- * If no completion was made, return 0 in "completed parameter"
- * @param[in]     h            CLIgen handle
- * @param[in,out] cursorp      Pointer to location of cursor on entry and exit
- * @param[out]    completed    0: Nothing changed by the TAB, eg position/cursor unmoved
- * @retval        0            OK
- * @retval       -1            Error
- */
-static int
-cli_try_complete(cligen_handle h,
-		 int          *cursorp,
-		 int          *done)
-{
-    int           retval = -1;
-    int	          old_cursor;
-    int	          prev_cursor;
-    parse_tree   *pt = NULL;     /* Orig */
-    parse_tree   *ptn = NULL;    /* Expanded */
-    cvec         *cvv = NULL;
-
-    if ((ptn = pt_new()) == NULL)
-	goto done;
-    if ((pt = cligen_ph_active_get(h)) == NULL)
-	goto ok;
-    if (pt_expand_treeref(h, NULL, pt) < 0) /* sub-tree expansion */
-	goto done;
-    if ((cvv = cvec_start(cligen_buf(h))) == NULL)
-	goto done; 
-    if (pt_expand(h, pt, cvv, 1, 0, ptn) < 0)      /* expansion */
-	goto done;
-    /* Note, can change cligen buf pointer (append and increase) */
-    old_cursor = *cursorp;  /* Save old location of cursor */
-    do {
-	prev_cursor = *cursorp;
-	if (cli_complete(h, cursorp, ptn, cvv) < 0) /* XXX expand-cleanup must be done here before show commands */
-	    goto done;
-    } while (cligen_tabmode(h)&CLIGEN_TABMODE_STEPS && prev_cursor != *cursorp);
-    if (old_cursor == *cursorp) { 	/* Cursor hasnt changed */
-	
-    }
- ok:
-    retval = 0; 
- done:
-    if (cvv)
-	cvec_free(cvv);
-    if (ptn && pt_free(ptn, 0) < 0)
-	return -1;
-    if (pt != NULL) {
-	if (pt_expand_cleanup(pt) < 0)
-	    return -1;
-	if (pt_expand_treeref_cleanup(pt) < 0)
-	    return -1;
-    }
-    return retval;	
-}
-
 /*! Callback from getline: '?' has been typed on command line
  * Just show help by calling long help show function. 
+ * @param[in]  h            CLIgen handle
  * @param[in]  string Input string to match
- * @param[in]  cursor_loc - Location of cursor
  * @retval  0 OK: required by getline
  * @retval -1 Error
  * @note Flaw related to getline: Errors from sub-functions are ignored
@@ -221,18 +163,49 @@ static int
 cli_tab_hook(cligen_handle h,
 	     int          *cursorp)
 {
-    int retval = -1;
-    int completed = 0;
+    int           retval = -1;
+    int	          prev_cursor;
+    parse_tree   *pt = NULL;     /* Orig */
+    parse_tree   *ptn = NULL;    /* Expanded */
+    cvec         *cvv = NULL;
 
-    if (cli_try_complete(h, cursorp, &completed) < 0)
+    if ((ptn = pt_new()) == NULL)
 	goto done;
-    if (!completed){
-	if (cli_show_help_commands(h, cligen_buf(h), cligen_tabmode(h) & CLIGEN_TABMODE_COLUMNS) < 0)
+    if ((pt = cligen_ph_active_get(h)) == NULL)
+	goto ok;
+    if (pt_expand_treeref(h, NULL, pt) < 0) /* sub-tree expansion */
+	goto done;
+    if ((cvv = cvec_start(cligen_buf(h))) == NULL)
+	goto done; 
+    if (pt_expand(h, pt, cvv, 1, 0, ptn) < 0)      /* expansion */
+	goto done;
+    /* Note, can change cligen buf pointer (append and increase) */
+    do {
+	prev_cursor = *cursorp;
+	if (cli_complete(h, cursorp, ptn, cvv) < 0) /* XXX expand-cleanup must be done here before show commands */
 	    goto done;
+    } while (cligen_tabmode(h)&CLIGEN_TABMODE_STEPS && prev_cursor != *cursorp);
+    fputs("\n", stdout);
+    if (cligen_tabmode(h) & CLIGEN_TABMODE_COLUMNS){
+	if (show_help_line(h, stdout, cligen_buf(h), ptn, cvv) <0)
+	goto done;
     }
+    else if (show_help_columns(h, stdout, cligen_buf(h), ptn, cvv) < 0)
+	    goto done;
+ ok:
     retval = 0; 
  done:
-    return retval;
+    if (cvv)
+	cvec_free(cvv);
+    if (ptn && pt_free(ptn, 0) < 0)
+	return -1;
+    if (pt != NULL) {
+	if (pt_expand_cleanup(pt) < 0)
+	    return -1;
+	if (pt_expand_treeref_cleanup(pt) < 0)
+	    return -1;
+    }
+    return retval;	
 }
 
 /*! Initialize this module
