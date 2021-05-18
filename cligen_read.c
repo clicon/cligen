@@ -331,7 +331,7 @@ show_help_columns(cligen_handle h,
     if (match_pattern(h, cvt, cvr,
 		      pt,
 		      0, /* best: Return all options, not only best */
-		      1, 1,
+		      1,
 		      &ptmatch, 
 		      &matchvec, &matchlen,
 		      cvv, NULL,
@@ -467,7 +467,6 @@ show_help_line(cligen_handle h,
 		      pt,       /* command vector */
 		      0,        /* best: Return all options, not only best */
 		      1,        /* hide */
-		      1,        /* expandvar */
 		      &ptmatch,
 		      &matchvec, &matchlen,
 		      cvv, NULL,
@@ -503,7 +502,7 @@ show_help_line(cligen_handle h,
 	cvec_del_i(cvr, cvec_len(cvr)-1);
 
 	if (match_pattern_exact(h, cvt, cvr, pt,
-				1, cvv, NULL,
+				cvv, NULL,
 				NULL, NULL,
 				&result, NULL) < 0)
 	    goto done;
@@ -714,7 +713,7 @@ cliread_parse(cligen_handle  h,
     if (pt_expand(h, pt, cvv, 0, 0, ptn) < 0) /* sub-tree expansion, ie choice, expand function */
 	goto done;
     if (match_pattern_exact(h, cvt, cvr,
-			    ptn, 0, cvv, cvvall,
+			    ptn, cvv, cvvall,
 			    &match_obj, &ptmatch, 
 			    result, reason) < 0)
 	goto done;
