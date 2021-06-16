@@ -545,7 +545,7 @@ pt_expand_choice(cg_obj       *co,
  * @param[in]  h       Cligen handle
  * @param[in]  pt      Original parse-tree consisting of a vector of cligen objects
  * @param[out] cvv     Cligen variable vector containing vars/values pair for completion
- * @param[in]  hide    Respect hide setting of commands (dont show)
+ * @param[in]  hide    If not set, include hidden commands. If set, do not include hidden commands. 
  * @param[in]  expandvar Set if VARS should be expanded, eg ? <tab>
  * @param[out] ptn     New parse-tree initially an empty pointer, its value is returned.
  * @retval     0       OK

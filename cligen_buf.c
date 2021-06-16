@@ -166,7 +166,7 @@ cbuf_get(cbuf *cb)
  * @param[in]   cb  Cligen buffer
  * @see cbuf_buflen
  */
-int
+int // size_t
 cbuf_len(cbuf *cb)
 {
     return cb->cb_strlen;
@@ -308,7 +308,7 @@ cbuf_append(cbuf       *cb,
     return cbuf_append_str(cb, str);
 }
 
-/*! Append a raw memory buffer and add null-termion
+/*! Append a raw memory buffer and add null-termination
   *
   * A raw buffer handler to cprintf
   * @param [in]  cb  cligen buffer allocated by cbuf_new(), may be reallocated.

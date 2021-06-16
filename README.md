@@ -1,6 +1,6 @@
 # CLIgen
 
-[![Build Status](https://travis-ci.org/clicon/cligen.png)](https://travis-ci.org/clicon/cligen) [![codecov](https://codecov.io/gh/clicon/cligen/branch/master/graph/badge.svg?token=6HXN51SARU)](https://codecov.io/gh/clicon/cligen)
+[![Build Status](https://github.com/clicon/cligen/actions/workflows/ci.yml/badge.svg)](https://github.com/clicon/cligen/workflows/ci.yml) [![codecov](https://codecov.io/gh/clicon/cligen/branch/master/graph/badge.svg?token=6HXN51SARU)](https://codecov.io/gh/clicon/cligen)
 
 CLIgen is a Command-Line Interface generator.
 
