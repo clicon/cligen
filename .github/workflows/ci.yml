@@ -19,5 +19,7 @@ jobs:
       run: make
     - name: make install
       run: sudo make install
+    - name: ldconfig
+      run: sudo ldconfig
     - name: make test
       run: make test
