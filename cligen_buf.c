@@ -331,12 +331,12 @@ cbuf_append_buf(cbuf  *cb,
 	return -1;
     }
     len0 = cb->cb_strlen;
-    len = cb->cb_strlen + n + 1;
+    len = cb->cb_strlen + n;
     /* Ensure buffer is large enough */
-    if (cbuf_realloc(cb, len) < 0)
+    if (cbuf_realloc(cb, len+1) < 0)
 	return -1;
     memcpy(cb->cb_buffer+len0, src, n);
-    cb->cb_buffer[len-1] = '\0'; /* Add a null byte */
+    cb->cb_buffer[len] = '\0'; /* Add a null byte */
     cb->cb_strlen = len;
     return 0;
 }
