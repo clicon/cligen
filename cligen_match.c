@@ -827,8 +827,6 @@ co_clearflag(cg_obj *co,
  * @param[in]     level     Current command level
  * @param[in]     best      Only return best match (for command evaluation) instead of 
  *                          all possible options. Only called from match_pattern_exact()
- * @param[in]     hide      Respect hide setting of commands (dont show)
- * @param[in]     expandvar Set if VARS should be expanded, eg ? <tab>
  * @param[out]    mrp       Match result including how many matches, level, reason for nomatc, etc
  * @param[in,out] cvv       cligen variable vector containing vars/values pair for completion
  * @param[in,out] cvvall    cligen variable vector containing vars/values + keywords for callbacks
@@ -842,7 +840,6 @@ match_pattern_sets_local(cligen_handle h,
 			 parse_tree   *pt,
 			 int           level,
 			 int           best,
-			 int           hide,
 			 cvec         *cvv,
 			 cvec         *cvvall,
 			 match_result **mrp)
@@ -977,14 +974,15 @@ match_pattern_sets_local(cligen_handle h,
  * @param[in]     pt        Vector of commands. Array of cligen object pointers
  * @param[in]     pt_max    Length of the pt array
  * @param[in]     level     Current command level
- * @param[in]     best      Only return best match (for command evaluation) instead of 
- *                          all possible options. Only called from match_pattern_exact()
- * @param[in]     hide      Respect hide setting of commands (dont show)
+ * @param[in]     best      If set, only return best match (for command evaluation) instead of 
+ *                          all possible options. Match also hidden options.
+ *                          If not set, return all possible matches, do not return hidden options 
  * @param[in,out] cvv       cligen variable vector containing vars/values pair for completion
  * @param[in,out] cvvall    cligen variable vector containing vars/values + keywords for callbacks
  * @param[out]    mrp       Match result including how many matches, level, reason for nomatc, etc
  * @retval        0         OK. result returned in mrp
  * @retval        -1        Error
+ * Note: parameter "best" is only set in call from match_pattern_exact().
  */
 static int 
 match_pattern_sets(cligen_handle h, 
@@ -993,7 +991,6 @@ match_pattern_sets(cligen_handle h,
 		   parse_tree   *pt,
 		   int           level,
 		   int           best,
-		   int           hide,
 		   cvec         *cvv,
 		   cvec         *cvvall,
 		   match_result **mrp)
@@ -1011,7 +1008,7 @@ match_pattern_sets(cligen_handle h,
     if (0)
 	fprintf(stderr, "%s %s\n", __FUNCTION__, token);
     /* Match the current token */
-    if (match_pattern_sets_local(h, cvt, cvr, pt, level, best, hide, 
+    if (match_pattern_sets_local(h, cvt, cvr, pt, level, best, 
 				 cvv, cvvall, &mr0) < 0)
 	goto done;
     if (mr0->mr_len != 1){ /* If not unique match exit here */
@@ -1031,7 +1028,10 @@ match_pattern_sets(cligen_handle h,
 	goto done;
     if ((ptn = pt_new()) == NULL)
 	goto done;
-    if (pt_expand(h, co_pt_get(co_match), cvv, hide, 1, ptn) < 0) /* expand/choice variables */
+    if (pt_expand(h, co_pt_get(co_match), cvv,
+		  !best,  /* If best is set, include hidden commands, otherwise do not */
+		  1,      /* VARS are expanded, eg ? <tab> */
+		  ptn) < 0) /* expand/choice variables */
 	goto done;
     /* Check termination criteria */
     lastsyntax = last_pt(ptn); /* 0, 1 or 2 */
@@ -1054,7 +1054,7 @@ match_pattern_sets(cligen_handle h,
 		mrc = NULL;
 	    if (match_pattern_sets(h, cvt, cvr, ptn,
 				   level+1,
-				   best, hide, 
+				   best, 
 				   cvv,
 				   cvvall,
 				   &mrc) < 0)
@@ -1084,11 +1084,11 @@ match_pattern_sets(cligen_handle h,
 	    goto ok;    
 	}
 	else if (match_pattern_sets(h, cvt, cvr, ptn,
-			       level+1, 
-			       best, hide, 
-			       cvv,
-			       cvvall,
-			       &mrc) < 0)
+				    level+1, 
+				    best, 
+				    cvv,
+				    cvvall,
+				    &mrc) < 0)
 	    goto done;
     }
     assert(mrc != NULL);
@@ -1148,9 +1148,9 @@ match_pattern_sets(cligen_handle h,
  * @param[in]  cvt       Tokenized string: vector of tokens
  * @param[in]  cvr       Rest variant,  eg remaining string in each step
  * @param[in]  pt        Vector of commands (array of cligen object pointers (cg_obj)
- * @param[in]  best      Only return best match (for command evaluation) instead of 
- *                       all possible options
- * @param[in]  hide      Respect hide setting of commands (dont show)
+ * @param[in]  best      If set, only return best match (for command evaluation) instead of 
+ *                       all possible options. Match also hidden options.
+ *                       If not set, return all possible matches, do not return hidden options 
  * @param[out] ptmatch   Returns the parsetree at the place of matching
  * @param[out] matchvec  A vector of integers containing indexes in covec which match
  * @param[out] matchlen  Number of matches in matchvec, (if retval is 0)
@@ -1158,7 +1158,6 @@ match_pattern_sets(cligen_handle h,
  * @param[out] cvvall    cligen variable vector containing vars/values + keywords for callbacks
  * @param[out] reasonp   If retval = 0, this may be malloced to indicate reason for 
  *                       not matching variables, if given. Neeed to be free:d
- *
  * @retval -1   error.
  * @retval  0   OK
  *
@@ -1171,7 +1170,6 @@ match_pattern(cligen_handle h,
 	      cvec         *cvr,
 	      parse_tree   *pt, 
 	      int           best,
-	      int           hide,
 	      parse_tree  **ptmatch, 
 	      int          *matchvec[],
 	      int          *matchlen, 
@@ -1191,7 +1189,7 @@ match_pattern(cligen_handle h,
     if (match_pattern_sets(h, cvt, cvr,
 			   pt,
 			   0,
-			   best, hide, 
+			   best, 
 			   cvv, cvvall,
 			   &mr) < 0)
 	goto done;
@@ -1277,8 +1275,7 @@ match_pattern_exact(cligen_handle  h,
     if ((match_pattern(h,
 		       cvt, cvr, /* token string */
 		       pt,       /* command vector */
-		       1,        /* best: Return only best option */
-		       0,        /* hide */
+		       1,        /* best: Return only best option including hidden options */
 		       &ptmatch, 
 		       &matchvec,
 		       &matchlen, 
@@ -1422,8 +1419,7 @@ match_complete(cligen_handle h,
     matchlen = 0;
     if (match_pattern(h, cvt, cvr,
 		      pt,
-		      0, /* best: Return all options, not only best */
-		      1,
+		      0, /* best: Return all options, not only best, exclude hidden options */
 		      &ptmatch, 
 		      &matchvec, &matchlen,
 		      cvv, NULL,
