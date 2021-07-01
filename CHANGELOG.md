@@ -1,7 +1,7 @@
 # Cligen Changelog
 	
 ## 5.2.0
-Expected: June 2021
+1 July 2021
 
 ### New Features
 
@@ -12,7 +12,7 @@ Expected: June 2021
 
 ### Corrected Bugs
 
-* Fixed error in cbuf_append_buf: essentially did not work on more than one successive call.
+* Fixed: Error in `cbuf_append_buf`: did not work for more than one call.
 * Fixed: [Auto completion does not work for strings including space. Seen only when autocompletion is strict and is via customary callback in .cli file #221](https://github.com/clicon/clixon/issues/221)
 * Fixed: [Auto Completion does not display options on pressing TAB for inner hierarchical nodes . #208](https://github.com/clicon/clixon/issues/208)
 

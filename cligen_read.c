@@ -110,7 +110,10 @@ cli_show_help_commands(cligen_handle h,
 	goto done; 
     if ((cvv = cvec_start(string)) == NULL)
 	goto done;
-    if (pt_expand(h, pt, cvv, 1, 0, ptn) < 0)      /* expansion */
+    if (pt_expand(h, pt, cvv,
+		  1, /* Include hidden commands */
+		  0, /* VARS are not expanded, eg ? <tab> */
+		  ptn) < 0)      /* expansion */
 	goto done;
     if (column){
 	if (show_help_line(h, stdout, string, ptn, cvv) <0)
@@ -177,7 +180,10 @@ cli_tab_hook(cligen_handle h,
 	goto done;
     if ((cvv = cvec_start(cligen_buf(h))) == NULL)
 	goto done; 
-    if (pt_expand(h, pt, cvv, 1, 0, ptn) < 0)      /* expansion */
+    if (pt_expand(h, pt, cvv,
+		  1,   /* Include hidden commands */
+		  0,   /* VARS are not expanded, eg ? <tab> */
+		  ptn) < 0)      /* expansion */
 	goto done;
     /* Note, can change cligen buf pointer (append and increase) */
     do {
@@ -303,8 +309,7 @@ show_help_columns(cligen_handle h,
 	goto done;
     if (match_pattern(h, cvt, cvr,
 		      pt,
-		      0, /* best: Return all options, not only best */
-		      1,
+		      0, /* best: Return all options, not only best, exclude hidden */
 		      &ptmatch, 
 		      &matchvec, &matchlen,
 		      cvv, NULL,
@@ -438,8 +443,7 @@ show_help_line(cligen_handle h,
     if (match_pattern(h,
 		      cvt, cvr, /* token string */
 		      pt,       /* command vector */
-		      0,        /* best: Return all options, not only best */
-		      1,        /* hide */
+		      0,        /* best: Return all options, not only best, exclude hidden */
 		      &ptmatch,
 		      &matchvec, &matchlen,
 		      cvv, NULL,
@@ -683,7 +687,10 @@ cliread_parse(cligen_handle  h,
     /* Why is this created separately from cvvall? */
     if ((cvv = cvec_start(string)) == NULL)
 	goto done;
-    if (pt_expand(h, pt, cvv, 0, 0, ptn) < 0) /* sub-tree expansion, ie choice, expand function */
+    if (pt_expand(h, pt, cvv,
+		  0,  /* Do not include hidden commands */
+		  0,  /* VARS are not expanded, eg ? <tab> */
+		  ptn) < 0) /* sub-tree expansion, ie choice, expand function */
 	goto done;
     if (match_pattern_exact(h, cvt, cvr,
 			    ptn, cvv, cvvall,

@@ -46,7 +46,7 @@
  */
 int match_pattern(cligen_handle h, cvec *cvt, cvec *cvr, 
 		  parse_tree *pt,
-		  int best, int hide,
+		  int best, 
 		  parse_tree  **ptmatch, 
 		  int *matchvec[], int *matchlen,
 		  cvec *cvv, cvec *cvvall,
