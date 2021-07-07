@@ -10,7 +10,7 @@ cd "$path"
 if [ -f .version ]; then
     vstring=$(cat .version)
 else
-    vstring=$(git describe --match '[vR]*')
+    vstring=$(git describe)
     if [ $? != 0 ]; then
       exit 1
     fi
@@ -19,8 +19,9 @@ fi
 TAG=$(echo ${vstring} | cut -d- -f1 | sed -e 's/^[vR]//')
 ADD=$(echo ${vstring} | cut -s -d- -f2)
 
-if [ ! -f .version ] && git rev-parse 2>/dev/null; then
-    CMT=$(git describe --dirty --match '[vR]*'| cut -s -d- -f3,4)
+git rev-parse 2> /dev/null
+if [ $? == 0 ]; then
+    CMT=$(git describe --dirty | cut -s -d- -f3,4)
 else
     CMT=$(echo ${vstring} | cut -s -d- -f3,4)
 fi
@@ -41,12 +42,12 @@ if [ "$1" = "rpm-release" ]; then
   exit
 fi
 
-if [ -n "${ADD}" ]; then
+  if [ -n "${ADD}" ]; then
     if [ "$1" = "rpm-string" ]; then
       echo ${TAG}-${ADD}${CMTR:+~${CMTR}}${BLD}
     else
       echo ${TAG}-${ADD}${CMT:+~${CMT}}${BLD}
     fi
-else
-    echo ${TAG}-1
+  else
+    echo ${TAG}-release
 fi
