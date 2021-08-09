@@ -341,3 +341,21 @@ cbuf_append_buf(cbuf  *cb,
     return 0;
 }
 
+/*! Truncate cligen buf to a shorther length
+  * @param [in]  cb  cligen buffer allocated by cbuf_new(), may be reallocated.
+  * @param [in]  i   Truncate string to this length
+  * @retval 0    OK
+  * @retval -1   Error
+ */
+int
+cbuf_trunc(cbuf  *cb,
+	   size_t i)
+{
+    if (i > cb->cb_strlen){
+	errno = EINVAL;
+	return -1;
+    }
+    cb->cb_strlen = i;
+    cb->cb_buffer[i] = '\0'; /* Add a null byte */
+    return 0;
+}

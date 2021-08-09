@@ -75,5 +75,6 @@ void     cbuf_reset(cbuf *cb);
 int      cbuf_append(cbuf *cb, int c);
 int      cbuf_append_str(cbuf *cb, char *str);
 int      cbuf_append_buf(cbuf *cb, void *src, size_t n);
+int      cbuf_trunc(cbuf *cb, size_t i);
 
 #endif /* _CLIGEN_BUF_H */
