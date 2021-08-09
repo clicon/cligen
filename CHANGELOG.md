@@ -3,6 +3,10 @@
 ## 5.3.0
 Expected: September 2021
 
+### New Features
+
+* Added cbuf_trunc() as requsted in [Yang patch pull request](https://github.com/clicon/clixon/pull/248)
+
 ## 5.2.0
 1 July 2021
 
