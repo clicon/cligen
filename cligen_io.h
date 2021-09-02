@@ -59,6 +59,7 @@ typedef int (cligen_fd_cb_t)(int, void*);
  * Prototypes
  */
 int  cli_output_reset(void);
+int  cli_output_status(void);
 #if defined(__GNUC__) && __GNUC__ >= 3
 int  cligen_output(FILE *f, const char *templ, ... ) __attribute__ ((format (printf, 2, 3)));
 #else
