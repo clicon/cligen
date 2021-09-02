@@ -78,13 +78,22 @@
 /*
  * Local variables
  */
-static int d_lines=0; /* XXX: global */
+static int D_LINES=0; /* XXX: global */
 
+/*! Reset cligen_output to initial state
+ * For new output or when 'q' is pressed that sets d_line to -1
+ */
 int
 cli_output_reset(void)
 {
-    d_lines = 0;
+    D_LINES = 0;
     return 0;
+}
+
+int
+cli_output_status(void)
+{
+    return D_LINES;
 }
 
 /*! CLIgen output function. All printf-style output should be made via this function.
@@ -92,6 +101,17 @@ cli_output_reset(void)
  * It deals with formatting, page breaks, etc. 
  * @param[in] f           Open stdio FILE pointer
  * @param[in] template... See man printf(3)
+ *
+ * @note: There has also been a discussion on the use of handles in this code (it relies on a
+ * global variable _terminalrows and D_LINES). However, the signature needs to be the same as
+ * fprintf in order to make compatible printing code.
+ *
+ * @note Related to the handle question is the use of the global variable D_LINES in order to
+ * handle multiple calls (such as in a loop) to cligen_output. However, this assumes D_LINES
+ * is reset before a new usage to D_LINES using the function cli_output_reset(). This therefore
+ * be done between invocations. Especially this applies to 'q'. Further, to react to quit, you need
+ * to poll cli_output_status() < 0.
+ *
  * @note: There has been a debate whether this function is the right solution to the
  * pageing problem of CLIgen or not. 
  * (1) On the one hand, a less/more like sub-process could be forked and stdout piped to this
@@ -101,10 +121,6 @@ cli_output_reset(void)
  * process), but all output functions need to pass though this code.
  * For now (2) is used and extended also for clixon functions. However (1) could still be 
  * implemented as an option.
- *
- * @note: There has also been a discussion on the use of handles in this code (it relies on a
- * global variable _terminalrows). However, the signature needs to be the same as fprintf in
- * order to make compatible printing code.
  */
 int
 cligen_output(FILE       *f,
@@ -144,37 +160,37 @@ cligen_output(FILE       *f,
 	while (end < bufend){
 	    end = strstr(start, "\n");
 	    if (end) /* got a NL */{
-		if (d_lines >= 0)
-		    d_lines++;
+		if (D_LINES >= 0)
+		    D_LINES++;
 		*end = '\0';
-		if (d_lines > -1)
+		if (D_LINES > -1)
 		    fprintf(f, "%s\n", start);
 	      
 		if (end < bufend)
 		    start = end+1;
 	      
-		if (d_lines >= (term_rows -1)){		    
+		if (D_LINES >= (term_rows -1)){		    
 		    gl_char_init();
 
 		    fprintf(f, "--More--");
 		    c = fgetc(stdin);
 		    if (c == '\n')
-			d_lines--;
+			D_LINES--;
 		    else if (c == ' ')
-			    d_lines = 0;
+			    D_LINES = 0;
 		    else if (c == 'q' || c == 3) /* ^c */
-			d_lines = -1;
+			D_LINES = -1;
 		    else if (c == '?')
 			fprintf(f, "Press CR for one more line, SPACE for next page, q to quit\n");
 		    else 
-			d_lines = 0;  
+			D_LINES = 0;  
 		    fprintf(f, "        ");
 		    gl_char_cleanup();
 		}
 	    } /* NL */
 	    else{
 		/* do only print if we have data */
-		if (d_lines >=0 && *start != '\0')
+		if (D_LINES >=0 && *start != '\0')
 		    fprintf(f, "%s", start);
 		end = start + strlen(start);
 		start = end;
