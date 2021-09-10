@@ -281,6 +281,50 @@ pt_reference_trunc(parse_tree *pt)
     return retval;
 }
 
+#ifdef CLIGEN_FILTER_PREFIX
+/*! Recursively remove any parse-tree objects labelled by filter
+ *
+ * @param[in]  pt       CLIgen parse-tree
+ * @param[in]  filter   If statement has this flag, filter it
+ * @retval     0        OK
+ * @retval    -1        Error
+ * @see CLIGEN_FILTER_PREFIX
+ */
+static int
+pt_recurse_filter(parse_tree  *pt,
+		  const char *filter)
+{
+    int         retval = -1;
+    parse_tree *ptc;
+    cg_obj     *co;
+    int         i;
+    cg_var     *cv = NULL;
+    
+    /* Iterate over all objects under pt (note can be removed in loop) */
+    for (i=0; i<pt_len_get(pt); i++){
+	if ((co = pt_vec_i_get(pt, i)) == NULL)
+	    continue;
+	/* Check if filter matches this object, if so remove it */
+	cv = NULL;
+	while ((cv = cvec_each(co->co_cvec, cv)) != NULL)
+	    if (strcmp(filter, cv_name_get(cv)) == 0) /* match */
+		break;
+	if (cv){ /* match -> remove */
+	    if (pt_vec_i_delete(pt, i) < 0)
+		goto done;
+	    i--; /* co is removed, get next in place */
+	    continue;	    
+	}
+	if ((ptc = co_pt_get(co)) != NULL)
+	    if (pt_recurse_filter(ptc, filter) < 0)
+		goto done;
+    }
+    retval = 0;
+ done:
+    return retval;
+}
+#endif /* CLIGEN_FILTER_PREFIX */
+
 /*! Take a top-object parse-tree (pt0), and expand all tree references one level. 
  * 
  * One level only. Parse-tree is expanded itself (not copy).
@@ -309,7 +353,12 @@ pt_expand_treeref(cligen_handle h,
     cg_obj     *co02;
     cg_obj     *cow;
     pt_head    *ph;
-
+#ifdef CLIGEN_FILTER_PREFIX
+    cg_var     *cv;
+    char       *name;
+    char       *filter;
+#endif
+    
  again: /* XXX ugly goto , try to replace with a loop */
     for (i=0; i<pt_len_get(pt0); i++){ /*  */
 	if ((co = pt_vec_i_get(pt0, i)) == NULL)
@@ -342,6 +391,21 @@ pt_expand_treeref(cligen_handle h,
 	    if (co->co_callbacks && 
 		pt_callback_reference(pt1ref, co->co_callbacks) < 0)
 		goto done;
+#ifdef CLIGEN_FILTER_PREFIX
+	    /* Find filter labels defined in "filter:<label>" local flags,
+	     * assign each to "filter"
+	     * Then traverse pt1ref and remove all objects labelled with "filter"
+	     */
+	    cv = NULL;
+	    while ((cv = cvec_each(co->co_cvec, cv)) != NULL){
+		if ((name = cv_name_get(cv)) != NULL &&
+		    strncmp(CLIGEN_FILTER_PREFIX, name, strlen(CLIGEN_FILTER_PREFIX)) == 0){
+		    filter = name+strlen(CLIGEN_FILTER_PREFIX);
+		    if (pt_recurse_filter(pt1ref, filter) < 0)
+			goto done;
+		}
+	    }
+#endif
 	    /* Copy top-levels into original parse-tree */
 	    for (j=0; j<pt_len_get(pt1ref); j++)
 		if ((cot = pt_vec_i_get(pt1ref, j)) != NULL){

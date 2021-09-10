@@ -37,6 +37,19 @@
 #ifndef _CLIGEN_EXPAND_H_
 #define _CLIGEN_EXPAND_H_
 
+
+/*
+ * Constants
+ */
+/*! Local flag beginning with this prefix can be used as filter statements in tree references
+ * Example:
+ * @subtree, except:local # Filter out all statements with flag "local"
+ * treename="subtree";           
+ * xx;
+ * yy, local; # Filter this
+ */
+#define CLIGEN_FILTER_PREFIX "filter:"
+
 /*
  * Types
  */

@@ -7,7 +7,7 @@
 %
 % Title
 %
-\title {CLIgen Manual\\ {\small CLIgen version 5.1}}
+\title {CLIgen Manual\\ {\small CLIgen version 5.2}}
 
 \author{Olof Hagsand}
 %
@@ -273,18 +273,14 @@ You can assign values to \emph{global} and \emph{local}
 variables. Global variables are valid for the whole syntax, while
 local variables only apply to a single command.
 
-In the current release, there are three pre-defined local variable: 
+In the current release, there are three pre-defined local variables:
 \begin{itemize}
 \item
-{\tt <hide-variable>} 
-<hide-variable> can be one of three options:
-hide-database : specifies that a command is not visible in database. This can be 
-                useful for setting passwords and not exposing them to users.
-hide : specifies that a command is not visible in auto completion, meaning 
-       when listing or completing commands with '?' and 'TAB'. This can be useful if there are
-       commands that should be known only by expert users.
-hide-database-auto-completion : specifies that a command is not visible in database and in auto completion.
-                                This can be useful for a password that was put in device by super user, not be changed.
+{\tt hide} : specifies that a command is not visible in auto completion, meaning when listing or completing commands with '?' and 'TAB'. This can be useful if there are commands that should be known only by expert users.
+\item
+{\tt hide-database} : specifies that a command is not visible in database. This can be useful for setting passwords and not exposing them to users.
+\item
+{\tt hide-database-auto-completion} : specifies that a command is not visible in database and in auto completion. This can be useful for a password that was put in device by super user, not be changed.
 \end{itemize}
 
 In the following example, {\tt aa bb cb dd} and {\tt aa bb cc} are not visible in database and/or auto completion
@@ -292,10 +288,10 @@ depending on the variable used as mentioned above :
 \begin{verbatim}
   aa bb{
     ca;
-    cb,<hide-variable>{
+    cb, hide{
       dd;
     }
-    cc,<hide-variable>;
+    cc, hide;
   }
 \end{verbatim}
 
@@ -348,7 +344,7 @@ Note, the {\tt treename} feature is not available in Clixon, only in stand-alone
 \subsubsection{Tree references}
 
 A CLIgen syntax tree may reference another tree as an extension using
-the reference operator '@'.
+the reference operator {\tt @}.
 
 The following specification references itself:
 \begin{verbatim}
@@ -402,6 +398,29 @@ data (x y) is the same but the operation(add/del) is different.
 In the example, the 'treename' variable is used to define a new CLIgen
 tree. It is possible using the C-API to change this keyword to
 something else by using the API function {\tt cligen\_treename\_keyword}.
+
+\subsubsection{Filtering trees}
+
+When referencing a tree with the {\tt @tree} syntax, it is possible to filter the tree by removing
+objects with specific labels. This can be useful if multiple references to a tree is made, but
+the instanciations differ.
+
+For example, assume the following subtree ``T'', where one leaf is labelled with flag ``local'':
+\begin{verbatim}
+  x {
+    y, local;
+    z;
+  }
+\end{verbatim}
+
+The this tree can be referenced as: {\tt @T, filter:local;} in which case the expanded tree has removed all tree nodes labelled with ``local'' as follows:
+\begin{verbatim}
+  x {
+    z;
+  }
+\end{verbatim}
+
+
 
 \subsubsection{Tree workpoints}
 
