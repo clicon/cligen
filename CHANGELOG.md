@@ -5,7 +5,10 @@ Expected: September 2021
 
 ### New Features
 
-* Added cbuf_trunc() as requsted in [Yang patch pull request](https://github.com/clicon/clixon/pull/248)
+* Added filtering of tree references.
+  * Example, `@t, filter:local` removes all nodes labelled with `local` in tree `t`.
+  * See cligen tutorial "Filtering trees" section
+* Added cbuf_trunc() as requested in [Yang patch pull request](https://github.com/clicon/clixon/pull/248)
 
 ## 5.2.0
 1 July 2021
