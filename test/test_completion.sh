@@ -40,6 +40,7 @@ expectpart "$(echo "v	a	" | $cligen_file -f $fspec)" 0  "values                 
 newtest "v<tab>a<tab>42 OK"
 expectpart "$(echo "v	a	42" | $cligen_file -f $fspec 2>&1)" 0  "cli> values 42" "1 name:values type:string value:values" "2 name:int32 type:int32 value:42" 
 
+newtest "endtest"
 endtest
 
 rm -rf $dir

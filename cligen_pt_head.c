@@ -220,33 +220,6 @@ cligen_ph_free(pt_head *ph)
     return 0;
 }
 
-#ifdef NOTUSED
-/*! Delete a parsetree head and unlink it from the handle list
- * @param[in] h    CLIgen handle
- * @param[in] name 
- */
-int 
-cligen_ph_del(cligen_handle h, 
-	      char         *name)
-{
-    pt_head  *ph;
-    pt_head  *ph_prev;
-
-    for (ph = cligen_pt_head_get(h); ph; ph = ph->ph_next){
-	if (strcmp(cligen_ph_name_get(ph), name) == 0){
-	    if (ph_prev == NULL)
-		cligen_pt_head_set(h, ph->ph_next);
-	    else
-		ph_prev->ph_next = ph->ph_next;
-	    cligen_ph_free(ph);
-	    break;
-	}
-	ph_prev = ph;
-    }
-    return 0;
-}
-#endif
-
 /*! Append a new parsetree header
  * @param[in]  h     CLIgen handle
  * @param[in]  name  Name of this tree 
@@ -326,11 +299,11 @@ cligen_ph_i(cligen_handle h,
     return NULL;
 }
 
-/*! Get name of currently active parsetree.
+/*! Get currently active parsetree.
  * @param[in] h       CLIgen handle
  */
 parse_tree *
-cligen_ph_active_get(cligen_handle h)
+cligen_pt_active_get(cligen_handle h)
 {
     pt_head *ph;
 
@@ -339,6 +312,19 @@ cligen_ph_active_get(cligen_handle h)
 	    return ph->ph_parsetree;
     return NULL;
 }
+
+#ifdef NOTYET
+pt_head *
+cligen_ph_active_get(cligen_handle h)
+{
+    pt_head *ph;
+
+    for (ph = cligen_pt_head_get(h); ph; ph = ph->ph_next)
+	if (ph->ph_active)
+	    return ph;
+    return NULL;
+}
+#endif
 
 /*! Set currently active parsetree by name
  * @param[in] h       CLIgen handle
@@ -469,47 +455,3 @@ cligen_wp_top(cligen_handle h,
     return 0;
 }
 
-#if 1 /* OBSOLETE (used by clixon) remove after 4.8 */
-
-/*! Find a parsetree by its name, 
- * @param[in] h       CLIgen handle
- * @param[in] name    Name of tree
- * @retval    pt      Parse-tree
- * @retval    NULL    Not found
- * @note OBSOLETE, keep for backward compat , remove after 4.8
- */
-parse_tree *
-cligen_tree_find(cligen_handle h, 
-		 char         *name)
-{
-    pt_head *ph;
-
-    if ((ph = cligen_ph_find(h, name)) != NULL)
-	return ph->ph_parsetree;
-    return NULL;
-}
-
-/*! Add a new parsetree last in list
- * @param[in]  h     CLIgen handle
- * @param[in]  name  Name of parse-tree
- * @param[in]  pt    parse-tree
- * @retval     0     OK
- * @retval    -1     Error
- * Note, if this is the first tree, it is activated by default
- * @note OBSOLETE, keep for backward compat , remove after 4.8
- */
-int 
-cligen_tree_add(cligen_handle h, 
-		char         *name, 
-		parse_tree   *pt)
-{
-    pt_head  *ph;
-    
-    if ((ph = cligen_ph_add(h, name)) == NULL)
-	return -1;
-    if (cligen_ph_parsetree_set(ph, pt) < 0)
-	return -1;
-    return 0;
-}
-
-#endif /* OBSOLETE */

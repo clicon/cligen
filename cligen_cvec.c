@@ -390,6 +390,7 @@ cvec_i_str(cvec *cvv,
  *    while ((cv = cvec_each(cvv, cv)) != NULL)
  *	     ...
  * @endcode
+ * @see cvec_each1 Skip first
  */
 cg_var *
 cvec_each(cvec   *cvv,

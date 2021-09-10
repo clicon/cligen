@@ -165,6 +165,7 @@ expectpart "$(echo -n "$CMD ?" | $cligen_file -e -f $fspec)" 0 "cli> $CMD" "size
 newtest "cligen -e -P $CMD ?"
 expectpart "$(echo -n "$CMD ?" | $cligen_file -e -P -f $fspec)" 0 "cli> $CMD" "size" "taste" "--not--" "<cr>"
 
+newtest "endtest"
 endtest
 
 rm -rf $dir

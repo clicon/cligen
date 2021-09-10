@@ -130,6 +130,8 @@ expectpart "$(echo "b f c d e ?" | $cligen_file -f $fspec 2>&1)" 0 "1 name:b typ
 newtest "b c d d: Already matched"
 expectpart "$(echo "b c d d" | $cligen_file -f $fspec 2>&1)" 0 "Already matched"
 
+newtest "endtest"
 endtest
 
 rm -rf $dir
+

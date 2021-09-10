@@ -62,7 +62,12 @@ pt_head    *cligen_ph_add(cligen_handle h, char *name);
 pt_head    *cligen_ph_each(cligen_handle h, pt_head *ph);
 pt_head    *cligen_ph_i(cligen_handle h, int i);
 
-parse_tree *cligen_ph_active_get(cligen_handle h);
+parse_tree *cligen_pt_active_get(cligen_handle h);
+#if 0 /* XXX Change asap */
+pt_head *cligen_ph_active_get(cligen_handle h);
+#else
+#define cligen_ph_active_get(h) cligen_pt_active_get(h)
+#endif
 int         cligen_ph_active_set(cligen_handle h, char *name);
 
 /* CLIgen callbacks */
@@ -70,12 +75,5 @@ int         cligen_wp_set(cligen_handle h, cvec *cvv, cvec *argv);
 int         cligen_wp_show(cligen_handle h, cvec *cvv, cvec *argv);
 int         cligen_wp_up(cligen_handle h, cvec *cvv, cvec *argv);
 int         cligen_wp_top(cligen_handle h, cvec *cvv, cvec *argv);
-
-#if 1 /* OBSOLETE, keep for backward compat , remove after 4.8 */
-parse_tree *cligen_tree_find(cligen_handle h, char *name);
-int         cligen_tree_add(cligen_handle h, char *name, parse_tree *pt);
-#define     cligen_tree_active_get(h)       cligen_ph_active_get(h)
-#define     cligen_tree_active_set(h, name) cligen_ph_active_set((h), (name))
-#endif
 
 #endif /* _CLIGEN_PT_HEAD_H_ */

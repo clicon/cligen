@@ -104,7 +104,7 @@ cli_show_help_commands(cligen_handle h,
     fputs("\n", stdout);
     if ((ptn = pt_new()) == NULL)
 	goto done;
-    if ((pt = cligen_ph_active_get(h)) == NULL)
+    if ((pt = cligen_pt_active_get(h)) == NULL)
 	goto ok;
     if (pt_expand_treeref(h, NULL, pt) < 0) /* sub-tree expansion */
 	goto done; 
@@ -174,7 +174,7 @@ cli_tab_hook(cligen_handle h,
 
     if ((ptn = pt_new()) == NULL)
 	goto done;
-    if ((pt = cligen_ph_active_get(h)) == NULL)
+    if ((pt = cligen_pt_active_get(h)) == NULL)
 	goto ok;
     if (pt_expand_treeref(h, NULL, pt) < 0) /* sub-tree expansion */
 	goto done;
@@ -829,7 +829,7 @@ cliread_eval(cligen_handle  h,
 	*result = CG_EOF; 
 	goto ok;
     }
-    if ((pt = cligen_ph_active_get(h)) == NULL){
+    if ((pt = cligen_pt_active_get(h)) == NULL){
 	fprintf(stderr, "No active parse-tree found\n");
 	goto done;;
     }

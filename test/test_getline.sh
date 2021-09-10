@@ -52,6 +52,7 @@ expectpart "$(echo -n "Theodoric ruledTheo 		" | $cligen_file -f $fspec)" 0 
 newtest "^W"
 expectpart "$(echo -n "TheodoricThe			" | $cligen_file -f $fspec)" 0 "Theodoric the bold"
 
+newtest "endtest"
 endtest
 
 rm -rf $dir

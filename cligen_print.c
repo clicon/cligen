@@ -247,16 +247,16 @@ pt2cbuf(cbuf       *cb,
 	int         marginal,
 	int         brief)
 {
-    int retval = -1;
-    int i;
+    int     retval = -1;
+    int     i;
+    cg_obj *co;
 
     for (i=0; i<pt_len_get(pt); i++){
-	if (pt_vec_i_get(pt, i) == NULL){
+	if ((co = pt_vec_i_get(pt, i)) == NULL)
 	    continue;
-	}
 	if (pt_len_get(pt) > 1)
 	    cprintf(cb, "%*s", marginal, "");
-	if (co2cbuf(cb, pt_vec_i_get(pt, i), marginal, brief) < 0)
+	if (co2cbuf(cb, co, marginal, brief) < 0)
 	    goto done;
     }
     retval = 0;

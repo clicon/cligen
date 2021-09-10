@@ -73,8 +73,8 @@
 struct parse_tree{
     struct cg_obj     **pt_vec;    /* vector of pointers to parse-tree nodes */
     int                 pt_len;    /* length of vector */
-#if 1 /* OBSOLETE but keep to after 4.8 */
-    char               *pt_name;   /* XXX Should be removed, us ph_name instead but eg clixon uses it */
+#if 1 /* Would be nice to remove, but some functions use them */
+    char               *pt_name;   /* Cache of ph_name */
 #endif
     char                pt_set;    /* Parse-tree is a SET */ 
 };
@@ -201,7 +201,7 @@ pt_len_get(parse_tree *pt)
     return pt->pt_len;
 }
 
-#if 1 /* OBSOLETE but keep to after 4.8 */
+#if 1 /* Would be nice to remove, but some functions use them */
 char*
 pt_name_get(parse_tree *pt)
 {
@@ -230,7 +230,7 @@ pt_name_set(parse_tree *pt,
 	pt->pt_name = NULL;
     return 0;
 }
-#endif /* OBSOLETE but keep to after 4.8 */
+#endif
 
 int
 pt_sets_get(parse_tree *pt)
@@ -544,6 +544,11 @@ cligen_parsetree_free(parse_tree *pt,
  * @param[in]  arg    Argument to function
  * @retval     0      OK (all applied function calls return 0)
  * @retval     -1     Error (one applied function call return -1)
+ * @code
+ *    parse_tree   *pt;
+ *    if (pt_apply(pt, fn, (void*)42) < 0)
+ *       err;
+ * @endcode
  */
 int
 pt_apply(parse_tree   *pt, 

@@ -103,6 +103,8 @@ expectpart "$(echo "u1 550e8400-e29b-41d4-a716-446655440000" | $cligen_file -f $
 newtest "time t0"
 expectpart "$(echo "t0 2008-09-21T18:57:21.003" | $cligen_file -f $fspec)" 0 "cli> t0 2008-09-21T18:57:21.003" --not-- "regexp match fail"
 
+newtest "endtest"
 endtest
 
 rm -rf $dir
+
