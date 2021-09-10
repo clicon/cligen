@@ -87,6 +87,7 @@ expectpart "$(echo -n "extra ?" | $cligen_file -f $fspec 2>&1)" 0 "<crypto>" "de
 newtest "extra des:?"
 expectpart "$(echo -n "extra des:?" | $cligen_file -f $fspec 2>&1)" 0 "<crypto>" "des:des" "des:des3" --not-- "mc:aes" "mc:foo"
 
+newtest "endtest"
 endtest
 
 rm -rf $dir

@@ -84,6 +84,8 @@ EOF
 newtest "cligen edit a b <int> top"
 expectpart "$(cat $fin | $cligen_tutorial -q -f $fspec 2>&1)" 0 "a;{" "b <v>;{" "d;" "c;"
 
+newtest "endtest"
 endtest
 
 rm -rf $dir
+

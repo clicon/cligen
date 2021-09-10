@@ -40,6 +40,7 @@
 %union {
   int intval;
   char *string;
+  void *stack;
 }
 
 %token MY_EOF
@@ -373,13 +374,12 @@ cgy_callback_arg(cligen_yacc *cy,
  */
 static int
 expand_arg(cligen_yacc *cy,
-	   char        *type,
 	   char        *arg)
 {
    int      retval = -1;
     cg_var *cv = NULL;
 
-    if ((cv = create_cv(cy, type, arg)) == NULL)
+    if ((cv = create_cv(cy, "string", arg)) == NULL)
 	goto done;
     if (cy->cy_var->co_expand_fn_vec)
 	cvec_append_var(cy->cy_var->co_expand_fn_vec, cv);
@@ -583,8 +583,10 @@ cgy_cmd(cligen_yacc *cy,
  */
 static int
 cgy_reference(cligen_yacc *cy, 
-	      char        *name)
+	      char        *name,
+	      cvec        *cvv)
 {
+    int              retval = -1;
     struct cgy_list *cl; 
     cg_obj          *cop;   /* parent */
     cg_obj          *cot;   /* tree */
@@ -594,17 +596,21 @@ cgy_reference(cligen_yacc *cy,
 	cop = cl->cl_obj;
 	if ((cot = co_new(name, cop)) == NULL) { 
 	    cligen_parseerror1(cy, "Allocating cligen object"); 
-	    return -1;
+	    goto done;
 	}
-	cot->co_type    = CO_REFERENCE;
+	cot->co_type = CO_REFERENCE;
+	if (cvv && (cot->co_cvec = cvec_dup(cvv)) == NULL)
+	    goto done;
 	if ((cot = co_insert(co_pt_get(cop), cot)) == NULL)  /* cot may be deleted */
-	    return -1;
+	    goto done;
 	/* Replace parent in cgy_list: not allowed after ref?
 	   but only way to add callbacks to it.
 	*/
 	cl->cl_obj = cot;
     }
-    return 0;
+    retval = 0;
+ done:
+    return retval;
 }
 
 /*! Add comment
@@ -687,12 +693,12 @@ cgy_terminal(cligen_yacc *cy)
 	if (cy->cy_cvec){
 	    if (cvec_find(cy->cy_cvec, "hide") != NULL)
 		co_flags_set(co, CO_FLAGS_HIDE);
-        if (cvec_find(cy->cy_cvec, "hide-database") != NULL)
-        co_flags_set(co, CO_FLAGS_HIDE_DATABASE);
-        if (cvec_find(cy->cy_cvec, "hide-database-auto-completion") != NULL) {
-            co_flags_set(co, CO_FLAGS_HIDE);
-            co_flags_set(co, CO_FLAGS_HIDE_DATABASE);
-        }
+	    if (cvec_find(cy->cy_cvec, "hide-database") != NULL)
+		co_flags_set(co, CO_FLAGS_HIDE_DATABASE);
+	    if (cvec_find(cy->cy_cvec, "hide-database-auto-completion") != NULL) {
+		co_flags_set(co, CO_FLAGS_HIDE);
+		co_flags_set(co, CO_FLAGS_HIDE_DATABASE);
+	    }
 	    /* generic variables */
 	    if ((co->co_cvec = cvec_dup(cy->cy_cvec)) == NULL){
 		fprintf(stderr, "%s: cvec_dup: %s\n", __FUNCTION__, strerror(errno));
@@ -1215,14 +1221,18 @@ option      : callback           { _PARSE_DEBUG("option->callback");}
             | assignment         { _PARSE_DEBUG("option->assignment");} 
             ;
 
-assignment  : NAME '=' DQ charseq DQ {_PARSE_DEBUG("assignment->\" charseq \"");
-		                      cgy_assignment(_cy, $1,$4);free($1); free($4);}
+assignment  : NAME '=' DQ charseq DQ
+                                 {_PARSE_DEBUG("assignment->\" charseq \"");
+		                  cgy_assignment(_cy, $1,$4);free($1); free($4);}
             ; 
 
-flag        : NAME {cgy_flag(_cy, $1);free($1);}
+flag        : NAME               { _PARSE_DEBUG("flag->NAME");
+		                   cgy_flag(_cy, $1);free($1);}
             ; 
 
-callback    : NAME  {if (cgy_callback(_cy, $1) < 0) YYERROR;} '(' arglist ')'
+callback    : NAME               { _PARSE_DEBUG("callback->NAME ( arglist )");
+		                   if (cgy_callback(_cy, $1) < 0) YYERROR;}
+              '(' arglist ')'
             ;
 
 arglist     : arglist1
@@ -1270,21 +1280,21 @@ declcomp    : '(' { if (ctx_push(_cy, 0) < 0) YYERROR; }
 
 decl        : cmd                 { _PARSE_DEBUG("decl->cmd");}
             | cmd PDQ charseq DQP { _PARSE_DEBUG("decl->cmd (\" comment \")");
-		   if (cgy_comment(_cy, $3) < 0) YYERROR; free($3);}
+		                    if (cgy_comment(_cy, $3) < 0) YYERROR; free($3);}
             | cmd PDQ DQP         { _PARSE_DEBUG("decl->cmd (\"\")");}
             ;
 
-cmd         : NAME     { _PARSE_DEBUG("cmd->NAME");
-		     if (cgy_cmd(_cy, $1) < 0) YYERROR; free($1); } 
-            | '@' NAME { _PARSE_DEBUG("cmd->@NAME");
-		         if (cgy_reference(_cy, $2) < 0) YYERROR; free($2); } 
-            | '<' { if ((_CY->cy_var = cgy_var_create(_CY)) == NULL) YYERROR; }
+cmd         : NAME           { _PARSE_DEBUG("cmd->NAME");
+		               if (cgy_cmd(_cy, $1) < 0) YYERROR; free($1); } 
+            | '@' NAME       { _PARSE_DEBUG("cmd->@NAME");
+		               if (cgy_reference(_cy, $2, NULL) < 0) YYERROR; free($2); } 
+            | '<'            { if ((_CY->cy_var = cgy_var_create(_CY)) == NULL) YYERROR; }
                variable '>'  { if (cgy_var_post(_cy) < 0) YYERROR; }
             ;
 
 variable    : NAME          { if (cgy_var_name_type(_cy, $1, $1)<0) YYERROR; }
             | NAME ':' NAME { if (cgy_var_name_type(_cy, $1, $3)<0) YYERROR; free($3); }
-            | NAME ' ' { if (cgy_var_name_type(_cy, $1, $1) < 0) YYERROR; }
+            | NAME ' '      { if (cgy_var_name_type(_cy, $1, $1) < 0) YYERROR; }
               keypairs
 	    | NAME ':' NAME ' ' { if (cgy_var_name_type(_cy, $1, $3) < 0) YYERROR; free($3); }
               keypairs
@@ -1336,7 +1346,7 @@ exparglist : exparglist ',' exparg
            ;
 
 exparg     : DQ DQ
-           | DQ charseq DQ { expand_arg(_cy, "string", $2); free($2); }
+           | DQ charseq DQ { expand_arg(_cy, $2); free($2); }
            ;
 
 exparg     : typecast arg1 {

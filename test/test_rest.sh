@@ -34,6 +34,8 @@ expectpart "$(echo "values aab" | $cligen_file -f $fspec 2>&1)" 0 "1 name:values
 newtest "cligen values aab foo rest"
 expectpart "$(echo "values aab cde" | $cligen_file -f $fspec 2>&1)" 0 "1 name:values type:string value:values" "2 name:x type:rest value:aab cde"
 
+newtest "endtest"
 endtest
 
 rm -rf $dir
+

@@ -170,8 +170,7 @@ struct cg_obj{
 					 reference */
     char               *co_command;   /* malloc:ed matching string / name or type */
     struct cg_callback *co_callbacks; /* linked list of callbacks and arguments */
-    cvec               *co_cvec;      /* List of cligen variables (XXX: not visible to
-					 callbacks) */
+    cvec               *co_cvec;      /* List of cligen local variables, such as hide */
     cvec               *co_helpvec;   /* Vector of CLIgen helptexts */
     uint32_t            co_flags;     /* General purpose flags, see CO_FLAGS_HIDE and others above */
     struct cg_obj      *co_ref;       /* Ref to original (if this is expanded) */

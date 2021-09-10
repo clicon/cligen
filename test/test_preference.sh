@@ -40,6 +40,7 @@ expectpart "$(echo "values 427438287432" | $cligen_file -f $fspec 2>&1)" 0 "cli>
 newtest "cligen pref no match"
 expectpart "$(echo "values 9aa" | $cligen_file -f $fspec 2>&1)" 0 "CLI syntax error in: \"values 9aa\": \"9aa\" is invalid input for cli command: string"
 
+newtest "endtest"
 endtest
 
 rm -rf $dir

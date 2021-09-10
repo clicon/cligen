@@ -40,6 +40,8 @@ expectpart "$(echo "abc str#Comment" | $cligen_file -f $fspec 2>&1)" 0 "cli> abc
 newtest "comment in rest"
 expectpart "$(echo "abc str s# Comment" | $cligen_file -f $fspec 2>&1)" 0 "cli> abc str s# Comment" "1 name:abc type:string value:abc" "2 name:s type:rest value:str s# Comment"
 
+newtest "endtest"
 endtest
 
-#rm -rf $dir
+rm -rf $dir
+
