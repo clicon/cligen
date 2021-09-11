@@ -63,9 +63,10 @@ pt_head    *cligen_ph_each(cligen_handle h, pt_head *ph);
 pt_head    *cligen_ph_i(cligen_handle h, int i);
 
 parse_tree *cligen_pt_active_get(cligen_handle h);
-#if 0 /* XXX Change asap */
+#if 0 /* XXX Add after 5.3 */
 pt_head *cligen_ph_active_get(cligen_handle h);
-#else
+#endif
+#if 1 /* XXX Remove before 5.3 */
 #define cligen_ph_active_get(h) cligen_pt_active_get(h)
 #endif
 int         cligen_ph_active_set(cligen_handle h, char *name);

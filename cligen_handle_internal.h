@@ -106,6 +106,7 @@ struct cligen_handle{
     int         ch_regex_xsd;    /* 0: POSIX / REGEX(3); 1: LIBXML2 XSD */
     char        ch_delimiter;    /* Delimiter between objects */
     int         ch_preference_mode;   /* Relaxed variable match preference handling */
+    cvec       *ch_reftree_filter; /* Vector of reftree(@tree) labels that are disabled by default */
 };
 
 #endif /* _CLIGEN_HANDLE_INTERNAL_H_ */

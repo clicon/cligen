@@ -1020,3 +1020,35 @@ cligen_preference_mode_set(cligen_handle h,
     ch->ch_preference_mode = flag;
     return 0;
 }
+
+/*! Get vector of labels for reference trees that are disabled by default (names are labels)
+ *
+ * @param[in] h      CLIgen handle
+ * @retval    cvv    Filter vector
+ * @retval    NULL   None
+ */
+cvec *
+cligen_reftree_filter_get(cligen_handle h)
+{
+    struct cligen_handle *ch = handle(h);
+
+    return ch->ch_reftree_filter;
+}
+
+/*! Set vector of labels for reference trees that are disabled by default (names are labels)
+ *
+ * @param[in]  h     CLIgen handle
+ * @param[in]  cvv   Filter vector (is consumed, do not free)
+ * @retval     0     OK
+ */
+int
+cligen_reftree_filter_set(cligen_handle h,
+			  cvec         *cvv)
+{
+    struct cligen_handle *ch = handle(h);
+    
+    if (ch->ch_reftree_filter)
+	cvec_free(ch->ch_reftree_filter);
+    ch->ch_reftree_filter = cvv;
+    return 0;
+}

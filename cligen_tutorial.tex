@@ -413,14 +413,14 @@ For example, assume the following subtree ``T'', where one leaf is labelled with
   }
 \end{verbatim}
 
-The this tree can be referenced as: {\tt @T, filter:local;} in which case the expanded tree has removed all tree nodes labelled with ``local'' as follows:
+Then this tree can be referenced as: {\tt @T, filter:-local;} in which case the expanded tree has removed all tree nodes labelled with ``local'' as follows:
 \begin{verbatim}
   x {
     z;
   }
 \end{verbatim}
 
-
+It is possible to pre-set a set of labels that are filtered by default using {\tt cligen\_reftree\_filter\_set}, in which you can enable a label in areference using eg {\tt @T, filter:+local;}.
 
 \subsubsection{Tree workpoints}
 

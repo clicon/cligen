@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # CLI variable preference
 # tests multiple variable matches with different preferences
-# Also test reference using filter statements: @<tree>, filter:<flag>
+# Also test reference using filter statements: @<tree>, filter:+/-<flag>
 
 # Magic line must be first in script (see README.md)
 s="$_" ; . ./lib.sh || if [ "$s" = $0 ]; then exit 0; else return 0; fi
@@ -17,7 +17,7 @@ cat > $fspec <<EOF
   values (<int64> | @subtree), callback();
 
   # Parametrized reference 
-  parameter @subtree, filter:local, callback();
+  parameter @subtree, filter:-local, callback();
 
   treename="subtree";           
   xx{

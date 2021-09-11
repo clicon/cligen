@@ -281,14 +281,13 @@ pt_reference_trunc(parse_tree *pt)
     return retval;
 }
 
-#ifdef CLIGEN_FILTER_PREFIX
 /*! Recursively remove any parse-tree objects labelled by filter
  *
  * @param[in]  pt       CLIgen parse-tree
  * @param[in]  filter   If statement has this flag, filter it
  * @retval     0        OK
  * @retval    -1        Error
- * @see CLIGEN_FILTER_PREFIX
+ * @see cligen_reftree_filter_set
  */
 static int
 pt_recurse_filter(parse_tree  *pt,
@@ -323,7 +322,6 @@ pt_recurse_filter(parse_tree  *pt,
  done:
     return retval;
 }
-#endif /* CLIGEN_FILTER_PREFIX */
 
 /*! Take a top-object parse-tree (pt0), and expand all tree references one level. 
  * 
@@ -353,11 +351,12 @@ pt_expand_treeref(cligen_handle h,
     cg_obj     *co02;
     cg_obj     *cow;
     pt_head    *ph;
-#ifdef CLIGEN_FILTER_PREFIX
     cg_var     *cv;
     char       *name;
     char       *filter;
-#endif
+    cvec       *cvv0;
+    cvec       *cvv = NULL;
+    cg_var     *cv1;
     
  again: /* XXX ugly goto , try to replace with a loop */
     for (i=0; i<pt_len_get(pt0); i++){ /*  */
@@ -391,21 +390,46 @@ pt_expand_treeref(cligen_handle h,
 	    if (co->co_callbacks && 
 		pt_callback_reference(pt1ref, co->co_callbacks) < 0)
 		goto done;
-#ifdef CLIGEN_FILTER_PREFIX
-	    /* Find filter labels defined in "filter:<label>" local flags,
+	    /* Find filter labels defined in "filter:-<label>" local flags,
 	     * assign each to "filter"
 	     * Then traverse pt1ref and remove all objects labelled with "filter"
 	     */
+	    /* Prepare new cvv filter add/subtract to cvvfilter depending on co_cvec */
+	    if ((cvv0 = cligen_reftree_filter_get(h)) != NULL){
+		if ((cvv = cvec_dup(cvv0)) == NULL)
+		    goto done;
+	    }
+	    else
+		if ((cvv = cvec_new(0)) == NULL)
+		    goto done;
 	    cv = NULL;
 	    while ((cv = cvec_each(co->co_cvec, cv)) != NULL){
-		if ((name = cv_name_get(cv)) != NULL &&
-		    strncmp(CLIGEN_FILTER_PREFIX, name, strlen(CLIGEN_FILTER_PREFIX)) == 0){
-		    filter = name+strlen(CLIGEN_FILTER_PREFIX);
+		if ((name = cv_name_get(cv)) != NULL){
+		    if (strncmp(CLIGEN_FILTER_PREFIX "-", name, strlen(CLIGEN_FILTER_PREFIX "-")) == 0){
+			filter = name+strlen(CLIGEN_FILTER_PREFIX "-");
+			/* If filter not in cvv, add it */
+			if (cvec_find(cvv, filter) == NULL){
+			    if ((cv1 = cvec_add(cvv, CGV_STRING)) == NULL)
+				goto done;
+			    cv_name_set(cv1, filter);
+			}
+		    }
+		    else if (strncmp(CLIGEN_FILTER_PREFIX "+", name, strlen(CLIGEN_FILTER_PREFIX "-")) == 0){
+			/* If filter in cvv, remove it (set to NULL) */
+			if ((cv1 = cvec_find(cvv, filter)) != NULL)
+			    cv_name_set(cv1, NULL);
+		    }
+		}
+	    }
+	    /* Now iterate over the names of cvv and filter out those on pt1ref */
+	    cv = NULL;
+	    while ((cv = cvec_each(cvv, cv)) != NULL){
+		if ((filter = cv_name_get(cv)) != NULL){
 		    if (pt_recurse_filter(pt1ref, filter) < 0)
 			goto done;
 		}
+			
 	    }
-#endif
 	    /* Copy top-levels into original parse-tree */
 	    for (j=0; j<pt_len_get(pt1ref); j++)
 		if ((cot = pt_vec_i_get(pt1ref, j)) != NULL){
@@ -505,8 +529,8 @@ pt_expand_fnv(cligen_handle h,
 	      cg_obj       *co_parent)
 {
     int         retval = -1;
-    cvec       *commands = cvec_new(0);
-    cvec       *helptexts = cvec_new(0);
+    cvec       *commands;
+    cvec       *helptexts;
     cg_var     *cv = NULL;
     char       *helpstr;
     cg_obj     *con = NULL;
@@ -518,6 +542,10 @@ pt_expand_fnv(cligen_handle h,
 	errno = EINVAL;
 	goto done;
     }
+    if ((commands = cvec_new(0)) == NULL)
+	goto done;
+    if ((helptexts = cvec_new(0)) == NULL)
+	goto done;
     if ((*co->co_expandv_fn)(cligen_userhandle(h)?cligen_userhandle(h):h, 
 			     co->co_expand_fn_str, 
 			     cvv,
