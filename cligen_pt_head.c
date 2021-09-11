@@ -313,7 +313,7 @@ cligen_pt_active_get(cligen_handle h)
     return NULL;
 }
 
-#ifdef NOTYET
+#if 0 /* XXX Add after 5.3 */
 pt_head *
 cligen_ph_active_get(cligen_handle h)
 {
