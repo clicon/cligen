@@ -339,6 +339,7 @@ cov_pref(cg_obj *co)
 }
 
 /*! Assign a preference to a cligen object
+ *
  * @param[in]  co    cligen_object
  * @param[in]  exact if match was exact (only applies to CO_COMMAND)
  * @retval     pref  Preference: positive integer
@@ -365,8 +366,8 @@ co_pref(cg_obj *co,
     case CO_VARIABLE:
 	pref = cov_pref(co);
 	break;
-    case CO_REFERENCE: /* ? */
-	
+    case CO_REFERENCE:
+    case CO_EMPTY:
 	break;
     }
     return pref;
@@ -523,6 +524,9 @@ co_copy(cg_obj  *co,
     if (co->co_command)
 	if ((con->co_command = strdup(co->co_command)) == NULL)
 	    goto done;
+    if (co->co_namespace)
+	if ((con->co_namespace = strdup(co->co_namespace)) == NULL)
+	    goto done;
     if (co_callback_copy(co->co_callbacks, &con->co_callbacks) < 0)
 	goto done;
     if (co->co_cvec)
@@ -612,7 +616,7 @@ str_cmp(char *s1,
 #endif /* HAVE_STRVERSCMP */
 }
 
-/*! Check if two cligen objects (cg_obj) ar equal
+/*! Check if two cligen objects (cg_obj) are equal
  *
  * Two cligen objects are equal if they have:
  * - same type (variable or command)
@@ -626,6 +630,7 @@ str_cmp(char *s1,
  * @retval <0  if co1 is less than co2
  * @retval >0  if co1 is greater than co2
  * @see str_cmp
+ * XXX co_namespace is not examined
  */
 int 
 co_eq(cg_obj *co1,
@@ -639,20 +644,25 @@ co_eq(cg_obj *co1,
 		but need to check special case, 
 		if the variable is a KEYWORD, then it can be eq to a command. */
 	/* Let References be last (more than) everything else */
-	if (co1->co_type == CO_REFERENCE)
+	if (co1->co_type == CO_REFERENCE){
 	    eq = 1;
-	if (co2->co_type == CO_REFERENCE)
+	    goto done;
+	}
+	if (co2->co_type == CO_REFERENCE){
 	    eq = -1;
+	    goto done;
+	}
+	/* EMPTY shoyuld always be first */
+	if (co1->co_type == CO_EMPTY){
+	    eq = -1;
+	    goto done;
+	}   
+	if (co2->co_type == CO_EMPTY){
+	    eq = 1;
+	    goto done;
+	}   
 	/* Here one is command and one is variable */
-	if (co1->co_type == CO_COMMAND){
-	    eq = strcmp(co1->co_command, co2->co_command);
-	    goto done;
-	}
-	else{ 	    /* co2->co_type == CO_COMMAND */
-	    eq = strcmp(co1->co_command, co2->co_command);
-	    goto done;
-	}
-	/* shouldnt reach */
+	eq = strcmp(co1->co_command, co2->co_command);
 	goto done;
     }
     switch (co1->co_type){
@@ -721,6 +731,9 @@ co_eq(cg_obj *co1,
 	    }
 	} /* range */
 	break;
+    case CO_EMPTY:
+	eq = 0;
+	break;
     }
   done:
     return eq;
@@ -747,6 +760,8 @@ co_free(cg_obj *co,
 	cvec_free(co->co_helpvec);
     if (co->co_command)
 	free(co->co_command);
+    if (co->co_namespace)
+	free(co->co_namespace);
     if (co->co_value)
 	free(co->co_value);
     if (co->co_cvec)
@@ -937,6 +952,28 @@ co_value_set(cg_obj *co,
     return 0;
 }
 
+/*! co is a terminal command, and therefore should be printed with a ';' 
+ * 
+ * It contains a child that is of type "EMPTY".
+ */
+int
+co_terminal(cg_obj *co)
+{
+    parse_tree *pt;
+    cg_obj     *coc;
+    int         ptlen;
+
+    pt = co_pt_get(co);
+    ptlen = pt_len_get(pt);
+    if (ptlen == 0)
+	return 1;
+    coc = pt_vec_i_get(pt, 0);
+    if (coc == NULL ||
+	coc->co_type == CO_EMPTY)
+	return 1;
+    return 0;
+}
+
 /*! Create (malloc) a reason string using var-list args
  * General purpose routine but used for error handling.
  * @param[in]  fmt     Format string followed by a variable list (as in  printf) 
@@ -965,3 +1002,4 @@ cligen_reason(const char *fmt, ...)
     va_end(ap);
     return reason;	
 }
+

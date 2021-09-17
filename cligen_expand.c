@@ -89,6 +89,11 @@ co_expand_sub(cg_obj  *co,
 	    fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
 	    return -1;
 	}
+    if (co->co_namespace)
+	if ((con->co_namespace = strdup(co->co_namespace)) == NULL){
+	    fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
+	    return -1;
+	}
     if (co->co_cvec)
 	con->co_cvec = cvec_dup(co->co_cvec);
     if (co_callback_copy(co->co_callbacks, &con->co_callbacks) < 0)
@@ -222,17 +227,17 @@ pt_callback_reference(parse_tree         *pt,
 {
     int                 i;
     cg_obj             *co;
-    parse_tree         *ptc;
     int                 retval = -1;
     struct cg_callback *cc;
     cg_var             *cv;
-		    
+    
     for (i=0; i<pt_len_get(pt); i++){    
-	if ((co = pt_vec_i_get(pt, i)) == NULL)
+	if ((co = pt_vec_i_get(pt, i)) == NULL ||
+	    co->co_type == CO_EMPTY)
 	    continue;
-	ptc = co_pt_get(co);
+
 	/* Filter out non-executable non-terminals. */
-	if (pt_len_get(ptc) && pt_vec_i_get(ptc, 0) == NULL){
+	if (co_terminal(co)){
 	    /* Copy the callback from top */
 	    if ((cc = co->co_callbacks) == NULL){
 		if (co_callback_copy(cc0, &co->co_callbacks) < 0)
@@ -390,11 +395,8 @@ pt_expand_treeref(cligen_handle h,
 	    if (co->co_callbacks && 
 		pt_callback_reference(pt1ref, co->co_callbacks) < 0)
 		goto done;
-	    /* Find filter labels defined in "filter:-<label>" local flags,
-	     * assign each to "filter"
-	     * Then traverse pt1ref and remove all objects labelled with "filter"
-	     */
-	    /* Prepare new cvv filter add/subtract to cvvfilter depending on co_cvec */
+	    /* Filter label code
+	     * 1. Prepare new cvv filter add/subtract to cvvfilter depending on co_cvec */
 	    if ((cvv0 = cligen_reftree_filter_get(h)) != NULL){
 		if ((cvv = cvec_dup(cvv0)) == NULL)
 		    goto done;
@@ -402,11 +404,14 @@ pt_expand_treeref(cligen_handle h,
 	    else
 		if ((cvv = cvec_new(0)) == NULL)
 		    goto done;
+	    /* 2. Find filter labels defined in "filter:-<label>" or ""filter:+<label> local flags,
+	     * add/remove to filter cvv list
+	     */
 	    cv = NULL;
 	    while ((cv = cvec_each(co->co_cvec, cv)) != NULL){
 		if ((name = cv_name_get(cv)) != NULL){
-		    if (strncmp(CLIGEN_FILTER_PREFIX "-", name, strlen(CLIGEN_FILTER_PREFIX "-")) == 0){
-			filter = name+strlen(CLIGEN_FILTER_PREFIX "-");
+		    if (strncmp(CLIGEN_REF_REMOVE, name, strlen(CLIGEN_REF_REMOVE)) == 0){
+			filter = name+strlen(CLIGEN_REF_REMOVE);
 			/* If filter not in cvv, add it */
 			if (cvec_find(cvv, filter) == NULL){
 			    if ((cv1 = cvec_add(cvv, CGV_STRING)) == NULL)
@@ -414,14 +419,17 @@ pt_expand_treeref(cligen_handle h,
 			    cv_name_set(cv1, filter);
 			}
 		    }
-		    else if (strncmp(CLIGEN_FILTER_PREFIX "+", name, strlen(CLIGEN_FILTER_PREFIX "-")) == 0){
+		    else if (strncmp(CLIGEN_REF_ADD, name, strlen(CLIGEN_REF_ADD)) == 0){
+			filter = name+strlen(CLIGEN_REF_ADD);
 			/* If filter in cvv, remove it (set to NULL) */
 			if ((cv1 = cvec_find(cvv, filter)) != NULL)
 			    cv_name_set(cv1, NULL);
 		    }
 		}
 	    }
-	    /* Now iterate over the names of cvv and filter out those on pt1ref */
+	    /* 3. Now iterate over the names of cvv and filter out those on pt1ref 
+	     * Then traverse pt1ref and remove all objects labelled with "filter"
+	     */
 	    cv = NULL;
 	    while ((cv = cvec_each(cvv, cv)) != NULL){
 		if ((filter = cv_name_get(cv)) != NULL){
@@ -452,6 +460,8 @@ pt_expand_treeref(cligen_handle h,
     }
     retval = 0;
  done:
+    if (cvv)
+	cvec_free(cvv);
     if (pt1ref)
 	pt_free(pt1ref, 1);
     return retval;

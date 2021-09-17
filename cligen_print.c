@@ -139,17 +139,6 @@ cov2cbuf(cbuf   *cb,
     return retval;
 }
 
-/*! co is a terminal command, and therefore should be printed with a ';' */
-static int
-terminal(cg_obj *co)
-{
-    parse_tree *pt;
-
-    pt = co_pt_get(co);
-    return ((pt_len_get(pt)>0 && pt_vec_i_get(pt, 0) == NULL) || 
-	    pt_len_get(pt) == 0);
-}
-
 /*! Print a CLIgen object (cg object / co) to a CLIgen buffer
  */
 static int 
@@ -162,6 +151,7 @@ co2cbuf(cbuf   *cb,
     struct cg_callback *cc;
     parse_tree         *pt;
     cg_var             *cv;
+    cg_obj             *co1;
     int                 i;
 
     switch (co->co_type){
@@ -175,6 +165,9 @@ co2cbuf(cbuf   *cb,
 	break;
     case CO_VARIABLE:
 	cov2cbuf(cb, co, brief);
+	break;
+    case CO_EMPTY:
+	cprintf(cb, ";");
 	break;
     }
     if (brief == 0){
@@ -211,16 +204,16 @@ co2cbuf(cbuf   *cb,
 	    }
 	}
     }
-    if (terminal(co))
+    if (co_terminal(co))
 	cprintf(cb, ";");
     pt = co_pt_get(co);
-    if (pt_len_get(pt)>1){
+    if (pt_len_get(pt) > 1){
 	if (co_sets_get(co))
 	    cprintf(cb, "@");
 	cprintf(cb, "{\n");
     }
     else
-	if (pt_len_get(pt)==1 && pt_vec_i_get(pt, 0) != NULL)
+	if (pt_len_get(pt)==1 && (co1 = pt_vec_i_get(pt, 0)) != NULL && co1->co_type != CO_EMPTY)
 	    cprintf(cb, " ");
 	else
 	    cprintf(cb, "\n");
@@ -252,7 +245,8 @@ pt2cbuf(cbuf       *cb,
     cg_obj *co;
 
     for (i=0; i<pt_len_get(pt); i++){
-	if ((co = pt_vec_i_get(pt, i)) == NULL)
+	if ((co = pt_vec_i_get(pt, i)) == NULL ||
+	    co->co_type == CO_EMPTY)
 	    continue;
 	if (pt_len_get(pt) > 1)
 	    cprintf(cb, "%*s", marginal, "");
@@ -376,6 +370,9 @@ co_dump1(FILE    *f,
 	break;
     case CO_VARIABLE:
 	fprintf(stderr, "%*s %p co <%s>\n", indent*3, "", co, co->co_command);
+	break;
+    case CO_EMPTY:
+	fprintf(stderr, "%*s %p empty;\n", indent*3, "", co);
 	break;
     }
     if ((pt = co_pt_get(co)) != NULL)
