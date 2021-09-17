@@ -679,6 +679,7 @@ cgy_terminal(cligen_yacc *cy)
     struct cg_callback **ccp;
     int                 retval = -1;
     parse_tree         *ptc;
+    cg_obj             *coi; 
     
     for (cl = cy->cy_list; cl; cl = cl->cl_next){
 	co  = cl->cl_obj;
@@ -711,11 +712,19 @@ cgy_terminal(cligen_yacc *cy)
 		if (pt_vec_i_get(ptc, i) == NULL)
 		    break;
 	    }
-	    if (i == pt_len_get(ptc)) /* Insert empty child if ';' */
-		co_insert(co_pt_get(co), NULL);
+	    if (i == pt_len_get(ptc)){ /* Insert empty child if ';' */
+		if ((coi = co_new(NULL, co)) == NULL) { 
+		    cligen_parseerror1(cy, "Allocating cligen object"); 
+		    return -1;
+		}
+		coi->co_type = CO_EMPTY;
+		co_insert(co_pt_get(co), coi);
+
+	    }
 	}
-	else
+	else{ /* XXX never reach here? */
 	    co_insert(co_pt_get(co), NULL);
+	}
     }
     /* cleanup */
     while ((cc = cy->cy_callbacks) != NULL){

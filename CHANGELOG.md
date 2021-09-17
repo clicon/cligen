@@ -5,8 +5,10 @@ Expected: September 2021
 
 ### New Features
 
-* Added filtering of tree references.
-  * Example, `@t, filter:local` removes all nodes labelled with `local` in tree `t`.
+* Internal: replace empty placeholder in parse-tree (pt) vector with a co of type CO_EMPTY as indication of terminal
+* Added filtering of tree references, using prefix `@add:` and `@remove`
+  * Example, `@t, @remove:local` removes all nodes labelled with `local` in tree `t` before applying the tree "macro" expansion
+  * Initialize filters with: `cligen_reftree_filter_set()`
   * See cligen tutorial "Filtering trees" section
 * Added cbuf_trunc() as requested in [Yang patch pull request](https://github.com/clicon/clixon/pull/248)
 

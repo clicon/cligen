@@ -46,7 +46,8 @@
 enum cg_objtype{
   CO_COMMAND,   /* Simple string parsing */
   CO_VARIABLE,  /* Parse as type eg int */
-  CO_REFERENCE  /* Symbolic reference to other tree */
+  CO_REFERENCE, /* Symbolic reference to other tree */
+  CO_EMPTY       /* No subtree, indicates a callback (used to be empty) */
 };
 
 /*
@@ -169,8 +170,13 @@ struct cg_obj{
     enum cg_objtype     co_type;      /* Type of object: command, variable or tree
 					 reference */
     char               *co_command;   /* malloc:ed matching string / name or type */
+    char               *co_namespace; /* Namespace URI, in cases where co_command is not unique */
     struct cg_callback *co_callbacks; /* linked list of callbacks and arguments */
-    cvec               *co_cvec;      /* List of cligen local variables, such as hide */
+    cvec               *co_cvec;      /* List of cligen local variables, such as "hide" 
+                                       * Special labels on @treerefs are: 
+                                       *     @add:<label> and @remove:<label>
+				       * which control tree ref macro expansion
+				       */
     cvec               *co_helpvec;   /* Vector of CLIgen helptexts */
     uint32_t            co_flags;     /* General purpose flags, see CO_FLAGS_HIDE and others above */
     struct cg_obj      *co_ref;       /* Ref to original (if this is expanded) */
@@ -230,6 +236,7 @@ int         co_free(cg_obj *co, int recursive);
 cg_obj     *co_insert(parse_tree *pt, cg_obj *co);
 cg_obj     *co_find_one(parse_tree *pt, char *name);
 int         co_value_set(cg_obj *co, char *str);
+int         co_terminal(cg_obj *co);
 #if defined(__GNUC__) && __GNUC__ >= 3
 char       *cligen_reason(const char *fmt, ...) __attribute__ ((format (printf, 1, 2)));
 #else

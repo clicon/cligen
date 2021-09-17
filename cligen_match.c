@@ -153,7 +153,7 @@ match_object(cligen_handle h,
       len = strlen(str);
   if (exact)
       *exact = 0;
-  if (co==NULL)
+  if (co==NULL) /* shouldnt happen */
       return 0;
   switch (co->co_type){
   case CO_COMMAND:
@@ -186,6 +186,12 @@ match_object(cligen_handle h,
   case CO_REFERENCE: /* This should never match, it is an abstract object that is expanded */
       if (reason){
 	  if ((*reason = strdup("Reference")) == NULL)
+	      return -1;
+      }
+      break;
+  case CO_EMPTY: /* Nothing match with empty (same as co = NULL) */
+      if (reason){
+	  if ((*reason = strdup("Empty")) == NULL)
 	      return -1;
       }
       break;
@@ -499,7 +505,8 @@ last_pt(parse_tree *pt)
     if (pt_len_get(pt) == 0)
 	return 1;
     for (i=0; i<pt_len_get(pt); i++){
-	if ((co = pt_vec_i_get(pt, i)) == NULL)
+	if ((co = pt_vec_i_get(pt, i)) == NULL ||
+	    co->co_type == CO_EMPTY)
 	    return pt_len_get(pt)==1?1:2;
     }
     return 0;
@@ -1324,7 +1331,9 @@ match_pattern_exact(cligen_handle  h,
      */
     if ((ptc = co_pt_get(co)) != NULL){
 	for (i=0; i<pt_len_get(ptc); i++){
-	    if (pt_vec_i_get(ptc, i) == NULL)
+	    cg_obj *co1;
+	    if ((co1 = pt_vec_i_get(ptc, i)) == NULL ||
+		co1->co_type == CO_EMPTY)
 		break; /* If we match here it is OK, unless no match */
 	}
 	if (pt_len_get(ptc) != 0 && i==pt_len_get(ptc)){
