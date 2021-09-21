@@ -5,7 +5,11 @@ Expected: September 2021
 
 ### New Features
 
+* Added constant `CLIGEN_SINGLE_HELPSTRING` to show only single help-string
+  * Some YANG models have very large comments and produces time-consuming memory allocation
 * Internal: replace empty placeholder in parse-tree (pt) vector with a co of type CO_EMPTY as indication of terminal
+* Added `co_count()` function to keep track how many cligen objects have been allocated
+* Added "prefix" field in cligen parse-object struct to prepare for namespace separation
 * Added filtering of tree references, using prefix `@add:` and `@remove`
   * Example, `@t, @remove:local` removes all nodes labelled with `local` in tree `t` before applying the tree "macro" expansion
   * Initialize filters with: `cligen_reftree_filter_set()`

@@ -1071,12 +1071,15 @@ move_cursor_up(int nr)
 static int
 move_cursor_right(int nr)
 {
-    char str[16];
-    int  i;
+    char   str[16];
+    int    i;
+    size_t len;
+    
     gl_putc(033);
     gl_putc('[');
     snprintf(str, 15, "%d", nr);
-    for (i=0; i<strlen(str); i++)
+    len = strlen(str);
+    for (i=0; i<len; i++)
 	gl_putc(str[i]);
     gl_putc('C');
     return 0;

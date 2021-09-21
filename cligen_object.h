@@ -170,7 +170,7 @@ struct cg_obj{
     enum cg_objtype     co_type;      /* Type of object: command, variable or tree
 					 reference */
     char               *co_command;   /* malloc:ed matching string / name or type */
-    char               *co_namespace; /* Namespace URI, in cases where co_command is not unique */
+    char               *co_prefix;    /* Prefix. Can be used in cases where co_command is not unique */
     struct cg_callback *co_callbacks; /* linked list of callbacks and arguments */
     cvec               *co_cvec;      /* List of cligen local variables, such as "hide" 
                                        * Special labels on @treerefs are: 
@@ -214,6 +214,7 @@ typedef struct cg_obj cg_obj;
 /*
  * Prototypes
  */
+uint64_t    co_count_get(void);
 cg_obj*     co_up(cg_obj *co);
 int         co_up_set(cg_obj *co, cg_obj *cop);
 cg_obj*     co_top(cg_obj *co0);
@@ -225,6 +226,8 @@ void        co_flags_reset(cg_obj *co, uint32_t flag);
 int         co_flags_get(cg_obj *co, uint32_t flag);
 int         co_sets_get(cg_obj *co);
 void        co_sets_set(cg_obj *co, int sets);
+char       *co_prefix_get(cg_obj *co);
+int         co_prefix_set(cg_obj *co, char *prefix);
 cg_obj     *co_new_only(void);
 cg_obj     *co_new(char *cmd, cg_obj *prev);
 cg_obj     *cov_new(enum cv_type cvtype, cg_obj *prev);

@@ -209,14 +209,14 @@ static int
 cgy_treename(cligen_yacc *cy,
 	     char        *name)
 {
-    cg_obj            *co = NULL;
-    cg_obj            *cot;
-    struct cgy_list   *cl; 
-    int                retval = -1;
-    int                i;
-    parse_tree        *pt;
-    pt_head           *ph;
-    
+    cg_obj          *co = NULL;
+    cg_obj          *cot;
+    struct cgy_list *cl; 
+    int              retval = -1;
+    int              i;
+    parse_tree      *pt;
+    pt_head         *ph;
+
     /* Get the first object */
     for (cl=cy->cy_list; cl; cl = cl->cl_next){
 	co = cl->cl_obj;
@@ -226,7 +226,7 @@ cgy_treename(cligen_yacc *cy,
     cot = co_top(co); /* co and cot can be same object */
     pt = co_pt_get(cot);
     /* If anything parsed */
-    if (pt_len_get(pt)){ 
+    if (pt_len_get(pt) > 0){ 
 	/* 2. Add the old parse-tree with old name*/
 	for (i=0; i<pt_len_get(pt); i++){
 	    if ((co=pt_vec_i_get(pt, i)) != NULL)
@@ -687,6 +687,11 @@ cgy_terminal(cligen_yacc *cy)
 	    ccp = &co->co_callbacks;
 	    while (*ccp != NULL)
 		ccp = &((*ccp)->cc_next);
+#if 1 /* Optimization: dont copy the last element */
+	    if (cl->cl_next == NULL)
+		*ccp = cy->cy_callbacks;		
+	    else
+#endif
 	    if (co_callback_copy(cy->cy_callbacks, ccp) < 0)
 		goto done;
 	}
@@ -708,7 +713,7 @@ cgy_terminal(cligen_yacc *cy)
 	}
 	/* misc */
 	if ((ptc = co_pt_get(co)) != NULL){
-	    for (i=0; i<pt_len_get(ptc); i++){
+    	    for (i=0; i<pt_len_get(ptc); i++){
 		if (pt_vec_i_get(ptc, i) == NULL)
 		    break;
 	    }
@@ -722,11 +727,16 @@ cgy_terminal(cligen_yacc *cy)
 
 	    }
 	}
-	else{ /* XXX never reach here? */
+	else{ /* Should never reach here? */
 	    co_insert(co_pt_get(co), NULL);
 	}
     }
     /* cleanup */
+#if 1 /* Optimization: dont copy first */
+    if ((cl = cy->cy_list) != NULL)
+	cy->cy_callbacks = NULL;
+    else
+#endif
     while ((cc = cy->cy_callbacks) != NULL){
 	if (cc->cc_cvec)	
 	    cvec_free(cc->cc_cvec);

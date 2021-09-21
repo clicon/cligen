@@ -41,6 +41,9 @@
 /* Number of allowed matchings */
 #define MATCHVECTORLEN 1024
 
+/* Just show a single help string */
+#undef CLIGEN_SINGLE_HELPSTRING
+
 /*
  * Function Prototypes
  */

@@ -442,9 +442,9 @@ cligen_help(cligen_handle h,
 	    FILE         *fout, 
 	    parse_tree   *pt)
 {
-    int              retval = -1;
-    int              i;
-    int             *matchvec = NULL;
+    int     retval = -1;
+    int     i;
+    int    *matchvec = NULL;
 
     /* intermediate struct to fit into print_help_lines() parameters */
     if ((matchvec = calloc(pt_len_get(pt), sizeof(int))) == NULL){
