@@ -195,6 +195,8 @@ cligen_exit(cligen_handle h)
 	free(ch->ch_treename_keyword);
     if (ch->ch_fn_str)
 	free(ch->ch_fn_str);
+    if (ch->ch_reftree_filter)
+	cvec_free(ch->ch_reftree_filter);
     while ((ph = ch->ch_pt_head) != NULL){
 	ch->ch_pt_head = ph->ph_next;
 	cligen_ph_free(ph);

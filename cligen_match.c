@@ -413,11 +413,13 @@ cligen_txt2cvv(char  *str,
     cvec   *cvv = NULL;
     cg_var *cv = NULL;
     int     whitespace = 1;
+    size_t  len;
     
     if ((cvv = cvec_new(0)) == NULL)
 	goto done;
+    len = strlen(str);
     i0 = 0;
-    for (i=0; i<strlen(str); i++){
+    for (i=0; i<len; i++){
 	c = str[i];
 	if (whitespace && isblank(c))
 	    i0 = i+1; /* skip */
@@ -428,23 +430,32 @@ cligen_txt2cvv(char  *str,
 		goto done;
 	    i0 = i+1;
 	    whitespace = 1;
+#ifdef CLIGEN_SINGLE_HELPSTRING
+	    i0 = i; /* disable extra \n */
+	    break;
+#endif
 	}
-	else
+	else{
 	    whitespace = 0;
+	}
     }
-    /* There may be a case here where last charis \n */
-    if (i-i0){
+    /* There may be a case here where last char is \n */
+    if (i != i0){
 	if ((cv = cvec_add(cvv, CGV_STRING)) == NULL)
 	    goto done;
 	if (cv_strncpy(cv, &str[i0], i-i0) == NULL)
 	    goto done;
     }
     if (cvp){
-	assert(*cvp == NULL); /* XXX */
+	if (*cvp != NULL)
+	    cvec_free(*cvp);
 	*cvp = cvv;
+	cvv = NULL;
     }
     retval = 0;
  done:
+    if (cvv)
+	cvec_free(cvv);
     return retval;
 }
 
@@ -501,13 +512,15 @@ last_pt(parse_tree *pt)
 {
     int     i;
     cg_obj *co;
+    size_t  len;
 
-    if (pt_len_get(pt) == 0)
+    len = pt_len_get(pt);
+    if (len == 0)
 	return 1;
-    for (i=0; i<pt_len_get(pt); i++){
+    for (i=0; i<len; i++){
 	if ((co = pt_vec_i_get(pt, i)) == NULL ||
 	    co->co_type == CO_EMPTY)
-	    return pt_len_get(pt)==1?1:2;
+	    return len==1?1:2;
     }
     return 0;
 }
@@ -523,7 +536,7 @@ pt_onlyvars(parse_tree *pt)
     int     i;
     cg_obj *co;
     int     onlyvars = 0;
-    
+
     for (i=0; i<pt_len_get(pt); i++){ 
 	if ((co = pt_vec_i_get(pt, i)) == NULL)
 	    continue;
@@ -1416,6 +1429,7 @@ match_complete(cligen_handle h,
     int      mv;
     int      append = 0; /* Has appended characters */
     int      retval = -1;
+    size_t   len;
 
     /* ignore any leading whitespace */
     string = *stringp;
@@ -1466,7 +1480,8 @@ match_complete(cligen_handle h,
 		; /* equal */
 	    else{
 		equal = 0;
-		for (j=0; j<MIN(strlen(co1->co_command), strlen(co->co_command)); j++)
+		len = MIN(strlen(co1->co_command), strlen(co->co_command));
+		for (j=0; j<len; j++)
 		    if (co1->co_command[j] != co->co_command[j])
 			break;
 		minmatch = MIN(minmatch, j);

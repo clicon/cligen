@@ -89,8 +89,8 @@ co_expand_sub(cg_obj  *co,
 	    fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
 	    return -1;
 	}
-    if (co->co_namespace)
-	if ((con->co_namespace = strdup(co->co_namespace)) == NULL){
+    if (co->co_prefix)
+	if ((con->co_prefix = strdup(co->co_prefix)) == NULL){
 	    fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
 	    return -1;
 	}
@@ -230,7 +230,7 @@ pt_callback_reference(parse_tree         *pt,
     int                 retval = -1;
     struct cg_callback *cc;
     cg_var             *cv;
-    
+
     for (i=0; i<pt_len_get(pt); i++){    
 	if ((co = pt_vec_i_get(pt, i)) == NULL ||
 	    co->co_type == CO_EMPTY)

@@ -127,9 +127,7 @@ cligen_parse_str(cligen_handle h,
 	if (cgl_exit(&cy) < 0)
 	    goto done;		
     }
-    if (cvv)
-	cvv= cy.cy_globals;
-    else
+    if (cvv == NULL) /* Not passed to caller function */
 	cvec_free(cy.cy_globals);
     /*
      * Remove the fake top level object and remove references to it.
@@ -286,10 +284,10 @@ cligen_expandv_str2fn(parse_tree       *pt,
 		      expandv_str2fn_t *str2fn, 
 		      void             *arg)
 {
-    int                 retval = -1;
-    cg_obj             *co;
-    char               *callback_err = NULL;   /* Error from str2fn callback */
-    int                 i;
+    int     retval = -1;
+    cg_obj *co;
+    char   *callback_err = NULL;   /* Error from str2fn callback */
+    int     i;
 
     for (i=0; i<pt_len_get(pt); i++){    
 	if ((co = pt_vec_i_get(pt, i)) != NULL){
@@ -323,10 +321,10 @@ cligen_translate_str2fn(parse_tree         *pt,
 			translate_str2fn_t *str2fn, 
 			void               *arg)
 {
-    int                 retval = -1;
-    cg_obj             *co;
-    char               *callback_err = NULL;   /* Error from str2fn callback */
-    int                 i;
+    int     retval = -1;
+    cg_obj *co;
+    char   *callback_err = NULL;   /* Error from str2fn callback */
+    int     i;
 
     for (i=0; i<pt_len_get(pt); i++){    
 	if ((co = pt_vec_i_get(pt, i)) != NULL){

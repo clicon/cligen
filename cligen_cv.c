@@ -2804,7 +2804,7 @@ cv_parse1(char   *str0,
     char  *mask;
     int    masklen = 0;
     int    i, j;
-
+    
     if (reason && (*reason != NULL)){
 	fprintf(stderr, "reason must be NULL on calling\n");
 	return -1;
@@ -2849,7 +2849,9 @@ cv_parse1(char   *str0,
 	break;
     case CGV_REST:
 	j = 0; /* decode string, remove \<delimiters */
-	for (i=0;i<strlen(str);i++)
+	/* XXX: unsure of the sanity of the use of strlen below, is it static or does the
+	 * length change due to the loop logic? */
+	for (i=0; i<strlen(str); i++)
 	    if (str[i] != '\\')
 		str[j++] = str[i];
 	for (;j<strlen(str);j++)

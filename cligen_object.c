@@ -67,6 +67,17 @@
 #include "cligen_handle.h"
 #include "cligen_getline.h"
 
+/* Stats: nr of created cligen objects */
+uint64_t _co_count = 0;
+
+/*! Return number of created cligen objects
+ */
+uint64_t
+co_count_get(void) 
+{
+    return _co_count;
+}
+
 /* Access macro */
 cg_obj* 
 co_up(cg_obj *co) 
@@ -213,6 +224,26 @@ co_sets_set(cg_obj *co,
 	pt_sets_set(pt, sets);
 }
 
+char*
+co_prefix_get(cg_obj *co)
+{
+    return co->co_prefix;
+}
+
+int
+co_prefix_set(cg_obj *co,
+	      char   *prefix)
+{
+    if (co->co_prefix != NULL){
+	free(co->co_prefix);
+	co->co_prefix = NULL;
+    }
+    if (prefix &&
+	(co->co_prefix = strdup(prefix)) == NULL)
+	return -1;
+    return 0;
+}
+    
 /*! Assign a preference to a cligen variable object
  * Prefer more specific commands/variables  if you have to choose from several. 
  * @param[in] co   Cligen obe
@@ -382,6 +413,7 @@ co_new_only()
     if ((co = malloc(sizeof(cg_obj))) == NULL)
 	return NULL;
     memset(co, 0, sizeof(cg_obj));
+    _co_count++;
     return co;
 }
 
@@ -524,8 +556,8 @@ co_copy(cg_obj  *co,
     if (co->co_command)
 	if ((con->co_command = strdup(co->co_command)) == NULL)
 	    goto done;
-    if (co->co_namespace)
-	if ((con->co_namespace = strdup(co->co_namespace)) == NULL)
+    if (co->co_prefix)
+	if ((con->co_prefix = strdup(co->co_prefix)) == NULL)
 	    goto done;
     if (co_callback_copy(co->co_callbacks, &con->co_callbacks) < 0)
 	goto done;
@@ -630,7 +662,7 @@ str_cmp(char *s1,
  * @retval <0  if co1 is less than co2
  * @retval >0  if co1 is greater than co2
  * @see str_cmp
- * XXX co_namespace is not examined
+ * XXX co_prefix is not examined
  */
 int 
 co_eq(cg_obj *co1,
@@ -756,12 +788,12 @@ co_free(cg_obj *co,
     struct cg_callback *cc;
     parse_tree         *pt;
 
-    if (co->co_helpvec)
+    if (co->co_helpvec) 
 	cvec_free(co->co_helpvec);
     if (co->co_command)
 	free(co->co_command);
-    if (co->co_namespace)
-	free(co->co_namespace);
+    if (co->co_prefix)
+	free(co->co_prefix);
     if (co->co_value)
 	free(co->co_value);
     if (co->co_cvec)

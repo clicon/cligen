@@ -174,10 +174,8 @@ cvec_reset(cvec *cvv)
 {
     cg_var *cv = NULL;
 
-    if (cvv == NULL) {
+    if (cvv == NULL)
 	return 0;
-    }
-
     while ((cv = cvec_each(cvv, cv)) != NULL)
 	cv_reset(cv);
     if (cvv->vr_vec)
@@ -202,10 +200,8 @@ cvec_next(cvec   *cvv,
     cg_var *cv = NULL;
     int i;
 
-    if (!cvv) {
-	    return 0;
-    }
-
+    if (cvv == NULL)
+	return NULL;
     if (cv0 == NULL)
 	cv = cvv->vr_vec;
     else {
@@ -340,9 +336,8 @@ cvec_del_i(cvec *cvv,
 int
 cvec_len(cvec *cvv)
 {
-	if (!cvv) {
-		return 0;
-	}
+    if (cvv == NULL)
+	return 0;
     return cvv->vr_len;
 }
 
@@ -396,17 +391,15 @@ cg_var *
 cvec_each(cvec   *cvv,
 	  cg_var *prev)
 {
-	if (!cvv) {
-		return 0;
-	}
-
-  if (prev == NULL){   /* Initialization */
-      if (cvv->vr_len > 0)
-	  return &cvv->vr_vec[0];
-      else
-	  return NULL;
-  }
-  return cvec_next(cvv, prev);
+    if (cvv == NULL)
+	return NULL;
+    if (prev == NULL){   /* Initialization */
+	if (cvv->vr_len > 0)
+	    return &cvv->vr_vec[0];
+	else
+	    return NULL;
+    }
+    return cvec_next(cvv, prev);
 }
 
 /*! Iterate through all except first cligen variables in a cvec list
@@ -423,17 +416,15 @@ cg_var *
 cvec_each1(cvec   *cvv,
 	   cg_var *prev)
 {
-    if (!cvv) {
-	    return 0;
+    if (cvv == NULL)
+	return NULL;
+    if (prev == NULL){   /* Initialization */
+	if (cvv->vr_len > 1)
+	    return &cvv->vr_vec[1];
+	else
+	    return NULL;
     }
-
-  if (prev == NULL){   /* Initialization */
-      if (cvv->vr_len > 1)
-	  return &cvv->vr_vec[1];
-      else
-	  return NULL;
-  }
-  return cvec_next(cvv, prev);
+    return cvec_next(cvv, prev);
 }
 
 /*! Create a new cvec by copying from an original
@@ -452,10 +443,8 @@ cvec_dup(cvec *old)
     cg_var *cv1;
     int     i;
 
-    if (!old) {
-	    return NULL;
-    }
-
+    if (old == NULL)
+	return NULL;
     if ((new = cvec_new(old->vr_len)) == NULL)
 	return NULL;
     if (old->vr_name)
@@ -482,10 +471,8 @@ cvec_start(char *cmd)
     cvec *cvec;
     cg_var    *cv;
 
-    if ((cvec = cvec_new(1)) == NULL){
-	fprintf(stderr, "%s: cvec_new: %s\n", __FUNCTION__, strerror(errno));
+    if ((cvec = cvec_new(1)) == NULL)
 	return NULL;
-    }
     cv = cvec_i(cvec, 0);
     cv->var_type = CGV_REST;
     cv_name_set(cv, "cmd"); /* the whole command string */
