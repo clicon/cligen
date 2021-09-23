@@ -37,34 +37,34 @@
 ###############
 
 # Paths
-prefix			= @prefix@
-datarootdir		= @datarootdir@
-exec_prefix		= @exec_prefix@
-bindir			= @bindir@
-libdir			= @libdir@
-srcdir			= @srcdir@
-includedir		= @includedir@/cligen
+prefix		= @prefix@
+datarootdir	= @datarootdir@
+exec_prefix	= @exec_prefix@
+bindir		= @bindir@
+libdir		= @libdir@
+srcdir		= @srcdir@
+includedir	= @includedir@/cligen
 
 # Commands
-INSTALL			= @INSTALL@
+INSTALL		= @INSTALL@
 INSTALLFLAGS	= @INSTALLFLAGS@
-INSTALL_LIB		= @INSTALL@
+INSTALL_LIB	= @INSTALL@
 INSTALL_DATA	= @INSTALL@
 INSTALL_PROGRAM	= @INSTALL@
-LN_S			= @LN_S@
+LN_S		= @LN_S@
 
 # Others
-HOST_VENDOR		= @host_vendor@
-SH_SUFFIX		= @SH_SUFFIX@
-LINKAGE			= @LINKAGE@
-YACC			= @YACC@
-LEX				= @LEX@
+HOST_VENDOR	= @host_vendor@
+SH_SUFFIX	= @SH_SUFFIX@
+LINKAGE		= @LINKAGE@
+YACC		= @YACC@
+LEX		= @LEX@
 
 # Flags
-LDFLAGS			= @LDFLAGS@
-LIBS			= @LIBS@
-INCLUDES		= -I. -I@srcdir@ @INCLUDES@
-CC				= @CC@
+LDFLAGS		= @LDFLAGS@
+LIBS		= @LIBS@
+INCLUDES	= -I. -I@srcdir@ @INCLUDES@
+CC		= @CC@
 
 # Versioning
 CLIGEN_VERSION	= @CLIGEN_VERSION@
@@ -76,19 +76,19 @@ CLIGEN_MINOR	= @CLIGEN_VERSION_MINOR@
 #     so-name: libcligen.so.3
 #     real-name: libcligen.so.3.0
 MYLIBDYNAMIC	= libcligen$(SH_SUFFIX).$(CLIGEN_MAJOR).$(CLIGEN_MINOR)
-MYLIBSO			= libcligen$(SH_SUFFIX).$(CLIGEN_MAJOR)
-MYLIBLINK		= libcligen$(SH_SUFFIX)
-MYLIBSTATIC		= libcligen.a
+MYLIBSO		= libcligen$(SH_SUFFIX).$(CLIGEN_MAJOR)
+MYLIBLINK	= libcligen$(SH_SUFFIX)
+MYLIBSTATIC	= libcligen.a
 
 # Applications 
-APPS			= cligen_hello cligen_file cligen_tutorial
+APPS		= cligen_hello cligen_file cligen_tutorial
 
 # Source and Object Files
-SRC			=	cligen_object.c cligen_parsetree.c cligen_pt_head.c \
-				cligen_handle.c cligen_cv.c cligen_match.c \
-				cligen_read.c cligen_io.c cligen_expand.c cligen_syntax.c \
-				cligen_print.c cligen_cvec.c cligen_buf.c cligen_util.c \
-				cligen_history.c cligen_regex.c cligen_getline.c build.c
+SRC		= cligen_object.c cligen_parsetree.c cligen_pt_head.c \
+		  cligen_handle.c cligen_cv.c cligen_match.c \
+		  cligen_read.c cligen_io.c cligen_expand.c cligen_syntax.c \
+		  cligen_print.c cligen_cvec.c cligen_buf.c cligen_util.c \
+		  cligen_history.c cligen_regex.c cligen_getline.c build.c
 
 OBJS		= $(SRC:.c=.o) 
 
@@ -97,10 +97,10 @@ LEX_SRC		= cligen_parsel
 YACCOBJS	:= lex.cligen_parse.o cligen_parse.tab.o 
 
 # Includes
-INCS		=	cligen_cv.h cligen_cvec.h cligen_object.h cligen_handle.h \
-				cligen_parsetree.h cligen_pt_head.h cligen_print.h \
-				cligen_read.h cligen_io.h cligen_expand.h cligen_syntax.h \
-				cligen_buf.h cligen_util.h cligen_history.h cligen_regex.h cligen.h
+INCS		= cligen_cv.h cligen_cvec.h cligen_object.h cligen_handle.h \
+		  cligen_parsetree.h cligen_pt_head.h cligen_print.h \
+		  cligen_read.h cligen_io.h cligen_expand.h cligen_syntax.h \
+		  cligen_buf.h cligen_util.h cligen_history.h cligen_regex.h cligen.h
 
 SRCDIR_INCS	= $(addprefix $(srcdir)/,$(INCS))
 
