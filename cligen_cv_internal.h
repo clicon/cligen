@@ -47,6 +47,11 @@
 /* Allow use of enable/disable as alternative truth values to true/false */
 #define BOOL_TRUTH_ENABLE_DISABLE
 
+#if defined (__QNX__)
+    #include <sys/time.h>
+#endif
+
+
 /*
  * Types
  */

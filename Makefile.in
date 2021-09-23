@@ -32,91 +32,253 @@
 #
 # ***** END LICENSE BLOCK *****
 
+###############
+## Variables ##
+###############
 
-prefix		= @prefix@
-datarootdir	= @datarootdir@
-exec_prefix	= @exec_prefix@
-bindir		= @bindir@
-libdir		= @libdir@
-srcdir		= @srcdir@
- # Force a cligen sub-directory
-includedir	= @includedir@/cligen
+# Paths
+prefix			= @prefix@
+datarootdir		= @datarootdir@
+exec_prefix		= @exec_prefix@
+bindir			= @bindir@
+libdir			= @libdir@
+srcdir			= @srcdir@
+includedir		= @includedir@/cligen
 
-CC		= @CC@
-LINKAGE         = @LINKAGE@
-ifeq ($(LINKAGE),dynamic)
-	CFLAGS		= -fPIC @CPPFLAGS@ @CFLAGS@
-else
-	CFLAGS		= @CPPFLAGS@ @CFLAGS@
-endif
-SH_SUFFIX	= @SH_SUFFIX@
-LDFLAGS		= @LDFLAGS@
-LIBS		= @LIBS@
-INCLUDES	= -I. -I@srcdir@ @INCLUDES@
-
-HOST_VENDOR     = @host_vendor@
-
-INSTALL         = @INSTALL@
-INSTALLFLAGS    = @INSTALLFLAGS@
-INSTALL_LIB     = @INSTALL@
-INSTALL_DATA    = @INSTALL@
+# Commands
+INSTALL			= @INSTALL@
+INSTALLFLAGS	= @INSTALLFLAGS@
+INSTALL_LIB		= @INSTALL@
+INSTALL_DATA	= @INSTALL@
 INSTALL_PROGRAM	= @INSTALL@
-LN_S            = @LN_S@
+LN_S			= @LN_S@
 
-CLIGEN_VERSION = @CLIGEN_VERSION@
-CLIGEN_MAJOR   = @CLIGEN_VERSION_MAJOR@
-CLIGEN_MINOR   = @CLIGEN_VERSION_MINOR@
+# Others
+HOST_VENDOR		= @host_vendor@
+SH_SUFFIX		= @SH_SUFFIX@
+LINKAGE			= @LINKAGE@
+YACC			= @YACC@
+LEX				= @LEX@
 
-# Linker-name: libcligen.so
-# so-name: libcligen.so.3
-# real-name: libcligen.so.3.0
-MYLIBDYNAMIC = libcligen$(SH_SUFFIX).$(CLIGEN_MAJOR).$(CLIGEN_MINOR)
-MYLIBSO      = libcligen$(SH_SUFFIX).$(CLIGEN_MAJOR)
-MYLIBLINK    = libcligen$(SH_SUFFIX)
-MYLIBSTATIC  = libcligen.a
+# Flags
+LDFLAGS			= @LDFLAGS@
+LIBS			= @LIBS@
+INCLUDES		= -I. -I@srcdir@ @INCLUDES@
+CC				= @CC@
 
-ifeq ($(LINKAGE),dynamic)
-	MYLIB        = $(MYLIBDYNAMIC)
-else
-	MYLIB        = $(MYLIBSTATIC)
-endif
+# Versioning
+CLIGEN_VERSION	= @CLIGEN_VERSION@
+CLIGEN_MAJOR	= @CLIGEN_VERSION_MAJOR@
+CLIGEN_MINOR	= @CLIGEN_VERSION_MINOR@
 
-SRC		= cligen_object.c cligen_parsetree.c cligen_pt_head.c \
-                  cligen_handle.c cligen_cv.c cligen_match.c \
-		  cligen_read.c cligen_io.c cligen_expand.c cligen_syntax.c \
-		  cligen_print.c cligen_cvec.c cligen_buf.c cligen_util.c \
-		  cligen_history.c cligen_regex.c cligen_getline.c build.c
+# Output Filenames
+#     Linker-name: libcligen.so
+#     so-name: libcligen.so.3
+#     real-name: libcligen.so.3.0
+MYLIBDYNAMIC	= libcligen$(SH_SUFFIX).$(CLIGEN_MAJOR).$(CLIGEN_MINOR)
+MYLIBSO			= libcligen$(SH_SUFFIX).$(CLIGEN_MAJOR)
+MYLIBLINK		= libcligen$(SH_SUFFIX)
+MYLIBSTATIC		= libcligen.a
 
-INCS		= cligen_cv.h cligen_cvec.h cligen_object.h cligen_handle.h \
-	          cligen_parsetree.h cligen_pt_head.h \
-		  cligen_print.h cligen_read.h cligen_io.h cligen_expand.h \
-		  cligen_syntax.h cligen_buf.h cligen_util.h cligen_history.h \
-		  cligen_regex.h cligen.h
+# Applications 
+APPS			= cligen_hello cligen_file cligen_tutorial
+
+# Source and Object Files
+SRC			=	cligen_object.c cligen_parsetree.c cligen_pt_head.c \
+				cligen_handle.c cligen_cv.c cligen_match.c \
+				cligen_read.c cligen_io.c cligen_expand.c cligen_syntax.c \
+				cligen_print.c cligen_cvec.c cligen_buf.c cligen_util.c \
+				cligen_history.c cligen_regex.c cligen_getline.c build.c
+
+OBJS		= $(SRC:.c=.o) 
+
+YACC_SRC	= cligen_parse.y
+LEX_SRC		= cligen_parsel
+YACCOBJS	:= lex.cligen_parse.o cligen_parse.tab.o 
+
+# Includes
+INCS		=	cligen_cv.h cligen_cvec.h cligen_object.h cligen_handle.h \
+				cligen_parsetree.h cligen_pt_head.h cligen_print.h \
+				cligen_read.h cligen_io.h cligen_expand.h cligen_syntax.h \
+				cligen_buf.h cligen_util.h cligen_history.h cligen_regex.h cligen.h
 
 SRCDIR_INCS	= $(addprefix $(srcdir)/,$(INCS))
 
-OBJS		= $(SRC:.c=.o) 
-APPS		= cligen_hello cligen_file cligen_tutorial
 
-YACC		= @YACC@
-LEX		= @LEX@
+# Static or Dynamics Linkage
+ifeq ($(LINKAGE),dynamic)
+	CFLAGS	= -fPIC @CPPFLAGS@ @CFLAGS@
+	MYLIB	= $(MYLIBDYNAMIC)
+else
+	CFLAGS	= @CPPFLAGS@ @CFLAGS@
+	MYLIB	= $(MYLIBSTATIC)
+endif
 
-all:	cligen $(MYLIB) $(APPS)
 
-.PHONY: TAGS test
-TAGS:
-	find . -name '*.[chyl]' -print | etags -
+####################
+## Implicit Rules ##
+####################
 
-# Run a clixon test container.
-# Alt: cd test; ./all.sh
-test:
-	(cd test && ./all.sh)
+%.c: %.y  # cancel implicit yacc rule
+%.c: %.l  # cancel implicit lex rule
+
+%.o: $(srcdir)/%.c
+	$(CC) $(INCLUDES) $(CFLAGS) -c $<
+
+.c.o:
+	$(CC) $(INCLUDES) $(CFLAGS) -c $<
+
+#####################
+## Library Targets ##
+#####################
+.PHONY: cligen $(MYLIBDYNAMIC) $(MYLIBSO) $(MYLIBLINK) $(MYLIBSTATIC)
+
+# recursive link to handle application include files, if you have not installed
+# .h files in $(includefile)
+cligen: 
+	cd $(srcdir) && rm -rf $@ && mkdir $@ && find . -name '*.h' -exec cp --parents '{}' $@ \;
+
+# Library
+$(MYLIBDYNAMIC): $(OBJS) $(YACCOBJS)
+ifeq ($(HOST_VENDOR),apple)
+	$(CC) $(CFLAGS) -shared -o $@ $(OBJS) $(YACCOBJS) -undefined dynamic_lookup -o $(MYLIB) $(LIBS)
+else
+	$(CC) $(CFLAGS) -shared -o $@ $(OBJS) $(YACCOBJS) -Wl,-soname=$(MYLIB) $(LIBS)
+endif
+	ln -sf libcligen$(SH_SUFFIX).$(CLIGEN_MAJOR).$(CLIGEN_MINOR) libcligen$(SH_SUFFIX).$(CLIGEN_MAJOR)
+	ln -sf libcligen$(SH_SUFFIX).$(CLIGEN_MAJOR) libcligen$(SH_SUFFIX)
+	
+# link-name is needed for application linking
+$(MYLIBSO): $(MYLIB)
+
+$(MYLIBLINK): $(MYLIB)
+
+$(MYLIBSTATIC): $(OBJS) $(YACCOBJS)
+	ar -crs $@ $(OBJS) $(YACCOBJS)
+
+#########################
+## Application Targets ##
+#########################
+.PHONY: cligen_hello cligen_file cligen_tutorial
+
+cligen_hello: $(srcdir)/cligen_hello.c cligen $(MYLIB) 
+	$(CC) $(CFLAGS) $(INCLUDES) $< $(LDFLAGS) $(LIBS) -o $@ $(MYLIB)
+
+cligen_file: $(srcdir)/cligen_file.c cligen $(MYLIB) 
+	$(CC) $(CFLAGS) $(INCLUDES) $< $(LDFLAGS) $(LIBS) -o $@ $(MYLIB)
+
+cligen_tutorial: $(srcdir)/cligen_tutorial.c cligen $(MYLIB) 
+	$(CC) $(CFLAGS) $(INCLUDES) $< $(LDFLAGS) $(LIBS) -o $@ $(MYLIB)
+
+########################
+## Lex / YACC Targets ##
+########################
+.PHONY: lex.cligen_parse.c cligen_parse.tab.h cligen_parse.tab.c lex.cligen_parse.o
+
+lex.cligen_parse.c: $(srcdir)/cligen_parse.l cligen_parse.tab.h
+	$(LEX) -Pcligen_parse $(srcdir)/cligen_parse.l # -d is debug 
+
+cligen_parse.tab.h: $(srcdir)/cligen_parse.y
+	$(YACC) -l -d -b cligen_parse -p cligen_parse $(srcdir)/cligen_parse.y # -t is debug
+
+cligen_parse.tab.c: cligen_parse.tab.h
+
+lex.cligen_parse.o: lex.cligen_parse.c cligen_parse.tab.h
+	$(CC) $(INCLUDES) -DYY_NO_INPUT $(CFLAGS) -c $<
+
+###################
+## Clean Targets ##
+###################
+.PHONY: clean distclean
+
+clean:
+	rm -f $(APPS) $(OBJS) $(YACCOBJS) 
+	rm -f $(MYLIB) $(MYLIBSO) $(MYLIBLINK) 
+	rm -f *.tab.c *.tab.h *.tab.o 
+	rm -f lex.*.c lex.*.o
+	rm -rf cligen
+	rm -f *.gcda *.gcno *.gcov # coverage
 
 distclean: clean
 	rm -f Makefile config.log config.status config.h TAGS .depend
 	rm -rf autom4te.cache build.c cligen_config.h
 	rm -rf doc build-root/rpmbuild
 	rm -f build-root/*.tar.xz build-root/*.rpm extras/rpm/Makefile
+
+##################
+## Test Targets ##
+##################
+.PHONY: test
+
+# Run a clixon test container.
+# Alt: cd test; ./all.sh
+test:
+	(cd test && ./all.sh)
+
+#####################
+## Default Targets ##
+#####################
+.PHONY: all TAGS doc depend
+
+all: cligen $(MYLIB) $(APPS)
+
+TAGS:
+	find . -name '*.[chyl]' -print | etags -
+
+doc: 
+	doxygen Doxyfile
+
+depend:
+	$(CC) $(DEPENDFLAGS) @DEFS@ $(INCLUDES) $(CFLAGS) -MM $(SRC) cligen_file.c cligen_hello.c cligen_tutorial.c > .depend
+
+
+#######################
+## Source Generation ##
+#######################
+.PHONY: build.c 
+
+# Compute the length of the date command (and add some extra with XXX)
+DATELEN = $(shell date +"%Y.%m.%d %H:%M by `whoami` on `hostname`XXXX" | tr -c '\n' '[\n*]' | grep -c '^')
+
+build.c:	
+	echo "/* This file is generated from the CLIgen Makefile */" > build.c;
+	date +"const char CLIGEN_BUILDSTR[$(DATELEN)]=\"%Y.%m.%d %H:%M by `whoami` on `hostname`"\"\; >> build.c;
+	echo "const char CLIGEN_VERSION[64]=\"$(CLIGEN_VERSION)\""\; >> build.c;
+
+#####################
+## Install Targets ##
+#####################
+.PHONY: install install-bin install-lib install-include uninstall
+
+install: install-lib install-include
+
+install-bin: $(APPS)
+	$(INSTALL) -m 0755 -d $(DESTDIR)$(bindir)
+	$(INSTALL_PROGRAM) -m 0755  $(APPS) $(DESTDIR)$(bindir)
+
+install-lib: $(MYLIB)
+	$(INSTALL) -m 0755 -d $(DESTDIR)$(libdir)
+	$(INSTALL) -m 0644 $(INSTALLFLAGS) $(MYLIB) $(DESTDIR)$(libdir)
+ifeq ($(LINKAGE),dynamic)
+	(cd $(DESTDIR)$(libdir) && $(LN_S) -f $(MYLIB) $(MYLIBSO))     # -l:libcligen.so.3
+	(cd $(DESTDIR)$(libdir) && $(LN_S) -f $(MYLIBSO) $(MYLIBLINK)) # -l:libcligen.so
+endif
+
+# Installs include files in subdir called 'cligen'. Applications should include
+# <cligen/cligen.h>
+install-include: $(SRCDIR_INCS)
+	install -m 0755 -d $(DESTDIR)$(includedir)
+	$(INSTALL_DATA) $(SRCDIR_INCS) $(DESTDIR)$(includedir)
+
+uninstall: 
+	rm -f $(DESTDIR)$(libdir)/$(MYLIB)
+	for i in $(INCS); do \
+		rm -f $(DESTDIR)$(includedir)/$$i; \
+	done
+
+########################
+## Distribute Targets ##
+########################
 
 export BR=$(CURDIR)/build-root
 
@@ -164,111 +326,3 @@ pkg-rpm: dist
 
 pkg-srpm: dist
 	make -C extras/rpm srpm
-
-%.o : $(srcdir)/%.c
-	$(CC) $(INCLUDES) $(CFLAGS) -c $<
-.c.o:
-	$(CC) $(INCLUDES) $(CFLAGS) -c $<
-
-# Compute the length of the date command (and add some extra with XXX)
-DATELEN = $(shell date +"%Y.%m.%d %H:%M by `whoami` on `hostname`XXXX"|wc -c)
-
-.PHONY: build.c 
-build.c:	
-	echo "/* This file is generated from the CLIgen Makefile */" > build.c;
-	date +"const char CLIGEN_BUILDSTR[$(DATELEN)]=\"%Y.%m.%d %H:%M by `whoami` on `hostname`"\"\; >> build.c;
-	echo "const char CLIGEN_VERSION[64]=\"$(CLIGEN_VERSION)\""\; >> build.c;
-
-# install-bin install-include
-install: install-lib install-include
-
-install-bin: $(APPS)
-	$(INSTALL) -m 0755 -d $(DESTDIR)$(bindir)
-	$(INSTALL_PROGRAM) -m 0755  $(APPS) $(DESTDIR)$(bindir)
-
-install-lib: $(MYLIB)
-	$(INSTALL) -m 0755 -d $(DESTDIR)$(libdir)
-	$(INSTALL) -m 0644 $(INSTALLFLAGS) $(MYLIB) $(DESTDIR)$(libdir)
-ifeq ($(LINKAGE),dynamic)
-	(cd $(DESTDIR)$(libdir) && $(LN_S) -f $(MYLIB) $(MYLIBSO))     # -l:libcligen.so.3
-	(cd $(DESTDIR)$(libdir) && $(LN_S) -f $(MYLIBSO) $(MYLIBLINK)) # -l:libcligen.so
-endif
-
-# Installs include files in subdir called 'cligen'. Applications should include
-# <cligen/cligen.h>
-install-include: $(SRCDIR_INCS)
-	install -m 0755 -d $(DESTDIR)$(includedir)
-	$(INSTALL_DATA) $(SRCDIR_INCS) $(DESTDIR)$(includedir)
-
-uninstall: 
-	rm -f $(DESTDIR)$(libdir)/$(MYLIB)
-	for i in $(INCS); do \
-		rm -f $(DESTDIR)$(includedir)/$$i; \
-	done
-
-# CLIGEN parser src
-YACC_SRC        = cligen_parse.y
-LEX_SRC         = cligen_parsel
-YACCOBJS := lex.cligen_parse.o cligen_parse.tab.o 
-
-clean:  
-	rm -f $(APPS) $(OBJS) $(YACCOBJS) 
-	rm -f $(MYLIB) $(MYLIBSO) $(MYLIBLINK) 
-	rm -f *.tab.c *.tab.h *.tab.o 
-	rm -f lex.*.c lex.*.o cligen
-	rm -f *.gcda *.gcno *.gcov # coverage
-
-%.c : %.y  # cancel implicit yacc rule
-%.c : %.l  # cancel implicit lex rule
-
-# top file parse
-lex.cligen_parse.c : $(srcdir)/cligen_parse.l cligen_parse.tab.h
-	$(LEX) -Pcligen_parse $(srcdir)/cligen_parse.l # -d is debug 
-
-cligen_parse.tab.h: $(srcdir)/cligen_parse.y
-	$(YACC) -l -d -b cligen_parse -p cligen_parse $(srcdir)/cligen_parse.y # -t is debug
-
-cligen_parse.tab.c: cligen_parse.tab.h
-
-lex.cligen_parse.o : lex.cligen_parse.c cligen_parse.tab.h
-	$(CC) $(INCLUDES) -DYY_NO_INPUT $(CFLAGS) -c $<
-
-# Applications
-cligen_hello : $(srcdir)/cligen_hello.c cligen $(MYLIB) 
-	$(CC) $(CFLAGS) $(INCLUDES) $< $(LDFLAGS) $(LIBS) -o $@ $(MYLIB)
-
-cligen_file :	$(srcdir)/cligen_file.c cligen $(MYLIB) 
-	$(CC) $(CFLAGS) $(INCLUDES) $< $(LDFLAGS) $(LIBS) -o $@ $(MYLIB)
-
-cligen_tutorial :$(srcdir)/cligen_tutorial.c cligen $(MYLIB) 
-	$(CC) $(CFLAGS) $(INCLUDES) $< $(LDFLAGS) $(LIBS) -o $@ $(MYLIB)
-
-$(MYLIBDYNAMIC) : $(OBJS) $(YACCOBJS)
-ifeq ($(HOST_VENDOR),apple)
-	$(CC) -shared -o $@ $(OBJS) $(YACCOBJS) -undefined dynamic_lookup -o $(MYLIB) $(LIBS)
-else
-	$(CC) -shared -o $@ $(OBJS) $(YACCOBJS) -Wl,-soname=$(MYLIB) $(LIBS)
-endif
-
-# link-name is needed for application linking
-$(MYLIBSO) : $(MYLIB)
-
-$(MYLIBLINK) : $(MYLIB)
-
-$(MYLIBSTATIC) : $(OBJS) $(YACCOBJS)
-	ar -crs $@ $(OBJS) $(YACCOBJS)
-
-# recursive link to handle application include files, if you have not installed
-# .h files in $(includefile)
-cligen : 
-	cd $(srcdir) && rm -rf $@ && ln -sf . $@
-
-.PHONY: doc
-doc : 
-	doxygen Doxyfile
-
-.PHONY: depend
-depend:
-	$(CC) $(DEPENDFLAGS) @DEFS@ $(INCLUDES) $(CFLAGS) -MM $(SRC) cligen_file.c cligen_hello.c cligen_tutorial.c > .depend
-
-#include .depend
