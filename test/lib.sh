@@ -60,6 +60,8 @@ testname=
 
 : ${cligen_tutorial:=../cligen_tutorial}
 
+: ${cligen_hello:=../cligen_hello}
+
 dir=/var/tmp/$0
 if [ ! -d $dir ]; then
     mkdir $dir
