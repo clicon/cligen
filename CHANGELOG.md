@@ -3,6 +3,10 @@
 ## 5.4.0
 Expected: November 2021
 
+### Corrected Bugs
+
+* Fixed: [Performance issue when parsed string size is damn large #66](https://github.com/clicon/cligen/issues/66)
+
 ## 5.3.0
 27 September 2021
 

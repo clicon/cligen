@@ -2804,6 +2804,7 @@ cv_parse1(char   *str0,
     char  *mask;
     int    masklen = 0;
     int    i, j;
+    size_t len;
     
     if (reason && (*reason != NULL)){
 	fprintf(stderr, "reason must be NULL on calling\n");
@@ -2851,10 +2852,11 @@ cv_parse1(char   *str0,
 	j = 0; /* decode string, remove \<delimiters */
 	/* XXX: unsure of the sanity of the use of strlen below, is it static or does the
 	 * length change due to the loop logic? */
-	for (i=0; i<strlen(str); i++)
+	len = strlen(str);
+	for (i=0; i<len; i++)
 	    if (str[i] != '\\')
 		str[j++] = str[i];
-	for (;j<strlen(str);j++)
+	for (;j<len;j++)
 	    str[j] = '\0';
 	if (cv->var_rest)
 	    free(cv->var_rest);
@@ -2864,10 +2866,11 @@ cv_parse1(char   *str0,
 	break;
     case CGV_STRING:
 	j = 0; /* decode string, remove \<delimiters */
-	for (i=0;i<strlen(str);i++)
+	len = strlen(str);
+	for (i=0;i<len;i++)
 	    if (str[i] != '\\')
 		str[j++] = str[i];
-	for (;j<strlen(str);j++)
+	for (;j<len;j++)
 	    str[j] = '\0';
 	if (cv->var_string){
 	    free(cv->var_string);
