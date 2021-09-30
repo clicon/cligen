@@ -52,7 +52,6 @@ I can be found at olof@hagsand.se.
 
 ## getline
 
-
 CLIgen uses getline with the following copyright:
 
 Copyright (C) 1991, 1992, 1993 by Chris Thewalt (thewalt@ce.berkeley.edu)
