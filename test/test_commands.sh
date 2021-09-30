@@ -39,6 +39,9 @@ expectpart "$(echo "abc" | $cligen_file -f $fspec 2>&1)" 0 "1 name:abc type:stri
 newtest "abd incomplete"
 expectpart "$(echo "abd" | $cligen_file -f $fspec 2>&1)" 0 'CLI syntax error in: "abd": Incomplete command'
 
+newtest "run hello"
+expectpart "$(echo "hello world" | $cligen_hello 2>&1)" 0 'hello world'
+
 newtest "endtest"
 endtest
 
