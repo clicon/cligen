@@ -550,6 +550,7 @@ pt_onlyvars(parse_tree *pt)
 }
 
 /*! Help function to append a cv to a cvec. For expansion cvec passed to pt_expand
+ *
  * @param[in]  h      CLIgen handle
  * @param[in]  co     A cligen variable that has a matching value
  * @param[in]  cmd    Value in string of the variable
@@ -803,16 +804,18 @@ match_bindvars(cligen_handle h,
     /* co_orig is original object in case of expansion */
     co_orig = co->co_ref?co->co_ref: co;
     if (co->co_type == CO_VARIABLE){
-	if (add_cov_to_cvec(h, co, token, cvv) == NULL)
+	/* Once so translate only is done once */
+	if ((cv = add_cov_to_cvec(h, co, token, cvv)) == NULL)
 	    goto done;
-	if (cvvall && add_cov_to_cvec(h, co, token, cvvall) == NULL)
+	if (cvvall && cvec_append_var(cvvall, cv) == NULL)
 	    goto done;
     }
     else if (co->co_type == CO_COMMAND && co_orig->co_type == CO_VARIABLE){
-	    if (add_cov_to_cvec(h, co_orig, co->co_command, cvv) == NULL)
-		goto done;
-	    if (cvvall && add_cov_to_cvec(h, co_orig, co->co_command, cvvall) == NULL)
-		goto done;
+	/* Once so translate only is done once */
+	if ((cv = add_cov_to_cvec(h, co_orig, co->co_command, cvv)) == NULL)
+	    goto done;
+	if (cvvall && cvec_append_var(cvvall, cv) == NULL)
+	    goto done;
     }
     else{
 	if (!cv_exclude_keys_get() && cvvall){
