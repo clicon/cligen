@@ -44,13 +44,19 @@ includedir	= @includedir@/cligen
 
 CC		= @CC@
 LINKAGE         = @LINKAGE@
+CFLAGS          = @CFLAGS@
+CPPFLAGS  	= @CPPFLAGS@
 ifeq ($(LINKAGE),dynamic)
-	CFLAGS		= -fPIC @CPPFLAGS@ @CFLAGS@
-else
-	CFLAGS		= @CPPFLAGS@ @CFLAGS@
+CPPFLAGS	+= -fPIC
 endif
+
 SH_SUFFIX	= @SH_SUFFIX@
+LIBSTATIC_SUFFIX = @LIBSTATIC_SUFFIX@
 LDFLAGS		= @LDFLAGS@
+ifneq ($(LINKAGE),dynamic)
+ # -rdynamic for using -ldl
+LDFLAGS 	+=  -rdynamic
+endif
 LIBS		= @LIBS@
 INCLUDES	= -I. -I@srcdir@ @INCLUDES@
 
@@ -73,13 +79,7 @@ CLIGEN_MINOR   = @CLIGEN_VERSION_MINOR@
 MYLIBDYNAMIC = libcligen$(SH_SUFFIX).$(CLIGEN_MAJOR).$(CLIGEN_MINOR)
 MYLIBSO      = libcligen$(SH_SUFFIX).$(CLIGEN_MAJOR)
 MYLIBLINK    = libcligen$(SH_SUFFIX)
-MYLIBSTATIC  = libcligen.a
-
-ifeq ($(LINKAGE),dynamic)
-	MYLIB        = $(MYLIBDYNAMIC)
-else
-	MYLIB        = $(MYLIBSTATIC)
-endif
+MYLIBSTATIC  = libcligen$(LIBSTATIC_SUFFIX)
 
 SRC		= cligen_object.c cligen_parsetree.c cligen_pt_head.c \
                   cligen_handle.c cligen_cv.c cligen_match.c \
@@ -101,7 +101,13 @@ APPS		= cligen_hello cligen_file cligen_tutorial
 YACC		= @YACC@
 LEX		= @LEX@
 
-all:	cligen $(MYLIB) $(APPS)
+all:	cligen $(APPS)
+
+ifeq ($(LINKAGE),dynamic)
+all:	 $(MYLIBDYNAMIC)
+else
+all:	 $(MYSTATIC)
+endif
 
 .PHONY: TAGS test
 TAGS:
@@ -166,13 +172,14 @@ pkg-srpm: dist
 	make -C extras/rpm srpm
 
 %.o : $(srcdir)/%.c
-	$(CC) $(INCLUDES) $(CFLAGS) -c $<
+	$(CC) $(INCLUDES) $(CPPFLAGS) $(CFLAGS) -c $<
 .c.o:
-	$(CC) $(INCLUDES) $(CFLAGS) -c $<
+	$(CC) $(INCLUDES) $(CPPFLAGS) $(CFLAGS) -c $<
 
 # Compute the length of the date command (and add some extra with XXX)
 DATELEN = $(shell date +"%Y.%m.%d %H:%M by `whoami` on `hostname`XXXX"|wc -c)
 
+# Should not be rebuilt on install, which causes root ownership of the lib in the build-dir
 .PHONY: build.c 
 build.c:	
 	echo "/* This file is generated from the CLIgen Makefile */" > build.c;
@@ -186,12 +193,16 @@ install-bin: $(APPS)
 	$(INSTALL) -m 0755 -d $(DESTDIR)$(bindir)
 	$(INSTALL_PROGRAM) -m 0755  $(APPS) $(DESTDIR)$(bindir)
 
-install-lib: $(MYLIB)
-	$(INSTALL) -m 0755 -d $(DESTDIR)$(libdir)
-	$(INSTALL) -m 0644 $(INSTALLFLAGS) $(MYLIB) $(DESTDIR)$(libdir)
 ifeq ($(LINKAGE),dynamic)
-	(cd $(DESTDIR)$(libdir) && $(LN_S) -f $(MYLIB) $(MYLIBSO))     # -l:libcligen.so.3
+install-lib: $(MYLIBDYNAMIC)
+	$(INSTALL) -m 0755 -d $(DESTDIR)$(libdir)
+	$(INSTALL) -m 0644 $(INSTALLFLAGS) $< $(DESTDIR)$(libdir)
+	(cd $(DESTDIR)$(libdir) && $(LN_S) -f $< $(MYLIBSO))     # -l:libcligen.so.3
 	(cd $(DESTDIR)$(libdir) && $(LN_S) -f $(MYLIBSO) $(MYLIBLINK)) # -l:libcligen.so
+else
+install-lib: $(MYLIBSTATIC)
+	$(INSTALL) -m 0755 -d $(DESTDIR)$(libdir)
+	$(INSTALL) -m 0644 $(INSTALLFLAGS) $< $(DESTDIR)$(libdir)
 endif
 
 # Installs include files in subdir called 'cligen'. Applications should include
@@ -201,7 +212,8 @@ install-include: $(SRCDIR_INCS)
 	$(INSTALL_DATA) $(SRCDIR_INCS) $(DESTDIR)$(includedir)
 
 uninstall: 
-	rm -f $(DESTDIR)$(libdir)/$(MYLIB)
+	rm -f $(DESTDIR)$(libdir)/$(MYLIBDYNAMIC)
+	rm -f $(DESTDIR)$(libdir)/$(MYLIBSTATIC)
 	for i in $(INCS); do \
 		rm -f $(DESTDIR)$(includedir)/$$i; \
 	done
@@ -213,9 +225,9 @@ YACCOBJS := lex.cligen_parse.o cligen_parse.tab.o
 
 clean:  
 	rm -f $(APPS) $(OBJS) $(YACCOBJS) 
-	rm -f $(MYLIB) $(MYLIBSO) $(MYLIBLINK) 
+	rm -f $(MYLIBSTATIC) $(MYLIBDYNAMIC) $(MYLIBSO) $(MYLIBLINK) 
 	rm -f *.tab.c *.tab.h *.tab.o 
-	rm -f lex.*.c lex.*.o cligen
+	rm -f lex.*.c lex.*.o *.core cligen
 	rm -f *.gcda *.gcno *.gcov # coverage
 
 %.c : %.y  # cancel implicit yacc rule
@@ -231,17 +243,23 @@ cligen_parse.tab.h: $(srcdir)/cligen_parse.y
 cligen_parse.tab.c: cligen_parse.tab.h
 
 lex.cligen_parse.o : lex.cligen_parse.c cligen_parse.tab.h
-	$(CC) $(INCLUDES) -DYY_NO_INPUT $(CFLAGS) -c $<
+	$(CC) $(INCLUDES) $(CPPFLAGS) -DYY_NO_INPUT $(CFLAGS) -c $<
+
+ifeq ($(LINKAGE),dynamic)
+MYLIB=$(MYLIBDYNAMIC)
+else
+MYLIB=$(MYLIBSTATIC)
+endif
 
 # Applications
-cligen_hello : $(srcdir)/cligen_hello.c cligen $(MYLIB) 
-	$(CC) $(CFLAGS) $(INCLUDES) $< $(LDFLAGS) $(LIBS) -o $@ $(MYLIB)
+cligen_hello : $(srcdir)/cligen_hello.c cligen $(MYLIB)
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(INCLUDES) $< $(LDFLAGS) $(LIBS) -o $@ $(MYLIB)
 
-cligen_file :	$(srcdir)/cligen_file.c cligen $(MYLIB) 
-	$(CC) $(CFLAGS) $(INCLUDES) $< $(LDFLAGS) $(LIBS) -o $@ $(MYLIB)
+cligen_file :	$(srcdir)/cligen_file.c cligen $(MYLIB)
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(INCLUDES) $< $(LDFLAGS) $(LIBS) -o $@ $(MYLIB)
 
-cligen_tutorial :$(srcdir)/cligen_tutorial.c cligen $(MYLIB) 
-	$(CC) $(CFLAGS) $(INCLUDES) $< $(LDFLAGS) $(LIBS) -o $@ $(MYLIB)
+cligen_tutorial :$(srcdir)/cligen_tutorial.c cligen $(MYLIB)
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(INCLUDES) $< $(LDFLAGS) $(LIBS) -o $@ $(MYLIB)
 
 $(MYLIBDYNAMIC) : $(OBJS) $(YACCOBJS)
 ifeq ($(HOST_VENDOR),apple)

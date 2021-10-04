@@ -633,7 +633,7 @@ cli_trim(char **line,
  * @param[in]  string    Input string to match
  * @param[in]  pt        Parse-tree
  * @param[out] co_orig   Object that matches (if retval == 1).
- * @param[out] cvvall    Variable vector (if retval == 1).
+ * @param[out] cvvall    Vector of cligen variables present in the input string. (if retval == 1).
  * @param[out] result    Result, < 0: errors, >=0 number of matches
  * @param[out] reason    Error reason if result is nomatch. Need to be free:d 
  * @retval     0         OK

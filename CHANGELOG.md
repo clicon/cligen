@@ -3,6 +3,10 @@
 ## 5.4.0
 Expected: November 2021
 
+### Minor changes
+
+* Refactored Makefile for static linking
+
 ### Corrected Bugs
 
 * Fixed: [Performance issue when parsed string size is damn large #66](https://github.com/clicon/cligen/issues/66)

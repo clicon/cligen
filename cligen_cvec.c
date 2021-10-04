@@ -218,7 +218,8 @@ cvec_next(cvec   *cvv,
  * @param[in] type  Append a new cv to the vector with this type
  * @retval    NULL  Error
  * @retval    cv    The new cligen variable
- * @see also cv_new, but this is allocated contiguosly as a part of a cvec.
+ * @see cv_new   but this is allocated contiguosly as a part of a cvec.
+ * @see cvec_append_var
  */
 cg_var *
 cvec_add(cvec        *cvv,

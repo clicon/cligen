@@ -627,6 +627,7 @@ LINKAGE
 INSTALLFLAGS
 INSTALL
 RANLIB
+LIBSTATIC_SUFFIX
 SH_SUFFIX
 INCLUDES
 LN_S
@@ -2140,7 +2141,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 # Default CFLAGS unless set by environment.
-: ${CFLAGS="-O2 -Wall"}
+: ${CFLAGS="$CFLAGS -O2 -Wall"}
 : ${INSTALLFLAGS="-s"}
 : ${LINKAGE=dynamic}
 
@@ -3511,6 +3512,8 @@ fi
 
 
 
+
+
 echo "$host_cpu $host_vendor $host_os"
 
 if test "$LEX" = ":"; then
@@ -3530,7 +3533,10 @@ LIBS="${LIBS} -L." #
 LDFLAGS=""
 CPPFLAGS="-DHAVE_CONFIG_H ${CPPFLAGS}"
 
+# Postfix for shared libs
 SH_SUFFIX=".so"
+# Postfix for static libs
+LIBSTATIC_SUFFIX=".a"
 
 # Debug flag
 # Check whether --enable-debug was given.
@@ -3558,6 +3564,8 @@ fi
 $as_echo "CPPFLAGS is $CPPFLAGS" >&6; }
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: CFLAGS is $CFLAGS" >&5
 $as_echo "CFLAGS is $CFLAGS" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: LDFLAGS is $LDFLAGS" >&5
+$as_echo "LDFLAGS is $LDFLAGS" >&6; }
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: INSTALLFLAGS is $INSTALLFLAGS" >&5
 $as_echo "INSTALLFLAGS is $INSTALLFLAGS" >&6; }
 

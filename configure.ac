@@ -37,7 +37,7 @@
 AC_INIT(cligen.h)
 
 # Default CFLAGS unless set by environment.
-: ${CFLAGS="-O2 -Wall"}
+: ${CFLAGS="$CFLAGS -O2 -Wall"}
 : ${INSTALLFLAGS="-s"}
 : ${LINKAGE=dynamic}
 
@@ -71,8 +71,10 @@ AC_SUBST(CC)
 AC_SUBST(CFLAGS)
 AC_SUBST(LDFLAGS)
 AC_SUBST(INCLUDES)
+AC_SUBST(CPPFLAGS)
 AC_SUBST(LIBS)
 AC_SUBST(SH_SUFFIX)
+AC_SUBST(LIBSTATIC_SUFFIX)
 AC_SUBST(RANLIB)
 AC_SUBST(INSTALL)
 AC_SUBST(INSTALL_DATA)
@@ -99,7 +101,10 @@ LIBS="${LIBS} -L." #
 LDFLAGS=""
 CPPFLAGS="-DHAVE_CONFIG_H ${CPPFLAGS}"
 
+# Postfix for shared libs 
 SH_SUFFIX=".so"
+# Postfix for static libs 
+LIBSTATIC_SUFFIX=".a"
 
 # Debug flag
 AC_ARG_ENABLE(debug, AS_HELP_STRING([--enable-debug],[Build with debug symbols, default: no]),[
@@ -117,8 +122,9 @@ if test "$ac_enable_debug" = "yes"; then
    INSTALLFLAGS=""	
 fi
 
-AC_MSG_RESULT(CPPFLAGS is $CPPFLAGS)	
-AC_MSG_RESULT(CFLAGS is $CFLAGS)	
+AC_MSG_RESULT(CPPFLAGS is $CPPFLAGS)
+AC_MSG_RESULT(CFLAGS is $CFLAGS)
+AC_MSG_RESULT(LDFLAGS is $LDFLAGS)
 AC_MSG_RESULT(INSTALLFLAGS is $INSTALLFLAGS)
 
 # Enable BSD select semantics allowing multiple input file descriptors to be enabled at once,
