@@ -37,12 +37,30 @@
 AC_INIT(cligen.h)
 
 # Default CFLAGS unless set by environment.
-: ${CFLAGS="$CFLAGS -O2 -Wall"}
 : ${INSTALLFLAGS="-s"}
 : ${LINKAGE=dynamic}
 
+
 # where autotool scripts are: install-sh, config.sub, config.guess
 AC_CONFIG_AUX_DIR(config-aux)
+
+# Debug flag
+AC_ARG_ENABLE(debug, AS_HELP_STRING([--enable-debug],[Build with debug symbols, default: no]),[
+	  if test "$enableval" = no; then
+	      ac_enable_debug=no
+	  else	      
+	      ac_enable_debug=yes
+          fi
+        ],
+	[ ac_enable_debug=no])
+
+AC_MSG_RESULT(debug is $ac_enable_debug)	
+if test "$ac_enable_debug" = "yes"; then
+   : ${CFLAGS="-g -Wall"}
+   INSTALLFLAGS=""	
+else
+   : ${CFLAGS="-O2 -Wall"}
+fi
 
 AC_CONFIG_HEADER(cligen_config.h)
 
@@ -106,21 +124,6 @@ SH_SUFFIX=".so"
 # Postfix for static libs 
 LIBSTATIC_SUFFIX=".a"
 
-# Debug flag
-AC_ARG_ENABLE(debug, AS_HELP_STRING([--enable-debug],[Build with debug symbols, default: no]),[
-	  if test "$enableval" = no; then
-	      ac_enable_debug=no
-	  else	      
-	      ac_enable_debug=yes
-          fi
-        ],
-	[ ac_enable_debug=no])
-
-AC_MSG_RESULT(debug is $ac_enable_debug)	
-if test "$ac_enable_debug" = "yes"; then
-   CFLAGS="-g -Wall"
-   INSTALLFLAGS=""	
-fi
 
 AC_MSG_RESULT(CPPFLAGS is $CPPFLAGS)
 AC_MSG_RESULT(CFLAGS is $CFLAGS)

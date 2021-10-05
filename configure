@@ -2141,9 +2141,9 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 # Default CFLAGS unless set by environment.
-: ${CFLAGS="$CFLAGS -O2 -Wall"}
 : ${INSTALLFLAGS="-s"}
 : ${LINKAGE=dynamic}
+
 
 # where autotool scripts are: install-sh, config.sub, config.guess
 ac_aux_dir=
@@ -2175,6 +2175,30 @@ ac_config_sub="$SHELL $ac_aux_dir/config.sub"  # Please don't use this var.
 ac_configure="$SHELL $ac_aux_dir/configure"  # Please don't use this var.
 
 
+
+# Debug flag
+# Check whether --enable-debug was given.
+if test "${enable_debug+set}" = set; then :
+  enableval=$enable_debug;
+	  if test "$enableval" = no; then
+	      ac_enable_debug=no
+	  else
+	      ac_enable_debug=yes
+          fi
+
+else
+   ac_enable_debug=no
+fi
+
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: debug is $ac_enable_debug" >&5
+$as_echo "debug is $ac_enable_debug" >&6; }
+if test "$ac_enable_debug" = "yes"; then
+   : ${CFLAGS="-g -Wall"}
+   INSTALLFLAGS=""
+else
+   : ${CFLAGS="-O2 -Wall"}
+fi
 
 ac_config_headers="$ac_config_headers cligen_config.h"
 
@@ -3538,27 +3562,6 @@ SH_SUFFIX=".so"
 # Postfix for static libs
 LIBSTATIC_SUFFIX=".a"
 
-# Debug flag
-# Check whether --enable-debug was given.
-if test "${enable_debug+set}" = set; then :
-  enableval=$enable_debug;
-	  if test "$enableval" = no; then
-	      ac_enable_debug=no
-	  else
-	      ac_enable_debug=yes
-          fi
-
-else
-   ac_enable_debug=no
-fi
-
-
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: debug is $ac_enable_debug" >&5
-$as_echo "debug is $ac_enable_debug" >&6; }
-if test "$ac_enable_debug" = "yes"; then
-   CFLAGS="-g -Wall"
-   INSTALLFLAGS=""
-fi
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: CPPFLAGS is $CPPFLAGS" >&5
 $as_echo "CPPFLAGS is $CPPFLAGS" >&6; }
