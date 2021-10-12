@@ -136,7 +136,7 @@ static int   search_last = 0;	  /* last match found */
 #include <bios.h>
 #endif
 
-#ifdef __unix__
+#if defined(__unix__) || defined(__APPLE__)
 #include <unistd.h>
 
 #define POSIX
