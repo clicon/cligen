@@ -34,6 +34,7 @@ build-root/debbuild
 # Shared objects (inc. Windows DLLs)
 *.dll
 *.so
+*.a
 *.so.*
 *.dylib
 
