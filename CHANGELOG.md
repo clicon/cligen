@@ -13,6 +13,8 @@ Expected: November 2021
 
 ### Corrected Bugs
 
+* Fix/Workaround:[Check if cg_obj is optional #38](https://github.com/clicon/cligen/issues/38)
+  * Added a check to not allow double level of options, eg ``[[cc]]``. Do not think this is a costraining fix, (bit may be wrong).
 * Fixed: [Performance issue when parsed string size is damn large #66](https://github.com/clicon/cligen/issues/66)
 
 ## 5.3.0
