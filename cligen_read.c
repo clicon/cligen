@@ -663,8 +663,6 @@ cliread_parse(cligen_handle  h,
     cvec       *cvr = NULL;      /* Rest variant,  eg remaining string in each step */
     cg_var     *cv;
     cvec       *cvv = NULL;     /* Top-level vars/val vector with just command as 0th element */
-    cbuf       *cb = NULL;
-    int         i;
 
     if (cvvall == NULL || cvec_len(cvvall) != 0){
 	errno = EINVAL;
@@ -685,15 +683,8 @@ cliread_parse(cligen_handle  h,
     if ((cv = cvec_add(cvvall, CGV_REST)) == NULL)
 	goto done;
     cv_name_set(cv, "cmd"); /* the whole command string */
-    /* The whole command string as user entered.
-     * Note as discussed in https://github.com/clicon/cligen/issues/65
-     * one may want the fully expanded string instead, which now
-     * REPLACES this original string, after cvvall is populated in match_pattern_exact.
-     * It is still kept in case you want to keep the original, then comment the
-     * replacement further down.
-     */
+    /* The whole command string as user entered. */
     cv_string_set(cv, string); 
-
     /* Why is this created separately from cvvall? */
     if ((cvv = cvec_start(string)) == NULL)
 	goto done;
@@ -707,21 +698,30 @@ cliread_parse(cligen_handle  h,
 			    &match_obj, &ptmatch, 
 			    result, reason) < 0)
 	goto done;
-    /* REPLACE the original string in first position with expanded string
-     * If you want the original string comment this section.
-     */
-    if ((cb = cbuf_new()) == NULL)
-	goto done;
-    for (i=1; i<cvec_len(cvvall); i++){
-	if (i>1)
-	    cprintf(cb, " ");
-	if ((cv = cvec_i(cvvall,i)) == NULL)
-	    goto done;
-	cv2cbuf(cv, cb);
-    }
-    cv = cvec_i(cvvall,0);
-    cv_string_set(cv, cbuf_get(cb));
+#if 0
+    {
+	cbuf       *cb = NULL;
+	int         i;
 
+	/* REPLACE the original string in first position with expanded string
+	 * Problem is cvvall is conditioned on cv_exclude_keys_get()
+	 * See also https://github.com/clicon/cligen/issues/65
+	 */
+	if ((cb = cbuf_new()) == NULL)
+	    goto done;
+	for (i=1; i<cvec_len(cvvall); i++){
+	    if (i>1)
+		cprintf(cb, " ");
+	    if ((cv = cvec_i(cvvall,i)) == NULL)
+		goto done;
+	    cv2cbuf(cv, cb);
+	}
+	cv = cvec_i(cvvall,0);
+	cv_string_set(cv, cbuf_get(cb));
+	if (cb)
+	    cbuf_free(cb);
+    }
+#endif
     /* Map from ghost object match_obj to real object */
     if (match_obj && match_obj->co_ref)
 	*co_orig = match_obj->co_ref;
@@ -729,8 +729,6 @@ cliread_parse(cligen_handle  h,
 	*co_orig = match_obj;
     retval = 0;
   done:
-    if (cb)
-	cbuf_free(cb);
     if (cvv)
 	cvec_free(cvv);
     if (cvt)
