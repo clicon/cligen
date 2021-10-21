@@ -5,6 +5,10 @@ Expected: November 2021
 
 ### Minor changes
 
+* Added case-insensitive command matching
+  * See [Case-Insensitive Command Matching](https://github.com/clicon/cligen/issues/46)
+  * To set cligen ignore case, you must call `cligen_caseignore_set(h, 1)`
+  * Note applications using cligen (eg clixon) may have case-sensitive code despite setting this
 * Refactored Makefile for static linking
 
 ### Corrected Bugs

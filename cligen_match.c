@@ -161,12 +161,18 @@ match_object(cligen_handle h,
 	  match++;
       else{
 	  if (best && *co->co_command == '\"'){ /* escaped */
-	      match = (strncmp(co->co_command+1, str, len) == 0);
+	      if (cligen_caseignore_get(h))
+		  match = (strncasecmp(co->co_command+1, str, len) == 0);
+	      else
+		  match = (strncmp(co->co_command+1, str, len) == 0);
 	      if (exact)
 		  *exact = strlen(co->co_command+1) == len;
 	  }
 	  else{
-	      match = (strncmp(co->co_command, str, len) == 0);
+	      if (cligen_caseignore_get(h))
+		  match = (strncasecmp(co->co_command, str, len) == 0);
+	      else
+		  match = (strncmp(co->co_command, str, len) == 0);
 	      if (exact)
 		  *exact = strlen(co->co_command) == len;
 	  }
@@ -1324,11 +1330,12 @@ match_pattern_exact(cligen_handle  h,
 	    for (j=0; j<matchlen; j++){
 		co = pt_vec_i_get(ptmatch,matchvec[j]);
 		/* XXX If variable dont compare co_command */
-		if (co->co_type == CO_COMMAND && string1 && 
-		    strcmp(string1, co->co_command)==0){
-		    matchlen = 1;
-		    matchvec[0] = matchvec[j];
-		    break;
+		if (co->co_type == CO_COMMAND && string1)
+		    if ((!cligen_caseignore_get(h) && strcmp(string1, co->co_command)==0) ||
+			(cligen_caseignore_get(h) && strcasecmp(string1, co->co_command)==0)){
+			matchlen = 1;
+			matchvec[0] = matchvec[j];
+			break;
 		}
 		if (co->co_type != CO_VARIABLE)
 		    allvars = 0; /* should mean onlyvars*/
@@ -1479,7 +1486,9 @@ match_complete(cligen_handle h,
 	    co1 = co;
 	}
 	else{
-	    if (strcmp(co1->co_command, co->co_command)==0)
+	    if (!cligen_caseignore_get(h) && strcmp(co1->co_command, co->co_command)==0)
+		; /* equal */
+	    else if (cligen_caseignore_get(h) && strcasecmp(co1->co_command, co->co_command)==0)
 		; /* equal */
 	    else{
 		equal = 0;

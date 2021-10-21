@@ -1054,3 +1054,33 @@ cligen_reftree_filter_set(cligen_handle h,
     ch->ch_reftree_filter = cvv;
     return 0;
 }
+
+/*! Get status of string case compare 
+ *
+ * @param[in] h   CLIgen handle
+ * @retval    0   Case-sensitive, ie aA != aa
+ * @retval    1   Ignore case, ie aA == aa
+ */
+int
+cligen_caseignore_get(cligen_handle h)
+{
+    struct cligen_handle *ch = handle(h);
+
+    return ch->ch_ignore_case;
+}
+
+/*! Set string case compare status
+ *
+ * @param[in]  h          CLIgen handle
+ * @param[in]  ignorecase 0: case-sensitive, 1: ignore case
+ * @retval     0          OK
+ */
+int
+cligen_caseignore_set(cligen_handle h,
+		      int           ignorecase)
+{
+    struct cligen_handle *ch = handle(h);
+    
+    ch->ch_ignore_case = ignorecase;
+    return 0;
+}
