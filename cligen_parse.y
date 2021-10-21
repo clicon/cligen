@@ -766,7 +766,7 @@ ctx_push(cligen_yacc *cy,
     cg_obj           *co; 
 
     if (debug)
-	fprintf(stderr, "%s sets:%d\n", __FUNCTION__, sets);
+	fprintf(stderr, "%s\n", __FUNCTION__);
     /* Create new stack element */
     if ((cs = malloc(sizeof(*cs))) == NULL) {
 	fprintf(stderr, "%s: malloc: %s\n", __FUNCTION__, strerror(errno));
@@ -779,15 +779,15 @@ ctx_push(cligen_yacc *cy,
 	co = cl->cl_obj;
 	if (cvec_find(cy->cy_cvec, "hide") != NULL)
 	    co_flags_set(co, CO_FLAGS_HIDE);
-    if (cvec_find(cy->cy_cvec, "hide-database") != NULL)
-        co_flags_set(co, CO_FLAGS_HIDE_DATABASE);
-    if (cvec_find(cy->cy_cvec, "hide-database-auto-completion") != NULL) {
-        co_flags_set(co, CO_FLAGS_HIDE_DATABASE);
-        co_flags_set(co, CO_FLAGS_HIDE);
-    }
+	if (cvec_find(cy->cy_cvec, "hide-database") != NULL)
+	    co_flags_set(co, CO_FLAGS_HIDE_DATABASE);
+	if (cvec_find(cy->cy_cvec, "hide-database-auto-completion") != NULL) {
+	    co_flags_set(co, CO_FLAGS_HIDE_DATABASE);
+	    co_flags_set(co, CO_FLAGS_HIDE);
+	}
 	if (sets)
 	    co_sets_set(co, 1);
-    	if (cgy_list_push(co, &cs->cs_list) < 0) 
+	if (cgy_list_push(co, &cs->cs_list) < 0) 
 	    return -1;
     }
     return 0;
@@ -1291,8 +1291,9 @@ decllist    : decltop
 declcomp    : '(' { if (ctx_push(_cy, 0) < 0) YYERROR; }
                decltop ')' { if (ctx_pop(_cy) < 0) YYERROR;
 		                     _PARSE_DEBUG("declcomp->(decltop)");}
-            | '[' { if (ctx_push(_cy, 0) < 0) YYERROR; }
-               decltop ']' { if (ctx_pop_add(_cy) < 0) YYERROR; }  {
+            | '[' { if(_CY->cy_optional){ fprintf(stderr, "Too many [] levels.\n"); YYERROR;} _CY->cy_optional++;
+		   if (ctx_push(_cy, 0) < 0) YYERROR; }
+                decltop ']' { _CY->cy_optional--; if (ctx_pop_add(_cy) < 0) YYERROR; }  {
 		                     _PARSE_DEBUG("declcomp->[decltop]");}
             | decl                 { _PARSE_DEBUG("declcomp->decl");}
             ;
