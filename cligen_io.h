@@ -47,9 +47,9 @@
  * Types
  */
 /* Struct for printing command and help */
-struct cmd_help{
-    char *ch_cmd;
-    cvec *ch_helpvec;
+struct cligen_help{
+    char   *ch_cmd;  /* Malloced string */
+    cvec   *ch_helpvec;
 };
 
 /* CLIgen event register callback type */
@@ -71,6 +71,8 @@ void cligen_redraw(cligen_handle h);
 int  cligen_susp_hook(cligen_handle h, cligen_susp_cb_t *fn);
 int  cligen_interrupt_hook(cligen_handle h, cligen_interrupt_cb_t *fn);
 void cligen_exitchar_add(cligen_handle h, char c);
+int  cligen_help_eq(struct cligen_help *ch0, struct cligen_help *ch1, int help);
+int  cligen_help_clear(struct cligen_help *ch0);
 int  print_help_lines(cligen_handle h, FILE *fout, parse_tree *ptmatch, int *matchvec, size_t matchlen);
 int  cligen_help(cligen_handle h, FILE *f, parse_tree *pt);
 
