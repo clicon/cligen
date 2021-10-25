@@ -10,7 +10,7 @@ fspec=$dir/spec.cli
 cat > $fspec <<EOF
   prompt="cli> ";              # Assignment of prompt
   comment="#";                 # Same comment as in syntax
-  treename="tutorial";         # Name of syntax (used when referencing)
+  treename="cligen";           # Name of syntax
 
   # Complex syntax and callback argument handling
   # Example of complex variable matching

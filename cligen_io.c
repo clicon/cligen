@@ -144,10 +144,8 @@ cligen_output(FILE       *f,
     len = vsnprintf(NULL, 0, template, args);
     va_end(args);
     len++;
-    if ((buf = malloc(len)) == NULL){
-	fprintf(stderr, "%s: malloc: %s\n", __FUNCTION__, strerror(errno));
+    if ((buf = malloc(len)) == NULL)
 	goto done;
-    }
     va_start(args, template);
     vsnprintf(buf, len, template, args);
     va_end(args);
@@ -292,7 +290,7 @@ static int
 print_help_line(cligen_handle    h,
 		FILE            *fout,
 		int              column_width,
-		struct cmd_help *ch)
+		struct cligen_help *ch)
 {
     int     retval = -1;
     cg_var *cv = NULL;
@@ -341,11 +339,71 @@ print_help_line(cligen_handle    h,
     return retval;
 }
 
+/*! Check equivalence of two cligen help structs
+ *
+ * Utility function for printing commands and help. If two are equal, do not repeat them, just
+ * print once. If "help" is set, also consider helt string, or at least first line of text.
+ * The difference is whether only commands are written (eg in columns) or written in lines where
+ * also helps trings are shown.
+ * @param[in] ch0   First CLIgen help struct
+ * @param[in] ch1   Second CLIgen help struct
+ * @param[in] help  If 0, only compare commands, if 1, also compare helstrings (first row)
+ * @retval    0     Not equal
+ * @retval    1     Equal
+ */
+int
+cligen_help_eq(struct cligen_help *ch0,
+	       struct cligen_help *ch1,
+	       int                 help)
+{
+    char   *cmd0  = ch0->ch_cmd;
+    char   *cmd1  = ch1->ch_cmd;
+    cvec   *help0 = ch0->ch_helpvec;
+    cvec   *help1 = ch1->ch_helpvec;
+    cg_var *cv0;
+    cg_var *cv1;
+
+    if (cmd0 == NULL && cmd1 == NULL)
+	return 1;
+    if (cmd0 == NULL || cmd1 == NULL)
+	return 0;
+    if (strcmp(cmd0, cmd1) != 0)
+	return 0;
+    if (help == 0)
+	return 1;
+    /* Commands are equal, check help string */
+    if (help0 == NULL && help1 == NULL)
+	return 1;
+    if (help0 == NULL || help1 == NULL)
+	return 0;
+    /* Get first line only as equality check */
+    cv0 = cvec_i(help0, 0);
+    cv1 = cvec_i(help1, 0);
+    if (cv0 == NULL && help1 == NULL)
+	return 1;
+    if (cv0 == NULL || help1 == NULL)
+	return 0;
+    return strcmp(cv_string_get(cv0), cv_string_get(cv1)) == 0;
+}
+
+/* Dont actually free it */
+int
+cligen_help_clear(struct cligen_help *ch)
+{
+    if (ch == NULL)
+	return 0;
+    if (ch->ch_cmd)
+	free(ch->ch_cmd);
+    memset(ch, 0, sizeof(*ch));
+    return 0;
+}
+
 /*! Print help lines for subset of a parsetree vector
  * @param[in] fout     File to print to, eg stdout
  * @param[in] ptvec    Cligen parse-node vector
  * @param[in] matchvec Array of indexes into ptvec to match (the subset)
  * @param[in] matchlen Length of matchvec
+ * @see show_help_columns
  */
 int
 print_help_lines(cligen_handle h,
@@ -359,20 +417,17 @@ print_help_lines(cligen_handle h,
     char            *cmd;
     int              i;
     cbuf            *cb = NULL;
-    struct cmd_help *chvec = NULL;
-    struct cmd_help *ch;
+    struct cligen_help *chvec = NULL;
+    struct cligen_help *ch;
     int              maxlen = 0;
-    char            *prev = NULL;
     int              nrcmd = 0;
     int              column_width;
     int              vi;
 
-    if ((cb = cbuf_new()) == NULL){
-	fprintf(stderr, "cbuf_new: %s\n", strerror(errno));
+    if ((cb = cbuf_new()) == NULL)
 	return -1;
-    }
     /* Go through match vector and collect commands and helps */
-    if ((chvec = calloc(matchlen, sizeof(struct cmd_help))) ==NULL){
+    if ((chvec = calloc(matchlen, sizeof(struct cligen_help))) ==NULL){
 	perror("calloc");
 	goto done;
     }
@@ -386,27 +441,24 @@ print_help_lines(cligen_handle h,
 	case CO_VARIABLE:
 	    cbuf_reset(cb);
 	    cov2cbuf(cb, co, 1);
-	    if ((cmd = strdup(cbuf_get(cb))) == NULL){
-		perror("strdup");
-		goto done;
-	    }
+	    cmd = cbuf_get(cb);
 	    break;
 	case CO_COMMAND:
-	    if ((cmd = strdup(co->co_command)) == NULL){
-		perror("strdup");
-		goto done;
-	    }
+	    cmd = co->co_command;
 	    break;
 	default:
 	    continue;
 	    break;
 	}
-	if (prev && strcmp(cmd, prev)==0)
-	    continue;
-	ch = &chvec[nrcmd++];
-	ch->ch_cmd = cmd;
+	ch = &chvec[nrcmd];
+	if ((ch->ch_cmd = strdup(cmd)) == NULL)
+	    goto done;
 	ch->ch_helpvec = co->co_helpvec;
-	prev = cmd;
+	if (nrcmd && cligen_help_eq(&chvec[nrcmd-1], ch, 1) == 1){
+	    cligen_help_clear(ch);
+	    continue;
+	}
+	nrcmd++;
 	/* Compute longest command */
 	maxlen = strlen(cmd)>maxlen?strlen(cmd):maxlen;
     }
@@ -422,10 +474,8 @@ print_help_lines(cligen_handle h,
     retval = 0;
  done:
     if (chvec){
-	for (i=0; i<nrcmd; i++){
-	    if (chvec[i].ch_cmd)
-		free(chvec[i].ch_cmd);
-	}
+	for (i=0; i<nrcmd; i++)
+	    cligen_help_clear(&chvec[i]);
 	free(chvec);
     }
     if (cb)

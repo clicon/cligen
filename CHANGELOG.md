@@ -5,6 +5,8 @@ Expected: November 2021
 
 ### Minor changes
 
+* Same commands with different help strings are now displayed separately
+  * See [Help-text support for multiple types](https://github.com/clicon/cligen/issues/27)
 * Added case-insensitive command matching
   * See [Case-Insensitive Command Matching](https://github.com/clicon/cligen/issues/46)
   * To set cligen ignore case, you must call `cligen_caseignore_set(h, 1)`

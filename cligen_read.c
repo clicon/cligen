@@ -231,7 +231,7 @@ static int
 column_print(FILE            *fout, 
 	     int              cnr, 
 	     int              cw,
-	     struct cmd_help *chvec,
+	     struct cligen_help *chvec,
 	     int              len,
 	     int              level)
 { 
@@ -239,7 +239,7 @@ column_print(FILE            *fout,
     int              li; /* line number */
     int              ci; /* column number */
     int              linenr;
-    struct cmd_help *ch;
+    struct cligen_help *ch;
 
     linenr = (len-1)/cnr + 1;
     for (ci=0, li = 0; li < linenr; li++) {
@@ -267,6 +267,7 @@ column_print(FILE            *fout,
  * @param[out] cvv     Cligen variable vector containing vars/values pair for completion
  * @retval     0       OK
  * @retval     -1      Error
+ * @see print_help_lines
  */
 static int
 show_help_columns(cligen_handle h, 
@@ -282,12 +283,11 @@ show_help_columns(cligen_handle h,
     int              vi;
     int              i;
     int              nrcmd = 0;
-    struct cmd_help *chvec = NULL;
-    struct cmd_help *ch;
+    struct cligen_help *chvec = NULL;
+    struct cligen_help *ch;
     cg_obj          *co;
     cbuf            *cb = NULL;
     char            *cmd;
-    char            *prev = NULL;
     int              maxlen = 0;
     int              column_width;
     int              column_nr;
@@ -319,7 +319,7 @@ show_help_columns(cligen_handle h,
 	goto done;
     if (matchlen > 0){ /* min, max only defined if matchlen > 0 */
 	/* Go through match vector and collect commands and helps */
-	if ((chvec = calloc(matchlen, sizeof(struct cmd_help))) ==NULL){
+	if ((chvec = calloc(matchlen, sizeof(struct cligen_help))) ==NULL){
 	    fprintf(stderr, "%s calloc: %s\n", __FUNCTION__, strerror(errno));
 	    goto done;
 	}
@@ -346,14 +346,17 @@ show_help_columns(cligen_handle h,
 	    }
 	    if (cmd == NULL || strlen(cmd)==0)
 		continue;
-	    if (prev && strcmp(cmd, prev)==0)
-		continue;
-	    ch = &chvec[nrcmd++];
+	    ch = &chvec[nrcmd];
 	    if ((ch->ch_cmd = strdup(cmd)) == NULL){
 		fprintf(stderr, "%s strdup: %s\n", __FUNCTION__, strerror(errno));
 		goto done;
 	    }
-	    prev = ch->ch_cmd;
+	    ch->ch_helpvec = co->co_helpvec;
+	    if (nrcmd && cligen_help_eq(&chvec[nrcmd-1], ch, 0) == 1){
+		cligen_help_clear(ch);
+		continue;
+	    }
+	    nrcmd++;
 	    maxlen = strlen(cmd)>maxlen?strlen(cmd):maxlen;
 	}
 	maxlen++;
@@ -375,10 +378,8 @@ show_help_columns(cligen_handle h,
     retval = 0;
   done:
     if (chvec){
-	for (i=0; i<nrcmd; i++){
-	    if (chvec[i].ch_cmd)
-		free(chvec[i].ch_cmd);
-	}
+	for (i=0; i<nrcmd; i++)
+	    cligen_help_clear(&chvec[i]);
 	free(chvec);
     }
     if (ptmatch && ptmatch != pt)
