@@ -55,6 +55,7 @@
 #include "cligen_pt_head.h"
 #include "cligen_object.h"
 #include "cligen_handle.h"
+#include "cligen_result.h"
 #include "cligen_read.h"
 #include "cligen_util.h"
 

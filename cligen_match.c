@@ -62,6 +62,7 @@
 #include "cligen_object.h"
 #include "cligen_handle.h"
 #include "cligen_expand.h"
+#include "cligen_result.h"
 #include "cligen_read.h"
 #include "cligen_match.h"
 
@@ -70,20 +71,6 @@
 #endif
 
 #define ISREST(co) ((co)->co_type == CO_VARIABLE && (co)->co_vtype == CGV_REST)
-
-/*! Result vector from match_pattern_* family of functions
- */
-struct match_result{
-    uint32_t     mr_len;    /* Length of mr_vec (significant entries) */
-    uint32_t     mr_size;   /* Size of allocated space of mr_vec */
-    int         *mr_vec;    /* (Indirect) vector of integers that identify indexes into mr_parsetree */
-    int          mr_level;
-    parse_tree  *mr_parsetree;
-    int          mr_last;
-    char        *mr_reason; /* Error reason if mr_len=0. Can also be carried by a mr_len!=0 
-			     * to store first error in case it is needed in a later error */
-};
-typedef struct match_result match_result;
 
 /*! Match variable against input string
  * 
@@ -124,6 +111,7 @@ match_variable(cligen_handle h,
 	cv_free(cv);
     return retval; 
 }
+
 
 /*! Given a string and one cligen object, return if the string matches
  * @param[in]  string  Input string to match (NULL is match)
@@ -209,260 +197,6 @@ match_object(cligen_handle h,
   }
   else
       return 1;
-}
-
-/*! Given a string (s0), return the next token. 
- * The string is modified to return
- * the remainder of the string after the identified token.
- * A token is found either as characters delimited by one or many delimiters.
- * Or as a pair of double-quotes(") with any characters in between.
- * if there are trailing spaces after the token, trail is set to one.
- * If string is NULL or "", NULL is returned.
- * If empty token found, s0 is NULL
- * @param[in]  s0       String, the string is modified like strtok
- * @param[out] token0   A malloced token.  NOTE: token must be freed after use.
- * @param[out] rest0    A remaining (rest) string.  NOTE: NOT malloced.
- * @param[out] leading0 If leading delimiters eg " thisisatoken"
- * Example:
- *   s0 = "  foo bar"
- * results in token="foo", leading=1
- */
-static int
-next_token(char **s0, 
-	   char **token0,
-	   char **rest0, 
-	   int   *leading0)
-{
-    char  *s;
-    char  *st;
-    char  *token = NULL;
-    size_t len;
-    int    quote=0;
-    int    leading=0;
-    int    escape = 0;
-
-    s = *s0;
-    if (s==NULL){
-	fprintf(stderr, "%s: null string\n", __FUNCTION__);
-	return -1;
-    }
-    for (s=*s0; *s; s++){ /* First iterate through delimiters */
-	if (index(CLIGEN_DELIMITERS, *s) == NULL)
-	    break;
-	leading++;
-    }
-    if (rest0)
-	*rest0 = s;
-    if (*s && index(CLIGEN_QUOTES, *s) != NULL){
-	quote++;
-	s++;
-    }
-    st=s; /* token starts */
-    escape = 0;
-    for (; *s; s++){ /* Then find token */
-	if (quote){
-	    if (index(CLIGEN_QUOTES, *s) != NULL)
-		break;
-	}
-	else{ /* backspace tokens for escaping delimiters */
-	    if (escape)
-		escape = 0;
-	    else{
-		if (*s == '\\')
-		    escape++;
-		else
-		    if (index(CLIGEN_DELIMITERS, *s) != NULL)
-			break;
-	    }
-	}
-    }
-    if (quote && *s){
-	s++;
-	// fprintf(stderr, "s=\"%s\" %d %s\n", s, *s, index(CLIGEN_DELIMITERS, *s));
-	if (*s && index(CLIGEN_DELIMITERS, *s) == NULL){
-	    ;//	cligen_reason("Quote token error");
-	}
-	len = (s-st)-1;
-    }
-    else{
-	if (quote){ /* Here we signalled error before but it is removed */
-	    st--;
-	}
-	len = (s-st);
-	if (!len){
-	    token = NULL;
-	    *s0 = NULL;
-	    goto done;
-	}
-    }
-    if ((token=malloc(len+1)) == NULL){
-	fprintf(stderr, "%s: malloc: %s\n", __FUNCTION__, strerror(errno));
-	return -1;
-    }
-    memcpy(token, st, len);
-    token[len] = '\0';
-    *s0 = s;
- done:
-    *leading0 = leading;
-    *token0 = token;
-    return 0;
-}
-
-/*! Split a CLIgen command string into a cligen variable vector using delimeters and escape quotes
- *
- * @param[in]  string String to split
- * @param[out] cvtp   CLIgen variable vector, containing all tokens. 
- * @param[out] cvrp   CLIgen variable vector, containing the remaining strings. 
- * @retval     0      OK
- * @retval    -1      Error
- * @code
- *   cvec  *cvt = NULL;
- *   cvec  *cvr = NULL;
- *   if (cligen_str2cvv("a=b&c=d", " \t", "\"", &cvt, &cvt) < 0)
- *     err;
- *   ...
- *   cvec_free(cvt);
- *   cvec_free(cvr);
- * @endcode
- * Example, input string "aa bb cc" (0th element is always whole string)
- *   cvp : ["aa bb cc", "aa", "bb", "cc"]
- *   cvr : ["aa bb cc", "aa bb cc", "bb cc", "cc"]
- * @note both out cvv:s should be freed with cvec_free()
- */
-int
-cligen_str2cvv(char  *string, 
-	       cvec **cvtp,
-    	       cvec **cvrp)
-{
-    int     retval = -1;
-    char   *s;
-    char   *sr;
-    char   *s0 = NULL;;
-    cvec   *cvt = NULL; /* token vector */
-    cvec   *cvr = NULL; /* rest vector */
-    cg_var *cv;
-    char   *t;
-    int     trail;
-    int     i;
-
-    if ((s0 = strdup(string)) == NULL)
-	goto done;
-    s = s0;
-    if ((cvt = cvec_start(string)) ==NULL)
-	goto done;
-    if ((cvr = cvec_start(string)) ==NULL)
-	goto done;
-    i = 0;
-    while (s != NULL) {
-	if (next_token(&s, &t, &sr, &trail) < 0)
-	    goto done;
-	/* If there is no token, stop, 
-	 * unless it is the intial token (empty string) OR there are trailing whitespace
-	 * In these cases insert an empty "" token.
-	 */
-	if (t == NULL && !trail && i > 0)
-	    break;
-	if ((cv = cvec_add(cvr, CGV_STRING)) == NULL)
-	    goto done;
-	if (cv_string_set(cv, sr?sr:"") == NULL) /* XXX memleak */
-	    goto done;
-	if ((cv = cvec_add(cvt, CGV_STRING)) == NULL)
-	    goto done;
-	if (cv_string_set(cv, t?t:"") == NULL) /* XXX memleak */
-	    goto done;
-	if (t)
-	    free(t);
-	i++;
-    }
-    retval = 0;
-    assert(cvec_len(cvt)>1); /* XXX */
-    assert(cvec_len(cvr)>1); /* XXX */
-    if (cvtp){
-	*cvtp = cvt;
-	cvt = NULL;
-    }
-    if (cvrp){
-	*cvrp = cvr;
-	cvr = NULL;
-    }
- done:
-    if (s0)
-	free(s0);
-    if (cvt)
-	cvec_free(cvt);
-    if (cvr)
-	cvec_free(cvr);
-    return retval;
-}
-
-/*! Transform a single helpstr to a vector of help strings and strip preceding whitespace
- *
- * @param[in]  str  String on the form <str1>\n<str2>
- * @param[out] cvp  CLIgen variable vector containing a vector of help strings 
- * @retval     0    OK
- * @retval    -1    Error
- * Eg, the string:
- *     "abcd\n     efgh\nijkl"
- * is translated to a cvec:
- * 0: "abcd"
- * 1: "efgh"
- * 2: "ijkl"
- */
-int
-cligen_txt2cvv(char  *str,
-	       cvec **cvp)
-{
-    int     retval = -1;
-    int     i;
-    int     i0;
-    char    c;
-    cvec   *cvv = NULL;
-    cg_var *cv = NULL;
-    int     whitespace = 1;
-    size_t  len;
-    
-    if ((cvv = cvec_new(0)) == NULL)
-	goto done;
-    len = strlen(str);
-    i0 = 0;
-    for (i=0; i<len; i++){
-	c = str[i];
-	if (whitespace && isblank(c))
-	    i0 = i+1; /* skip */
-	else if (c == '\n'){
-	    if ((cv = cvec_add(cvv, CGV_STRING)) == NULL)
-		goto done;
-	    if (cv_strncpy(cv, &str[i0], i-i0) == NULL)
-		goto done;
-	    i0 = i+1;
-	    whitespace = 1;
-#ifdef CLIGEN_SINGLE_HELPSTRING
-	    i0 = i; /* disable extra \n */
-	    break;
-#endif
-	}
-	else{
-	    whitespace = 0;
-	}
-    }
-    /* There may be a case here where last char is \n */
-    if (i != i0){
-	if ((cv = cvec_add(cvv, CGV_STRING)) == NULL)
-	    goto done;
-	if (cv_strncpy(cv, &str[i0], i-i0) == NULL)
-	    goto done;
-    }
-    if (cvp){
-	if (*cvp != NULL)
-	    cvec_free(*cvp);
-	*cvp = cvv;
-	cvv = NULL;
-    }
-    retval = 0;
- done:
-    if (cvv)
-	cvec_free(cvv);
-    return retval;
 }
 
 /*! Returns the total number of "levels" of a CLIgen command string
@@ -593,99 +327,6 @@ add_cov_to_cvec(cligen_handle h,
     return cv;
 }
 
-/*! Append int vector with one index
- */
-static int
-mr_vec_append(match_result *mr,
-	      int           index)
-{
-    int retval = -1;
-
-    if (mr->mr_size <= mr->mr_len){ /* need increased size */
-	if ((mr->mr_vec = realloc(mr->mr_vec, (mr->mr_len+1)*sizeof(int))) == NULL)
-	    goto done;
-    }
-    mr->mr_vec[mr->mr_len++] = index;
-    mr->mr_size = mr->mr_len;
-    retval = 0;
- done:
-    return retval;
-}
-
-/*! Reset/empty matchvec of indexes by g and incrementing vector
- * @param[in,out]  mr  Match result struct
- */
-static int
-mr_vec_reset(match_result *mr)
-{
-    if (mr->mr_len)
-	mr->mr_len = 0;
-    return 0;
-}
-
-/*! Reset/empty matchvec of indexes by g and incrementing vector
- * @param[in,out]  mr      Match result struct
- * @param[in]      reason  Malloced string (consumed here)
- */
-static int
-mr_reason_set(match_result *mr,
-	      char         *reason)
-{
-    if (mr->mr_reason)
-	free(mr->mr_reason);
-    mr->mr_reason = reason;
-    return 0;
-}
-
-static int
-mr_parsetree_set(match_result *mr,
-		 parse_tree   *pt)
-{
-    mr->mr_parsetree = pt;
-    return 0;
-}
-
-/*! Move an error reason from one mr to the next
- * There is a case for keeping the first error reason in case of multiple
- */
-static int
-mr_mv_reason(match_result *from,
-	     match_result *to)
-{
-    char *reason;
-
-    if ((reason = from->mr_reason) != NULL &&
-	to->mr_reason == NULL){
-	to->mr_reason = reason;
-	from->mr_reason = NULL;
-    }
-    return 0;
-}
-
-static match_result *
-mr_new(void)
-{
-    match_result *mr;
-    
-    if ((mr = malloc(sizeof(*mr))) == NULL)
-	return NULL;
-    memset(mr, 0, sizeof(*mr));
-    return mr;
-}
-
-/*! Free a return structure
- * Dont free the parse tree mr_parsetree
- */
-static int
-mr_free(match_result *mr)
-{
-    if (mr->mr_vec)
-	free(mr->mr_vec);
-    if (mr->mr_reason)
-	free(mr->mr_reason);
-    free(mr);
-    return 0;
-}
 
 /*! Match a parse-tree (pt) with a command vector (cvt/cvr)
  * @param[in]  h        CLIgen handle
@@ -761,28 +402,28 @@ match_vec(cligen_handle h,
 	    assert(tmpreason == NULL);
 	    if (best){ /* only save best match */
 		if (p == pref_upper){
-		    if (mr_vec_append(mr, i) < 0)
+		    if (mr_pt_append(mr, co) < 0)
 			goto done;
 		}
 		else if (p > pref_upper){ /* Start again at this level */
 		    pref_upper = p;
-		    if (mr_vec_reset(mr) < 0)
+		    if (mr_pt_reset(mr) < 0)
 			goto done;
-		    if (mr_vec_append(mr, i) < 0)
+		    if (mr_pt_append(mr, co) < 0)
 			goto done;
 		}
 		else{ /* p < pref_upper : skip */
 		}
 	    } /* if best */
 	    else {
-		if (mr_vec_append(mr, i) < 0)
+		if (mr_pt_append(mr, co) < 0)
 		    goto done;
 	    }
 	} /* switch match */
 	assert(tmpreason == NULL);
     } /* for pt_len_get(pt) */
     /* Only return reason if matches == 0 */
-    if (mr->mr_len != 0)
+    if (mr_pt_len_get(mr) != 0)
 	mr_reason_set(mr, NULL);
     retval = 0;
  done:
@@ -890,7 +531,7 @@ match_pattern_sets_local(cligen_handle h,
     resttokens  = cvec_i_str(cvr, level+1);
     
     /* Return level at this point, can be overriden by recursive call */
-    mr0->mr_level = level;
+    mr_level_set(mr0, level);
 
     /* How many matches of cvt[level+1] in pt */
     if (match_vec(h,
@@ -899,11 +540,11 @@ match_pattern_sets_local(cligen_handle h,
 		   mr0) < 0)
 	goto done;
     /* Number of matches is 0 (no match), 1 (exact) or many */
-    switch (mr0->mr_len){
+    switch (mr_pt_len_get(mr0)){
     case 0: /* no matches */
 	if (pt_onlyvars(pt))
 	    ; /* XXX Uuh mr0 already has a reason,... */
-	mr_vec_reset(mr0);
+	mr_pt_reset(mr0);
 	goto ok; 
 	break;
     case 1: /* exactly one match */
@@ -915,7 +556,7 @@ match_pattern_sets_local(cligen_handle h,
 	if (lasttoken){
 	    mr_parsetree_set(mr0, pt);
 	    if (best){
-		co_match = pt_vec_i_get(pt, mr0->mr_vec[0]); 
+		co_match = mr_pt_i_get(mr0, 0);
 		if (match_bindvars(h, co_match, 
 				   ISREST(co_match)?resttokens:token,
 				   cvv, cvvall) < 0)
@@ -923,13 +564,16 @@ match_pattern_sets_local(cligen_handle h,
 	    }
 	    goto ok; /* will return matches > 1 */ 
 	}
-	mr_vec_reset(mr0);
+	mr_pt_reset(mr0);
 	goto ok;  /* will return matches = 0 */
 	break;
     } /* switch matches */
-    assert(mr0->mr_len == 1);
+    if (mr_pt_len_get(mr0) != 1){
+	errno = EFAULT; /* shouldnt happen */
+	goto done;
+    }
     /* Get the single match object */
-    co_match = pt_vec_i_get(pt, mr0->mr_vec[0]);
+    co_match = mr_pt_i_get(mr0, 0);
     /* co_orig is original object in case of expansion */
     co_orig = co_match->co_ref?co_match->co_ref: co_match;
 
@@ -939,7 +583,7 @@ match_pattern_sets_local(cligen_handle h,
 	if ((r = strdup("Already matched")) == NULL)
 	    goto done;
 	mr_reason_set(mr0, r);
-	mr_vec_reset(mr0);
+	mr_pt_reset(mr0);
 	goto ok; /* will return matches = 0 */
     }
 
@@ -959,13 +603,13 @@ match_pattern_sets_local(cligen_handle h,
 	 * This is "inline" of match_terminal
 	 */
 	mr_parsetree_set(mr0, pt);
-	mr0->mr_last = 1; /* dont go to children */
+	mr_last_set(mr0); /* dont go to children */
     }
  ok: 
     /* mr0:local or mrc:child
      * if mrc has result, take that, otherwise take mr0
      */
-    switch (mr0->mr_len) {
+    switch (mr_pt_len_get(mr0)) {
     case 0:
 	break;
     case 1:
@@ -1040,14 +684,14 @@ match_pattern_sets(cligen_handle h,
     if (match_pattern_sets_local(h, cvt, cvr, pt, level, best, 
 				 cvv, cvvall, &mr0) < 0)
 	goto done;
-    if (mr0->mr_len != 1){ /* If not unique match exit here */
+    if (mr_pt_len_get(mr0) != 1){ /* If not unique match exit here */
 	*mrp = mr0;
 	mr0 = NULL;
 	goto ok;
     }
     /* Unique match */
-    co_match = pt_vec_i_get(pt, mr0->mr_vec[0]);
-    if (mr0->mr_last && (strcmp(token,"") != 0)){
+    co_match = mr_pt_i_get(mr0, 0);
+    if (mr_last_get(mr0) && (strcmp(token,"") != 0)){
 	co_flags_set(co_match, CO_FLAGS_MATCH);
 	*mrp = mr0;
 	mr0 = NULL;
@@ -1088,17 +732,15 @@ match_pattern_sets(cligen_handle h,
 				   cvvall,
 				   &mrc) < 0)
 		goto done;		
-	    if (mrc->mr_len != 1)
+	    if (mr_pt_len_get(mrc) != 1)
 		break;
 	    if (mrcprev != NULL){
-		if (mrcprev->mr_parsetree != ptn &&
-		    mrcprev->mr_parsetree != mrc->mr_parsetree)
-		    pt_free(mrcprev->mr_parsetree, 0);
+		mr_parsetree_free_ifnot(mrcprev, ptn, mr_parsetree_get(mrc));
 		mr_free(mrcprev);
 		mrcprev = NULL;
 	    }
 	    mrcprev = mrc;
-	    level = mrc->mr_level;
+	    level = mr_level_get(mrc); /* XXX level always 0 */
 	} /* while */
 	if (mrc == NULL){
 	    *mrp = mr0;
@@ -1124,15 +766,14 @@ match_pattern_sets(cligen_handle h,
     /* Clear all CO_FLAGS_MATCH recursively */
     pt_apply(ptn, co_clearflag, (void*)CO_FLAGS_MATCH);
     /* If child match fails, use previous */
-    if (mrc->mr_len == 0 && mrcprev){
+    if (mr_pt_len_get(mrc) == 0 && mrcprev){
 	/* Transfer match flags from ptn to pt if this tree has no more matches */
-	if (mrc->mr_len == 0)
-	    co_flags_set(co_match, CO_FLAGS_MATCH);	    
+	co_flags_set(co_match, CO_FLAGS_MATCH);	    
 	mr_mv_reason(mrc, mrcprev); 	/* transfer error reason if any from child */
 	*mrp = mrcprev;
 	mrcprev = NULL;
     }
-    else if (mrc->mr_len == 0 && lastsyntax == 2){ /* If no child match, then use local */
+    else if (mr_pt_len_get(mrc) == 0 && lastsyntax == 2){ /* If no child match, then use local */
 	mr_parsetree_set(mr0, pt);
 	co_flags_set(co_match, CO_FLAGS_MATCH);
 	mr_mv_reason(mrc, mr0); 	/* transfer error reason if any from child */
@@ -1140,14 +781,14 @@ match_pattern_sets(cligen_handle h,
 	mr0 = NULL;
     }
     else{ /* child match,  use that */
-	if (mrc->mr_len == 1)
+	if (mr_pt_len_get(mrc) == 1)
 	    co_flags_set(co_match, CO_FLAGS_MATCH);
 	*mrp = mrc;
 	if (mrcprev == mrc)
 	    mrcprev = NULL;
 	mrc = NULL;
     }
-    if (*mrp && (*mrp)->mr_parsetree == ptn){
+    if (*mrp && mr_parsetree_get(*mrp) == ptn){
 	ptn = NULL; /* passed to upper layers, dont free here */
     }
  ok:
@@ -1155,11 +796,7 @@ match_pattern_sets(cligen_handle h,
  done:
     if (mrcprev && mrcprev != mrc){
 	assert(mrcprev != *mrp);
-	if (mrcprev->mr_parsetree &&
-	    mrcprev->mr_parsetree != ptn &&
-	    *mrp &&
-	    mrcprev->mr_parsetree != (*mrp)->mr_parsetree)
-	    pt_free(mrcprev->mr_parsetree, 0);
+	mr_parsetree_free_ifnot(mrcprev, ptn, *mrp ? mr_parsetree_get(*mrp) : NULL);
 	mr_free(mrcprev);
     }
     if (ptn)
@@ -1180,15 +817,11 @@ match_pattern_sets(cligen_handle h,
  * @param[in]  best      If set, only return best match (for command evaluation) instead of 
  *                       all possible options. Match also hidden options.
  *                       If not set, return all possible matches, do not return hidden options 
- * @param[out] ptmatch   Returns the parsetree at the place of matching
- * @param[out] matchvec  A vector of integers containing indexes in covec which match
- * @param[out] matchlen  Number of matches in matchvec, (if retval is 0)
  * @param[out] cvv       cligen variable vector containing vars/values pair for completion
  * @param[out] cvvall    cligen variable vector containing vars/values + keywords for callbacks
- * @param[out] reasonp   If retval = 0, this may be malloced to indicate reason for 
- *                       not matching variables, if given. Neeed to be free:d
- * @retval -1   error.
- * @retval  0   OK
+ * @param[out] mrp       CLIgen match result struct encapsulating several return parameters
+ * @retval    -1         Error
+ * @retval     0         OK
  *
  * All options are ordered by PREFERENCE, where 
  *       command > ipv4,mac > string > rest
@@ -1199,22 +832,25 @@ match_pattern(cligen_handle h,
 	      cvec         *cvr,
 	      parse_tree   *pt, 
 	      int           best,
-	      parse_tree  **ptmatch, 
-	      int          *matchvec[],
-	      int          *matchlen, 
 	      cvec         *cvv,
 	      cvec         *cvvall,
-	      char        **reasonp)
+	      match_result **mrp)
 {
     int           retval = -1;
     match_result *mr = NULL;
-    
-    if (ptmatch == NULL || cvt == NULL || cvr == NULL || matchvec == NULL || matchlen == NULL){
+    char         *r;
+    cg_obj       *co;
+    cg_obj       *co1 = NULL;
+    parse_tree   *ptc;
+    int           i;
+    int           allvars = 1;
+    char         *string1;
+    cg_obj       *co_match;
+
+    if (cvt == NULL || cvr == NULL || mrp == NULL){
 	errno = EINVAL;
 	goto done;
     }
-    *matchlen = 0;
-
     if (match_pattern_sets(h, cvt, cvr,
 			   pt,
 			   0,
@@ -1222,44 +858,109 @@ match_pattern(cligen_handle h,
 			   cvv, cvvall,
 			   &mr) < 0)
 	goto done;
+    if (mr == NULL){  /* shouldnt happen */
+	errno = EFAULT;
+	goto done;
+    }
+    /* XXX Lots of complex code follows, 
+     * Good news is that these have been moved from calling functions to here
+     * Hopefully it may be easier to simplify
+     */
     /* Clear all CO_FLAGS_MATCH recursively */
     pt_apply(pt, co_clearflag, (void*)CO_FLAGS_MATCH);
-#if 1 /* XXX: should move up to callers? */
-    if (mr){
-	if (!last_level(cvt, mr->mr_level)){
-	    cg_obj *co_match;
-	    char *r;
-	    if (mr->mr_len == 1){
-		co_match = pt_vec_i_get(mr->mr_parsetree,mr->mr_vec[0]);
-		if (co_match->co_type == CO_VARIABLE && ISREST(co_match))
-		    ;
-		else{
-		    if (mr->mr_reason == NULL){ /* If pre-existing error reason use that */
-			if ((r = strdup("Unknown command")) == NULL) /* else create unknown error */
-			    goto done;
-			mr_reason_set(mr, r);
-		    }
-		    mr_vec_reset(mr);
+    if (!last_level(cvt, mr_level_get(mr))){ /* XXX level always 0 */
+	if (mr_pt_len_get(mr) == 1){
+	    co_match = mr_pt_i_get(mr, 0);
+	    if (co_match->co_type == CO_VARIABLE && ISREST(co_match))
+		;
+	    else{
+		if (mr_reason_get(mr) == NULL){ /* If pre-existing error reason use that */
+		    if ((r = strdup("Unknown command")) == NULL) /* else create unknown error */
+			goto done;
+		    mr_reason_set(mr, r);
 		}
+		mr_pt_reset(mr);
 	    }
-	    else {
+	}
+	else {
+	    if ((r = strdup("Unknown command")) == NULL)
+		goto done;
+	    mr_reason_set(mr, r);
+	    mr_pt_reset(mr);
+	}
+    }
+    /* There is some magic to this. Collapse many choices to one
+     * if all alternatives are variables.
+     * Note can convert len>1 to len=1
+     */
+    if (mr_pt_len_get(mr) > 1){ 
+	string1 = cvec_i_str(cvt, cligen_cvv_levels(cvt)+1);
+	for (i=0; i<mr_pt_len_get(mr); i++){
+	    co = mr_pt_i_get(mr, i);
+	    /* XXX If variable dont compare co_command */
+	    if (co->co_type == CO_COMMAND && string1)
+		if ((!cligen_caseignore_get(h) && strcmp(string1, co->co_command)==0) ||
+		    (cligen_caseignore_get(h) && strcasecmp(string1, co->co_command)==0)){
+		    mr_pt_reset(mr);
+		    mr_pt_append(mr, co);
+		    break;
+		}
+	    if (co->co_type != CO_VARIABLE)
+		allvars = 0; /* should mean onlyvars*/
+	}
+	if (allvars && cligen_preference_mode(h)){
+	    co = mr_pt_i_get(mr,0);
+	    mr_pt_reset(mr);
+	    mr_pt_append(mr, co);
+	}
+    }
+    switch (mr_pt_len_get(mr)){
+    case 0:
+	/* If no match fix an error message */
+	if (mr_pt_len_get(mr) == 0){
+	    if (mr_reason_get(mr) == NULL){
 		if ((r = strdup("Unknown command")) == NULL)
 		    goto done;
 		mr_reason_set(mr, r);
-		mr_vec_reset(mr);
 	    }
 	}
-	*ptmatch = mr->mr_parsetree;
-	*matchvec = mr->mr_vec;
-	*matchlen = mr->mr_len;
-	if (reasonp){
-	    *reasonp = mr->mr_reason;
+	break;
+    case 1:
+	/* Here we have an obj that is unique so far. We need to see if there is 
+	 * only one sibling to it. */
+	co1 = mr_pt_i_get(mr, 0);
+	if (co1 != NULL && co1->co_ref != NULL){
+	    parse_tree    *ptmr = mr_pt_get(mr);
+	    if (pt_vec_i_replace(ptmr, 0, co1->co_ref) < 0)
+		goto done;
 	}
-	else if (mr->mr_reason)
-	    free(mr->mr_reason);
-	free(mr);
-    }
-#endif
+	/*
+	 * Special case: if a NULL child is not found, then set result == GC_NOMATCH
+	 */
+	if ((ptc = co_pt_get(co1)) != NULL
+	    && best
+	    ){
+	    for (i=0; i<pt_len_get(ptc); i++){
+		if ((co = pt_vec_i_get(ptc, i)) == NULL ||
+		    co->co_type == CO_EMPTY)
+		    break; /* If we match here it is OK, unless no match */
+	    }
+	    if (pt_len_get(ptc) != 0 &&
+		i == pt_len_get(ptc)){
+		co1 = NULL;
+		if ((r = strdup("Incomplete command")) == NULL)
+		    goto done;
+		mr_reason_set(mr, r);
+		mr_pt_reset(mr);
+	    }
+	}
+	break;
+    default:
+	break;
+    } /* switch */
+    if (best)
+    	mr_parsetree_free_ifnot(mr, pt, NULL);
+    *mrp = mr;
     retval = 0;
  done:
     return retval;
@@ -1274,7 +975,6 @@ match_pattern(cligen_handle h,
  * @param[out] cvv       CLIgen variable vector containing vars for matching path
  * @param[out] cvvall    CLIgen variable vector containing vars and constants for matching vars
  * @param[out] match_obj Exact object to return
- * @param[out] ptmatch   Expanded parse tree in which match_obj occurs
  * @param[out] resultp   Result, < 0: errors, >=0 number of matches (only if retval == 0)
  * @param[out] reason    If retval is 0 and matchlen != 1, contains reason 
  *                       for not matching variables, if given. Need to be free:d
@@ -1289,116 +989,41 @@ match_pattern_exact(cligen_handle  h,
 		    cvec          *cvv,
 		    cvec          *cvvall,
 		    cg_obj       **match_obj,
-		    parse_tree   **ptmatchp,
 		    cligen_result *resultp,
-		    char         **reason)
+		    char         **reason
+		    )
 {
     int           retval = -1;
-    parse_tree   *ptmatch = NULL;
-    cg_obj       *co = NULL;
-    int          *matchvec = NULL;
-    int           matchlen = -1; /* length of matchvec */
-    int           i;
-    parse_tree   *ptc;
-
+    match_result *mr = NULL;
+    
+    if (resultp == NULL){
+	errno = EINVAL;
+	goto done;
+    }
     if ((match_pattern(h,
 		       cvt, cvr, /* token string */
 		       pt,       /* command vector */
 		       1,        /* best: Return only best option including hidden options */
-		       &ptmatch, 
-		       &matchvec,
-		       &matchlen, 
 		       cvv, cvvall,
-		       reason)) < 0){
+		       &mr)) < 0){
 	goto done;
     }
-    assert(matchlen != -1);
-    /* If no match fix an error message */
-    if (matchlen == 0){
-	if (reason && *reason == NULL){
-	    if ((*reason = strdup("Unknown command")) == NULL)
-		goto done;
-	}
+    if (mr == NULL){ /* shouldnt happen */
+	errno = EFAULT;
+	goto done;
     }
-    else if (matchlen > 1){ /* There is some magic to this. Collapse many choices to one
-			     * if all alternatives are variables.
-			     */
-	    int j;
-	    int allvars = 1;
-	    char *string1;
-	    string1 = cvec_i_str(cvt, cligen_cvv_levels(cvt)+1);
-	    for (j=0; j<matchlen; j++){
-		co = pt_vec_i_get(ptmatch,matchvec[j]);
-		/* XXX If variable dont compare co_command */
-		if (co->co_type == CO_COMMAND && string1)
-		    if ((!cligen_caseignore_get(h) && strcmp(string1, co->co_command)==0) ||
-			(cligen_caseignore_get(h) && strcasecmp(string1, co->co_command)==0)){
-			matchlen = 1;
-			matchvec[0] = matchvec[j];
-			break;
-		}
-		if (co->co_type != CO_VARIABLE)
-		    allvars = 0; /* should mean onlyvars*/
-	    }
-	    if (allvars && cligen_preference_mode(h)){
-		matchlen = 1; /* choose first element */
-	    }
-    }
-    /* Only a single match at this point */
-    if (matchlen != 1)
-	goto ok;
-    /* Here we have an obj that is unique so far. We need to see if there is only one sibling to it. */
-    co = pt_vec_i_get(ptmatch, *matchvec);
-    /*
-     * Special case: if a NULL child is not found, then set result == GC_NOMATCH
-     */
-    if ((ptc = co_pt_get(co)) != NULL){
-	for (i=0; i<pt_len_get(ptc); i++){
-	    cg_obj *co1;
-	    if ((co1 = pt_vec_i_get(ptc, i)) == NULL ||
-		co1->co_type == CO_EMPTY)
-		break; /* If we match here it is OK, unless no match */
-	}
-	if (pt_len_get(ptc) != 0 && i==pt_len_get(ptc)){
-	    co = NULL;
-	    if (reason){
-		if (*reason != NULL)
-		    free(*reason);
-		if ((*reason = strdup("Incomplete command")) == NULL)
-		    goto done;
-	    }
-	    matchlen = 0;
-	}
-    }
- ok:
-    if (resultp){
-	switch (matchlen){
-	case -1: /* shouldnt happen */
-	    *resultp = CG_ERROR;
-	    break;
-	case 0:
-	    *resultp = CG_NOMATCH;
-	    break;
-	case 1:
-	    *resultp = CG_MATCH;
-	    break;
-	default:
-	    *resultp = CG_MULTIPLE;
-	    break;
-	}
-    }
-    if (match_obj)
-	*match_obj = co;
-    if (ptmatchp){
-	*ptmatchp = ptmatch;
-	ptmatch = NULL;
-    }
+    if (reason &&
+	mr_reason_get(mr))
+	*reason = strdup(mr_reason_get(mr));
+    if (mr_pt_len_get(mr) == 1 &&
+	match_obj)
+	*match_obj = mr_pt_i_get(mr, 0);
+    *resultp = mr2result(mr);
     retval = 0;
  done:
-    if (ptmatch && pt != ptmatch)
-	pt_free(ptmatch, 0);
-    if (matchvec)
-	free(matchvec);
+    if (mr){
+	mr_free(mr);
+    }
     return retval;
 } /* match_pattern_exact */
 
@@ -1433,13 +1058,10 @@ match_complete(cligen_handle h,
     char    *string;
     char    *s;
     char    *ss;
-    parse_tree *ptmatch = NULL; 
-    int      matchlen = 0;
-    int     *matchvec = NULL;
-    int      mv;
     int      append = 0; /* Has appended characters */
     int      retval = -1;
     size_t   len;
+    match_result *mr = NULL;
 
     /* ignore any leading whitespace */
     string = *stringp;
@@ -1449,16 +1071,13 @@ match_complete(cligen_handle h,
     s = string;
     while ((strlen(s) > 0) && isblank(*s))
 	s++;
-    matchlen = 0;
     if (match_pattern(h, cvt, cvr,
 		      pt,
 		      0, /* best: Return all options, not only best, exclude hidden options */
-		      &ptmatch, 
-		      &matchvec, &matchlen,
 		      cvv, NULL,
-		      NULL) < 0)
+		      &mr) < 0)
 	goto done;
-    if (matchlen == 0){
+    if (mr == NULL || mr_pt_len_get(mr) == 0){
 	retval = 0;
 	goto done; /*  No matches */
     }
@@ -1469,10 +1088,8 @@ match_complete(cligen_handle h,
 
     minmatch = slen;
     equal = 1;
-    for (i=0; i<matchlen; i++){
-	mv = matchvec[i];
-	assert(mv != -1);
-	co = pt_vec_i_get(ptmatch, mv);
+    for (i=0; i<mr_pt_len_get(mr); i++){
+	co = mr_pt_i_get(mr, i);
 	if (co == NULL){
 	    retval = 0;
 	    goto done;
@@ -1521,14 +1138,14 @@ match_complete(cligen_handle h,
     }
     retval = append?1:0;
   done:
-    if (ptmatch && pt != ptmatch)
-	pt_free(ptmatch, 0);
     if (cvt)
 	cvec_free(cvt);
     if (cvr)
 	cvec_free(cvr);
-    if (matchvec)
-	free(matchvec);
+    if (mr){
+	mr_parsetree_free_ifnot(mr, pt, NULL);
+	mr_free(mr);
+    }
     return retval;
 }
 

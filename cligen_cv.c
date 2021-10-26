@@ -61,7 +61,6 @@
 #include "cligen_parsetree.h"
 #include "cligen_object.h"
 #include "cligen_io.h"
-#include "cligen_match.h"
 #include "cligen_regex.h"
 #include "cligen_getline.h"
 
