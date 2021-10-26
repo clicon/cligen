@@ -30,6 +30,10 @@
 
   ***** END LICENSE BLOCK *****
 
+  * Notes:
+  * - The main prefix is "pt_" in this API, but a few have "cligen_parsetree_" pt_free 
+  *    have both, consider changing to "cligen_pt_" ?
+  * - There is some inconsistency wheen freeing sub-objects in this API.
 */
 
 #include "cligen_config.h"
@@ -62,6 +66,7 @@
 #include "cligen_pt_head.h"
 #include "cligen_object.h"
 #include "cligen_io.h"
+#include "cligen_result.h"
 #include "cligen_read.h"
 #include "cligen_parse.h"
 #include "cligen_handle.h"
@@ -87,7 +92,7 @@ cg_obj *
 pt_vec_i_get(parse_tree *pt,
 	     int         i)
 {
-    if (pt == NULL){
+    if (pt == NULL || i<0){
        errno = EINVAL;
        return NULL;
     }
@@ -106,7 +111,7 @@ pt_vec_i_clear(parse_tree *pt,
        errno = EINVAL;
        return -1;
     }
-    if (i >= pt_len_get(pt)){
+    if (i<0 || i >= pt_len_get(pt)){
        errno = EINVAL;
        return -1;
     }
@@ -135,12 +140,36 @@ pt_vec_i_insert(parse_tree *pt,
        errno = EINVAL;
        goto done;
     }
+    if (i<0 || i > pt_len_get(pt)){
+       errno = EINVAL;
+       return -1;
+    }
     if (pt_realloc(pt) < 0)
 	goto done;
     if ((size = (pt_len_get(pt) - (i+1))*sizeof(cg_obj*)) != 0)
 	memmove(&pt->pt_vec[i+1], 
 		&pt->pt_vec[i], 
 		size);
+    pt->pt_vec[i] = co;
+    retval = 0;
+ done:
+    return retval;
+}
+int
+pt_vec_i_replace(parse_tree *pt,
+		 int         i,
+		 cg_obj     *co)
+{
+    int       retval = -1;
+    
+    if (pt == NULL){
+       errno = EINVAL;
+       goto done;
+    }
+    if (i<0 || i > pt_len_get(pt)){
+       errno = EINVAL;
+       return -1;
+    }
     pt->pt_vec[i] = co;
     retval = 0;
  done:
@@ -154,6 +183,8 @@ pt_vec_append(parse_tree *pt,
     return pt_vec_i_insert(pt, pt_len_get(pt), co);
 }
 
+/*! Remove and delete a single cligen object from a parsetree
+ */
 int
 pt_vec_i_delete(parse_tree *pt,
 		int         i)
@@ -166,7 +197,7 @@ pt_vec_i_delete(parse_tree *pt,
        errno = EINVAL;
        goto done;
     }
-    if (i >= pt_len_get(pt)){
+    if (i < 0 || i >= pt_len_get(pt)){
        errno = EINVAL;
        goto done;
     }
@@ -498,7 +529,7 @@ cligen_parsetree_sort(parse_tree *pt,
 
 /*! Free all parse-tree nodes of the parse-tree, 
  * @param[in]  pt         CLIgen parse-tree
- * @param[in]  recursive  If set free recursive
+ * @param[in]  recursive  If 0 free pt and objects only, if 1 free recursive
  * @retval     0          OK
  * @retval    -1          Error
  */
@@ -533,6 +564,26 @@ cligen_parsetree_free(parse_tree *pt,
 		      int         recursive)
 {
     return pt_free(pt, recursive);
+}
+
+/*! Reset parse-tree vector, DONT free any co-objects
+ * @param[in]  pt         CLIgen parse-tree
+ * @retval     0          OK
+ * @retval    -1          Error
+ */
+int
+pt_reset(parse_tree *pt)
+{
+    if (pt == NULL){
+	errno = EINVAL;
+	return -1;
+    }
+    if (pt->pt_vec){
+	free(pt->pt_vec);
+	pt->pt_vec = NULL;
+    }
+    pt->pt_len = 0;
+    return 0;
 }
 
 /*! Apply a function call recursively on all cg_obj:s in a parse-tree

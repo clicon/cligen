@@ -57,6 +57,7 @@
 #include "cligen_pt_head.h"
 #include "cligen_object.h"
 #include "cligen_handle.h"
+#include "cligen_result.h"
 #include "cligen_read.h"
 #include "cligen_print.h"
 #include "cligen_io.h"
@@ -408,9 +409,7 @@ cligen_help_clear(struct cligen_help *ch)
 int
 print_help_lines(cligen_handle h,
 		 FILE         *fout, 
-		 parse_tree   *ptmatch, 
-		 int          *matchvec,
-		 size_t        matchlen)
+		 parse_tree   *ptmatch)
 {
     int              retval = -1;
     cg_obj          *co;
@@ -422,18 +421,16 @@ print_help_lines(cligen_handle h,
     int              maxlen = 0;
     int              nrcmd = 0;
     int              column_width;
-    int              vi;
 
     if ((cb = cbuf_new()) == NULL)
 	return -1;
     /* Go through match vector and collect commands and helps */
-    if ((chvec = calloc(matchlen, sizeof(struct cligen_help))) ==NULL){
+    if ((chvec = calloc(pt_len_get(ptmatch), sizeof(struct cligen_help))) ==NULL){
 	perror("calloc");
 	goto done;
     }
-    for (i=0; i<matchlen; i++){
-	vi = matchvec[i]; /* index into array, extra indirection */
-	co = pt_vec_i_get(ptmatch, vi);
+    for (i=0; i<pt_len_get(ptmatch); i++){
+	co = pt_vec_i_get(ptmatch, i);
 	if (co->co_command == NULL)
 	    continue;
 	cmd = NULL;
@@ -492,23 +489,6 @@ cligen_help(cligen_handle h,
 	    FILE         *fout, 
 	    parse_tree   *pt)
 {
-    int     retval = -1;
-    int     i;
-    int    *matchvec = NULL;
-
-    /* intermediate struct to fit into print_help_lines() parameters */
-    if ((matchvec = calloc(pt_len_get(pt), sizeof(int))) == NULL){
-	perror("calloc");
-	goto done;
-    }
-    for (i=0; i<pt_len_get(pt); i++)
-	matchvec[i] = i;
-    if (print_help_lines(h, fout, pt, matchvec, pt_len_get(pt)) < 0)
-	goto done;
-    retval = 0;
- done:
-    if (matchvec)
-	free(matchvec);
-    return retval;
+    return print_help_lines(h, fout, pt);
 }
 

@@ -64,6 +64,7 @@
 #include "cligen_object.h"
 #include "cligen_io.h"
 #include "cligen_handle.h"
+#include "cligen_result.h"
 #include "cligen_read.h"
 #include "cligen_parse.h"
 #include "cligen_history.h"

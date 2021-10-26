@@ -48,6 +48,11 @@
 #include <arpa/inet.h>
 #include <string.h>
 #include <errno.h>
+#define __USE_GNU /* isblank() */
+#include <ctype.h>
+#ifndef isblank
+#define isblank(c) (c==' ')
+#endif /* isblank */
 
 #include "cligen_buf.h"
 #include "cligen_cv.h"
@@ -55,7 +60,6 @@
 #include "cligen_parsetree.h"
 #include "cligen_object.h"
 #include "cligen_io.h"
-#include "cligen_match.h"
 #include "cligen_getline.h"
 
 #include "cligen_cv_internal.h"
@@ -686,4 +690,243 @@ cvec_size(cvec *cvv)
     while ((cv = cvec_each(cvv, cv)) != NULL)
 	sz += cv_size(cv);
     return sz;
+}
+
+int
+cligen_txt2cvv(char  *str,
+	       cvec **cvp)
+{
+    int     retval = -1;
+    int     i;
+    int     i0;
+    char    c;
+    cvec   *cvv = NULL;
+    cg_var *cv = NULL;
+    int     whitespace = 1;
+    size_t  len;
+    
+    if ((cvv = cvec_new(0)) == NULL)
+	goto done;
+    len = strlen(str);
+    i0 = 0;
+    for (i=0; i<len; i++){
+	c = str[i];
+	if (whitespace && isblank(c))
+	    i0 = i+1; /* skip */
+	else if (c == '\n'){
+	    if ((cv = cvec_add(cvv, CGV_STRING)) == NULL)
+		goto done;
+	    if (cv_strncpy(cv, &str[i0], i-i0) == NULL)
+		goto done;
+	    i0 = i+1;
+	    whitespace = 1;
+#ifdef CLIGEN_SINGLE_HELPSTRING
+	    i0 = i; /* disable extra \n */
+	    break;
+#endif
+	}
+	else{
+	    whitespace = 0;
+	}
+    }
+    /* There may be a case here where last char is \n */
+    if (i != i0){
+	if ((cv = cvec_add(cvv, CGV_STRING)) == NULL)
+	    goto done;
+	if (cv_strncpy(cv, &str[i0], i-i0) == NULL)
+	    goto done;
+    }
+    if (cvp){
+	if (*cvp != NULL)
+	    cvec_free(*cvp);
+	*cvp = cvv;
+	cvv = NULL;
+    }
+    retval = 0;
+ done:
+    if (cvv)
+	cvec_free(cvv);
+    return retval;
+}
+
+/*! Given a string (s0), return the next token. 
+ * The string is modified to return
+ * the remainder of the string after the identified token.
+ * A token is found either as characters delimited by one or many delimiters.
+ * Or as a pair of double-quotes(") with any characters in between.
+ * if there are trailing spaces after the token, trail is set to one.
+ * If string is NULL or "", NULL is returned.
+ * If empty token found, s0 is NULL
+ * @param[in]  s0       String, the string is modified like strtok
+ * @param[out] token0   A malloced token.  NOTE: token must be freed after use.
+ * @param[out] rest0    A remaining (rest) string.  NOTE: NOT malloced.
+ * @param[out] leading0 If leading delimiters eg " thisisatoken"
+ * Example:
+ *   s0 = "  foo bar"
+ * results in token="foo", leading=1
+ */
+static int
+next_token(char **s0, 
+	   char **token0,
+	   char **rest0, 
+	   int   *leading0)
+{
+    char  *s;
+    char  *st;
+    char  *token = NULL;
+    size_t len;
+    int    quote=0;
+    int    leading=0;
+    int    escape = 0;
+
+    s = *s0;
+    if (s==NULL){
+	fprintf(stderr, "%s: null string\n", __FUNCTION__);
+	return -1;
+    }
+    for (s=*s0; *s; s++){ /* First iterate through delimiters */
+	if (index(CLIGEN_DELIMITERS, *s) == NULL)
+	    break;
+	leading++;
+    }
+    if (rest0)
+	*rest0 = s;
+    if (*s && index(CLIGEN_QUOTES, *s) != NULL){
+	quote++;
+	s++;
+    }
+    st=s; /* token starts */
+    escape = 0;
+    for (; *s; s++){ /* Then find token */
+	if (quote){
+	    if (index(CLIGEN_QUOTES, *s) != NULL)
+		break;
+	}
+	else{ /* backspace tokens for escaping delimiters */
+	    if (escape)
+		escape = 0;
+	    else{
+		if (*s == '\\')
+		    escape++;
+		else
+		    if (index(CLIGEN_DELIMITERS, *s) != NULL)
+			break;
+	    }
+	}
+    }
+    if (quote && *s){
+	s++;
+	// fprintf(stderr, "s=\"%s\" %d %s\n", s, *s, index(CLIGEN_DELIMITERS, *s));
+	if (*s && index(CLIGEN_DELIMITERS, *s) == NULL){
+	    ;//	cligen_reason("Quote token error");
+	}
+	len = (s-st)-1;
+    }
+    else{
+	if (quote){ /* Here we signalled error before but it is removed */
+	    st--;
+	}
+	len = (s-st);
+	if (!len){
+	    token = NULL;
+	    *s0 = NULL;
+	    goto done;
+	}
+    }
+    if ((token=malloc(len+1)) == NULL){
+	fprintf(stderr, "%s: malloc: %s\n", __FUNCTION__, strerror(errno));
+	return -1;
+    }
+    memcpy(token, st, len);
+    token[len] = '\0';
+    *s0 = s;
+ done:
+    *leading0 = leading;
+    *token0 = token;
+    return 0;
+}
+
+/*! Split a CLIgen command string into a cligen variable vector using delimeters and escape quotes
+ *
+ * @param[in]  string String to split
+ * @param[out] cvtp   CLIgen variable vector, containing all tokens. 
+ * @param[out] cvrp   CLIgen variable vector, containing the remaining strings. 
+ * @retval     0      OK
+ * @retval    -1      Error
+ * @code
+ *   cvec  *cvt = NULL;
+ *   cvec  *cvr = NULL;
+ *   if (cligen_str2cvv("a=b&c=d", " \t", "\"", &cvt, &cvt) < 0)
+ *     err;
+ *   ...
+ *   cvec_free(cvt);
+ *   cvec_free(cvr);
+ * @endcode
+ * Example, input string "aa bb cc" (0th element is always whole string)
+ *   cvp : ["aa bb cc", "aa", "bb", "cc"]
+ *   cvr : ["aa bb cc", "aa bb cc", "bb cc", "cc"]
+ * @note both out cvv:s should be freed with cvec_free()
+ */
+int
+cligen_str2cvv(char  *string, 
+	       cvec **cvtp,
+    	       cvec **cvrp)
+{
+    int     retval = -1;
+    char   *s;
+    char   *sr;
+    char   *s0 = NULL;;
+    cvec   *cvt = NULL; /* token vector */
+    cvec   *cvr = NULL; /* rest vector */
+    cg_var *cv;
+    char   *t;
+    int     trail;
+    int     i;
+
+    if ((s0 = strdup(string)) == NULL)
+	goto done;
+    s = s0;
+    if ((cvt = cvec_start(string)) ==NULL)
+	goto done;
+    if ((cvr = cvec_start(string)) ==NULL)
+	goto done;
+    i = 0;
+    while (s != NULL) {
+	if (next_token(&s, &t, &sr, &trail) < 0)
+	    goto done;
+	/* If there is no token, stop, 
+	 * unless it is the intial token (empty string) OR there are trailing whitespace
+	 * In these cases insert an empty "" token.
+	 */
+	if (t == NULL && !trail && i > 0)
+	    break;
+	if ((cv = cvec_add(cvr, CGV_STRING)) == NULL)
+	    goto done;
+	if (cv_string_set(cv, sr?sr:"") == NULL) /* XXX memleak */
+	    goto done;
+	if ((cv = cvec_add(cvt, CGV_STRING)) == NULL)
+	    goto done;
+	if (cv_string_set(cv, t?t:"") == NULL) /* XXX memleak */
+	    goto done;
+	if (t)
+	    free(t);
+	i++;
+    }
+    retval = 0;
+    if (cvtp){
+	*cvtp = cvt;
+	cvt = NULL;
+    }
+    if (cvrp){
+	*cvrp = cvr;
+	cvr = NULL;
+    }
+ done:
+    if (s0)
+	free(s0);
+    if (cvt)
+	cvec_free(cvt);
+    if (cvr)
+	cvec_free(cvr);
+    return retval;
 }

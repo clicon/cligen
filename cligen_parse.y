@@ -94,7 +94,6 @@
 #include "cligen_parsetree.h"
 #include "cligen_pt_head.h"
 #include "cligen_object.h"
-#include "cligen_match.h"
 #include "cligen_syntax.h"
 #include "cligen_handle.h"
 #include "cligen_parse.h"

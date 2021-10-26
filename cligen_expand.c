@@ -49,7 +49,6 @@
 #include "cligen_pt_head.h"
 #include "cligen_object.h"
 #include "cligen_handle.h"
-#include "cligen_match.h"
 #include "cligen_print.h"
 #include "cligen_expand.h"
 #include "cligen_syntax.h"

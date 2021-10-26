@@ -55,7 +55,6 @@
 #endif /* WIN32 */
 #define __USE_GNU /* isblank() */
 #include <ctype.h>
-#include <assert.h>
 
 #ifndef isblank
 #define isblank(c) (c==' ')
@@ -69,9 +68,10 @@
 #include "cligen_object.h"
 #include "cligen_handle.h"
 #include "cligen_print.h"
-#include "cligen_io.h"
+#include "cligen_result.h"
 #include "cligen_read.h"
 #include "cligen_match.h"
+#include "cligen_io.h"
 #include "cligen_expand.h"
 #include "cligen_history_internal.h"
 #include "cligen_getline.h"
@@ -278,9 +278,6 @@ show_help_columns(cligen_handle h,
 {
     int              retval = -1;
     int              level;
-    int              matchlen = 0;
-    int             *matchvec = NULL;
-    int              vi;
     int              i;
     int              nrcmd = 0;
     struct cligen_help *chvec = NULL;
@@ -294,7 +291,7 @@ show_help_columns(cligen_handle h,
     int              rest;
     cvec            *cvt = NULL;      /* Tokenized string: vector of tokens */
     cvec            *cvr = NULL;      /* Rest variant,  eg remaining string in each step */
-    parse_tree      *ptmatch = NULL;
+    match_result    *mr = NULL;
 
     if (string == NULL){
 	errno = EINVAL;
@@ -310,23 +307,20 @@ show_help_columns(cligen_handle h,
     if (match_pattern(h, cvt, cvr,
 		      pt,
 		      0, /* best: Return all options, not only best, exclude hidden */
-		      &ptmatch, 
-		      &matchvec, &matchlen,
 		      cvv, NULL,
-		      NULL) < 0)
+		      &mr) < 0)
 	goto done;
     if ((level = cligen_cvv_levels(cvt)) < 0)
 	goto done;
-    if (matchlen > 0){ /* min, max only defined if matchlen > 0 */
+    if (mr_pt_len_get(mr) > 0){ /* min, max only defined if matchlen > 0 */
 	/* Go through match vector and collect commands and helps */
-	if ((chvec = calloc(matchlen, sizeof(struct cligen_help))) ==NULL){
+	if ((chvec = calloc(mr_pt_len_get(mr), sizeof(struct cligen_help))) ==NULL){
 	    fprintf(stderr, "%s calloc: %s\n", __FUNCTION__, strerror(errno));
 	    goto done;
 	}
 	nrcmd = 0;
-	for (i = 0; i<matchlen; i++){ // nr-1?
-	    vi=matchvec[i];
-	    if ((co = pt_vec_i_get(ptmatch, vi)) == NULL)
+	for (i = 0; i<mr_pt_len_get(mr); i++){ // nr-1?
+	    if ((co = mr_pt_i_get(mr, i)) == NULL)
 		continue;
 	    if (co->co_command == NULL)
 		continue;		
@@ -382,16 +376,16 @@ show_help_columns(cligen_handle h,
 	    cligen_help_clear(&chvec[i]);
 	free(chvec);
     }
-    if (ptmatch && ptmatch != pt)
-	pt_free(ptmatch, 0);
     if (cvt)
 	cvec_free(cvt);
     if (cvr)
 	cvec_free(cvr);
     if (cb)
 	cbuf_free(cb);
-    if (matchvec)
-	free(matchvec);
+    if (mr){
+	mr_parsetree_free_ifnot(mr, pt, NULL);	
+	mr_free(mr);
+    }
     return retval;
 }
 
@@ -425,14 +419,12 @@ show_help_line(cligen_handle h,
 {
     int           retval = -1;
     int           level;
-    int           matchlen = 0;
-    int          *matchvec = NULL;
     cvec         *cvt = NULL;      /* Tokenized string: vector of tokens */
     cvec         *cvr = NULL;      /* Rest variant,  eg remaining string in each step */
     cg_var       *cvlastt;         /* Last element in cvt */
     cg_var       *cvlastr;         /* Last element in cvr */
     cligen_result result;
-    parse_tree   *ptmatch = NULL; 
+    match_result *mr = NULL;
 
     if (string == NULL){
 	errno = EINVAL;
@@ -445,13 +437,9 @@ show_help_line(cligen_handle h,
 		      cvt, cvr, /* token string */
 		      pt,       /* command vector */
 		      0,        /* best: Return all options, not only best, exclude hidden */
-		      &ptmatch,
-		      &matchvec, &matchlen,
 		      cvv, NULL,
-		      NULL) < 0)
+		      &mr) < 0)
 	goto done;
-    if (matchlen) /* sanity */
-	assert(matchvec!= NULL && ptmatch != NULL);
     if ((level =  cligen_cvv_levels(cvt)) < 0)
 	goto done;
 
@@ -480,33 +468,34 @@ show_help_line(cligen_handle h,
 	cvec_del_i(cvr, cvec_len(cvr)-1);
 
 	if (match_pattern_exact(h, cvt, cvr, pt,
-				cvv, NULL,
-				NULL, NULL,
-				&result, NULL) < 0)
+				cvv,
+				NULL,
+				NULL, 
+				&result,
+				NULL) < 0)
 	    goto done;
 	if (result == CG_MATCH || result == CG_MULTIPLE){
 	    fprintf(fout, "  <cr>\n");
 	    fflush(fout);
 	}
     }
-    if (matchlen == 0){
+    if (mr_pt_len_get(mr) == 0){
 	retval = 0;
 	goto done;
     }
     /* ptmatch points to expanded nodes from first match_pattern call */
-    if (print_help_lines(h, fout, ptmatch, matchvec, matchlen) < 0) 
+    if (print_help_lines(h, fout, mr_pt_get(mr)) < 0) 
 	goto done;
-
     retval = 0;
   done:
-    if (ptmatch && pt != ptmatch)
-	pt_free(ptmatch, 0);
     if (cvt)
 	cvec_free(cvt);
     if (cvr)
 	cvec_free(cvr);
-    if (matchvec)
-	free(matchvec);
+    if (mr){
+	mr_parsetree_free_ifnot(mr, pt, NULL);
+	mr_free(mr);
+    }
     return retval;
 }
 
@@ -657,9 +646,8 @@ cliread_parse(cligen_handle  h,
 	      char         **reason)
 {
     int         retval = -1;
-    cg_obj     *match_obj;
+    cg_obj     *match_obj = NULL;
     parse_tree *ptn = NULL;      /* Expanded */
-    parse_tree *ptmatch = NULL;
     cvec       *cvt = NULL;      /* Tokenized string: vector of tokens */
     cvec       *cvr = NULL;      /* Rest variant,  eg remaining string in each step */
     cg_var     *cv;
@@ -696,7 +684,7 @@ cliread_parse(cligen_handle  h,
 	goto done;
     if (match_pattern_exact(h, cvt, cvr,
 			    ptn, cvv, cvvall,
-			    &match_obj, &ptmatch, 
+			    &match_obj,
 			    result, reason) < 0)
 	goto done;
 #if 0
@@ -724,10 +712,7 @@ cliread_parse(cligen_handle  h,
     }
 #endif
     /* Map from ghost object match_obj to real object */
-    if (match_obj && match_obj->co_ref)
-	*co_orig = match_obj->co_ref;
-    else
-	*co_orig = match_obj;
+    *co_orig = match_obj;
     retval = 0;
   done:
     if (cvv)
@@ -736,13 +721,9 @@ cliread_parse(cligen_handle  h,
 	cvec_free(cvt);
     if (cvr)
 	cvec_free(cvr);
-    if (ptmatch && ptmatch != ptn)
-	if (pt_free(ptmatch, 0) < 0)
-	    return -1;
     if (ptn)
 	if (pt_free(ptn, 0) < 0)
 	    return -1;
-
     if (pt_expand_cleanup(pt) < 0)
 	return -1;
     return retval;

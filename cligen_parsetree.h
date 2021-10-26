@@ -68,6 +68,7 @@ vec_ */
 cg_obj     *pt_vec_i_get(parse_tree *pt, int i);
 int         pt_vec_i_clear(parse_tree *pt, int i);
 int         pt_vec_i_insert(parse_tree *pt, int i, cg_obj *co);
+int         pt_vec_i_replace(parse_tree *pt, int i, cg_obj *co);
 int         pt_vec_append(parse_tree *pt, cg_obj *co);
 int         pt_vec_i_delete(parse_tree *pt, int i);
 int         pt_len_get(parse_tree *pt);
@@ -82,6 +83,7 @@ parse_tree *pt_dup(parse_tree *pt, cg_obj *cop);
 int         cligen_parsetree_merge(parse_tree *pt0, cg_obj *parent0, parse_tree *pt1);
 int         pt_free(parse_tree *pt, int recurse);
 int         cligen_parsetree_free(parse_tree *pt, int recurse);
+int         pt_reset(parse_tree *pt);
 parse_tree *pt_new(void);
 int         pt_apply(parse_tree *pt, cg_applyfn_t fn, void *arg);
 

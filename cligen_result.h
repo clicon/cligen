@@ -1,5 +1,4 @@
 /*
-  CLI generator input/output support functions.
 
   ***** BEGIN LICENSE BLOCK *****
  
@@ -30,50 +29,51 @@
   the provisions above, a recipient may use your version of this file under
   the terms of any one of the Apache License version 2 or the GPL.
 
-  * ***** END LICENSE BLOCK ***** *
- */
+  ***** END LICENSE BLOCK *****
 
-#ifndef _CLIGEN_IO_H_
-#define _CLIGEN_IO_H_
+ * Result generated when matching and used inyternally in cligen
+ * This include file is used internally in cligen, not part of API
+ * The C struct is not exposed outside the .c file
+*/
 
-/*
- * Constants
- */
-
-#define COLUMN_MIN_WIDTH  21 /* For column formatting how many chars minimum 
-				for command/var */
+#ifndef _CLIGEN_RESULT_H
+#define _CLIGEN_RESULT_H
 
 /*
  * Types
  */
-/* Struct for printing command and help */
-struct cligen_help{
-    char   *ch_cmd;  /* Malloced string */
-    cvec   *ch_helpvec;
+enum cligen_result{
+    CG_EOF      = -2,
+    CG_ERROR    = -1,
+    CG_NOMATCH  =  0,
+    CG_MATCH    =  1,
+    CG_MULTIPLE =  2,
 };
+typedef enum cligen_result cligen_result;
 
-/* CLIgen event register callback type */
-typedef int (cligen_fd_cb_t)(int, void*);
+/* see cligen_match_result.c for struct declaration */
+typedef struct match_result match_result; 
 
 /*
  * Prototypes
  */
-int  cli_output_reset(void);
-int  cli_output_status(void);
-#if defined(__GNUC__) && __GNUC__ >= 3
-int  cligen_output(FILE *f, const char *templ, ... ) __attribute__ ((format (printf, 2, 3)));
-#else
-int  cligen_output(FILE *f, const char *templ, ... );
-#endif
-int  cligen_regfd(int fd, cligen_fd_cb_t *cb, void *arg);
-int  cligen_unregfd(int fd);
-void cligen_redraw(cligen_handle h);
-int  cligen_susp_hook(cligen_handle h, cligen_susp_cb_t *fn);
-int  cligen_interrupt_hook(cligen_handle h, cligen_interrupt_cb_t *fn);
-void cligen_exitchar_add(cligen_handle h, char c);
-int  cligen_help_eq(struct cligen_help *ch0, struct cligen_help *ch1, int help);
-int  cligen_help_clear(struct cligen_help *ch0);
-int  print_help_lines(cligen_handle h, FILE *fout, parse_tree *ptmatch);
-int  cligen_help(cligen_handle h, FILE *f, parse_tree *pt);
+int   mr_pt_len_get(match_result *mr);
+int   mr_pt_reset(match_result *mr);
+int   mr_pt_append(match_result *mr, cg_obj *co);
+cg_obj *mr_pt_i_get(match_result *mr, int i);
+parse_tree *mr_pt_get(match_result *mr);
+char *mr_reason_get(match_result *mr);
+int   mr_reason_set(match_result *mr, char *reason);
+parse_tree *mr_parsetree_get(match_result *mr);
+int   mr_parsetree_set(match_result *mr, parse_tree *pt);
+int   mr_parsetree_free_ifnot(match_result *mr, parse_tree *pt1, parse_tree *pt2);
+int   mr_level_get(match_result *mr);
+int   mr_level_set(match_result *mr, int level);
+int   mr_last_get(match_result *mr);
+int   mr_last_set(match_result *mr);
+int   mr_mv_reason(match_result *from, match_result *to);
+match_result *mr_new(void);
+int   mr_free(match_result *mr);
+cligen_result mr2result(match_result *mr);
 
-#endif /* _CLIGEN_IO_H_ */
+#endif /* _CLIGEN_RESULT_H */

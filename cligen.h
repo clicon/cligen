@@ -63,6 +63,7 @@ extern "C" {
 #include <cligen/cligen_object.h>
 #include <cligen/cligen_handle.h>
 #include <cligen/cligen_print.h>
+#include <cligen/cligen_result.h>
 #include <cligen/cligen_read.h>
 #include <cligen/cligen_io.h>
 #include <cligen/cligen_expand.h>
