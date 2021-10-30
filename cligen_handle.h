@@ -146,4 +146,14 @@ int   cligen_reftree_filter_set(cligen_handle h, cvec *cvv);
 int   cligen_caseignore_get(cligen_handle h);
 int   cligen_caseignore_set(cligen_handle h, int ignorecase);
 
+int   cligen_expand_first_get(cligen_handle h);
+int   cligen_expand_first_set(cligen_handle h, int cvv0expand);
+
+int   cligen_exclude_keys_set(cligen_handle h, int status);
+int   cligen_exclude_keys_get(cligen_handle h);
+
+/* XXX backward compatible, use cligen_ variant below instead */
+int   cv_exclude_keys(int status);
+int   cv_exclude_keys_get(void);
+
 #endif /* _CLIGEN_HANDLE_H_ */

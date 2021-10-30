@@ -1085,3 +1085,94 @@ cligen_caseignore_set(cligen_handle h,
     ch->ch_ignore_case = ignorecase;
     return 0;
 }
+
+/*! Get status of cvv0 expand
+ *
+ * First arg of callback cvv is:
+ * If 0: original string as the user typed it
+ * If 1, expanded string matching keywords
+ *
+ * @param[in] h   CLIgen handle
+ * @retval    0   cvv0 is original
+ * @retval    1   cvv0 is expanded
+ * @see cvec_cvv0expand
+ */
+int
+cligen_expand_first_get(cligen_handle h)
+{
+    struct cligen_handle *ch = handle(h);
+
+    return ch->ch_expand_first;
+}
+
+/*! Set status of cvv0 expand
+ *
+ * First arg of callback cvv is:
+ * If 0: original string as the user typed it
+ * If 1, expanded string matching keywords
+ * @param[in]  h          CLIgen handle
+ * @param[in]  cvv0expand 0: original, 1:; expanded
+ * @retval     0          OK
+ * @see cvec_exclude_keys
+ */
+int
+cligen_expand_first_set(cligen_handle h,
+			int           expand_first)
+{
+    struct cligen_handle *ch = handle(h);
+    
+    ch->ch_expand_first = expand_first;
+    return 0;
+}
+
+/*! Changes cvec find function behaviour, exclude keywords or include them.
+ * @param[in] status
+ */
+int
+cligen_exclude_keys_set(cligen_handle h,
+			int           status)
+{
+    struct cligen_handle *ch = handle(h);
+    
+    ch->ch_exclude_keys = status;
+    return 0;
+}
+
+/*! Changes cvec find function behaviour, exclude keywords or include them.
+ * @param[in] status
+ * @see cv_exclude_keys
+ */
+int
+cligen_exclude_keys_get(cligen_handle h)
+{
+    struct cligen_handle *ch = handle(h);
+
+    return ch->ch_exclude_keys;
+}
+
+#if 1 // XXX backward compatible
+/*
+ * cv_exclude_keys
+ * set if you want to backward compliant: dont include keys in cgv vec to callback
+ * that is, regular 'keys' and keys like: '<string keyword=foo>'
+ */
+static int excludekeys = 0;
+
+/*! Changes cvec find function behaviour, exclude keywords or include them.
+ * @param[in] status
+ */
+int
+cv_exclude_keys(int status)
+{
+    excludekeys = status;
+    return 0;
+}
+/*! Changes cvec find function behaviour, exclude keywords or include them.
+ * @param[in] status
+ */
+int
+cv_exclude_keys_get(void)
+{
+    return excludekeys;
+}
+#endif

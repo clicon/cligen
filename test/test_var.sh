@@ -14,7 +14,7 @@ cat > $fspec <<EOF
   treename="example";          # Name of syntax (used when referencing)
 
 # 3.1 Basic structure
-  a <int32>, callback();
+  aaa <int32>, callback();
   b <b:int32>, callback();
   c <c:int32 show:"a number">("A 32-bit number"), callback();
 
@@ -29,8 +29,22 @@ newtest "$cligen_file -f $fspec"
 
 # 3.1 Basic structure
 # commands
-newtest "a 42"
-expectpart "$(echo "a 42" | $cligen_file -f $fspec 2>&1)" 0 "1 name:a type:string value:a" "2 name:int32 type:int32 value:42"
+# Note variants of aa, aaa:
+# aa is input, aaa is completed
+newtest "aa 42"
+expectpart "$(echo "aa 42" | $cligen_file -f $fspec 2>&1)" 0 "0 name:cmd type:rest value:aa 42" "1 name:aaa type:string value:aaa" "2 name:int32 type:int32 value:42"
+
+# No string param
+newtest "aa 42 exclude keys"
+expectpart "$(echo "aa 42" | $cligen_file -E -f $fspec 2>&1)" 0 "0 name:cmd type:rest value:aa 42" "1 name:int32 type:int32 value:42" --not-- "name:aaa type:string value:aaa"
+
+# aa->aaa in first arg
+newtest "aa 42 expand cvv0"
+expectpart "$(echo "aa 42" | $cligen_file -c -f $fspec 2>&1)" 0 "0 name:cmd type:rest value:aaa 42" "1 name:aaa type:string value:aaa" "2 name:int32 type:int32 value:42"
+
+# both of the above
+newtest "aa 42 exclude keys + expand cvv0"
+expectpart "$(echo "aa 42" | $cligen_file -c -E -f $fspec 2>&1)" 0 "0 name:cmd type:rest value:aaa 42" "1 name:int32 type:int32 value:42" --not-- "name:aaa type:string value:aaa"
 
 newtest "b 42"
 expectpart "$(echo "b 42" | $cligen_file -f $fspec 2>&1)" 0 "1 name:b type:string value:b" "2 name:b type:int32 value:42"

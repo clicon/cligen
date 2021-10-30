@@ -81,13 +81,6 @@ static inline char * strdup4(char *str)
     return dup;
 }
 
-/*
- * cv_exclude_keys
- * set if you want to backward compliant: dont include keys in cgv vec to callback
- * that is, regular 'keys' and keys like: '<string keyword=foo>'
- */
-static int excludekeys = 0;
-
 /*! Create and initialize a new cligen variable vector (cvec)
  *
  * Each individual cv initialized with CGV_ERR and no value.
@@ -312,6 +305,8 @@ cvec_del(cvec   *cvv,
  *
  * @param[in]  cvv   Cligen variable vector
  * @param[in]  del   variable to delete
+ * @retvak     n     New cvec length
+ * @retvak    -1     Error
  *
  * @note This is a dangerous command since the cv it deletes (such as created by
  * cvec_add) may have been modified with realloc (eg cvec_add/delete) and
@@ -323,9 +318,10 @@ int
 cvec_del_i(cvec *cvv,
 	   int   i)
 {
-    if (cvec_len(cvv) == 0 || cvec_len(cvv) < i)
-	return 0;
-    
+    if (cvec_len(cvv) == 0 || cvec_len(cvv) < i){
+	errno = EINVAL;
+	return -1;
+    }
     if (i != cvec_len(cvv)-1) /* If not last entry, move the remaining cv's */
 	memmove(&cvv->vr_vec[i], &cvv->vr_vec[i+1],
 		(cvv->vr_len-i-1) * sizeof(cvv->vr_vec[0]));
@@ -657,24 +653,6 @@ cvec_name_set(cvec *cvv,
 }
 
 
-/*! Changes cvec find function behaviour, exclude keywords or include them.
- * @param[in] status
- */
-int
-cv_exclude_keys(int status)
-{
-    excludekeys = status;
-    return 0;
-}
-/*! Changes cvec find function behaviour, exclude keywords or include them.
- * @param[in] status
- */
-int
-cv_exclude_keys_get(void)
-{
-    return excludekeys;
-}
-
 /*! Return the alloced memory of a CLIgen variable vector
  */
 size_t
@@ -929,4 +907,60 @@ cligen_str2cvv(char  *string,
     if (cvr)
 	cvec_free(cvr);
     return retval;
+}
+
+/*! Replace the original string in first position with expanded string
+ *
+ * @param[in,out]  cvv  Change first element
+ * @retval         0    OK
+ * @retval         -1   Error
+ * @see https://github.com/clicon/cligen/issues/65
+ */
+int
+cvec_expand_first(cvec *cvv)
+{
+    int     retval = -1;
+    cbuf   *cb = NULL;
+    cg_var *cv;
+    int     i;
+    
+    if ((cb = cbuf_new()) == NULL)
+	goto done;
+    for (i=1; i<cvec_len(cvv); i++){
+	if (i>1)
+	    cprintf(cb, " ");
+	if ((cv = cvec_i(cvv, i)) == NULL)
+	    goto done;
+	cv2cbuf(cv, cb);
+    }
+    cv = cvec_i(cvv,0);
+    cv_string_set(cv, cbuf_get(cb));
+    retval = 0;
+ done:
+    if (cb)
+	cbuf_free(cb);
+    return retval;
+}
+
+/*! Exclude keys from cvec
+ *
+ * @param[in,out]  cvv  Remove all contant keywords
+ * @see https://github.com/clicon/cligen/issues/65
+ */
+int
+cvec_exclude_keys(cvec *cvv)
+{
+    cg_var *cv;
+    int     i;
+
+    for (i=1; i<cvec_len(cvv);){
+	if ((cv = cvec_i(cvv, i)) != NULL &&
+	    cv_const_get(cv)){
+	    cv_reset(cv);
+	    cvec_del_i(cvv, i);		
+	    continue;
+	}
+	i++;
+    }
+    return 0;
 }

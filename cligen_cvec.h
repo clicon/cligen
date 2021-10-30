@@ -73,11 +73,11 @@ cg_var *cvec_find_var(cvec *vr, char *name);
 char   *cvec_find_str(cvec *vr, char *name);
 char   *cvec_name_get(cvec *vr);
 char   *cvec_name_set(cvec *vr, char *name);
-int     cv_exclude_keys(int status);
-int     cv_exclude_keys_get(void);
 size_t  cvec_size(cvec *cvv);
 int     cligen_txt2cvv(char *str, cvec **cvp);
 int     cligen_str2cvv(char *string, cvec **cvp, cvec **cvr);
+int     cvec_expand_first(cvec *cvv);
+int     cvec_exclude_keys(cvec *cvv);
 
 #endif /* _CLIGEN_CVEC_H_ */
 

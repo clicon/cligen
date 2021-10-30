@@ -1170,18 +1170,20 @@ An example of {\tt CLIgen} callback function from the example in
 Section~\ref{sec:intro} with the command syntax {\tt hello world,cb("hello");}is:
 
 \begin{verbatim}
-   int cb(cligen_handle h, cvec *cvv, cvec *argv){
+   int cb(cligen_handle h, 
+          cvec *cvv, 
+          cvec *argv)
+   {
       printf("%s\n", cv_string_get(cvec_i(argv, 0)));
       return 0;
    }
 \end{verbatim}
-The callback returns zero if everything is OK, and $-1$ on error. The arguments of a callback
-function are:
+The callback returns zero if everything is OK, and $-1$ on error. The parameters of a callback function are:
 \begin{itemize}
 \item
 {\tt handle} - CLIgen handle created by a call to {\tt cligen\_init}. The handle is used if the callback makes API calls to CLIgen, such as changing prompt, parse-tree, etc.
 \item
-{\tt cvv} - The command line as a list of CLIgen variables. Both keys and variables are included in the list.
+{\tt cvv} - The command line as a list of CLIgen variables. By default, both keys and variables are included in the list.
 \item
 {\tt argv} - A vector of CLIgen variables declared in the command syntax.
 \end{itemize}
@@ -1195,13 +1197,23 @@ and an CLI input command such as:
   cli> person male 67
 \end{verbatim}
 
-The cligen variable vector {\tt cvv} has four elements and can be accessed via iteration or via the {\tt cvec\_i()} function:
+\subsubsection{The cvv parameter}
+
+In the example, the cligen variable vector {\tt cvv} has four elements and can be accessed via iteration or via the {\tt cvec\_i()} function:
 \begin{enumerate}
-\item The complete command string: {\tt person male 67}.
+\item The complete command string: {\tt person male 67} as the user typed the string.
 \item The CLIgen string variable containing the keyword {\tt person}.
 \item The keyword {\tt male}.
 \item A CLIgen integer variable containing 67.
 \end{enumerate}
+
+Two API functions control the format of {\tt cvv} and changes the rules above:
+\begin{enumerate}
+\item {\tt cligen\_expand\_first\_set()}.: Instead of showing the first {\tt cvv} argument as the user typed it, the \emph{expanded} variant (after completion) is shown. Example: the user types {\tt per m 67}, whereas the expanded version of that string is {\tt person male 67}.
+\item {\tt cligen\_exclude\_keys\_set()}: Do \emph{not} include keywords in the {\tt ccv} argument. With this option enabled, there are only two elements in {\tt cvv} of the example: The complete command string; and the integer, while the two keywords {\tt person} and {\tt male} are omitted.
+\end{enumerate}
+
+\subsubsection{The argv parameter}
 
 The {\tt argv} argument contains the function argument in the command syntax: {\tt person}.
 

@@ -60,7 +60,9 @@
  *   Shell command:           foo.sh 99 1.2.3.4.
  */
 int
-cligen_exec_cb(cligen_handle handle, cvec *cvv, cvec *argv)
+cligen_exec_cb(cligen_handle handle,
+	       cvec         *cvv,
+	       cvec         *argv)
 {
     cg_var *cv = NULL;
     char    buf[64];
@@ -92,16 +94,18 @@ cligen_exec_cb(cligen_handle handle, cvec *cvv, cvec *argv)
 /*! CLI generic callback printing the variable vector and argument
  */
 int
-callback(cligen_handle handle, cvec *cvv, cvec *argv)
+callback(cligen_handle handle,
+	 cvec         *cvv,
+	 cvec         *argv)
 {
-    int     i = 1;
+    int     i = 0;
     cg_var *cv;
     char    buf[64];
 
     cligen_output(stderr, "function: %s\n", cligen_fn_str_get(handle));
     cligen_output(stderr, "variables:\n");
     cv = NULL;
-    while ((cv = cvec_each1(cvv, cv)) != NULL) {
+    while ((cv = cvec_each(cvv, cv)) != NULL) {
 	cv2str(cv, buf, sizeof(buf)-1);
 	cligen_output(stderr, "\t%d name:%s type:%s value:%s\n", 
 		i++, 
@@ -125,7 +129,9 @@ callback(cligen_handle handle, cvec *cvv, cvec *argv)
  * Note, the syntax need to something like: "a{help}, callback(42)"
  */
 cgv_fnstype_t *
-str2fn(char *name, void *arg, char **error)
+str2fn(char  *name,
+       void  *arg,
+       char **error)
 {
     *error = NULL;
     if (strcmp(name, "callback") == 0)
@@ -170,7 +176,9 @@ cli_expand_cb(cligen_handle h,
 /*! Trivial function translator/mapping function that just assigns same callback
  */
 static expandv_cb *
-str2fn_exp(char *name, void *arg, char **error)
+str2fn_exp(char  *name,
+	   void  *arg,
+	   char **error)
 {
     return cli_expand_cb;
 }
@@ -187,6 +195,8 @@ usage(char *argv)
 	    "\t-1 \t\tOnce only. Do not enter interactive mode\n"
 	    "\t-p \t\tPrint syntax\n"
 	    "\t-e \t\tSet automatic expansion/completion for all expand() functions\n"
+    	    "\t-E \t\tExclude keys in callback cvv. Default include keys\n"
+	    "\t-c \t\tExpand first arg of callback cvv to string matching keywords\n"
 	    "\t-P \t\tSet preference mode to 1, ie return first if several have same pref\n"
 	    "\t-t <nr> \tSet tab mode: 1:columns, 2: same pref for vars, 4: all steps\n"
 	    "\t-s <nr> \tScrolling 0: disable line scrolling, 1: enable line scrolling (default 1)\n"
@@ -197,7 +207,8 @@ usage(char *argv)
 
 /* Main */
 int
-main(int argc, char *argv[])
+main(int   argc,
+     char *argv[])
 {
     int         retval = -1;
     parse_tree *pt = NULL;
@@ -214,7 +225,9 @@ main(int argc, char *argv[])
     int         set_preference = 0;
     int         tabmode = 0;
     int         scrollmode = 0;
-
+    int         exclude_keys = 0;
+    int         expand_first = 0;
+    
     argv++;argc--;
     for (;(argc>0)&& *argv; argc--, argv++){
 	if (**argv != '-')
@@ -234,6 +247,12 @@ main(int argc, char *argv[])
 	    break;
 	case 'e': /* Set automatic completion/expand */
 	    set_expand++;
+	    break;
+	case 'E': /* Exclude keys in callback cvv */
+	    exclude_keys++;
+	    break;
+	case 'c': /* Expand first arg of callback cvv */
+	    expand_first++;
 	    break;
 	case 'P': /* Return first if several have same preference */
 	    set_preference++;
@@ -261,6 +280,10 @@ main(int argc, char *argv[])
   }
     if ((h = cligen_init()) == NULL)
 	goto done;    
+    if (exclude_keys)
+	cligen_exclude_keys_set(h, 1);
+    if (expand_first)
+	cligen_expand_first_set(h, 1);
     cligen_lexicalorder_set(h, 1);
     cligen_ignorecase_set(h, 1);
     if (set_preference)

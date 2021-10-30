@@ -5,6 +5,13 @@ Expected: November 2021
 
 ### Minor changes
 
+* Changes on how cvv callback options
+  * See cligen_tutorial Section 6.1
+  * Moved cv_exclude_keys() to cligen_exclude_keys_set() and created cvec_exclude_keys()
+  * New: cligen_expand_first_get/set() and cvec_expand_first()
+  * Merged the use of cvv and cvvall parameters into a single cvv parameter in match_pattern code
+  * Solved [Get the expanded string of entire command executed even if entered string is partial](https://github.com/clicon/cligen/issues/65)
+
 * Same commands with different help strings are now displayed separately
   * See [Help-text support for multiple types](https://github.com/clicon/cligen/issues/27)
 * Added case-insensitive command matching
