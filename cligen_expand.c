@@ -546,6 +546,7 @@ pt_expand_fnv(cligen_handle h,
     int         i;
     const char *value;
     const char *escaped;
+    cvec       *cvv1 = NULL; /* Modified */
 
     if (cvv == NULL){
 	errno = EINVAL;
@@ -555,9 +556,19 @@ pt_expand_fnv(cligen_handle h,
 	goto done;
     if ((helptexts = cvec_new(0)) == NULL)
 	goto done;
+    /* Make a copy of var argument for modifications */
+    if ((cvv1 = cvec_dup(cvv)) == NULL)
+	goto done;
+    /* Make modifications to cvv */
+    if (cligen_expand_first_get(h) &&
+	cvec_expand_first(cvv1) < 0)
+	goto done;
+    if (cligen_exclude_keys_get(h) &&
+	cvec_exclude_keys(cvv1) < 0)
+	goto done;
     if ((*co->co_expandv_fn)(cligen_userhandle(h)?cligen_userhandle(h):h, 
 			     co->co_expand_fn_str, 
-			     cvv,
+			     cvv1,
 			     co->co_expand_fn_vec,
 			     commands, 
 			     helptexts) < 0)
@@ -594,6 +605,8 @@ pt_expand_fnv(cligen_handle h,
 	cvec_free(helptexts);
     retval = 0;
  done:
+    if (cvv1)
+	cvec_free(cvv1);
     return retval;
 
 }

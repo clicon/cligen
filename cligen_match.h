@@ -50,13 +50,12 @@
 int match_pattern(cligen_handle h, cvec *cvt, cvec *cvr, 
 		  parse_tree *pt,
 		  int best, 
-		  cvec *cvv, cvec *cvvall,
+		  cvec *cvv, 
 		  match_result **mrp);
 
 int match_pattern_exact(cligen_handle h, cvec *cvt, cvec *cvr, 
 			parse_tree    *pt,
 			cvec          *cvv,
-			cvec          *cvvall,
 			cg_obj       **match_obj,
 			cligen_result *result,
 			char         **reasonp);

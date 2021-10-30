@@ -435,14 +435,12 @@ match_vec(cligen_handle h,
  * @param[in]  co_match  Matched cligen parse object
  * @param[in]  token     Token 
  * @param[out] cvv       cligen variable vector containing vars/values pair for completion
- * @param[out] cvvall    cligen variable vector containing vars/values + keywords for callbacks
  */
 static int
 match_bindvars(cligen_handle h,
 	       cg_obj       *co,
 	       char         *token,
-	       cvec         *cvv,
-	       cvec         *cvvall)
+	       cvec         *cvv)
 {
     int     retval = -1;
     cg_var *cv = NULL;
@@ -454,25 +452,19 @@ match_bindvars(cligen_handle h,
 	/* Once so translate only is done once */
 	if ((cv = add_cov_to_cvec(h, co, token, cvv)) == NULL)
 	    goto done;
-	if (cvvall && cvec_append_var(cvvall, cv) == NULL)
-	    goto done;
     }
     else if (co->co_type == CO_COMMAND && co_orig->co_type == CO_VARIABLE){
 	/* Once so translate only is done once */
 	if ((cv = add_cov_to_cvec(h, co_orig, co->co_command, cvv)) == NULL)
 	    goto done;
-	if (cvvall && cvec_append_var(cvvall, cv) == NULL)
-	    goto done;
     }
     else{
-	if (!cv_exclude_keys_get() && cvvall){
-	    if ((cv = cvec_add(cvvall, co_orig->co_vtype)) == NULL)
-		goto done;
-	    cv_name_set(cv, co_orig->co_command);
-	    cv_type_set(cv, CGV_STRING);
-	    cv_string_set(cv, co_orig->co_command);
-	    cv_const_set(cv, 1);
-	}
+	if ((cv = cvec_add(cvv, co_orig->co_vtype)) == NULL)
+	    goto done;
+	cv_name_set(cv, co_orig->co_command);
+	cv_type_set(cv, CGV_STRING);
+	cv_string_set(cv, co_orig->co_command);
+	cv_const_set(cv, 1);
     }
     retval = 0;
  done:
@@ -499,7 +491,6 @@ co_clearflag(cg_obj *co,
  *                          all possible options. Only called from match_pattern_exact()
  * @param[out]    mrp       Match result including how many matches, level, reason for nomatc, etc
  * @param[in,out] cvv       cligen variable vector containing vars/values pair for completion
- * @param[in,out] cvvall    cligen variable vector containing vars/values + keywords for callbacks
  * @retval        0         OK. result returned in mrp
  * @retval        -1        Error
  */
@@ -511,7 +502,6 @@ match_pattern_sets_local(cligen_handle h,
 			 int           level,
 			 int           best,
 			 cvec         *cvv,
-			 cvec         *cvvall,
 			 match_result **mrp)
 {
     int         retval = -1;
@@ -559,7 +549,7 @@ match_pattern_sets_local(cligen_handle h,
 		co_match = mr_pt_i_get(mr0, 0);
 		if (match_bindvars(h, co_match, 
 				   ISREST(co_match)?resttokens:token,
-				   cvv, cvvall) < 0)
+				   cvv) < 0)
 		    goto done;
 	    }
 	    goto ok; /* will return matches > 1 */ 
@@ -592,7 +582,7 @@ match_pattern_sets_local(cligen_handle h,
 	/* Bind vars and constants to variable vectors used for completion and callbacks */
 	if (match_bindvars(h, co_match, 
 			   ISREST(co_match)?resttokens:token,
-			   cvv, cvvall) < 0)
+			   cvv) < 0)
 	    goto done;
     }
     if (lasttoken ||
@@ -651,7 +641,6 @@ match_pattern_sets_local(cligen_handle h,
  *                          all possible options. Match also hidden options.
  *                          If not set, return all possible matches, do not return hidden options 
  * @param[in,out] cvv       cligen variable vector containing vars/values pair for completion
- * @param[in,out] cvvall    cligen variable vector containing vars/values + keywords for callbacks
  * @param[out]    mrp       Match result including how many matches, level, reason for nomatc, etc
  * @retval        0         OK. result returned in mrp
  * @retval        -1        Error
@@ -665,7 +654,6 @@ match_pattern_sets(cligen_handle h,
 		   int           level,
 		   int           best,
 		   cvec         *cvv,
-		   cvec         *cvvall,
 		   match_result **mrp)
 {
     int           retval = -1;
@@ -682,7 +670,7 @@ match_pattern_sets(cligen_handle h,
 	fprintf(stderr, "%s %s\n", __FUNCTION__, token);
     /* Match the current token */
     if (match_pattern_sets_local(h, cvt, cvr, pt, level, best, 
-				 cvv, cvvall, &mr0) < 0)
+				 cvv, &mr0) < 0)
 	goto done;
     if (mr_pt_len_get(mr0) != 1){ /* If not unique match exit here */
 	*mrp = mr0;
@@ -729,7 +717,6 @@ match_pattern_sets(cligen_handle h,
 				   level+1,
 				   best, 
 				   cvv,
-				   cvvall,
 				   &mrc) < 0)
 		goto done;		
 	    if (mr_pt_len_get(mrc) != 1)
@@ -758,7 +745,6 @@ match_pattern_sets(cligen_handle h,
 				    level+1, 
 				    best, 
 				    cvv,
-				    cvvall,
 				    &mrc) < 0)
 	    goto done;
     }
@@ -818,7 +804,6 @@ match_pattern_sets(cligen_handle h,
  *                       all possible options. Match also hidden options.
  *                       If not set, return all possible matches, do not return hidden options 
  * @param[out] cvv       cligen variable vector containing vars/values pair for completion
- * @param[out] cvvall    cligen variable vector containing vars/values + keywords for callbacks
  * @param[out] mrp       CLIgen match result struct encapsulating several return parameters
  * @retval    -1         Error
  * @retval     0         OK
@@ -833,7 +818,6 @@ match_pattern(cligen_handle h,
 	      parse_tree   *pt, 
 	      int           best,
 	      cvec         *cvv,
-	      cvec         *cvvall,
 	      match_result **mrp)
 {
     int           retval = -1;
@@ -855,7 +839,7 @@ match_pattern(cligen_handle h,
 			   pt,
 			   0,
 			   best, 
-			   cvv, cvvall,
+			   cvv, 
 			   &mr) < 0)
 	goto done;
     if (mr == NULL){  /* shouldnt happen */
@@ -973,7 +957,6 @@ match_pattern(cligen_handle h,
  * @param[in]  cvr       Rest variant,  eg remaining string in each step
  * @param[in]  pt        CLIgen parse tree, vector of cligen objects.
  * @param[out] cvv       CLIgen variable vector containing vars for matching path
- * @param[out] cvvall    CLIgen variable vector containing vars and constants for matching vars
  * @param[out] match_obj Exact object to return
  * @param[out] resultp   Result, < 0: errors, >=0 number of matches (only if retval == 0)
  * @param[out] reason    If retval is 0 and matchlen != 1, contains reason 
@@ -987,7 +970,6 @@ match_pattern_exact(cligen_handle  h,
 		    cvec          *cvr,
 		    parse_tree    *pt, 
 		    cvec          *cvv,
-		    cvec          *cvvall,
 		    cg_obj       **match_obj,
 		    cligen_result *resultp,
 		    char         **reason
@@ -1004,7 +986,7 @@ match_pattern_exact(cligen_handle  h,
 		       cvt, cvr, /* token string */
 		       pt,       /* command vector */
 		       1,        /* best: Return only best option including hidden options */
-		       cvv, cvvall,
+		       cvv,
 		       &mr)) < 0){
 	goto done;
     }
@@ -1074,7 +1056,7 @@ match_complete(cligen_handle h,
     if (match_pattern(h, cvt, cvr,
 		      pt,
 		      0, /* best: Return all options, not only best, exclude hidden options */
-		      cvv, NULL,
+		      cvv, 
 		      &mr) < 0)
 	goto done;
     if (mr == NULL || mr_pt_len_get(mr) == 0){

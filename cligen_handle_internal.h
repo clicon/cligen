@@ -108,6 +108,8 @@ struct cligen_handle{
     int         ch_preference_mode;   /* Relaxed variable match preference handling */
     cvec       *ch_reftree_filter; /* Vector of reftree(@tree) labels that are disabled by default */
     int         ch_ignore_case;  /* Set if ignore case of commands, eg aA = aa */
+    int         ch_expand_first; /* Set if expand arg 1 of callback cvv */
+    int         ch_exclude_keys; /* Set if exclude keywords from callback cvv */
 };
 
 #endif /* _CLIGEN_HANDLE_INTERNAL_H_ */
