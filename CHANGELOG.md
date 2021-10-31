@@ -5,6 +5,8 @@ Expected: November 2021
 
 ### Minor changes
 
+* cliread_parse2() variant of cligen_parse() where fifth cvv parameter changed type from `cvec*` to `cvec**`.
+  * cliread_parse() will be removed after CLIgen 5.4
 * Changes on how cvv callback options
   * See cligen_tutorial Section 6.1
   * Moved cv_exclude_keys() to cligen_exclude_keys_set() and created cvec_exclude_keys()

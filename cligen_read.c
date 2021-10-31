@@ -622,7 +622,7 @@ cli_trim(char **line,
  * @param[in]  string    Input string to match
  * @param[in]  pt        Parse-tree
  * @param[out] co_orig   Object that matches (if retval == 1).
- * @param[out] cvv       Vector of cligen variables present in the input string. (if retval == 1).
+ * @param[out] cvvp      Vector of cligen variables present in the input string. (if retval == 1).
  * @param[out] result    Result, < 0: errors, >=0 number of matches
  * @param[out] reason    Error reason if result is nomatch. Need to be free:d 
  * @retval     0         OK
@@ -636,13 +636,13 @@ cli_trim(char **line,
  *   2 : bb = 22     # variable
  */
 int 
-cliread_parse(cligen_handle  h, 
-	      char          *string,
-	      parse_tree    *pt,     /* Orig */
-	      cg_obj       **co_orig,
-	      cvec         **cvvp,
-	      cligen_result *result,
-	      char         **reason)
+cliread_parse2(cligen_handle  h, 
+	       char          *string,
+	       parse_tree    *pt,     /* Orig */
+	       cg_obj       **co_orig,
+	       cvec         **cvvp,
+	       cligen_result *result,
+	       char         **reason)
 {
     int         retval = -1;
     cg_obj     *match_obj = NULL;
@@ -668,7 +668,10 @@ cliread_parse(cligen_handle  h,
 	goto done;
     if (pt_expand_treeref(h, NULL, pt) < 0) /* sub-tree expansion, ie @ */
 	goto done; 
-    if ((cvv = cvec_new(0)) == NULL)
+    /* XXX remove this in 5.4 */
+    if (*cvvp != NULL)
+	cvv = *cvvp;
+    else if ((cvv = cvec_new(0)) == NULL)
 	goto done;;
     if ((cv = cvec_add(cvv, CGV_REST)) == NULL)
 	goto done;
@@ -701,6 +704,27 @@ cliread_parse(cligen_handle  h,
     if (pt_expand_cleanup(pt) < 0)
 	return -1;
     return retval;
+}
+
+/*! Bridging function for brackward compatibility
+ * Just the handling of cvv, in old code, cvv is created before, while in new, the 
+ * function creates it.
+ * @see cliread_parse2  Use that function instead
+ */
+int 
+cliread_parse(cligen_handle  h, 
+	      char          *string,
+	      parse_tree    *pt,     /* Orig */
+	      cg_obj       **co_orig,
+	      cvec          *cvv,
+	      cligen_result *result,
+	      char         **reason)
+{
+    if (cvv == NULL || cvec_len(cvv) != 0){
+	errno = EINVAL;
+	return -1;
+    }
+    return cliread_parse2(h, string, pt, co_orig, &cvv, result, reason);
 }
 
 /*! Read line interactively from terminal using getline (completion, etc)
@@ -769,7 +793,7 @@ cliread_getline(cligen_handle h,
 	return CG_EOF; 
 
     *line = string;
-    return cliread_parse(h, string, match_obj, cvvp);
+    return cliread_parse2(h, string, match_obj, cvvp);
 }
 #endif /* notused */
 
@@ -814,7 +838,7 @@ cliread_eval(cligen_handle  h,
 	fprintf(stderr, "No active parse-tree found\n");
 	goto done;;
     }
-    if (cliread_parse(h, *line, pt, &matchobj, &cvv, result, reason) < 0)
+    if (cliread_parse2(h, *line, pt, &matchobj, &cvv, result, reason) < 0)
 	goto done;
     if (*result == CG_MATCH)
 	*cb_retval = cligen_eval(h, matchobj, cvv);
