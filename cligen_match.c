@@ -60,6 +60,7 @@
 #include "cligen_parsetree.h"
 #include "cligen_pt_head.h"
 #include "cligen_object.h"
+#include "cligen_print.h"
 #include "cligen_handle.h"
 #include "cligen_expand.h"
 #include "cligen_result.h"
@@ -71,6 +72,9 @@
 #endif
 
 #define ISREST(co) ((co)->co_type == CO_VARIABLE && (co)->co_vtype == CGV_REST)
+
+/* Development debugging for sets matching */
+#undef _DEBUG_SETS
 
 /*! Match variable against input string
  * 
@@ -327,7 +331,6 @@ add_cov_to_cvec(cligen_handle h,
     return cv;
 }
 
-
 /*! Match a parse-tree (pt) with a command vector (cvt/cvr)
  * @param[in]  h        CLIgen handle
  * @param[in]  token    Token to match at this level
@@ -385,7 +388,6 @@ match_vec(cligen_handle h,
 		tmpreason = NULL;
 	    }
 	}
-#if 1
 	/* An alternative is to sort away these after the call in match_pattern_sets_local */
 	else if (co_flags_get(co, CO_FLAGS_MATCH)){
 	    p = 1; /* XXX lower than any variables*/
@@ -397,7 +399,6 @@ match_vec(cligen_handle h,
 		mr_reason_set(mr, r);
 	    }
 	}
-#endif
 	else { /* Match: if best compare and save highest preference */
 	    assert(tmpreason == NULL);
 	    if (best){ /* only save best match */
@@ -544,7 +545,6 @@ match_pattern_sets_local(cligen_handle h,
 	      * to one under certain circumstances
 	      */
 	if (lasttoken){
-	    mr_parsetree_set(mr0, pt);
 	    if (best){
 		co_match = mr_pt_i_get(mr0, 0);
 		if (match_bindvars(h, co_match, 
@@ -592,7 +592,6 @@ match_pattern_sets_local(cligen_handle h,
 	 * there is more text have this word, then we can match REST
 	 * This is "inline" of match_terminal
 	 */
-	mr_parsetree_set(mr0, pt);
 	mr_last_set(mr0); /* dont go to children */
     }
  ok: 
@@ -666,12 +665,18 @@ match_pattern_sets(cligen_handle h,
     char         *token;
 
     token = cvec_i_str(cvt, level+1); /* for debugging */
-    if (0)
-	fprintf(stderr, "%s %s\n", __FUNCTION__, token);
+#ifdef _DEBUG_SETS
+    fprintf(stderr, "%s %*s level: %d token:%s\npt:\n", __FUNCTION__, level*3,"",
+		level, strlen(token)?token:"\"\"");
+    pt_print(stderr, pt, 1);
+#endif
     /* Match the current token */
     if (match_pattern_sets_local(h, cvt, cvr, pt, level, best, 
 				 cvv, &mr0) < 0)
 	goto done;
+#ifdef _DEBUG_SETS
+    fprintf(stderr, "%s %*s matchnr:%d\n", __FUNCTION__, level*3,"", mr_pt_len_get(mr0));
+#endif
     if (mr_pt_len_get(mr0) != 1){ /* If not unique match exit here */
 	*mrp = mr0;
 	mr0 = NULL;
@@ -679,8 +684,11 @@ match_pattern_sets(cligen_handle h,
     }
     /* Unique match */
     co_match = mr_pt_i_get(mr0, 0);
+#ifdef _DEBUG_SETS
+    fprintf(stderr, "%s %*s match co:%s\n", __FUNCTION__, level*3,"", co_match->co_command);
+#endif
     if (mr_last_get(mr0) && (strcmp(token,"") != 0)){
-	co_flags_set(co_match, CO_FLAGS_MATCH);
+	mr_flags_set_co_match(mr0, co_match);
 	*mrp = mr0;
 	mr0 = NULL;
 	goto ok;
@@ -700,8 +708,7 @@ match_pattern_sets(cligen_handle h,
     case 0: /* Not last in syntax tree, continue */
 	break;
     case 1: /* Last in syntax tree (not token) */
-	mr_parsetree_set(mr0, pt);
-	co_flags_set(co_match, CO_FLAGS_MATCH);
+	mr_flags_set_co_match(mr0, co_match);
 	*mrp = mr0;
 	mr0 = NULL;
 	goto ok;
@@ -710,6 +717,9 @@ match_pattern_sets(cligen_handle h,
 	break;
     }
     if (pt_sets_get(ptn)){ /* For sets, iterate */
+#ifdef _DEBUG_SETS
+	fprintf(stderr, "%s %*s sets:\n", __FUNCTION__, level*3,"");
+#endif
 	while (!last_level(cvt, level)){
 	    if (mrc != NULL)
 		mrc = NULL;
@@ -719,10 +729,16 @@ match_pattern_sets(cligen_handle h,
 				   cvv,
 				   &mrc) < 0)
 		goto done;		
+#ifdef _DEBUG_SETS
+	    fprintf(stderr, "%s %*s sets matchnr: %d\n", __FUNCTION__, level*3,"", mr_pt_len_get(mrc));
+#endif
 	    if (mr_pt_len_get(mrc) != 1)
 		break;
+#ifdef _DEBUG_SETS
+	    fprintf(stderr, "%s %*s sets match co: %s\n", __FUNCTION__, level*3,"",
+		    mr_pt_i_get(mrc, 0)->co_command);
+#endif
 	    if (mrcprev != NULL){
-		mr_parsetree_free_ifnot(mrcprev, ptn, mr_parsetree_get(mrc));
 		mr_free(mrcprev);
 		mrcprev = NULL;
 	    }
@@ -754,35 +770,30 @@ match_pattern_sets(cligen_handle h,
     /* If child match fails, use previous */
     if (mr_pt_len_get(mrc) == 0 && mrcprev){
 	/* Transfer match flags from ptn to pt if this tree has no more matches */
-	co_flags_set(co_match, CO_FLAGS_MATCH);	    
+	mr_flags_set_co_match(mr0, co_match);
 	mr_mv_reason(mrc, mrcprev); 	/* transfer error reason if any from child */
 	*mrp = mrcprev;
 	mrcprev = NULL;
     }
     else if (mr_pt_len_get(mrc) == 0 && lastsyntax == 2){ /* If no child match, then use local */
-	mr_parsetree_set(mr0, pt);
-	co_flags_set(co_match, CO_FLAGS_MATCH);
+	mr_flags_set_co_match(mr0, co_match);
 	mr_mv_reason(mrc, mr0); 	/* transfer error reason if any from child */
 	*mrp = mr0;
 	mr0 = NULL;
     }
     else{ /* child match,  use that */
 	if (mr_pt_len_get(mrc) == 1)
-	    co_flags_set(co_match, CO_FLAGS_MATCH);
+	    mr_flags_set_co_match(mr0, co_match);
 	*mrp = mrc;
 	if (mrcprev == mrc)
 	    mrcprev = NULL;
 	mrc = NULL;
-    }
-    if (*mrp && mr_parsetree_get(*mrp) == ptn){
-	ptn = NULL; /* passed to upper layers, dont free here */
     }
  ok:
     retval = 0;
  done:
     if (mrcprev && mrcprev != mrc){
 	assert(mrcprev != *mrp);
-	mr_parsetree_free_ifnot(mrcprev, ptn, *mrp ? mr_parsetree_get(*mrp) : NULL);
 	mr_free(mrcprev);
     }
     if (ptn)
@@ -885,17 +896,16 @@ match_pattern(cligen_handle h,
 	    if (co->co_type == CO_COMMAND && string1)
 		if ((!cligen_caseignore_get(h) && strcmp(string1, co->co_command)==0) ||
 		    (cligen_caseignore_get(h) && strcasecmp(string1, co->co_command)==0)){
-		    mr_pt_reset(mr);
-		    mr_pt_append(mr, co);
+		    if (mr_pt_trunc(mr, 1))
+			goto done;
 		    break;
 		}
 	    if (co->co_type != CO_VARIABLE)
 		allvars = 0; /* should mean onlyvars*/
 	}
 	if (allvars && cligen_preference_mode(h)){
-	    co = mr_pt_i_get(mr,0);
-	    mr_pt_reset(mr);
-	    mr_pt_append(mr, co);
+	    if (mr_pt_trunc(mr, 1))
+		goto done;
 	}
     }
     switch (mr_pt_len_get(mr)){
@@ -913,11 +923,6 @@ match_pattern(cligen_handle h,
 	/* Here we have an obj that is unique so far. We need to see if there is 
 	 * only one sibling to it. */
 	co1 = mr_pt_i_get(mr, 0);
-	if (co1 != NULL && co1->co_ref != NULL){
-	    parse_tree    *ptmr = mr_pt_get(mr);
-	    if (pt_vec_i_replace(ptmr, 0, co1->co_ref) < 0)
-		goto done;
-	}
 	/*
 	 * Special case: if a NULL child is not found, then set result == GC_NOMATCH
 	 */
@@ -942,8 +947,6 @@ match_pattern(cligen_handle h,
     default:
 	break;
     } /* switch */
-    if (best)
-    	mr_parsetree_free_ifnot(mr, pt, NULL);
     *mrp = mr;
     retval = 0;
  done:
@@ -957,7 +960,7 @@ match_pattern(cligen_handle h,
  * @param[in]  cvr       Rest variant,  eg remaining string in each step
  * @param[in]  pt        CLIgen parse tree, vector of cligen objects.
  * @param[out] cvv       CLIgen variable vector containing vars for matching path
- * @param[out] match_obj Exact object to return
+ * @param[out] match_obj Exact object to return, must be freed by caller
  * @param[out] resultp   Result, < 0: errors, >=0 number of matches (only if retval == 0)
  * @param[out] reason    If retval is 0 and matchlen != 1, contains reason 
  *                       for not matching variables, if given. Need to be free:d
@@ -977,6 +980,7 @@ match_pattern_exact(cligen_handle  h,
 {
     int           retval = -1;
     match_result *mr = NULL;
+    cg_obj       *co;
     
     if (resultp == NULL){
 	errno = EINVAL;
@@ -998,14 +1002,17 @@ match_pattern_exact(cligen_handle  h,
 	mr_reason_get(mr))
 	*reason = strdup(mr_reason_get(mr));
     if (mr_pt_len_get(mr) == 1 &&
-	match_obj)
-	*match_obj = mr_pt_i_get(mr, 0);
+	match_obj){
+	/* Must make a copy since the mr will be freed */
+	co = mr_pt_i_get(mr, 0);
+	if (co_copy1(co, NULL, 0, match_obj) < 0)
+	    goto done;
+    }
     *resultp = mr2result(mr);
     retval = 0;
  done:
-    if (mr){
-	mr_free(mr);
-    }
+    if (mr)
+	mr_free(mr); 
     return retval;
 } /* match_pattern_exact */
 
@@ -1125,7 +1132,6 @@ match_complete(cligen_handle h,
     if (cvr)
 	cvec_free(cvr);
     if (mr){
-	mr_parsetree_free_ifnot(mr, pt, NULL);
 	mr_free(mr);
     }
     return retval;

@@ -45,7 +45,9 @@
 /*! CLI callback that just prints the function argument
  */
 int
-hello(cligen_handle h, cvec *cvv, cvec *argv)
+hello(cligen_handle h,
+      cvec         *cvv,
+      cvec         *argv)
 {
     cg_var *cv;
 
@@ -57,30 +59,33 @@ hello(cligen_handle h, cvec *cvv, cvec *argv)
 /*! CLI generic callback printing the variable vector and argument
  */
 int
-cb(cligen_handle h, cvec *vars, cvec *argv)
+callback(cligen_handle h,
+	 cvec         *cvv,
+	 cvec         *argv)
 {
-    int     i=1;
+    int     i = 0;
     cg_var *cv;
     char    buf[64];
 
-    fprintf(stderr, "variables:\n");
+    cligen_output(stderr, "function: %s\n", cligen_fn_str_get(h));
+    cligen_output(stderr, "variables:\n");
     cv = NULL;
-    while ((cv = cvec_each1(vars, cv)) != NULL) {
-        cv2str(cv, buf, sizeof(buf)-1);
-        fprintf(stderr, "\t%d name:%s type:%s value:%s\n", 
-                i, 
-                cv_name_get(cv),
-                cv_type2str(cv_type_get(cv)),
-                buf
-            );
-
+    while ((cv = cvec_each(cvv, cv)) != NULL) {
+	cv2str(cv, buf, sizeof(buf)-1);
+	cligen_output(stderr, "\t%d name:%s type:%s value:%s\n", 
+		i++, 
+		cv_name_get(cv),
+		cv_type2str(cv_type_get(cv)),
+		buf
+	    );
     }
-    cv = NULL;
-    i=0;
-    if (argv)
-	while ((cv = cvec_each(argv, cv)) != NULL) {
-	    cv2str(cv, buf, sizeof(buf)-1);
-	    fprintf(stderr, "arg %d: %s\n", i++, buf);
+    if (argv){
+	    cv = NULL;
+	    i=0;
+	    while ((cv = cvec_each(argv, cv)) != NULL) {
+		cv2str(cv, buf, sizeof(buf)-1);
+		cligen_output(stderr, "arg %d: %s\n", i++, buf);
+	    }
 	}
     return 0;
 }
@@ -88,7 +93,9 @@ cb(cligen_handle h, cvec *vars, cvec *argv)
 /*! CLI example callback handling a complex syntax
  */
 int
-letters(cligen_handle h, cvec *cvv, cvec *argv)
+letters(cligen_handle h,
+	cvec         *cvv,
+	cvec         *argv)
 {
     char   *str;
     cg_var *cv;
@@ -110,7 +117,9 @@ letters(cligen_handle h, cvec *cvv, cvec *argv)
 /*! This callback is for hidden commands
  */
 int
-secret(cligen_handle h, cvec *cvv, cvec *argv)
+secret(cligen_handle h,
+       cvec         *cvv,
+       cvec         *argv)
 {
     cg_var *cv;
 
@@ -123,7 +132,9 @@ secret(cligen_handle h, cvec *cvv, cvec *argv)
 /*! This callback changes the prompt to the variable setting
  */
 int
-setprompt(cligen_handle h, cvec *cvv, cvec *argv)
+setprompt(cligen_handle h,
+	  cvec         *cvv,
+	  cvec         *argv)
 {
     char *str;
 
@@ -135,7 +146,9 @@ setprompt(cligen_handle h, cvec *cvv, cvec *argv)
 /*! Request quitting the CLI
  */
 int
-quit(cligen_handle h, cvec *cvv, cvec *argv)
+quit(cligen_handle h,
+     cvec         *cvv,
+     cvec         *argv)
 {
     cligen_exiting_set(h, 1);
     return 0;
@@ -144,7 +157,9 @@ quit(cligen_handle h, cvec *cvv, cvec *argv)
 /*! Change cligen tree
  */
 int
-changetree(cligen_handle h, cvec *cvv, cvec *argv)
+changetree(cligen_handle h,
+	   cvec         *cvv,
+	   cvec         *argv)
 {
     cg_var *cv;
     char *treename;
@@ -157,7 +172,9 @@ changetree(cligen_handle h, cvec *cvv, cvec *argv)
 /*! Command without assigned callback
  */
 int
-unknown(cligen_handle h, cvec *cvv, cvec *argv)
+unknown(cligen_handle h,
+	cvec         *cvv,
+	cvec         *argv)
 {
     cg_var *cv = cvec_i(cvv, 0);
 
@@ -169,17 +186,19 @@ unknown(cligen_handle h, cvec *cvv, cvec *argv)
  * Better to use dlopen, mmap or some other more flexible scheme.
  */
 cgv_fnstype_t *
-str2fn(char *name, void *arg, char **error)
+str2fn(char  *name,
+       void  *arg,
+       char **error)
 {
     *error = NULL;
     if (strcmp(name, "hello") == 0)
         return hello;
     else     if (strcmp(name, "cb") == 0)
-        return cb;
+        return callback;
     else     if (strcmp(name, "add") == 0)
-        return cb;
+        return callback;
     else     if (strcmp(name, "del") == 0)
-        return cb;
+        return callback;
     else     if (strcmp(name, "letters") == 0)
         return letters;
     else     if (strcmp(name, "secret") == 0)
@@ -226,7 +245,9 @@ cli_expand_cb(cligen_handle h,
 /*! Trivial function translator/mapping function that just assigns same callback
  */
 static expandv_cb *
-str2fn_exp(char *name, void *arg, char **error)
+str2fn_exp(char  *name,
+	   void  *arg,
+	   char **error)
 {
     return cli_expand_cb;
 }
@@ -280,7 +301,8 @@ usage(char *argv)
 
 /* Main */
 int
-main(int argc, char *argv[])
+main(int   argc,
+     char *argv[])
 {
     cligen_handle   h;
     int             retval = -1;

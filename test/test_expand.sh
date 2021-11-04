@@ -32,7 +32,7 @@ newtest "cligen i<tab><tab>?"
 expectpart "$(echo "i		?" | $cligen_tutorial -q -f $fspec)" 0 "cli> interface eth" "eth0                  Interface A" 'Ambiguous command'
 
 newtest "cligen interface eth0"
-expectpart "$(echo "interface eth0" | $cligen_tutorial -q -f $fspec 2>&1)" 0 "1 name:ifname type:string value:eth0"
+expectpart "$(echo "interface eth0" | $cligen_tutorial -q -f $fspec 2>&1)" 0 "2 name:ifname type:string value:eth0"
 
 newtest "cligen interface foo unknown"
 expectpart "$(echo "interface foo" | $cligen_tutorial -q -f $fspec)" 0 'CLI syntax error in: "interface foo": Unknown command'
@@ -50,10 +50,10 @@ cat > $fspec <<EOF
 EOF
 
 newtest "cligen interface eth0"
-expectpart "$(echo "interface eth0" | $cligen_tutorial -q -f $fspec 2>&1)" 0 "1 name:ifname type:string value:eth0"
+expectpart "$(echo "interface eth0" | $cligen_tutorial -q -f $fspec 2>&1)" 0 "2 name:ifname type:string value:eth0"
 
 newtest "cligen interface foo"
-expectpart "$(echo "interface foo" | $cligen_tutorial -q -f $fspec 2>&1)" 0 "1 name:ifname type:string value:foo"
+expectpart "$(echo "interface foo" | $cligen_tutorial -q -f $fspec 2>&1)" 0 "2 name:ifname type:string value:foo"
 
 # Two overlapping expand sets (there was a problem when the same occurs in two sets, the
 # succeeding items did not work)

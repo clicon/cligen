@@ -83,7 +83,7 @@ parse_tree *pt_dup(parse_tree *pt, cg_obj *cop);
 int         cligen_parsetree_merge(parse_tree *pt0, cg_obj *parent0, parse_tree *pt1);
 int         pt_free(parse_tree *pt, int recurse);
 int         cligen_parsetree_free(parse_tree *pt, int recurse);
-int         pt_reset(parse_tree *pt);
+int         pt_trunc(parse_tree *pt, int len);
 parse_tree *pt_new(void);
 int         pt_apply(parse_tree *pt, cg_applyfn_t fn, void *arg);
 
