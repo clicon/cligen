@@ -529,6 +529,7 @@ co_callback_copy(struct cg_callback  *cc0,
  * @retval     0      OK
  * @retval     -1     Error
  * @see co_expand_sub
+ * @see co_copy1  For non-recursive
  */
 int
 co_copy(cg_obj  *co, 
@@ -574,6 +575,113 @@ co_copy(cg_obj  *co,
 	if ((con->co_helpvec = cvec_dup(co->co_helpvec)) == NULL)
 	    goto done;
     if (co_value_set(con, co->co_value) < 0) /* XXX: free på co->co_value? */
+	goto done;
+    if (co->co_type == CO_VARIABLE){
+	if (co->co_expand_fn_str)
+	    if ((con->co_expand_fn_str = strdup(co->co_expand_fn_str)) == NULL)
+		goto done;
+	if (co->co_translate_fn_str)
+	    if ((con->co_translate_fn_str = strdup(co->co_translate_fn_str)) == NULL)
+		goto done;
+	if (co->co_show)
+	    if ((con->co_show = strdup(co->co_show)) == NULL)
+		goto done;
+	if (co->co_rangecvv_low)
+	    if ((con->co_rangecvv_low = cvec_dup(co->co_rangecvv_low)) == NULL)
+		goto done;
+	if (co->co_rangecvv_upp)
+	    if ((con->co_rangecvv_upp = cvec_dup(co->co_rangecvv_upp)) == NULL)
+		goto done;
+	if (co->co_expand_fn_vec)
+	    if ((con->co_expand_fn_vec = cvec_dup(co->co_expand_fn_vec)) == NULL)
+		goto done;
+	if (co->co_choice){
+	    if ((con->co_choice = strdup(co->co_choice)) == NULL)
+		goto done;
+	}
+	if (co->co_regex){
+	    if ((con->co_regex = cvec_dup(co->co_regex)) == NULL)
+		goto done;
+	}
+    } /* VARIABLE */
+    *conp = con;
+    retval = 0;
+ done:
+    return retval;
+}
+
+/*! Copy a single cligen object, non-recursively
+ *
+ * CLIgen objects are sometimes created (eg expand) and point into an existing parse-tree
+ * structure. To free such a co, the regular co_copy cannot be used since it would
+ * free a pt structure still being use by other co:s.
+ * working
+ * @param[in]  co     The object to copy from
+ * @param[in]  parent The parent of the new object, need not be same as parent of co
+ * @param[in]  recursive  If set copy recursive, otherwise, only first level object
+ * @param[out] conp   Pointer to the object to copy to (is allocated)
+ * @retval     0      OK
+ * @retval     -1     Error
+ * @see co_copy   recursive copy: If recurse is 1, this function is equivalent
+ * @note mark & refdone flags are cleared
+ * @note co_ref is cleared in the recursive case. (This seems ad-hoc)
+ */
+int
+co_copy1(cg_obj  *co, 
+	 cg_obj  *parent,
+	 int      recursive,
+	 cg_obj **conp)
+{
+    int         retval = -1;
+    cg_obj     *con = NULL;
+    parse_tree *pt;
+    parse_tree *ptn;
+
+    if ((con = co_new_only()) == NULL)
+	goto done;
+    memcpy(con, co, sizeof(cg_obj));
+    con->co_ptvec = NULL;
+    con->co_pt_len = 0;
+    if (!recursive)
+    	con->co_ref = co->co_ref; // XXX Check this for recursive too
+    else
+	con->co_ref = NULL;
+    if (co->co_treeref_orig)
+	con->co_treeref_orig = co->co_treeref_orig;
+    else
+	con->co_treeref_orig = co;
+    co_flags_reset(con, CO_FLAGS_MARK);
+    co_flags_reset(con, CO_FLAGS_REFDONE);
+    /* Replace all pointers */
+    co_up_set(con, parent);
+    if (co->co_command)
+	if ((con->co_command = strdup(co->co_command)) == NULL)
+	    goto done;
+    if (co->co_prefix)
+	if ((con->co_prefix = strdup(co->co_prefix)) == NULL)
+	    goto done;
+    if (co_callback_copy(co->co_callbacks, &con->co_callbacks) < 0)
+	goto done;
+    if (co->co_cvec)
+	con->co_cvec = cvec_dup(co->co_cvec);
+    if ((pt = co_pt_get(co)) != NULL){
+	/* Here this function differs from co_copy */
+	if (recursive){
+	    if ((ptn = pt_dup(pt, con)) == NULL) /* sets a new pt under con */
+		goto done;
+	    if (co_pt_set(con, ptn) < 0)
+		goto done;
+	}
+	else {
+	    if (co_pt_set(con, pt) < 0)
+		goto done;
+	}
+    }
+
+    if (co->co_helpvec)
+	if ((con->co_helpvec = cvec_dup(co->co_helpvec)) == NULL)
+	    goto done;
+    if (co_value_set(con, co->co_value) < 0)
 	goto done;
     if (co->co_type == CO_VARIABLE){
 	if (co->co_expand_fn_str)

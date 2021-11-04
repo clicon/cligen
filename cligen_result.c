@@ -47,20 +47,25 @@
 #include <sys/types.h>
 #include <assert.h>
 
+#include "cligen_buf.h"
+#include "cligen_cv.h"
+#include "cligen_cvec.h"
+#include "cligen_object.h"
+
 #include "cligen_parsetree.h"
 #include "cligen_result.h"
 
 /*! Result vector from match_pattern_* family of functions
  */
 struct match_result{
-    parse_tree  *mr_parsetree; /* vector of hits (generalize to cxobj**) */
     parse_tree  *mr_pt;        
     char        *mr_reason; /* Error reason if mr_len=0. Can also be carried by a mr_len!=0 
 			     * to store first error in case it is needed in a later error */
     int          mr_level;
     int          mr_last;
+    cg_obj      *mr_co_match_orig; /* Kludge, save (latest) matched object, see 
+                                      mr_flags_set_co_match() */
 };
-
 
 int
 mr_pt_len_get(match_result *mr)
@@ -71,19 +76,39 @@ mr_pt_len_get(match_result *mr)
 }
 
 /*! Reset parse-tree vector, DONT free any co-objects
- * XXX consider "mr_pt_reset" to len = 0?
  */
 int
 mr_pt_reset(match_result *mr)
 {
-    return pt_reset(mr->mr_pt);
+    pt_free(mr->mr_pt, 0);
+    if ((mr->mr_pt = pt_new()) == NULL)
+	return -1;
+    return 0;
+}
+
+/*! Truncate parse-tree vector: free all extra elements, keep nr of heading elements
+ *
+ * the objects in the tail of the pt tree is freed.
+ * @param[in]  mr  
+ * @param[in]  len   >0
+ */
+int
+mr_pt_trunc(match_result *mr,
+	    int           len)
+{
+    return pt_trunc(mr->mr_pt, len);
 }
 
 int
 mr_pt_append(match_result *mr,
 	     cg_obj       *co)
 {
-    return pt_vec_append(mr->mr_pt, co);
+    cg_obj *co1 = NULL;
+
+    if (co_copy1(co, NULL, 0, &co1) < 0)
+	return -1;
+    mr->mr_co_match_orig = co;
+    return pt_vec_append(mr->mr_pt, co1);
 }
 
 cg_obj*
@@ -105,6 +130,7 @@ mr_reason_get(match_result *mr)
     return mr->mr_reason;
 }
 
+
 /*! Reset/empty matchvec of indexes by g and incrementing vector
  * @param[in,out]  mr      Match result struct
  * @param[in]      reason  Malloced string (consumed here)
@@ -116,39 +142,6 @@ mr_reason_set(match_result *mr,
     if (mr->mr_reason)
     	free(mr->mr_reason);
     mr->mr_reason = reason;
-    return 0;
-}
-
-parse_tree *
-mr_parsetree_get(match_result *mr)
-{
-    return mr->mr_parsetree;
-}
-
-int
-mr_parsetree_set(match_result *mr,
-		 parse_tree   *pt)
-{
-    mr->mr_parsetree = pt;
-    return 0;
-}
-
-/*! This is a hack
- */
-int
-mr_parsetree_free_ifnot(match_result *mr,
-			parse_tree   *pt1,
-    			parse_tree   *pt2)
-{
-    parse_tree *pt0;
-
-    if ((pt0 = mr_parsetree_get(mr)) == NULL)
-	return 0;
-    if ((pt1==NULL || (pt0 != pt1)) &&
-	(pt2==NULL || (pt0 != pt2))){
-	pt_free(pt0, 0);
-	mr_parsetree_set(mr, NULL);
-    }
     return 0;
 }
 
@@ -219,13 +212,8 @@ mr_new(void)
 int
 mr_free(match_result *mr)
 {
-#if 0
-    if (mr->mr_parsetree)
-	pt_free(mr->mr_parsetree, 0);
-#endif
     if (mr->mr_pt){
-	pt_reset(mr->mr_pt);
-	free(mr->mr_pt); /* XXX Need an actual API call but pt_free is too destructive */
+	pt_free(mr->mr_pt, 0);
     }
     if (mr->mr_reason)
 	free(mr->mr_reason);
@@ -239,18 +227,31 @@ mr_free(match_result *mr)
 cligen_result 
 mr2result(match_result *mr)
 {
-	switch (mr_pt_len_get(mr)){
-	case -1: /* shouldnt happen */
-	    return CG_ERROR;
-	    break;
-	case 0:
-	    return CG_NOMATCH;
-	    break;
-	case 1:
-	    return CG_MATCH;
-	    break;
-	default:
-	    return CG_MULTIPLE;
-	    break;
-	}
+    switch (mr_pt_len_get(mr)){
+    case -1: /* shouldnt happen */
+	return CG_ERROR;
+	break;
+    case 0:
+	return CG_NOMATCH;
+	break;
+    case 1:
+	return CG_MATCH;
+	break;
+    default:
+	return CG_MULTIPLE;
+	break;
+    }
+}
+
+/*! Set CO_FLAGS_MATCH
+ *
+ * Kludge to mark both the copy and the most recently matched object
+ */
+int
+mr_flags_set_co_match(match_result *mr,
+		      cg_obj       *co)
+{
+    co_flags_set(mr->mr_co_match_orig, CO_FLAGS_MATCH);
+    co_flags_set(co, CO_FLAGS_MATCH);
+    return 0;
 }

@@ -383,7 +383,6 @@ show_help_columns(cligen_handle h,
     if (cb)
 	cbuf_free(cb);
     if (mr){
-	mr_parsetree_free_ifnot(mr, pt, NULL);	
 	mr_free(mr);
     }
     return retval;
@@ -492,7 +491,6 @@ show_help_line(cligen_handle h,
     if (cvr)
 	cvec_free(cvr);
     if (mr){
-	mr_parsetree_free_ifnot(mr, pt, NULL);
 	mr_free(mr);
     }
     return retval;
@@ -621,7 +619,7 @@ cli_trim(char **line,
  * @param[in]  h         Cligen handle
  * @param[in]  string    Input string to match
  * @param[in]  pt        Parse-tree
- * @param[out] co_orig   Object that matches (if retval == 1).
+ * @param[out] co_orig   Object that matches (if retval == 1). Free with co_free(co, 0)
  * @param[out] cvvp      Vector of cligen variables present in the input string. (if retval == 1).
  * @param[out] result    Result, < 0: errors, >=0 number of matches
  * @param[out] reason    Error reason if result is nomatch. Need to be free:d 
@@ -709,7 +707,7 @@ cliread_parse2(cligen_handle  h,
 /*! Bridging function for brackward compatibility
  * Just the handling of cvv, in old code, cvv is created before, while in new, the 
  * function creates it.
- * @see cliread_parse2  Use that function instead
+ * @see cliread_parse2  Use that function instead difference is *cvv -> **cvv
  */
 int 
 cliread_parse(cligen_handle  h, 
@@ -773,7 +771,7 @@ cliread(cligen_handle h,
  *
  * @param[in]  h         CLIgen handle
  * @param[out] line      Pointer to new string input from terminal
- * @param[out] match_obj Matching object  (if retval = 1)
+ * @param[out] match_obj Matching object  (if retval = 1) Must be freed by caller
  * @param[out] cvv       Variable vector  (if retval = 1)
  * @retval    -2         EOF
  * @retval    -1         Error
@@ -820,7 +818,7 @@ cliread_eval(cligen_handle  h,
 	     char         **reason)
 {
     int         retval = -1;
-    cg_obj     *matchobj;    /* matching syntax node */
+    cg_obj     *matchobj = NULL;    /* matching syntax node */
     cvec       *cvv = NULL;
     parse_tree *pt = NULL;     /* Orig */
 
@@ -845,6 +843,8 @@ cliread_eval(cligen_handle  h,
  ok:
     retval = 0;
  done:
+    if (matchobj)
+	co_free(matchobj, 0);
     if (cvv)
 	cvec_free(cvv);	
     /* XXX: Get parse-tree */

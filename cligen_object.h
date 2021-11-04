@@ -226,6 +226,7 @@ cg_obj     *cov_new(enum cv_type cvtype, cg_obj *prev);
 int         co_pref(cg_obj *co, int exact);
 int         co_callback_copy(struct cg_callback *cc0, struct cg_callback **ccn);
 int         co_copy(cg_obj *co, cg_obj *parent, cg_obj **conp);
+int         co_copy1(cg_obj *co, cg_obj *parent, int recursive, cg_obj **conp);
 int         co_eq(cg_obj *co1, cg_obj *co2);
 int         co_free(cg_obj *co, int recursive);
 cg_obj     *co_insert(parse_tree *pt, cg_obj *co);

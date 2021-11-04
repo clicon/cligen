@@ -59,14 +59,12 @@ typedef struct match_result match_result;
  */
 int   mr_pt_len_get(match_result *mr);
 int   mr_pt_reset(match_result *mr);
+int   mr_pt_trunc(match_result *mr, int len);
 int   mr_pt_append(match_result *mr, cg_obj *co);
 cg_obj *mr_pt_i_get(match_result *mr, int i);
 parse_tree *mr_pt_get(match_result *mr);
 char *mr_reason_get(match_result *mr);
 int   mr_reason_set(match_result *mr, char *reason);
-parse_tree *mr_parsetree_get(match_result *mr);
-int   mr_parsetree_set(match_result *mr, parse_tree *pt);
-int   mr_parsetree_free_ifnot(match_result *mr, parse_tree *pt1, parse_tree *pt2);
 int   mr_level_get(match_result *mr);
 int   mr_level_set(match_result *mr, int level);
 int   mr_last_get(match_result *mr);
@@ -75,5 +73,6 @@ int   mr_mv_reason(match_result *from, match_result *to);
 match_result *mr_new(void);
 int   mr_free(match_result *mr);
 cligen_result mr2result(match_result *mr);
+int   mr_flags_set_co_match(match_result *mr, cg_obj *co);
 
 #endif /* _CLIGEN_RESULT_H */

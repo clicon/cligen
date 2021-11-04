@@ -566,23 +566,37 @@ cligen_parsetree_free(parse_tree *pt,
     return pt_free(pt, recursive);
 }
 
-/*! Reset parse-tree vector, DONT free any co-objects
+/*! Trunc parse-tree to specific length
+ *
+ * Keep "len" objects, free the rest and reallocate the vector
  * @param[in]  pt         CLIgen parse-tree
  * @retval     0          OK
  * @retval    -1          Error
  */
 int
-pt_reset(parse_tree *pt)
+pt_trunc(parse_tree *pt,
+	 int         len)
 {
+    int     i;
+    cg_obj *co;
+
     if (pt == NULL){
 	errno = EINVAL;
 	return -1;
     }
-    if (pt->pt_vec){
-	free(pt->pt_vec);
-	pt->pt_vec = NULL;
+    if (len == 0 || len > pt->pt_len){
+	errno = EINVAL;
+	return -1;
     }
-    pt->pt_len = 0;
+    if (len < pt->pt_len){
+	for (i=len; i<pt_len_get(pt); i++){
+	    if ((co = pt_vec_i_get(pt, i)) != NULL)
+		co_free(co, 0);
+	}
+	if ((pt->pt_vec = realloc(pt->pt_vec, (len)*sizeof(cg_obj *))) == 0)
+	    return -1;
+	pt->pt_len = len;
+    }
     return 0;
 }
 
