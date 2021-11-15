@@ -67,7 +67,6 @@
  * @param[val]  val  String value
  * @retval  0  OK
  * @retval -1  Error
- * See also 
  */
 int
 cvec_add_string(cvec *cvv, 

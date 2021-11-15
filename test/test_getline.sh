@@ -49,6 +49,9 @@ expectpart "$(echo -n "ruled over the shores of the Hreiðsea" | $cligen_
 newtest "search ^R"
 expectpart "$(echo -n "Theodoric ruledTheo 		" | $cligen_file -f $fspec)" 0 "Theodoric the bold"
 
+newtest "search ^R^S"
+expectpart "$(echo -n "Theojfforic123TheodoricTheosdajvTheo 		" | $cligen_file -f $fspec)" 0 "Theodoric the bold"
+
 newtest "^W"
 expectpart "$(echo -n "TheodoricThe			" | $cligen_file -f $fspec)" 0 "Theodoric the bold"
 
