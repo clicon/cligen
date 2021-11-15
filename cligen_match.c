@@ -116,7 +116,6 @@ match_variable(cligen_handle h,
     return retval; 
 }
 
-
 /*! Given a string and one cligen object, return if the string matches
  * @param[in]  string  Input string to match (NULL is match)
  * @param[in]  co      cligen object

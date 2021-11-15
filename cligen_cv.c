@@ -209,17 +209,6 @@ cv_flag_set(cg_var *cv,
     return cv->var_flag |= mask;
 }
 
-/*! Get value of cv without specific type set
- * @param[in] cv     CLIgen variable
- */
-void *
-cv_value_get(cg_var *cv)
-{
-    if (cv == NULL) 
-	return 0;
-    return &cv->u;
-}
-
 /*! Get boolean value of cv
  * @param[in] cv     CLIgen variable
  */
@@ -1509,8 +1498,8 @@ parse_macaddr(char  *str,
  *                    be changed destructively
  * @param[in]  cv     CLIgen variable
  * @param[out] reason if given, malloced err string (retval=0), needs freeing
- * URL syntax:
-
+ * URL syntax: Syntax:  <proto>://[<user>[:<passwd>]@]<addr>[/<path>]. 
+ * @note The syntax is not complete: it is recommended to use regexps
  */
 static int
 parse_url(char   *url, 
@@ -1840,12 +1829,14 @@ str2time(char           *in,
     i += len;
  zone:
     switch (in[i]){
-    case 'Z':
+    case 'Z': /* does not parse zone*/
 	i++;
 	break;
     case '+': 
     case '-': /* not parsed */
 	goto mkdate;
+    case '\0':
+	break;
     default:
 	goto done;
     }

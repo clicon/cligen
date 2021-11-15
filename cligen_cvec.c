@@ -217,6 +217,7 @@ cvec_next(cvec   *cvv,
  * @retval    cv    The new cligen variable
  * @see cv_new   but this is allocated contiguosly as a part of a cvec.
  * @see cvec_append_var
+ * @see cvec_add_string  utility function for appending a string cv
  */
 cg_var *
 cvec_add(cvec        *cvv,

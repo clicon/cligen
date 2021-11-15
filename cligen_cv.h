@@ -135,8 +135,6 @@ char cv_flag(cg_var *cv, char mask);
 char cv_flag_clr(cg_var *cv, char mask);
 char cv_flag_set(cg_var *cv, char mask);
 
-void *cv_value_get(cg_var *cv);
-
 char cv_bool_get(cg_var *cv);
 char cv_bool_set(cg_var *cv, char x);
 int8_t  cv_int8_get(cg_var *cv);
