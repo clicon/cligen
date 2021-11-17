@@ -10,7 +10,7 @@ fspec=$dir/spec.cli
 cat > $fspec <<EOF
   prompt="cli> ";              # Assignment of prompt
   comment="#";                 # Same comment as in syntax
-  treename="tutorial";         # Name of syntax (used when referencing)
+  treename="types";            # Name of syntax (used when referencing)
 
   # Example of variable preferences
   r0  <v:string regexp:"[a-z][0-9]*">, callback();
@@ -40,6 +40,12 @@ cat > $fspec <<EOF
 EOF
 
 newtest "$cligen_file -f $fspec"
+
+newtest "print syntax, check first and last"
+expectpart "$(echo "" | $cligen_file -f $fspec -p)" 0  'a0 <v:ipv4addr>, callback();' 'r0 <v:string regexp:"\[a-z\]\[0-9\]\*">, callback();' 't0 <v:time>, callback();'
+
+newtest "dump syntax"
+expectpart "$(echo "" | $cligen_file -f $fspec -d)" 0  "pt types" "co a0"
 
 # regexps
 for x in 0 1 2 3 4 5; do

@@ -189,17 +189,19 @@ str2fn_exp(char  *name,
 static void 
 usage(char *argv)
 {
-    fprintf(stderr, "Usage:%s [-h][-f <filename>][-1][-p][-P], where the optoions have the following meaning:\n"
+    fprintf(stderr, "Usage:%s <option>*, where the options have the following meaning:\n"
 	    "\t-h \t\tHelp\n"
 	    "\t-f <file> \tConfig-file (or stdin)\n"
 	    "\t-1 \t\tOnce only. Do not enter interactive mode\n"
 	    "\t-p \t\tPrint syntax\n"
+    	    "\t-d \t\tDump syntax with implementation-specific info\n"
 	    "\t-e \t\tSet automatic expansion/completion for all expand() functions\n"
     	    "\t-E \t\tExclude keys in callback cvv. Default include keys\n"
 	    "\t-c \t\tExpand first arg of callback cvv to string matching keywords\n"
 	    "\t-P \t\tSet preference mode to 1, ie return first if several have same pref\n"
 	    "\t-t <nr> \tSet tab mode: 1:columns, 2: same pref for vars, 4: all steps\n"
 	    "\t-s <nr> \tScrolling 0: disable line scrolling, 1: enable line scrolling (default 1)\n"
+	    "\t-u \t\tEnable experimental UTF-8 mode\n"
 	    ,
 	    argv);
     exit(0);
@@ -221,6 +223,7 @@ main(int   argc,
     char       *str;
     int         once = 0;
     int         print_syntax = 0;
+    int         dump_syntax = 0;
     int         set_expand = 0;
     int         set_preference = 0;
     int         tabmode = 0;
@@ -228,6 +231,8 @@ main(int   argc,
     int         exclude_keys = 0;
     int         expand_first = 0;
     
+    if ((h = cligen_init()) == NULL)
+	goto done;    
     argv++;argc--;
     for (;(argc>0)&& *argv; argc--, argv++){
 	if (**argv != '-')
@@ -244,6 +249,9 @@ main(int   argc,
 	    break;
 	case 'p': /* print syntax */
 	    print_syntax++;
+	    break;
+	case 'd': /* dump syntax */
+	    dump_syntax++;
 	    break;
 	case 'e': /* Set automatic completion/expand */
 	    set_expand++;
@@ -273,13 +281,14 @@ main(int   argc,
 	    argc--;argv++;
 	    tabmode = atoi(*argv);
 	    break;
+	case 'u': /* UTF-8 experimental */
+	    cligen_utf8_set(h, 1);
+	    break;
 	default:
 	    usage(argv0);
 	    break;
 	}
-  }
-    if ((h = cligen_init()) == NULL)
-	goto done;    
+    }
     if (exclude_keys)
 	cligen_exclude_keys_set(h, 1);
     if (expand_first)
@@ -323,9 +332,11 @@ main(int   argc,
 	pt_print(stdout, pt, 0);
 	fflush(stdout);
     }
-    if (once)
-	goto done;
-    if (cligen_loop(h) < 0)
+    if (dump_syntax){
+	pt_dump(stdout, pt);
+	fflush(stdout);
+    }
+    if (!once && cligen_loop(h) < 0)
 	goto done;
     retval = 0;
   done:

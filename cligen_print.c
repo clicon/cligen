@@ -337,14 +337,14 @@ pt_dump1(FILE       *f,
     char   *name;
     
     name = pt_name_get(pt);
-    fprintf(stderr, "%*s %p pt %s [%d]",
+    fprintf(f, "%*s %p pt %s [%d]",
 	    indent*3, "", pt,
 	    name?name:"",
 	    pt_len_get(pt));
-    fprintf(stderr, "\n");
+    fprintf(f, "\n");
     for (i=0; i<pt_len_get(pt); i++){
 	if ((co = pt_vec_i_get(pt, i)) == NULL)
-	    fprintf(stderr, "%*s NULL\n", (indent+1)*3, "");
+	    fprintf(f, "%*s NULL\n", (indent+1)*3, "");
 	else
 	    co_dump1(f, co, indent+1);
     }
@@ -360,23 +360,23 @@ co_dump1(FILE    *f,
 
     switch (co->co_type){
     case CO_COMMAND:
-	fprintf(stderr, "%*s %p co %s", indent*3, "", co, co->co_command);
+	fprintf(f, "%*s %p co %s", indent*3, "", co, co->co_command);
 	if (co_sets_get(co))
-	    fprintf(stderr, " SETS");
-	fprintf(stderr, "\n");
+	    fprintf(f, " SETS");
+	fprintf(f, "\n");
 	break;
     case CO_REFERENCE:
-	fprintf(stderr, "%*s %p co @%s\n", indent*3, "", co, co->co_command);
+	fprintf(f, "%*s %p co @%s\n", indent*3, "", co, co->co_command);
 	break;
     case CO_VARIABLE:
-	fprintf(stderr, "%*s %p co <%s>\n", indent*3, "", co, co->co_command);
+	fprintf(f, "%*s %p co <%s>\n", indent*3, "", co, co->co_command);
 	break;
     case CO_EMPTY:
-	fprintf(stderr, "%*s %p empty;\n", indent*3, "", co);
+	fprintf(f, "%*s %p empty;\n", indent*3, "", co);
 	break;
     }
     if ((pt = co_pt_get(co)) != NULL)
-	pt_dump1(stderr, pt, indent);
+	pt_dump1(f, pt, indent);
     return 0;
 }
 
