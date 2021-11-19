@@ -44,6 +44,7 @@
 #include "cligen_cvec.h"
 #include "cligen_parsetree.h"
 #include "cligen_pt_head.h"
+#include "cligen_callback.h"
 #include "cligen_object.h"
 #include "cligen_parse.h"
 #include "cligen_handle.h"
@@ -231,18 +232,19 @@ cligen_callbackv_str2fn(parse_tree   *pt,
 			cgv_str2fn_t *str2fn, 
 			void         *arg)
 {
-    int                 retval = -1;
-    cg_obj             *co;
-    char               *callback_err = NULL;   /* Error from str2fn callback */
-    struct cg_callback *cc;
-    int                 i;
+    int          retval = -1;
+    cg_obj      *co;
+    char        *callback_err = NULL;   /* Error from str2fn callback */
+    cg_callback *cc;
+    int          i;
 
     for (i=0; i<pt_len_get(pt); i++)
 	if ((co = pt_vec_i_get(pt, i)) != NULL){
-	    for (cc = co->co_callbacks; cc; cc=cc->cc_next){
-		if (cc->cc_fn_str != NULL && cc->cc_fn_vec == NULL){
+	    for (cc = co->co_callbacks; cc; cc = co_callback_next(cc)){
+		if (cc->cc_fn_str != NULL &&
+		    co_callback_fn_get(cc) == NULL){
 		    /* Note str2fn is a function pointer */
-		    cc->cc_fn_vec = str2fn(cc->cc_fn_str, arg, &callback_err);
+		    co_callback_fn_set(cc, str2fn(cc->cc_fn_str, arg, &callback_err));
 		    if (callback_err != NULL){
 			fprintf(stderr, "%s: error: No such function: %s (%s)\n",
 				__FUNCTION__, cc->cc_fn_str, callback_err);

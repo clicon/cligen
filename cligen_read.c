@@ -65,6 +65,7 @@
 #include "cligen_cvec.h"
 #include "cligen_parsetree.h"
 #include "cligen_pt_head.h"
+#include "cligen_callback.h"
 #include "cligen_object.h"
 #include "cligen_handle.h"
 #include "cligen_print.h"
@@ -654,8 +655,6 @@ cliread_parse2(cligen_handle  h,
 	errno = EINVAL;
 	goto done;
     }
-    if ((ptn = pt_new()) == NULL)
-	goto done;
     if (cligen_logsyntax(h) > 0){
 	fprintf(stderr, "%s:\n", __FUNCTION__);
 	pt_print(stderr, pt, 0);
@@ -676,6 +675,8 @@ cliread_parse2(cligen_handle  h,
     cv_name_set(cv, "cmd"); /* the whole command string */
     /* The whole command string as user entered. */
     cv_string_set(cv, string); 
+    if ((ptn = pt_new()) == NULL)
+	goto done;
     if (pt_expand(h, pt, cvv,
 		  0,  /* Do not include hidden commands */
 		  0,  /* VARS are not expanded, eg ? <tab> */
@@ -870,11 +871,12 @@ cligen_eval(cligen_handle h,
 	    cg_obj       *co, 
 	    cvec         *cvv)
 {
-    int                 retval = -1;
-    struct cg_callback *cc;
-    cvec               *argv;
-    cvec               *cvv1 = NULL; /* Modified */
-	    
+    int          retval = -1;
+    cg_callback *cc;
+    cvec        *argv;
+    cvec        *cvv1 = NULL; /* Modified */
+    cgv_fnstype_t *fn;
+    
     /* Save matched object for plugin use */
     if (h)
 	cligen_co_match_set(h, co);
@@ -889,15 +891,14 @@ cligen_eval(cligen_handle h,
 	cvec_exclude_keys(cvv1) < 0)
 	goto done;
     /* Traverse callbacks */
-    for (cc = co->co_callbacks; cc; cc=cc->cc_next){
+    for (cc = co->co_callbacks; cc; cc=co_callback_next(cc)){
 	/* Vector cvec argument to callback */
-    	if (cc->cc_fn_vec){
+    	if ((fn = co_callback_fn_get(cc)) != NULL){
 	    argv = cc->cc_cvec ? cvec_dup(cc->cc_cvec) : NULL;
 	    cligen_fn_str_set(h, cc->cc_fn_str);
-	    if ((retval = (*cc->cc_fn_vec)(
-					cligen_userhandle(h)?cligen_userhandle(h):h, 
-					cvv1, 
-					argv)) < 0){
+	    if ((retval = (*fn)(cligen_userhandle(h)?cligen_userhandle(h):h, 
+				cvv1, 
+				argv)) < 0){
 		if (argv != NULL)
 		    cvec_free(argv);
 		cligen_fn_str_set(h, NULL);

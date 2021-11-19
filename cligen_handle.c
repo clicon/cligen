@@ -56,6 +56,7 @@
 #include "cligen_cvec.h"
 #include "cligen_parsetree.h"
 #include "cligen_pt_head.h"
+#include "cligen_callback.h"
 #include "cligen_object.h"
 #include "cligen_io.h"
 #include "cligen_handle.h"
@@ -1126,6 +1127,7 @@ cligen_expand_first_set(cligen_handle h,
 }
 
 /*! Changes cvec find function behaviour, exclude keywords or include them.
+ * @param[in] h
  * @param[in] status
  */
 int
@@ -1139,7 +1141,7 @@ cligen_exclude_keys_set(cligen_handle h,
 }
 
 /*! Changes cvec find function behaviour, exclude keywords or include them.
- * @param[in] status
+ * @param[in] h
  * @see cv_exclude_keys
  */
 int

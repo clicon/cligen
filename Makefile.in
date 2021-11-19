@@ -81,13 +81,13 @@ MYLIBSO      = libcligen$(SH_SUFFIX).$(CLIGEN_MAJOR)
 MYLIBLINK    = libcligen$(SH_SUFFIX)
 MYLIBSTATIC  = libcligen$(LIBSTATIC_SUFFIX)
 
-SRC		= cligen_object.c cligen_parsetree.c cligen_pt_head.c \
+SRC		= cligen_object.c cligen_callback.c cligen_parsetree.c cligen_pt_head.c \
                   cligen_handle.c cligen_cv.c cligen_match.c cligen_result.c \
 		  cligen_read.c cligen_io.c cligen_expand.c cligen_syntax.c \
 		  cligen_print.c cligen_cvec.c cligen_buf.c cligen_util.c \
 		  cligen_history.c cligen_regex.c cligen_getline.c build.c
 
-INCS		= cligen_cv.h cligen_cvec.h cligen_object.h cligen_handle.h \
+INCS		= cligen_cv.h cligen_cvec.h cligen_object.h cligen_callback.h cligen_handle.h \
 	          cligen_parsetree.h cligen_pt_head.h cligen_result.h \
 		  cligen_print.h cligen_read.h cligen_io.h cligen_expand.h \
 		  cligen_syntax.h cligen_buf.h cligen_util.h cligen_history.h \

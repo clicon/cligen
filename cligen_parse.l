@@ -42,6 +42,10 @@
 #include <stdint.h>
 #include <errno.h>
 #include <netinet/in.h>
+#include <ctype.h>
+#ifndef isblank
+#define isblank(c) (c==' ')
+#endif /* isblank */
 
 #include "cligen_parse.tab.h" /* generated */
 
@@ -49,6 +53,7 @@
 #include "cligen_cv.h"
 #include "cligen_cvec.h"
 #include "cligen_parsetree.h"
+#include "cligen_callback.h"
 #include "cligen_object.h"
 #include "cligen_parse.h"
 
@@ -102,7 +107,7 @@ stripdup(char *s0)
 %s STRING
 
 %%
-<INITIAL>[ \t]            
+<INITIAL>[ \t]*
 <INITIAL>,                { BEGIN(OPTION); return *yytext; }
 <INITIAL>#                { _CY->cy_lex_state =INITIAL; BEGIN(COMMENT); }
 <INITIAL>\n               { _CY->cy_linenum++; }
@@ -126,15 +131,21 @@ stripdup(char *s0)
 <INITIAL>.                { return -1; }
 
 <HELP>\n                  { _CY->cy_linenum++; 
-                            cligen_parselval.string = strdup(yytext);
-                            return CHARS; }
+                            return *yytext; }
 <HELP><<EOF>>             { return MY_EOF; }
 <HELP>\"\)                { BEGIN(INITIAL); return DQP; /* double-quote parenthes */}
 <HELP>\\                  { _CY->cy_lex_state = HELP; BEGIN(ESCAPE); }
-<HELP>[^\\{")}\n]+        { cligen_parselval.string = strdup(yytext);
-                            return CHARS;}
-<HELP>.                   { cligen_parselval.string = strdup(yytext);
-                            return CHARS;}
+<HELP>[^\\"\n]+           { 
+                             int i;
+                             for (i=0;i<strlen(yytext);i++){
+                                if (!isblank(yytext[i]))
+                                   break;
+                             }
+                             cligen_parselval.string = yytext+i;
+                             return HELPSTR;
+                          }
+<HELP>.                   { cligen_parselval.string = yytext;
+                            return HELPSTR;}
 
 <NAMEORTYPE>\>            { BEGIN(INITIAL); return *yytext; }
 <NAMEORTYPE>\n            { _CY->cy_linenum++; }
@@ -207,8 +218,7 @@ stripdup(char *s0)
 
 <COMMENT>\n               { _CY->cy_linenum++; BEGIN(_CY->cy_lex_state);}
 <COMMENT><<EOF>>          { return MY_EOF; }
-<COMMENT>.               
-
+<COMMENT>[^\n]+   
 
 %%
 
