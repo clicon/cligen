@@ -47,6 +47,7 @@
 #include "cligen_cvec.h"
 #include "cligen_parsetree.h"
 #include "cligen_pt_head.h"
+#include "cligen_callback.h"
 #include "cligen_object.h"
 #include "cligen_handle.h"
 #include "cligen_print.h"
@@ -204,7 +205,7 @@ transform_var_to_cmd(cg_obj *co,
 }
 
 /*! Recursively copy callback structure to all terminal nodes in the parse-tree.
- * XXX: Actually copies to every node, even if not terminal
+ *
  * Problem is that the argument is modified according to reference rule
  * @param[in]  pt   Parse-tree
  * @param[in]  cc0  This is the parameter (calling) callback. eg fn in @sub,fn().
@@ -218,17 +219,17 @@ transform_var_to_cmd(cg_obj *co,
  * - Always replace (or add if empty) original callback in co0
  * - Use local argument-list _unless_ there is none, then use callback list from cc0
  * The effect of this is that the generated trees argument are first (eg api-path)
- * and the ones in the @ref cal are appended.
+ * and the ones in the @ref call are appended.
  */
 static int
-pt_callback_reference(parse_tree         *pt, 
-		      struct cg_callback *cc0)
+pt_callback_reference(parse_tree  *pt, 
+		      cg_callback *cc0)
 {
-    int                 i;
-    cg_obj             *co;
-    int                 retval = -1;
-    struct cg_callback *cc;
-    cg_var             *cv;
+    int          i;
+    cg_obj      *co;
+    int          retval = -1;
+    cg_callback *cc;
+    cg_var      *cv;
 
     for (i=0; i<pt_len_get(pt); i++){    
 	if ((co = pt_vec_i_get(pt, i)) == NULL ||
@@ -243,13 +244,20 @@ pt_callback_reference(parse_tree         *pt,
 		    return -1;
 	    }
 	    else {
-		cc->cc_fn_vec = cc0->cc_fn_vec; /*  */
-		if (cc0->cc_fn_str){
+		co_callback_fn_set(cc, co_callback_fn_get(cc0));
+		if (cc0->cc_fn_str){ /* XXX check w strcmp that it is equal */
 		    if (cc->cc_fn_str)
 			free (cc->cc_fn_str);
 		    cc->cc_fn_str = strdup(cc0->cc_fn_str);
 		}
-		/* Append original parameters to end of call */
+		/* Append original parameters to end of call 
+		 * For example, 
+		 * Before call:
+		 * 0 : "/example:x"
+		 * After call:
+		 * 0 : "/example:x"
+		 * 1 : "candidate" # cc0:s parameter copied and appended to cc
+		 */
 		if (cc0->cc_cvec){
 		    cv = NULL;
 		    while ((cv = cvec_each(cc0->cc_cvec, cv)) != NULL)
@@ -435,7 +443,6 @@ pt_expand_treeref(cligen_handle h,
 		    if (pt_recurse_filter(pt1ref, filter) < 0)
 			goto done;
 		}
-			
 	    }
 	    /* Copy top-levels into original parse-tree */
 	    for (j=0; j<pt_len_get(pt1ref); j++)

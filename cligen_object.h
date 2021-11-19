@@ -54,15 +54,6 @@ enum cg_objtype{
  * Types
  */
 
-/*
- * Callback function type. Is called after a specific syntax node has been identified.,
- *   arg is an optionalargument
- *   argc is number of variables (1...)
- *   argv[] is a vector of variables. The first is always the whole syntax string as entered.
- */
-typedef int (cg_fnstype_t)(cligen_handle h, cvec *vars, cg_var *arg);
-typedef int (cgv_fnstype_t)(cligen_handle h, cvec *vars, cvec *argv);
-
 /* Expand callback function for vector arguments (should be in cligen_expand.h) 
    Returns 0 if handled expand, that is, it returned commands for 'name'
            1 if did not handle expand 
@@ -93,15 +84,6 @@ typedef int (cligen_susp_cb_t)(void *h, char *, int, int *);
 typedef int (cligen_interrupt_cb_t)(cligen_handle h);
 
 typedef struct parse_tree parse_tree;
-
-/*! A CLIgen object may have one or several callbacks. This type defines one callback
- */
-struct cg_callback  { /* Linked list of command callbacks */
-    struct  cg_callback *cc_next;    /**< Next callback in list.  */
-    cgv_fnstype_t       *cc_fn_vec;  /**< callback/function pointer using cvec.  */
-    char                *cc_fn_str;  /**< callback/function name. malloced */
-    cvec                *cc_cvec;    /**< callback/function arguments */
-};
 
 /*
  * If cligen object is a variable, this is its variable spec.
@@ -163,7 +145,7 @@ struct cg_obj{
 					 reference */
     char               *co_command;   /* malloc:ed matching string / name or type */
     char               *co_prefix;    /* Prefix. Can be used in cases where co_command is not unique */
-    struct cg_callback *co_callbacks; /* linked list of callbacks and arguments */
+    cg_callback        *co_callbacks; /* linked list of callbacks and arguments */
     cvec               *co_cvec;      /* List of cligen local variables, such as "hide" 
                                        * Special labels on @treerefs are: 
                                        *     @add:<label> and @remove:<label>
@@ -224,7 +206,6 @@ cg_obj     *co_new_only(void);
 cg_obj     *co_new(char *cmd, cg_obj *prev);
 cg_obj     *cov_new(enum cv_type cvtype, cg_obj *prev);
 int         co_pref(cg_obj *co, int exact);
-int         co_callback_copy(struct cg_callback *cc0, struct cg_callback **ccn);
 int         co_copy(cg_obj *co, cg_obj *parent, cg_obj **conp);
 int         co_copy1(cg_obj *co, cg_obj *parent, int recursive, cg_obj **conp);
 int         co_eq(cg_obj *co1, cg_obj *co2);

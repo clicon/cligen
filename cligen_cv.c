@@ -59,6 +59,7 @@
 #include "cligen_cv.h"
 #include "cligen_cvec.h"
 #include "cligen_parsetree.h"
+#include "cligen_callback.h"
 #include "cligen_object.h"
 #include "cligen_io.h"
 #include "cligen_regex.h"
@@ -502,6 +503,30 @@ cv_string_set(cg_var *cv,
 	free(cv->u.varu_string);
     cv->u.varu_string = s1;
     return s1; 
+}
+
+/*! Set new string without malloc 
+ * @param[in] cv     CLIgen variable
+ * @param[in] s      String to directly assign (must have been alloced)
+ * @retval    0      OK
+ * @retval    -1     Error
+ */
+int
+cv_string_set_direct(cg_var *cv, 
+		     char   *s)
+{
+    if (cv == NULL){
+	errno = EINVAL;
+	return -1;
+    }
+    if (s == NULL){
+	errno = EINVAL;
+	return -1;
+    }
+    if (cv->u.varu_string != NULL)
+	free(cv->u.varu_string);
+    cv->u.varu_string = s;
+    return 0; 
 }
 
 /*! Allocate new string from original by copying using strncpy

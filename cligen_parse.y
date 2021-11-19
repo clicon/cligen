@@ -55,12 +55,15 @@
 %token <string> NUMBER  /* In variables */
 %token <string> DECIMAL /* In variables */
 %token <string> CHARS
+%token <string> HELPSTR
 
 %type <string> charseq
 %type <string> choices
 %type <string> numdec
 %type <string> arg1
 %type <string> typecast
+%type <string> helpstring
+%type <string> helpstring1
 %type <intval> preline
 
 %lex-param     {void *_cy} /* Add this argument to parse() and lex() function */
@@ -93,9 +96,11 @@
 #include "cligen_cvec.h"
 #include "cligen_parsetree.h"
 #include "cligen_pt_head.h"
+#include "cligen_callback.h"
 #include "cligen_object.h"
 #include "cligen_syntax.h"
 #include "cligen_handle.h"
+    //#include "cligen_util.h"
 #include "cligen_parse.h"
 
 static int debug = 0;
@@ -316,8 +321,8 @@ int
 cgy_callback(cligen_yacc *cy,
 	     char        *cb_str)
 {
-    struct cgy_stack    *cs = cy->cy_stack;
-    struct cg_callback *cc, **ccp;
+    struct cgy_stack *cs = cy->cy_stack;
+    cg_callback      *cc, **ccp;
 
     if (debug)
 	fprintf(stderr, "%s: %s\n", __FUNCTION__, cb_str);
@@ -345,13 +350,13 @@ cgy_callback_arg(cligen_yacc *cy,
 		 char        *type, 
 		 char        *arg)
 {
-    int                 retval = -1;
-    struct cg_callback *cc;
-    struct cg_callback *cclast;
-    cg_var             *cv = NULL;
+    int          retval = -1;
+    cg_callback *cc;
+    cg_callback *cclast;
+    cg_var      *cv = NULL;
 
     cclast = NULL;
-    for (cc=cy->cy_callbacks; cc; cc=cc->cc_next)
+    for (cc=cy->cy_callbacks; cc; cc = co_callback_next(cc))
 	cclast = cc;
     if (cclast){
 	if ((cv = create_cv(cy, type, arg)) == NULL)
@@ -612,27 +617,49 @@ cgy_reference(cligen_yacc *cy,
     return retval;
 }
 
-/*! Add comment
- * Assume comment is malloced and not freed by parser 
+/*! Add one line of helpstr
+ *
  * @param[in]  cy       CLIgen yacc parse struct
- * @param[in]  comment  Help string, inside ("...")
+ * @param[in]  helpstr  Malloced help string, stripped of spaces, consumed here
  */
 static int
-cgy_comment(cligen_yacc *cy,
-	    char        *comment)
+cgy_helpstring(cligen_yacc *cy,
+	       char        *helpstr)
 {
+    int              retval = -1;
     struct cgy_list *cl; 
-    cg_obj          *co; 
+    cg_obj          *co;
+    cg_var          *cv; 
 
+    if (helpstr == NULL){
+	errno = EINVAL;
+	goto done;
+    }
     for (cl = cy->cy_list; cl; cl = cl->cl_next){
 	co = cl->cl_obj;
-	if (co->co_helpvec == NULL && /* Why would it already have a comment? */
-	    cligen_txt2cvv(comment, &co->co_helpvec) < 0){ /* Or just append to existing? */
-	    cligen_parseerror1(cy, "Allocating comment");
-	    return -1;
+	if (co->co_helpvec == NULL){
+	    if ((co->co_helpvec = cvec_new(0)) == NULL){
+		cligen_parseerror1(cy, "Allocating helpstr");
+		goto done;
+	    }
+	}
+#ifdef CLIGEN_SINGLE_HELPSTRING
+	else
+	    continue;
+#endif
+	if ((cv = cvec_add(co->co_helpvec, CGV_STRING)) == NULL){
+	    cligen_parseerror1(cy, "Allocating helpstr");
+	    goto done;
+	}
+	if (cv_string_set(cv, helpstr) == NULL){
+	    cligen_parseerror1(cy, "Allocating helpstr");
+	    goto done;
 	}
     }
-    return 0;
+    free(helpstr);
+    retval = 0;
+ done:
+    return retval;
 }
 
 /*! Append a new choice option to a choice variable string 
@@ -667,18 +694,19 @@ cgy_var_choice_append(cligen_yacc *cy,
  * 1. Add callback and args to every list
  * 2. Add empty child unless already empty child
  * @param[in]  cy  CLIgen yacc parse struct
+ * @note co_callback_copy takes cycles, ca 50%
  */
 int
 cgy_terminal(cligen_yacc *cy)
 {
-    struct cgy_list    *cl; 
-    cg_obj             *co; 
-    int                 i;
-    struct cg_callback *cc;
-    struct cg_callback **ccp;
-    int                 retval = -1;
-    parse_tree         *ptc;
-    cg_obj             *coi; 
+    struct cgy_list *cl; 
+    cg_obj          *co; 
+    int              i;
+    cg_callback     *cc;
+    cg_callback    **ccp;
+    int              retval = -1;
+    parse_tree      *ptc;
+    cg_obj          *coi; 
     
     for (cl = cy->cy_list; cl; cl = cl->cl_next){
 	co  = cl->cl_obj;
@@ -737,12 +765,8 @@ cgy_terminal(cligen_yacc *cy)
     else
 #endif
     while ((cc = cy->cy_callbacks) != NULL){
-	if (cc->cc_cvec)	
-	    cvec_free(cc->cc_cvec);
-	if (cc->cc_fn_str)	
-	    free(cc->cc_fn_str);
-	cy->cy_callbacks = cc->cc_next;
-	free(cc);
+	cy->cy_callbacks = co_callback_next(cc);
+	co_callback_free(cc);
     }
     if (cy->cy_cvec){
 	cvec_free(cy->cy_cvec);
@@ -1298,10 +1322,36 @@ declcomp    : '(' { if (ctx_push(_cy, 0) < 0) YYERROR; }
             ;
 
 decl        : cmd                 { _PARSE_DEBUG("decl->cmd");}
-            | cmd PDQ charseq DQP { _PARSE_DEBUG("decl->cmd (\" comment \")");
-		                    if (cgy_comment(_cy, $3) < 0) YYERROR; free($3);}
+            | cmd PDQ helpstring DQP { _PARSE_DEBUG("decl->cmd (\" helpstring \")");}
             | cmd PDQ DQP         { _PARSE_DEBUG("decl->cmd (\"\")");}
             ;
+
+helpstring : helpstring '\n' helpstring1
+              {
+		  _PARSE_DEBUG("helpstring -> helpstring helpstring1");
+		  if (cgy_helpstring(_cy, $3) < 0) YYERROR;
+	      }
+            | helpstring1
+	       {
+		   _PARSE_DEBUG("helpstring -> helpstring1");
+		   if (cgy_helpstring(_cy, $1) < 0) YYERROR;
+	       }
+            ;
+
+helpstring1 : helpstring1 HELPSTR
+              {
+		  size_t len = strlen($1);
+		  _PARSE_DEBUG("helpstring1 -> helpstring1 HELPSTR");
+		  if (($$ = realloc($1, len+strlen($2) +1)) == NULL) YYERROR;
+		  sprintf($$+len, "%s", $2); 
+	      }
+            | HELPSTR
+	       {
+    		  _PARSE_DEBUG("helpstring1 -> HELPSTR");
+		   if (($$=strdup($1)) == NULL) YYERROR;
+	       }
+            ;
+
 
 cmd         : NAME           { _PARSE_DEBUG("cmd->NAME");
 		               if (cgy_cmd(_cy, $1) < 0) YYERROR; free($1); } 
@@ -1387,12 +1437,13 @@ choices     : { $$ = NULL;}
 charseq    : charseq CHARS
               {
 		  int len = strlen($1);
+		  _PARSE_DEBUG("charseq->charseq CHARS");
 		  $$ = realloc($1, len+strlen($2) +1); 
 		  sprintf($$+len, "%s", $2); 
 		  free($2);
                  }
-
-           | CHARS {$$=$1;}
+           | CHARS {_PARSE_DEBUG("charseq->CHARS");
+		    $$=$1;}
            ;
 
 

@@ -49,6 +49,7 @@
 #include "cligen_cvec.h"
 #include "cligen_parsetree.h"
 #include "cligen_pt_head.h"
+#include "cligen_callback.h"
 #include "cligen_object.h"
 #include "cligen_handle.h"
 #include "cligen_print.h"
@@ -147,12 +148,12 @@ co2cbuf(cbuf   *cb,
 	int     marginal,
 	int     brief)
 {
-    int                 retval = -1;
-    struct cg_callback *cc;
-    parse_tree         *pt;
-    cg_var             *cv;
-    cg_obj             *co1;
-    int                 i;
+    int          retval = -1;
+    cg_callback *cc;
+    parse_tree  *pt;
+    cg_var      *cv;
+    cg_obj      *co1;
+    int          i;
 
     switch (co->co_type){
     case CO_COMMAND:
@@ -188,20 +189,8 @@ co2cbuf(cbuf   *cb,
 		cprintf(cb, ", hide-database");
 	if ((co_flags_get(co, CO_FLAGS_HIDE)) && (co_flags_get(co, CO_FLAGS_HIDE_DATABASE)))
 		cprintf(cb, ", hide-database-auto-completion");
-	for (cc = co->co_callbacks; cc; cc=cc->cc_next){
-	    if (cc->cc_fn_str){
-		cprintf(cb, ", %s(", cc->cc_fn_str);
-		if (cc->cc_cvec){
-		    cv = NULL;
-		    i = 0;
-		    while ((cv = cvec_each(cc->cc_cvec, cv)) != NULL) {
-			if (i++)
-			    cprintf(cb, ",");
-			cv2cbuf(cv, cb);
-		    }
-		}
-		cprintf(cb, ")");
-	    }
+	for (cc = co->co_callbacks; cc; cc = co_callback_next(cc)){
+	    co_callback2cbuf(cb, cc);
 	}
     }
     if (co_terminal(co))
@@ -417,7 +406,7 @@ cligen_print_trees(FILE         *f,
 
     ph = NULL;
     while ((ph = cligen_ph_each(h, ph)) != NULL) {
-	fprintf(stderr, "%s\n", cligen_ph_name_get(ph));
+	fprintf(stderr, "%s:\n", cligen_ph_name_get(ph));
 	pt = cligen_ph_parsetree_get(ph);
 	if (!brief && pt_print(f, pt, brief) < 0)
 	    goto done;

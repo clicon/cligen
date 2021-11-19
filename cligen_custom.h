@@ -33,8 +33,15 @@
 
   Custom file as boilerplate appended by cligen_config.h 
 */
+
 #if 1 /* SANITY CHECK */
 typedef struct {int a;} *cligen_handle;
 #else
 typedef void *cligen_handle; /* API */
 #endif
+
+/* Just show a single help string 
+ * In case of large help strings such as with many YANG specs this reduces memory use
+ * by only showing one help string
+ */
+#undef CLIGEN_SINGLE_HELPSTRING

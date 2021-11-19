@@ -74,7 +74,7 @@ struct cligen_parse_yacc{
     struct cgy_stack     *cy_stack;        /* Stack of levels: push/pop on () and [] */
     struct cgy_list      *cy_list;         /* (Parallel) List of objects currently 'active' */
     cg_obj               *cy_var;
-    struct cg_callback   *cy_callbacks; 
+    cg_callback          *cy_callbacks; 
     int                   cy_lex_state;  /* lex start condition (ESCAPE/COMMENT) */
     int                   cy_lex_string_state; /* lex start condition (STRING) */
     int                   cy_optional;     /* Keep track of [] level, just 0..1 allowed*/

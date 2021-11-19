@@ -60,6 +60,7 @@
 #include "cligen_cvec.h"
 #include "cligen_parsetree.h"
 #include "cligen_pt_head.h"
+#include "cligen_callback.h"
 #include "cligen_object.h"
 #include "cligen_io.h"
 #include "cligen_result.h"
@@ -481,46 +482,6 @@ cov_new(enum cv_type cvtype,
     return co;
 }
 
-/*! Copy a linked list of cg_obj callback objects
- *
- * Copy a linked list of cg_obj callback objects, including function pointer, 
- * function name,
- *
- * @param[in]  cc0  The object to copy from
- * @param[out] ccn  Pointer to the object to copy to (is allocated)
- * @param[in]  cgv  if given, is a string that overrides the arg in cc.
- * @retval     0      OK
- * @retval     -1     Error
- */
-int
-co_callback_copy(struct cg_callback  *cc0, 
-		 struct cg_callback **ccn)
-{
-    struct cg_callback  *cc;
-    struct cg_callback  *cc1;
-    struct cg_callback **ccp;
-
-    ccp = ccn;
-    for (cc = cc0; cc; cc=cc->cc_next){
-	if ((cc1 = malloc(sizeof(*cc1))) == NULL){
-	    fprintf(stderr, "%s: malloc: %s\n", __FUNCTION__, strerror(errno));
-	    return -1;
-	}
-	memset(cc1, 0, sizeof(*cc1));
-	cc1->cc_fn_vec = cc->cc_fn_vec;
-	if (cc->cc_fn_str)
-	    if ((cc1->cc_fn_str = strdup(cc->cc_fn_str)) == NULL){
-		fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
-		return -1;
-	    }
-	if (cc->cc_cvec && ((cc1->cc_cvec = cvec_dup(cc->cc_cvec)) == NULL))
-	    return -1;
-	*ccp = cc1;
-	ccp = &cc1->cc_next;
-    }
-    return 0;
-}
-
 /*! Recursively copy a cligen object.
  *
  * @param[in]  co     The object to copy from
@@ -887,15 +848,15 @@ co_eq(cg_obj *co1,
  * @retval    -1          Error
  * Note that the co_var pointer is not freed. The application
  * needs to handle it (dont use a pointer to the stack for example).
- * Note: if you add a free here, you should probably add somthing in
+ * Note: if you add a free here, you should probably add something in
  * co_copy and co_expand_sub
  */
 int 
 co_free(cg_obj *co, 
 	int     recursive)
 {
-    struct cg_callback *cc;
-    parse_tree         *pt;
+    cg_callback *cc;
+    parse_tree  *pt;
 
     if (co->co_helpvec) 
 	cvec_free(co->co_helpvec);
@@ -908,12 +869,8 @@ co_free(cg_obj *co,
     if (co->co_cvec)
 	cvec_free(co->co_cvec);
     while ((cc = co->co_callbacks) != NULL){
-	if (cc->cc_cvec)	
-	    cvec_free(cc->cc_cvec);
-	if (cc->cc_fn_str)     
-	    free(cc->cc_fn_str);
-	co->co_callbacks = cc->cc_next;
-	free(cc);
+	co->co_callbacks = co_callback_next(cc);
+	co_callback_free(cc);
     }
     if (co->co_type == CO_VARIABLE){
 	if (co->co_expand_fn_str)

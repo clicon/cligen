@@ -50,8 +50,8 @@
 #include "cligen_buf.h"
 #include "cligen_cv.h"
 #include "cligen_cvec.h"
+#include "cligen_callback.h"
 #include "cligen_object.h"
-
 #include "cligen_parsetree.h"
 #include "cligen_result.h"
 
