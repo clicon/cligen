@@ -69,8 +69,9 @@ cgv_fnstype_t *co_callback_fn_get(cg_callback *cc);
 int            co_callback_fn_set(cg_callback *cc, cgv_fnstype_t *fn);
 cg_callback   *co_callback_next(cg_callback *cc);
 int            co_callback_copy(cg_callback *cc0, cg_callback **ccn);
-int            co_callback_free(cg_callback *cc);
+int            co_callbacks_free(cg_callback **ccp);
 int            co_callback2cbuf(cbuf *cb, cg_callback *cc);
+size_t         co_callback_size(cg_callback *cc);
 
 #endif /* _CLIGEN_CALLBACK_H_ */
 

@@ -12,7 +12,7 @@ cat > $fspec <<EOF
   comment="#";                 # Same comment as in syntax
   treename="tutorial";         # Name of syntax (used when referencing)
 
-  edit,cligen_wp_set("working");{
+  edit, cligen_wp_set("working");{
     @working, cligen_wp_set("working");
   }
   show, cligen_wp_show("working");
@@ -30,59 +30,76 @@ EOF
 
 newtest "$cligen_tutorial -f $fspec" # To bind the cligen_wp_* functions
 
-newtest "cligen show top tree"
-expectpart "$(echo "show" | $cligen_tutorial -q -f $fspec 2>&1)" 0 "a;{" "b <v>;{" "d;" "c;"
+function testrun()
+{
+    copies=$1
 
-cat <<EOF > $fin
+    if $copies; then
+	options="-q -f $fspec" # default is full copies
+    else
+	options="-q -f $fspec -C" # turn limited copies on
+    fi
+
+    newtest "cligen show top tree"
+    expectpart "$(echo "show" | $cligen_tutorial ${options} 2>&1)" 0 "a;{" "b <v>;{" "d;" "c;"
+
+    cat <<EOF > $fin
 up
 show
 EOF
-newtest "cligen up"
-expectpart "$(cat $fin | $cligen_tutorial -q -f $fspec 2>&1)" 0 "a;{" "b <v>;{" "d;" "c;"
+    newtest "cligen up"
+    expectpart "$(cat $fin | $cligen_tutorial ${options} 2>&1)" 0 "a;{" "b <v>;{" "d;" "c;"
 
-cat <<EOF > $fin
+    cat <<EOF > $fin
 edit a
 show
 EOF
-newtest "cligen edit a"
-expectpart "$(cat $fin | $cligen_tutorial -q -f $fspec 2>&1)" 0 "b <v>;{" "d;" "c;" --not-- "a;{"
+    newtest "cligen edit a"
+    expectpart "$(cat $fin | $cligen_tutorial ${options} 2>&1)" 0 "b <v>;{" "d;" "c;" --not-- "a;{"
 
-cat <<EOF > $fin
+    cat <<EOF > $fin
 edit a
 edit b 23
 show
 EOF
 
-newtest "cligen edit a b <int>"
-expectpart "$(cat $fin | $cligen_tutorial -q -f $fspec 2>&1)" 0 "d;" --not-- "b <v>;{" "c;"  "a;{"
+    newtest "cligen edit a b <int>"
+    expectpart "$(cat $fin | $cligen_tutorial ${options} 2>&1)" 0 "d;" --not-- "b <v>;{" "c;"  "a;{"
 
-cat <<EOF > $fin
+    cat <<EOF > $fin
 edit a b 23
 up
 show
 EOF
 
-newtest "cligen edit a b <int> up"
-expectpart "$(cat $fin | $cligen_tutorial -q -f $fspec 2>&1)" 0 "<v>;{" "d;" --not-- "b <v>;{" "c;"  "a;{"
+    newtest "cligen edit a b <int> up"
+    expectpart "$(cat $fin | $cligen_tutorial ${options} 2>&1)" 0 "<v>;{" "d;" --not-- "b <v>;{" "c;"  "a;{"
 
-cat <<EOF > $fin
+    cat <<EOF > $fin
 edit a b 23
 up
 up
 show
 EOF
 
-newtest "cligen edit a b <int> up up"
-expectpart "$(cat $fin | $cligen_tutorial -q -f $fspec 2>&1)" 0 "b <v>;{" "c;" "d;" --not-- "a;{"
+    newtest "cligen edit a b <int> up up"
+    expectpart "$(cat $fin | $cligen_tutorial ${options} 2>&1)" 0 "b <v>;{" "c;" "d;" --not-- "a;{"
 
-cat <<EOF > $fin
+    cat <<EOF > $fin
 edit a b 23
 top
 show
 EOF
 
-newtest "cligen edit a b <int> top"
-expectpart "$(cat $fin | $cligen_tutorial -q -f $fspec 2>&1)" 0 "a;{" "b <v>;{" "d;" "c;"
+    newtest "cligen edit a b <int> top"
+    expectpart "$(cat $fin | $cligen_tutorial ${options} 2>&1)" 0 "a;{" "b <v>;{" "d;" "c;"
+}
+
+newtest "Run mode tests with full treeref copies (default)"
+testrun true
+
+newtest "Run mode tests with limited treeref copies"
+testrun false
 
 newtest "endtest"
 endtest

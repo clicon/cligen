@@ -98,9 +98,15 @@ co_expand_sub(cg_obj  *co,
 	con->co_cvec = cvec_dup(co->co_cvec);
     if (co_callback_copy(co->co_callbacks, &con->co_callbacks) < 0)
 	return -1;
+#ifdef CLIGEN_HELPSTRING_VEC
     if (co->co_helpvec)
 	if ((con->co_helpvec = cvec_dup(co->co_helpvec)) == NULL)
 	    return -1;
+#else /* CLIGEN_HELPSTRING_VEC */
+    if (co->co_helpstring)
+	if ((con->co_helpstring = strdup(co->co_helpstring)) == NULL)
+	    return -1;
+#endif /* CLIGEN_HELPSTRING_VEC */
     if (co->co_type == CO_VARIABLE){
 	if (co->co_expand_fn_str)
 	    if ((con->co_expand_fn_str = strdup(co->co_expand_fn_str)) == NULL){
@@ -147,9 +153,9 @@ co_expand_sub(cg_obj  *co,
  * and transform them to a set of commands: <string>...<string>
  * @param[in]  co        The variable to transform to a command
  * @param[in]  cmd       Command name
- * @param[out] helptext  Helptext of command
+ * @param[out] helptext  Helptext of command, can be NULL, is copied
  */
-int
+static int
 transform_var_to_cmd(cg_obj *co, 
 		     char   *cmd, 
 		     char   *helptext)
@@ -158,6 +164,7 @@ transform_var_to_cmd(cg_obj *co,
 	free(co->co_command);
     co->co_command = cmd; 
     if (helptext){
+#ifdef CLIGEN_HELPSTRING_VEC
 	if (co->co_helpvec){
 	    cvec_free(co->co_helpvec);
 	    co->co_helpvec = NULL;
@@ -165,6 +172,14 @@ transform_var_to_cmd(cg_obj *co,
 	/* helpstr can be on the form "txt1\n    txt2" */
 	if (cligen_txt2cvv(helptext, &co->co_helpvec) < 0)
 	    return -1;
+#else /* CLIGEN_HELPSTRING_VEC */
+	if (co->co_helpstring){
+	    free(co->co_helpstring);
+	    co->co_helpstring = NULL;
+	}
+	if (helptext)
+	    co->co_helpstring = strdup(helptext); /* XXX: can change to consume helpstring */
+#endif /* CLIGEN_HELPSTRING_VEC */
     }
     if (co->co_expandv_fn)
 	co->co_expandv_fn = NULL;
@@ -244,7 +259,7 @@ pt_callback_reference(parse_tree  *pt,
 		    return -1;
 	    }
 	    else {
-		co_callback_fn_set(cc, co_callback_fn_get(cc0));
+		cc->cc_fn_vec = cc0->cc_fn_vec;
 		if (cc0->cc_fn_str){ /* XXX check w strcmp that it is equal */
 		    if (cc->cc_fn_str)
 			free (cc->cc_fn_str);
@@ -273,26 +288,99 @@ pt_callback_reference(parse_tree  *pt,
     return retval;
 }
 
-/*! Truncate parse tree
+/*! Expand treeref one level
+ * 
+ * @param[in]  cot      Original object
+ * @param[in]  coparent Parent to both cot and con
+ * @param[out] conp     New object
+ * @retval     0
+ * @retval    -1
  */
 static int
-pt_reference_trunc(parse_tree *pt)
+pt_expand_treeref_one(cg_obj  *cot,
+		      cg_obj  *coparent,
+		      cg_obj **conp)
 {
-    int     i;
-    cg_obj *co;
     int     retval = -1;
+    cg_obj *con;
 
-    for (i=0; i<pt_len_get(pt); i++){    
-	if ((co = pt_vec_i_get(pt, i)) == NULL)
-	    continue;
-	if (pt_reference_trunc(co_pt_get(co)) < 0)
+    /* see co_expand_sub */
+    if ((con = co_new_only()) == NULL)
+	goto done;
+    memcpy(con, cot, sizeof(cg_obj));
+    co_flags_set(con, CO_FLAGS_TREEREF); /* Mark expanded refd tree */
+    con->co_treeref_orig = cot;
+    /* Point to same underlying pt */
+    con->co_ptvec = NULL;
+    con->co_pt_len = 0;
+    if (co_pt_set(con, co_pt_get(cot)) < 0)
+	goto done;
+    /* Replace all pointers */
+    co_up_set(con, coparent);
+    if (cot->co_command)
+	if ((con->co_command = strdup(cot->co_command)) == NULL){
+	    fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
 	    goto done;
-    }
+	}
+    if (cot->co_prefix)
+	if ((con->co_prefix = strdup(cot->co_prefix)) == NULL){
+	    fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
+	    goto done;
+	}
+    if (cot->co_cvec)
+	con->co_cvec = cvec_dup(cot->co_cvec);
+    if (co_callback_copy(cot->co_callbacks, &con->co_callbacks) < 0)
+	goto done;
+#ifdef CLIGEN_HELPSTRING_VEC
+    if (cot->co_helpvec)
+	if ((con->co_helpvec = cvec_dup(cot->co_helpvec)) == NULL)
+	    goto done;
+#else /* CLIGEN_HELPSTRING_VEC */
+    if (cot->co_helpstring)
+	if ((con->co_helpstring = strdup(cot->co_helpstring)) == NULL)
+	    goto done;
+#endif /* CLIGEN_HELPSTRING_VEC */
+    if (cot->co_type == CO_VARIABLE){
+	if (cot->co_expand_fn_str)
+	    if ((con->co_expand_fn_str = strdup(cot->co_expand_fn_str)) == NULL){
+		fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
+		goto done;
+	    }
+	if (cot->co_expand_fn_vec)
+	    if ((con->co_expand_fn_vec = cvec_dup(cot->co_expand_fn_vec)) == NULL)
+		goto done;
+	if (cot->co_translate_fn_str)
+	    if ((con->co_translate_fn_str = strdup(cot->co_translate_fn_str)) == NULL){
+		fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
+		goto done;
+	    }
+	if (cot->co_show)
+	    if ((con->co_show = strdup(cot->co_show)) == NULL){
+		fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
+		goto done;
+	    }
+	if (cot->co_rangecvv_low)
+	    if ((con->co_rangecvv_low = cvec_dup(cot->co_rangecvv_low)) == NULL)
+		goto done;
+	if (cot->co_rangecvv_upp)
+	    if ((con->co_rangecvv_upp = cvec_dup(cot->co_rangecvv_upp)) == NULL)
+		goto done;
+	if (cot->co_choice)
+	    if ((con->co_choice = strdup(cot->co_choice)) == NULL){
+		fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
+		goto done;
+	    }
+	if (cot->co_regex)
+	    if ((con->co_regex = cvec_dup(cot->co_regex)) == NULL){
+		fprintf(stderr, "%s: cvec_dup: %s\n", __FUNCTION__, strerror(errno));
+		goto done;
+	    }
+    } /* CO_VARIABLE */
+    *conp = con;
     retval = 0;
-  done:
+ done:
     return retval;
 }
-
 /*! Recursively remove any parse-tree objects labelled by filter
  *
  * @param[in]  pt       CLIgen parse-tree
@@ -321,7 +409,7 @@ pt_recurse_filter(parse_tree  *pt,
 	    if (strcmp(filter, cv_name_get(cv)) == 0) /* match */
 		break;
 	if (cv){ /* match -> remove */
-	    if (pt_vec_i_delete(pt, i) < 0)
+	    if (pt_vec_i_delete(pt, i, 1) < 0)
 		goto done;
 	    i--; /* co is removed, get next in place */
 	    continue;	    
@@ -347,7 +435,7 @@ pt_recurse_filter(parse_tree  *pt,
  *       from start. Since the expanded elements may be references,... 
  * @see pt_expand_treeref_cleanup
  */
-int
+static int
 pt_expand_treeref(cligen_handle h, 
 		  cg_obj       *co0, 
 		  parse_tree   *pt0)
@@ -359,8 +447,9 @@ pt_expand_treeref(cligen_handle h,
     parse_tree *ptref = 0;      /* tree referenced by pt0 orig */
     parse_tree *pt1ref = NULL;  /* tree referenced by pt0 resolved */
     cg_obj     *cot;            /* treeref object */
+    cg_obj     *con;
     char       *treename;
-    cg_obj     *co02;
+    cg_obj     *coparent;
     cg_obj     *cow;
     pt_head    *ph;
     cg_var     *cv;
@@ -388,80 +477,147 @@ pt_expand_treeref(cligen_handle h,
 		ptref = co_pt_get(cow);
 	    else
 		ptref = cligen_ph_parsetree_get(ph);	    
-
-	    /* make a copy of ptref -> pt1ref */
-	    co02 = co_up(co);
-
-	    if ((pt1ref = pt_dup(ptref, co02)) == NULL) /* From ptref -> pt1ref */
-		goto done;
-	    /* Recursively add extra NULLs in non-terminals */
-	    if (co_flags_get(co, CO_FLAGS_HIDE) && /* XXX: hide to trunk? */
-		pt_reference_trunc(pt1ref) < 0)
-		goto done;
-	    /* Recursively install callback all through the referenced tree */
-	    if (co->co_callbacks && 
-		pt_callback_reference(pt1ref, co->co_callbacks) < 0)
-		goto done;
-	    /* Filter label code
-	     * 1. Prepare new cvv filter add/subtract to cvvfilter depending on co_cvec */
-	    if ((cvv0 = cligen_reftree_filter_get(h)) != NULL){
-		if ((cvv = cvec_dup(cvv0)) == NULL)
-		    goto done;
-	    }
-	    else
-		if ((cvv = cvec_new(0)) == NULL)
-		    goto done;
-	    /* 2. Find filter labels defined in "filter:-<label>" or ""filter:+<label> local flags,
-	     * add/remove to filter cvv list
-	     */
-	    cv = NULL;
-	    while ((cv = cvec_each(co->co_cvec, cv)) != NULL){
-		if ((name = cv_name_get(cv)) != NULL){
-		    if (strncmp(CLIGEN_REF_REMOVE, name, strlen(CLIGEN_REF_REMOVE)) == 0){
-			filter = name+strlen(CLIGEN_REF_REMOVE);
-			/* If filter not in cvv, add it */
-			if (cvec_find(cvv, filter) == NULL){
-			    if ((cv1 = cvec_add(cvv, CGV_STRING)) == NULL)
-				goto done;
-			    cv_name_set(cv1, filter);
+	    /* One level copy or deep copy */
+	    if (cligen_reftree_copy_get(h) == 0){
+		/* make a copy of ptref -> pt1ref */
+		coparent = co_up(co);
+		if (0){ /* notyet */
+		    /* Filter label code
+		     * 1. Prepare new cvv filter add/subtract to cvvfilter depending on co_cvec */
+		    if ((cvv0 = cligen_reftree_filter_get(h)) != NULL){
+			if ((cvv = cvec_dup(cvv0)) == NULL)
+			    goto done;
+		    }
+		    else
+			if ((cvv = cvec_new(0)) == NULL)
+			    goto done;
+		    /* 2. Find filter labels defined in "filter:-<label>" or ""filter:+<label> local flags,
+		     * add/remove to filter cvv list
+		     */
+		    cv = NULL;
+		    while ((cv = cvec_each(co->co_cvec, cv)) != NULL){
+			if ((name = cv_name_get(cv)) != NULL){
+			    if (strncmp(CLIGEN_REF_REMOVE, name, strlen(CLIGEN_REF_REMOVE)) == 0){
+				filter = name+strlen(CLIGEN_REF_REMOVE);
+				/* If filter not in cvv, add it */
+				if (cvec_find(cvv, filter) == NULL){
+				    if ((cv1 = cvec_add(cvv, CGV_STRING)) == NULL)
+					goto done;
+				    cv_name_set(cv1, filter);
+				}
+			    }
+			    else if (strncmp(CLIGEN_REF_ADD, name, strlen(CLIGEN_REF_ADD)) == 0){
+				filter = name+strlen(CLIGEN_REF_ADD);
+				/* If filter in cvv, remove it (set to NULL) */
+				if ((cv1 = cvec_find(cvv, filter)) != NULL)
+				    cv_name_set(cv1, NULL);
+			    }
 			}
 		    }
-		    else if (strncmp(CLIGEN_REF_ADD, name, strlen(CLIGEN_REF_ADD)) == 0){
-			filter = name+strlen(CLIGEN_REF_ADD);
-			/* If filter in cvv, remove it (set to NULL) */
-			if ((cv1 = cvec_find(cvv, filter)) != NULL)
-			    cv_name_set(cv1, NULL);
+		    /* 3. Now iterate over the names of cvv and filter out those on pt1ref 
+		     * Then traverse pt1ref and remove all objects labelled with "filter"
+		     */
+		    cv = NULL;
+		    while ((cv = cvec_each(cvv, cv)) != NULL){
+			if ((filter = cv_name_get(cv)) != NULL){
+			    if (pt_recurse_filter(pt1ref, filter) < 0)
+				goto done;
+			}
+		    }
+		} /* notyet */
+		/* Copy top-levels into original parse-tree */
+		for (j=0; j<pt_len_get(ptref); j++){
+		    if ((cot = pt_vec_i_get(ptref, j)) == NULL)
+			continue;
+		    /* caveats for tree expansion */
+		    if (cot->co_type == CO_EMPTY ||
+			cot->co_type == CO_REFERENCE)
+			continue;
+		    if (pt_expand_treeref_one(cot, coparent, &con) < 0)
+			goto done;
+		    con->co_ref = co; /* Backpointer to the "ref" node */
+		    if (co_insert(pt0, con) == NULL) 
+			goto done;
+		} /* for j */
+		/* Due to loop above, all co in vec should be moved, it should
+		   be safe to remove */
+		co_flags_set(co, CO_FLAGS_REFDONE);
+		goto again; 
+	    }
+	    else {  /* Deep copy: cligen_reftree_copy_get == 1 */
+		/* make a copy of ptref -> pt1ref */
+		coparent = co_up(co);
+
+		/* From ptref -> pt1ref 
+		 * All co in pt1ref point to pt1ref in their co_treeref_orig pointer
+		 */
+		if ((pt1ref = pt_dup(ptref, coparent, CO_COPY_FLAGS_TREEREF)) == NULL) 
+		    goto done;
+		/* Recursively install callback all through the referenced tree */
+		if (co->co_callbacks && 
+		    pt_callback_reference(pt1ref, co->co_callbacks) < 0)
+		    goto done;
+		/* Filter label code
+		 * 1. Prepare new cvv filter add/subtract to cvvfilter depending on co_cvec */
+		if ((cvv0 = cligen_reftree_filter_get(h)) != NULL){
+		    if ((cvv = cvec_dup(cvv0)) == NULL)
+			goto done;
+		}
+		else
+		    if ((cvv = cvec_new(0)) == NULL)
+			goto done;
+		/* 2. Find filter labels defined in "filter:-<label>" or ""filter:+<label> local flags,
+		 * add/remove to filter cvv list
+		 */
+		cv = NULL;
+		while ((cv = cvec_each(co->co_cvec, cv)) != NULL){
+		    if ((name = cv_name_get(cv)) != NULL){
+			if (strncmp(CLIGEN_REF_REMOVE, name, strlen(CLIGEN_REF_REMOVE)) == 0){
+			    filter = name+strlen(CLIGEN_REF_REMOVE);
+			    /* If filter not in cvv, add it */
+			    if (cvec_find(cvv, filter) == NULL){
+				if ((cv1 = cvec_add(cvv, CGV_STRING)) == NULL)
+				    goto done;
+				cv_name_set(cv1, filter);
+			    }
+			}
+			else if (strncmp(CLIGEN_REF_ADD, name, strlen(CLIGEN_REF_ADD)) == 0){
+			    filter = name+strlen(CLIGEN_REF_ADD);
+			    /* If filter in cvv, remove it (set to NULL) */
+			    if ((cv1 = cvec_find(cvv, filter)) != NULL)
+				cv_name_set(cv1, NULL);
+			}
 		    }
 		}
-	    }
-	    /* 3. Now iterate over the names of cvv and filter out those on pt1ref 
-	     * Then traverse pt1ref and remove all objects labelled with "filter"
-	     */
-	    cv = NULL;
-	    while ((cv = cvec_each(cvv, cv)) != NULL){
-		if ((filter = cv_name_get(cv)) != NULL){
-		    if (pt_recurse_filter(pt1ref, filter) < 0)
-			goto done;
+		/* 3. Now iterate over the names of cvv and filter out those on pt1ref 
+		 * Then traverse pt1ref and remove all objects labelled with "filter"
+		 */
+		cv = NULL;
+		while ((cv = cvec_each(cvv, cv)) != NULL){
+		    if ((filter = cv_name_get(cv)) != NULL){
+			if (pt_recurse_filter(pt1ref, filter) < 0)
+			    goto done;
+		    }
 		}
-	    }
-	    /* Copy top-levels into original parse-tree */
-	    for (j=0; j<pt_len_get(pt1ref); j++)
-		if ((cot = pt_vec_i_get(pt1ref, j)) != NULL){
-		    co_flags_set(cot, CO_FLAGS_TREEREF); /* Mark expanded refd tree */
-		    cot->co_ref = co; /* Backpointer so we know where this treeref is from */
-		    if (co_insert(pt0, cot) == NULL) 
-			goto done;
-		    if (pt_vec_i_clear(pt1ref, j) < 0)
-			goto done;
+		/* Copy top-levels into original parse-tree */
+		for (j=0; j<pt_len_get(pt1ref); j++)
+		    if ((cot = pt_vec_i_get(pt1ref, j)) != NULL){
+			co_flags_set(cot, CO_FLAGS_TREEREF); /* Mark expanded refd tree */
+			cot->co_ref = co; /* Backpointer so we know where this treeref is from */
+			if (co_insert(pt0, cot) == NULL) 
+			    goto done;
+			if (pt_vec_i_clear(pt1ref, j) < 0)
+			    goto done;
+		    }
+		/* Due to loop above, all co in vec should be moved, it should
+		   be safe to remove */
+		co_flags_set(co, CO_FLAGS_REFDONE);
+		if (pt1ref){
+		    pt_free(pt1ref, 1);
+		    pt1ref = NULL;
 		}
-	    /* Due to loop above, all co in vec should be moved, it should
-	       be safe to remove */
-	    co_flags_set(co, CO_FLAGS_REFDONE);
-	    if (pt1ref){
-		pt_free(pt1ref, 1);
-		pt1ref = NULL;
-	    }
-	    goto again; 
+		goto again; 
+	    } /* cligen_reftree_copy_get */
 	}
     }
     retval = 0;
@@ -654,6 +810,7 @@ pt_expand_choice(cg_obj       *co,
     return retval;
 }
 
+    
 /*! Take a pattern pt and expand all <variables> with option 'choice' or 'expand' into new ptn tree
  *
  * The pattern is expanded by examining the objects they point to: those objects that are expand 
@@ -672,7 +829,7 @@ pt_expand_choice(cg_obj       *co,
  * @retval     0       OK
  * @retval    -1       Error
  */
-int
+static int
 pt_expand(cligen_handle h, 
 	  parse_tree   *pt, 
 	  cvec         *cvv,
@@ -685,6 +842,10 @@ pt_expand(cligen_handle h,
     cg_obj *con = NULL;
     int     retval = -1;
 
+    if (pt_len_get(ptn) != 0){
+	errno = EINVAL;
+	goto done;	
+    }
     pt_sets_set(ptn, pt_sets_get(pt));
     if (pt_len_get(pt) == 0)
 	goto ok;
@@ -715,9 +876,10 @@ pt_expand(cligen_handle h,
 		 * MAYBE you could see if there are any other same variables on
 		 * this iteration and if not add it?
 		 */
-		if (expandvar)
+		if (expandvar){
 		    if (pt_expand_fnv(h, co, cvv, ptn, NULL) < 0)
 			goto done;
+		}
 	    }
 	    else{
 		/* Copy original cg_obj to shadow list*/
@@ -732,7 +894,10 @@ pt_expand(cligen_handle h,
 	    pt_realloc(ptn); /* empty child */
 	}
     } /* for */
-    cligen_parsetree_sort(ptn, 1);
+    /* Sorting (Alt: ensure all elements are inserted properly)
+     * Sorting is disabled for now. Left this comment but seems to work fine without
+     *    cligen_parsetree_sort(ptn, 1);
+     */
     if (cligen_logsyntax(h) > 0){
 	fprintf(stderr, "%s:\n", __FUNCTION__);
 	pt_print(stderr, ptn, 0);
@@ -745,25 +910,32 @@ pt_expand(cligen_handle h,
 
 /*! Go through tree and clean & delete all extra memory from pt_expand_treeref()
  * More specifically, delete all expanded subtrees co_ref
+ * @param[in] h     CLIgen handle
  * @param[in] pt   Parsetree
  * @retval    0    OK
  * @retval   -1    Error
  * @see pt_expand_treeref
+ * XXX Could make a limit to recursion at some level, but need to research more
  */
-int
-pt_expand_treeref_cleanup(parse_tree *pt)
+static int
+pt_expand_treeref_cleanup(cligen_handle h,
+			  parse_tree   *pt,
+			  int           level)
 {
     int     retval = -1;
     int     i;
     cg_obj *co;
+    int     recurse;
 
+    recurse = (cligen_reftree_copy_get(h) == 1);
     for (i=0; i<pt_len_get(pt); i++){
       again:
 	if ((co = pt_vec_i_get(pt, i)) != NULL){
-	    if (co_flags_get(co, CO_FLAGS_REFDONE))
+	    if (co_flags_get(co, CO_FLAGS_REFDONE)){
 		co_flags_reset(co, CO_FLAGS_REFDONE);
+	    }
 	    if (co_flags_get(co, CO_FLAGS_TREEREF)){
-		if (pt_vec_i_delete(pt, i) < 0)
+		if (pt_vec_i_delete(pt, i, recurse) < 0)
 		    goto done;
 		if (i < pt_len_get(pt))
 		    goto again;
@@ -771,7 +943,7 @@ pt_expand_treeref_cleanup(parse_tree *pt)
 		    break;
 	    }
 	    else
-		if (pt_expand_treeref_cleanup(co_pt_get(co)) < 0)
+		if (pt_expand_treeref_cleanup(h, co_pt_get(co), level+1) < 0)
 		    return -1;
 	}
     }
@@ -787,7 +959,7 @@ pt_expand_treeref_cleanup(parse_tree *pt)
  * @retval   -1    Error
  * @see pt_expand
  */
-int
+static int
 pt_expand_cleanup(parse_tree *pt)
 {
     int         retval = -1;
@@ -798,13 +970,59 @@ pt_expand_cleanup(parse_tree *pt)
 	if ((co = pt_vec_i_get(pt, i)) != NULL){
 	    if (co_value_set(co, NULL) < 0)
 		return -1;
-	    if (pt_expand_cleanup(co_pt_get(co)) < 0)
-		goto done;
 	}
     }
     retval = 0;
- done:
+    // done:
     return retval;
+}
+
+/*! Take a pattern pt and expand all tree references, and all <variables> into new ptn tree
+ *
+ * @param[in]  h       Cligen handle
+ * @param[in]  co      Parent, if any
+ * @param[in]  pt      Original parse-tree consisting of a vector of cligen objects
+ * @param[out] cvv     Cligen variable vector containing vars/values pair for completion
+ * @param[in]  hide    If not set, include hidden commands. If set, do not include hidden commands. 
+ * @param[in]  expandvar Set if VARS should be expanded, eg ? <tab>
+ * @param[out] ptn     New parse-tree initially an empty pointer, its value is returned.
+ * @retval     0       OK
+ * @retval    -1       Error
+ * @see pt_expand1_cleanup
+ */
+int
+pt_expand1(cligen_handle h, 
+	   cg_obj       *co, 
+	   parse_tree   *pt, 
+	   cvec         *cvv,
+	   int           hide,
+	   int           expandvar,
+	   parse_tree   *ptn)
+{
+    if (pt_expand_treeref(h, co, pt) < 0) /* sub-tree expansion */
+	return -1;
+    if (pt_expand(h, pt, cvv, hide, expandvar, ptn) < 0)
+	return -1;
+    return 0;
+}
+
+/*! Go through tree and clean & delete all extra memory from pt_expand and pt_expand_treeref
+ * More specifically, delete all co_values and co_pt_exp and expanded subtrees co_ref
+ * @param[in] h     CLIgen handle
+ * @param[in] pt   Parsetree
+ * @retval    0    OK
+ * @retval   -1    Error
+ * @see pt_expand1
+ */
+int
+pt_expand1_cleanup(cligen_handle h,
+		   parse_tree *pt)
+{
+    if (pt_expand_cleanup(pt) < 0)
+	return -1;
+    if (pt_expand_treeref_cleanup(h, pt, 0) < 0)
+	return -1;
+    return 0;
 }
 
 /*! Return object in original tree from  object in a referenced tree

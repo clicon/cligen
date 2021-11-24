@@ -40,8 +40,14 @@ typedef struct {int a;} *cligen_handle;
 typedef void *cligen_handle; /* API */
 #endif
 
-/* Just show a single help string 
+/*! Just show a single help string 
  * In case of large help strings such as with many YANG specs this reduces memory use
  * by only showing one help string
+ * NOTE: only meaningful is CLIGEN_HELPSTRING_VEC
  */
-#undef CLIGEN_SINGLE_HELPSTRING
+#undef CLIGEN_HELPSTRING_SINGLE
+
+/*! Use a vector of helpstrings instead of a single malloc
+ * This is for faster access of first vs next lines wheh showing help
+ */
+#undef CLIGEN_HELPSTRING_VEC

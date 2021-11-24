@@ -131,7 +131,7 @@ cligen_ph_parsetree_get(pt_head *ph)
     return ph->ph_parsetree;
 }
 
-/*! Access function to set parsetree of parse-tree header
+/*! Access function to set parsetree of parse-tree header, remove pt from its parents
  * @param[in]  ph    Parse-tree header
  * @param[in]  pt    parse-tree
  * @retval     0     OK
@@ -141,11 +141,17 @@ int
 cligen_ph_parsetree_set(pt_head    *ph,
 			parse_tree *pt)
 {
-    int              retval = -1;
+    int     retval = -1;
+    int     i;
+    cg_obj *co;
     
     if (ph == NULL){
        errno = EINVAL;
        goto done;
+    }
+    for (i=0; i<pt_len_get(pt); i++){
+	if ((co = pt_vec_i_get(pt, i)) != NULL)
+	    co_up_set(co, NULL);
     }
     ph->ph_parsetree = pt; /* XXX not free if exists? */
 #if 1 /* This is still used in clixon */
@@ -303,6 +309,7 @@ cligen_ph_i(cligen_handle h,
 
 /*! Get currently active parsetree.
  * @param[in] h       CLIgen handle
+ * @see cligen_ph_active_get  prefer to use that function instead
  */
 parse_tree *
 cligen_pt_active_get(cligen_handle h)
@@ -315,7 +322,9 @@ cligen_pt_active_get(cligen_handle h)
     return NULL;
 }
 
-#if 0 /* XXX Add after 5.3 */
+/*! Get currently active parsetree head.
+ * @param[in] h       CLIgen handle
+ */
 pt_head *
 cligen_ph_active_get(cligen_handle h)
 {
@@ -326,7 +335,6 @@ cligen_ph_active_get(cligen_handle h)
 	    return ph;
     return NULL;
 }
-#endif
 
 /*! Set currently active parsetree by name
  * @param[in] h       CLIgen handle
@@ -334,8 +342,8 @@ cligen_ph_active_get(cligen_handle h)
  * If parse-tree not found all are inactivated.
  */
 int
-cligen_ph_active_set(cligen_handle h, 
-		     char         *name)
+cligen_ph_active_set_byname(cligen_handle h, 
+			    char         *name)
 {
     pt_head *ph;
 
@@ -376,14 +384,15 @@ cligen_wp_set(cligen_handle h,
     char     *treename;
     pt_head  *ph;  
     cg_obj   *co;
-    cg_obj   *coorig;
 
     cv = cvec_i(argv, 0);
     treename = cv_string_get(cv);
     if ((ph = cligen_ph_find(h, treename)) != NULL &&
-	(co = cligen_co_match(h)) != NULL &&
-	(coorig = co->co_treeref_orig) != NULL){
-	cligen_ph_workpoint_set(ph, coorig);
+	(co = cligen_co_match(h)) != NULL){
+	if (co->co_treeref_orig != NULL)
+	    cligen_ph_workpoint_set(ph, co->co_treeref_orig);
+	else if (co->co_ref != NULL)
+	    cligen_ph_workpoint_set(ph, co->co_ref);	    
     }
     return 0;
 }

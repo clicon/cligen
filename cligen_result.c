@@ -105,7 +105,7 @@ mr_pt_append(match_result *mr,
 {
     cg_obj *co1 = NULL;
 
-    if (co_copy1(co, NULL, 0, &co1) < 0)
+    if (co_copy1(co, NULL, 0, 0x0, &co1) < 0)
 	return -1;
     mr->mr_co_match_orig = co;
     return pt_vec_append(mr->mr_pt, co1);
@@ -129,7 +129,6 @@ mr_reason_get(match_result *mr)
 {
     return mr->mr_reason;
 }
-
 
 /*! Reset/empty matchvec of indexes by g and incrementing vector
  * @param[in,out]  mr      Match result struct
@@ -171,7 +170,6 @@ mr_last_set(match_result *mr)
     mr->mr_last = 1;
     return 0;
 }
-
 
 /*! Move an error reason from one mr to the next
  * There is a case for keeping the first error reason in case of multiple

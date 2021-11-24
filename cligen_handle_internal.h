@@ -65,7 +65,7 @@ typedef struct pt_head  { /* Linked list of cligen parse-trees */
     struct pt_head  *ph_next;
     char            *ph_name;
     parse_tree      *ph_parsetree; /* should be free:d */
-    int              ph_active;    /* First one is active */
+    int              ph_active;    /* Which parse-tree is used at top of tree (top-level "mode") */
     cg_obj          *ph_workpt;    /* Shortcut to "working point" cligen object, or more 
                                     * specifically its parse-tree sub vector. */
 } pt_head;
@@ -107,9 +107,15 @@ struct cligen_handle{
     char        ch_delimiter;    /* Delimiter between objects */
     int         ch_preference_mode;   /* Relaxed variable match preference handling */
     cvec       *ch_reftree_filter; /* Vector of reftree(@tree) labels that are disabled by default */
+    int         ch_reftree_copy; /* 0: Minimize copying when treeref expand 
+                                       - cannot tree recurse/
+                                        - cannot @add/@remove
+				    1: copy whole tree reference. - uses more memory */
     int         ch_ignore_case;  /* Set if ignore case of commands, eg aA = aa */
     int         ch_expand_first; /* Set if expand arg 1 of callback cvv */
     int         ch_exclude_keys; /* Set if exclude keywords from callback cvv */
+    cligen_eval_wrap_fn *ch_eval_wrap_fn;  /* Wrap function check state around cligen_eval */
+    void               *ch_eval_wrap_arg; /* Argument to wrap function */
 };
 
 #endif /* _CLIGEN_HANDLE_INTERNAL_H_ */

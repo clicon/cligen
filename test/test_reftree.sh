@@ -21,7 +21,7 @@ cat > $fspec <<EOF
 
   treename="subtree";           
   xx{
-    yy, callback();
+    yy;
   }
   zz1, local, callback();
   zz2{

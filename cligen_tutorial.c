@@ -166,7 +166,7 @@ changetree(cligen_handle h,
 
     cv = cvec_i(argv, 0);
     treename = cv_string_get(cv);
-    return cligen_ph_active_set(h, treename);
+    return cligen_ph_active_set_byname(h, treename);
 }
 
 /*! Command without assigned callback
@@ -294,6 +294,7 @@ usage(char *argv)
 	    "\t-h \t\tHelp\n"
 	    "\t-f <file> \tConfig-file (or stdin) Example use: tutorial.cli for \n"
 	    "\t-q \t\tQuiet\n"
+	    "\t-C \t\tDont copy treeref mode\n"
 	    ,
 	    argv);
     exit(0);
@@ -315,6 +316,8 @@ main(int   argc,
     char           *str;
     int             quiet = 0;
 
+    if ((h = cligen_init()) == NULL)
+        goto done;    
     argv++;argc--;
     for (;(argc>0)&& *argv; argc--, argv++){
         if (**argv != '-')
@@ -337,13 +340,14 @@ main(int   argc,
                 exit(1);
             }
             break;
+	case 'C': /* Dont copy reftree mode */
+	    cligen_reftree_copy_set(h, 0);
+	    break;
         default:
             usage(argv0);
             break;
         }
-  }
-    if ((h = cligen_init()) == NULL)
-        goto done;    
+    }
     if ((globals = cvec_new(0)) == NULL)
 	goto done;
     if (cligen_parse_file(h, f, filename, NULL, globals) < 0)
@@ -378,7 +382,7 @@ main(int   argc,
     if (cligen_loop(h) < 0)
 	goto done;
     retval = 0;
-  done:
+ done:
     fclose(f);
     if (h)
 	cligen_exit(h);
