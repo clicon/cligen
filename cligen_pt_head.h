@@ -62,14 +62,10 @@ pt_head    *cligen_ph_add(cligen_handle h, char *name);
 pt_head    *cligen_ph_each(cligen_handle h, pt_head *ph);
 pt_head    *cligen_ph_i(cligen_handle h, int i);
 
-parse_tree *cligen_pt_active_get(cligen_handle h);
-#if 0 /* XXX Add after 5.3 */
-pt_head *cligen_ph_active_get(cligen_handle h);
-#endif
-#if 1 /* XXX Remove before 5.3 */
-#define cligen_ph_active_get(h) cligen_pt_active_get(h)
-#endif
-int         cligen_ph_active_set(cligen_handle h, char *name);
+parse_tree *cligen_pt_active_get(cligen_handle h); /* consider replace w cligen_ph_active_get */
+pt_head    *cligen_ph_active_get(cligen_handle h);
+
+int         cligen_ph_active_set_byname(cligen_handle h, char *name);
 
 /* CLIgen callbacks */
 int         cligen_wp_set(cligen_handle h, cvec *cvv, cvec *argv);

@@ -57,7 +57,6 @@ co_callback_fn_set(cg_callback   *cc,
     cc->cc_fn_vec = fn;
     return 0;
 }
-		   
 
 cg_callback *
 co_callback_next(cg_callback *cc)
@@ -105,8 +104,12 @@ co_callback_copy(cg_callback  *cc0,
     return 0;
 }
 
-int
-co_callback_free(cg_callback  *cc)
+/*! Free a single callback structure
+ *
+ * @param[in]  cc   Callback object
+ */
+static int
+co_callback_one_free(cg_callback *cc)
 {
     if (cc->cc_cvec)	
 	cvec_free(cc->cc_cvec);
@@ -115,6 +118,23 @@ co_callback_free(cg_callback  *cc)
     free(cc);
     return 0;
 }
+
+/*! Free a linked list of callbacks
+ *
+ * @param[in]  ccp   Pointer to head of callback linked list
+ */
+int
+co_callbacks_free(cg_callback **ccp)
+{
+   cg_callback *cc;
+   
+   while ((cc = *ccp) != NULL){
+	*ccp = co_callback_next(cc);
+	co_callback_one_free(cc);
+   }
+    return 0;
+}
+
 
 /*! Print a CLIgen object callback to a CLIgen buffer
  */
@@ -133,10 +153,25 @@ co_callback2cbuf(cbuf        *cb,
 	    while ((cv = cvec_each(cc->cc_cvec, cv)) != NULL) {
 		if (i++)
 		    cprintf(cb, ",");
+		cprintf(cb, "\"");
 		cv2cbuf(cv, cb);
+		cprintf(cb, "\"");
 	    }
 	}
 	cprintf(cb, ")");
     }
     return 0;
+}
+
+size_t
+co_callback_size(cg_callback *cc)
+{
+    size_t sz = 0;
+
+    sz = sizeof(struct cg_callback);
+    if (cc->cc_fn_str)
+	sz += strlen(cc->cc_fn_str) + 1;
+    if (cc->cc_cvec)
+	sz += cvec_size(cc->cc_cvec);
+    return sz;
 }

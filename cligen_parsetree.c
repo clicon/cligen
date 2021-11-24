@@ -85,6 +85,49 @@ struct parse_tree{
     char                pt_set;    /* Parse-tree is a SET */ 
 };
 
+static int
+pt_stats_one(parse_tree *pt,
+	     size_t     *szp)
+{
+    size_t              sz = 0;
+
+    sz += sizeof(struct parse_tree);
+    sz += pt->pt_len*sizeof(struct cg_obj*);
+    if (pt->pt_name)
+	sz += strlen(pt->pt_name) + 1;
+    if (szp)
+	*szp = sz;
+    return 0;
+}
+
+/*! Return statistics of a CLIgen objects of this parsetree recursively
+ *
+ * @param[in]   pt   Parsetree object
+ * @param[out]  nrp  Number of CLIgen objects recursively
+ * @param[out]  szp  Size of this pt + onjects recursively
+ * @retval      0    OK
+ * @retval     -1    Error
+ */
+int
+pt_stats(parse_tree *pt,
+	 uint64_t   *nrp,
+	 size_t     *szp)
+{
+    cg_obj *co;
+    size_t  sz = 0;
+    int     i;
+    
+    *nrp += 1;
+    pt_stats_one(pt, &sz);
+    if (szp)
+	*szp += sz;
+    for (i=0; i<pt_len_get(pt); i++){
+	if ((co = pt_vec_i_get(pt, i)) != NULL)	
+	    co_stats(co, nrp, szp);
+    }
+    return 0;
+}
+
 /*! Access function to get the i:th CLIgen object child of a parse-tree
  * @param[in]  pt  Parse tree
  * @param[in]  i   Which object to return
@@ -188,7 +231,8 @@ pt_vec_append(parse_tree *pt,
  */
 int
 pt_vec_i_delete(parse_tree *pt,
-		int         i)
+		int         i,
+    		int         recurse)
 {
     int       retval = -1;
     size_t    size;
@@ -208,7 +252,7 @@ pt_vec_i_delete(parse_tree *pt,
     }
     co = pt->pt_vec[i];
     pt->pt_vec[i] = NULL;
-    co_free(co, 1);
+    co_free(co, recurse);
     if ((size = (pt_len_get(pt) - (i+1))*sizeof(cg_obj*)) != 0)
 	memmove(&pt->pt_vec[i], 
 		&pt->pt_vec[i+1], 
@@ -333,6 +377,7 @@ pt_realloc(parse_tree *pt)
  *
  * @param[in]  pt     Original parse-tree
  * @param[in]  parent The parent of the new parsetree. Need not be same as parent of the orignal
+ * @param[in]  flags  Copy flags
  * @param[out] ptn    New parse-tree (need to be already created on entry)
  * @retval     0      OK
  * @retval    -1      Error
@@ -341,6 +386,7 @@ pt_realloc(parse_tree *pt)
 int
 pt_copy(parse_tree *pt, 
 	cg_obj     *co_parent, 
+	uint32_t    flags,
 	parse_tree *ptn)
 {
     int        retval = -1;
@@ -369,7 +415,7 @@ pt_copy(parse_tree *pt,
     for (i=0; i<pt_len_get(pt); i++){
 	if ((co = pt_vec_i_get(pt, i)) != NULL){
 	    if (!co_flags_get(co, CO_FLAGS_TREEREF))
-		if (co_copy(co, co_parent, &ptn->pt_vec[j++]) < 0)
+		if (co_copy(co, co_parent, flags, &ptn->pt_vec[j++]) < 0)
 		    goto done;
 	}
 	else
@@ -383,13 +429,15 @@ pt_copy(parse_tree *pt,
 /*! Duplicate a  parse-tree recursively
  *
  * @param[in]  pt     Original parse-tree
+ * @param[in]  flags  Copy flags
  * @param[in]  parent The parent of the new parsetree. Need not be same as parent of the orignal
  * @retval     ptnp   New parse-tree
  * @retval     NULL   Error
  */
 parse_tree *
 pt_dup(parse_tree *pt,
-       cg_obj     *cop)
+       cg_obj     *cop,
+       uint32_t    flags)
 {
     parse_tree *ptn = NULL;
 
@@ -399,7 +447,7 @@ pt_dup(parse_tree *pt,
     }
     if ((ptn = pt_new()) == NULL)
 	goto done;
-    if (pt_copy(pt, cop, ptn) < 0){
+    if (pt_copy(pt, cop, flags, ptn) < 0){
 	ptn = NULL;
 	goto done;
     }
@@ -463,7 +511,7 @@ cligen_parsetree_merge(parse_tree *pt0,
 	else{
 	    if (pt_realloc(pt0) < 0)
 		goto done;
-	    if (co_copy(co1, parent, &co1c) < 0)
+	    if (co_copy(co1, parent, 0x0, &co1c) < 0)
 		goto done;
 	    pt0->pt_vec[pt_len_get(pt0)-1] = co1c;
 	}
@@ -607,18 +655,20 @@ pt_trunc(parse_tree *pt,
  * object found. The function is called with the cg_obj and an argument as args.
  * @param[in]  pt     CLIgen parse-tree
  * @param[in]  fn     Function to apply
+ * @param[in]  depth  0: only this level, n : n levels
  * @param[in]  arg    Argument to function
  * @retval     0      OK (all applied function calls return 0)
  * @retval     -1     Error (one applied function call return -1)
  * @code
  *    parse_tree   *pt;
- *    if (pt_apply(pt, fn, (void*)42) < 0)
+ *    if (pt_apply(pt, fn, INT32_MAX, (void*)42) < 0)
  *       err;
  * @endcode
  */
 int
 pt_apply(parse_tree   *pt, 
-	 cg_applyfn_t  fn, 
+	 cg_applyfn_t  fn,
+	 int           depth,
 	 void         *arg)
 {
     cg_obj *co;
@@ -628,16 +678,17 @@ pt_apply(parse_tree   *pt,
 
     if (pt->pt_vec == NULL)
 	return 0;
-    for (i=0; i<pt_len_get(pt); i++){
-	if ((co = pt_vec_i_get(pt, i)) == NULL)
-	    continue;
-	if ((ret = fn(co, arg)) < 0)
-	    goto done;
-	if (ret == 1) /* done */
-	    break;
-	if (pt_apply(co_pt_get(co), fn, arg) < 0)
-	    goto done;
-    }
+    if (depth)
+	for (i=0; i<pt_len_get(pt); i++){
+	    if ((co = pt_vec_i_get(pt, i)) == NULL)
+		continue;
+	    if ((ret = fn(co, arg)) < 0)
+		goto done;
+	    if (ret == 1) /* done */
+		break;
+	    if (pt_apply(co_pt_get(co), fn, depth-1, arg) < 0)
+		goto done;
+	}
     retval = 0;
   done:
     return retval;

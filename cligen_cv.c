@@ -2558,7 +2558,8 @@ cv_print(FILE   *f,
 	fprintf(f, "%s", cv->var_rest);
 	break;
     case CGV_STRING: 
-	fprintf(f, "\"%s\"", cv->var_string);
+	if (cv->var_string)
+	    fprintf(f, "\"%s\"", cv->var_string);
 	break;
     case CGV_INTERFACE: 
 	fprintf(f, "\"%s\"", cv->var_interface);
@@ -3660,7 +3661,7 @@ cv_size(cg_var *cv)
 	sz += strlen(cv->var_name)+1;
     if (cv->var_show)
 	sz += strlen(cv->var_show)+1;
-    if (cv_isstring(cv->var_type))
+    if (cv_isstring(cv->var_type) && cv->var_string)
 	sz += strlen(cv->var_string)+1;
     return sz;
 }

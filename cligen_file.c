@@ -48,7 +48,7 @@
 /*! General callback for executing shells. 
  * The argument is a command followed by arguments as defined in the input syntax.
  * Simple example:
- *   CLIgen input syntax:     <a type:int32>, cligen_exec_cb("ls ${a}");
+ *   CLIgen input syntax:     <a:str>, cligen_exec_cb("ls ${a}");
  *   CLI input:               > 42
  *   Shell command:           ls 42
  * More advanced example:
@@ -194,6 +194,7 @@ usage(char *argv)
 	    "\t-f <file> \tConfig-file (or stdin)\n"
 	    "\t-1 \t\tOnce only. Do not enter interactive mode\n"
 	    "\t-p \t\tPrint syntax\n"
+	    "\t-C \t\tDont copy treeref mode\n"
     	    "\t-d \t\tDump syntax with implementation-specific info\n"
 	    "\t-e \t\tSet automatic expansion/completion for all expand() functions\n"
     	    "\t-E \t\tExclude keys in callback cvv. Default include keys\n"
@@ -249,6 +250,9 @@ main(int   argc,
 	    break;
 	case 'p': /* print syntax */
 	    print_syntax++;
+	    break;
+	case 'C': /* Dont copy reftree mode */
+	    cligen_reftree_copy_set(h, 0);
 	    break;
 	case 'd': /* dump syntax */
 	    dump_syntax++;
@@ -325,7 +329,7 @@ main(int   argc,
     if ((str = cvec_find_str(globals, "comment")) != NULL)
 	cligen_comment_set(h, *str);
     if ((str = cvec_find_str(globals, "mode")) != NULL)
-	cligen_ph_active_set(h, str);
+	cligen_ph_active_set_byname(h, str);
     cvec_free(globals);
 
     if (print_syntax){

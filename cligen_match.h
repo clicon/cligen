@@ -48,12 +48,14 @@ int match_pattern(cligen_handle h, cvec *cvt, cvec *cvr,
 		  parse_tree *pt,
 		  int best, 
 		  cvec *cvv, 
+		  cg_callback **callbacks,
 		  match_result **mrp);
 
 int match_pattern_exact(cligen_handle h, cvec *cvt, cvec *cvr, 
 			parse_tree    *pt,
 			cvec          *cvv,
 			cg_obj       **match_obj,
+			cg_callback  **callbacks,
 			cligen_result *result,
 			char         **reasonp);
 int cligen_cvv_levels(cvec *cvv);

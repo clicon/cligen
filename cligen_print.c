@@ -122,8 +122,15 @@ cov2cbuf(cbuf   *cb,
 		cprintf(cb, " show:\"%s\"", co->co_show);
 	    if (co->co_expand_fn_str){
 		cprintf(cb, " %s(\"", co->co_expand_fn_str);
-		if (co->co_expand_fn_vec)
-		    cvec2cbuf(cb, co->co_expand_fn_vec);
+		if (co->co_expand_fn_vec){
+		    cg_var *cv = NULL;
+		    int   i = 0;
+		    while ((cv = cvec_each(co->co_expand_fn_vec, cv)) != NULL) {
+			if (i++)
+			    cprintf(cb, ",");
+			cv2cbuf(cv, cb);
+		    }
+		}
 		cprintf(cb, "\")");
 	    }
 	    cv1 = NULL;
@@ -136,7 +143,6 @@ cov2cbuf(cbuf   *cb,
     }
     retval = 0;
 //  done:
-
     return retval;
 }
 
@@ -151,9 +157,11 @@ co2cbuf(cbuf   *cb,
     int          retval = -1;
     cg_callback *cc;
     parse_tree  *pt;
-    cg_var      *cv;
     cg_obj      *co1;
+#ifdef CLIGEN_HELPSTRING_VEC
+    cg_var      *cv;
     int          i;
+#endif
 
     switch (co->co_type){
     case CO_COMMAND:
@@ -172,8 +180,9 @@ co2cbuf(cbuf   *cb,
 	break;
     }
     if (brief == 0){
+#ifdef CLIGEN_HELPSTRING_VEC
 	if (co->co_helpvec){
-	    cprintf(cb, "(\"");
+	    cbuf_append_str(cb, "(\"");
 	    cv = NULL;
 	    i = 0;
 	    while ((cv = cvec_each(co->co_helpvec, cv)) != NULL) {
@@ -181,8 +190,15 @@ co2cbuf(cbuf   *cb,
 		    cprintf(cb, "\n");
 		cv2cbuf(cv, cb);
 	    }
-	    cprintf(cb, "\")");
+	    cbuf_append_str(cb, "\")");
 	}
+#else /* CLIGEN_HELPSTRING_VEC */
+	if (co->co_helpstring){
+	    cbuf_append_str(cb, "(\"");
+	    cbuf_append_str(cb, co->co_helpstring);
+	    cbuf_append_str(cb, "\")");
+	}
+#endif /* CLIGEN_HELPSTRING_VEC */
 	if (co_flags_get(co, CO_FLAGS_HIDE))
 	    cprintf(cb, ", hide");
 	if ((!co_flags_get(co, CO_FLAGS_HIDE)) && (co_flags_get(co, CO_FLAGS_HIDE_DATABASE)))

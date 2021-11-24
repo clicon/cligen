@@ -78,7 +78,7 @@ fi
 # error and exit,
 # arg1: expected
 # arg2: errmsg[optional]
-err(){
+function err(){
   echo -e "\e[31m\nError in Test$testnr [$testname]:"
   if [ $# -gt 0 ]; then 
       echo "Expected: $1"
@@ -96,7 +96,7 @@ err(){
 }
 
 # Test is previous test had valgrind errors if so quit
-checkvalgrind(){
+function checkvalgrind(){
     if [ -f $valgrindfile ]; then
 	res=$(cat $valgrindfile | grep -e "Invalid" |awk '{print  $4}' | grep -v '^0$')
 	if [ -n "$res" ]; then
@@ -117,7 +117,7 @@ checkvalgrind(){
 }
 
 # NOTE this means there must always be a final new
-endtest()
+function endtest()
 {
     if [ $valgrindtest -eq 1 ]; then 
 	checkvalgrind
@@ -125,7 +125,7 @@ endtest()
 }
 
 # Increment test number and print a nice string
-newtest()
+function newtest()
 {
     endtest # finalize previous test
     testnr=`expr $testnr + 1`
@@ -143,7 +143,7 @@ newtest()
 # - the token "--not--"
 # - not expected stdout outcome*
 # @note need to escape \[\]
-expectpart(){
+function expectpart(){
   r=$?
   ret=$1
   retval=$2

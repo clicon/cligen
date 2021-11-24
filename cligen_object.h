@@ -124,6 +124,10 @@ typedef struct cg_varspec cg_varspec;
 #define CO_FLAGS_OPTION    0x10  /* Generated from optional [] */
 #define CO_FLAGS_MATCH     0x20  /* For sets: avoid selecting same more than once */
 
+/* Flags for pt_copy and co_copy
+ */
+#define CO_COPY_FLAGS_TREEREF 0x01 /* If called from pt_expand_treeref: the copy point to the original */
+
 /*! cligen gen object is a parse-tree node. A cg_obj is either a command or a variable
  * A cg_obj 
  * @code
@@ -151,10 +155,18 @@ struct cg_obj{
                                        *     @add:<label> and @remove:<label>
 				       * which control tree ref macro expansion
 				       */
+#ifdef CLIGEN_HELPSTRING_VEC
     cvec               *co_helpvec;   /* Vector of CLIgen helptexts */
+#else
+    char               *co_helpstring; /* String of CLIgen helptexts */
+#endif
     uint32_t            co_flags;     /* General purpose flags, see CO_FLAGS_HIDE and others above */
-    struct cg_obj      *co_ref;       /* Ref to original (if this is expanded) */
-    struct cg_obj      *co_treeref_orig; /* Ref to original (if this is a tree reference) */
+    struct cg_obj      *co_ref;       /* Ref to original (if this is expanded) 
+				       * Typical from expanded command to original variable
+				       */
+    struct cg_obj      *co_treeref_orig; /* Ref to original (if this is a tree reference) 
+					  * Only set in co_copy 
+					  */
     char               *co_value;     /* Expanded value can be a string with a constant. 
 					 Store the constant in the original variable. */
     union {                           /* depends on co_type: */
@@ -188,7 +200,8 @@ typedef struct cg_obj cg_obj;
 /*
  * Prototypes
  */
-uint64_t    co_count_get(void);
+int         co_stats_global(uint64_t *created, uint64_t *nr);
+int         co_stats(cg_obj *co, uint64_t *nrp, size_t *szp);
 cg_obj*     co_up(cg_obj *co);
 int         co_up_set(cg_obj *co, cg_obj *cop);
 cg_obj*     co_top(cg_obj *co0);
@@ -206,8 +219,8 @@ cg_obj     *co_new_only(void);
 cg_obj     *co_new(char *cmd, cg_obj *prev);
 cg_obj     *cov_new(enum cv_type cvtype, cg_obj *prev);
 int         co_pref(cg_obj *co, int exact);
-int         co_copy(cg_obj *co, cg_obj *parent, cg_obj **conp);
-int         co_copy1(cg_obj *co, cg_obj *parent, int recursive, cg_obj **conp);
+int         co_copy(cg_obj *co, cg_obj *parent, uint32_t flags, cg_obj **conp);
+int         co_copy1(cg_obj *co, cg_obj *parent, int recursive, uint32_t flags, cg_obj **conp);
 int         co_eq(cg_obj *co1, cg_obj *co2);
 int         co_free(cg_obj *co, int recursive);
 cg_obj     *co_insert(parse_tree *pt, cg_obj *co);

@@ -63,6 +63,7 @@
 #include "cligen_result.h"
 #include "cligen_read.h"
 #include "cligen_parse.h"
+#include "cligen_print.h"
 #include "cligen_history.h"
 #include "cligen_getline.h"
 #include "cligen_handle_internal.h"
@@ -154,6 +155,7 @@ cligen_init(void)
     ch->ch_magic = CLIGEN_MAGIC;
     ch->ch_tabmode = 0x0; /* see CLIGEN_TABMODE_* */
     ch->ch_delimiter = ' ';
+    ch->ch_reftree_copy = 1; /* By default make full refrtree copies */
     h = (cligen_handle)ch;
     cligen_prompt_set(h, CLIGEN_PROMPT_DEFAULT);
     /* Only if stdin and stdout refers to a terminal make win size check */
@@ -1057,6 +1059,35 @@ cligen_reftree_filter_set(cligen_handle h,
     return 0;
 }
 
+/*! Set copy status of tree references
+ *
+ * @param[in] h       CLIgen handle
+ * @param[in] status
+ */
+int
+cligen_reftree_copy_set(cligen_handle h, 
+			int           status)
+{
+    struct cligen_handle *ch = handle(h);
+
+    ch->ch_reftree_copy = status;
+    return 0;
+}
+
+/*! Get copy status of tree references
+ *
+ * @param[in] h       CLIgen handle
+ * @retval    0       Minimize copying when treeref expand - cannot tree recurse / @add/@remove
+ * @retval    1       Copy whole tree reference. - uses more memory 
+ */
+int
+cligen_reftree_copy_get(cligen_handle h)
+{
+    struct cligen_handle *ch = handle(h);
+
+    return ch->ch_reftree_copy;
+}
+
 /*! Get status of string case compare 
  *
  * @param[in] h   CLIgen handle
@@ -1178,3 +1209,42 @@ cv_exclude_keys_get(void)
     return excludekeys;
 }
 #endif
+
+
+/*! Set CLIgen eval wrap function to check state before and after a callback function 
+ *
+ * @param[in] h     CLIgen handle
+ * @param[in] fn    Register function to call before and after each callback
+ * @param[in] arg   Call function with this argument
+ */
+int
+cligen_eval_wrap_fn_set(cligen_handle        h, 
+			cligen_eval_wrap_fn *fn,
+			void                *arg)
+{
+    struct cligen_handle *ch = handle(h);
+
+    ch->ch_eval_wrap_fn = fn;
+    ch->ch_eval_wrap_arg = arg;
+    return 0;
+}
+
+/*! Get CLIgen eval wrap function to check state before and after a callback function 
+ *
+ * @param[in]  h     CLIgen handle
+ * @param[out] fn    Register function to call before and after each callback
+ * @param[out] arg   Call function with this argument
+ */
+int
+cligen_eval_wrap_fn_get(cligen_handle         h,
+			cligen_eval_wrap_fn **fn,
+    			void                **arg)
+{
+    struct cligen_handle *ch = handle(h);
+
+    if (fn)
+	*fn = ch->ch_eval_wrap_fn;
+    if (arg)
+	*arg = ch->ch_eval_wrap_arg;
+    return 0;
+}

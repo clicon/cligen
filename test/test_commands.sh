@@ -17,6 +17,7 @@ cat > $fspec <<EOF
     a,callback();
     b,callback();
   }
+  exec <a:string>, cligen_exec_cb("echo \$a"); # Trivial: just echo
 EOF
 
 newtest "$cligen_file -f $fspec"
@@ -41,6 +42,9 @@ expectpart "$(echo "abd" | $cligen_file -f $fspec 2>&1)" 0 'CLI syntax error in:
 
 newtest "run hello"
 expectpart "$(echo "hello world" | $cligen_hello 2>&1)" 0 'hello world'
+
+newtest "run exec"
+expectpart "$(echo "exec foo" | $cligen_file -f $fspec 2>&1)" 0 foo
 
 newtest "endtest"
 endtest

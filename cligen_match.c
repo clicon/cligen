@@ -653,6 +653,7 @@ match_pattern_sets(cligen_handle h,
 		   int           level,
 		   int           best,
 		   cvec         *cvv,
+		   cg_callback **callbacks,
 		   match_result **mrp)
 {
     int           retval = -1;
@@ -684,6 +685,18 @@ match_pattern_sets(cligen_handle h,
     }
     /* Unique match */
     co_match = mr_pt_i_get(mr0, 0);
+
+    /* If instantiated tree reference copy the callbacks */
+    if (callbacks &&
+	co_flags_get(co_match, CO_FLAGS_TREEREF)){
+	cg_obj *coref = co_match;
+	while (coref->co_ref)
+	    coref = coref->co_ref;
+	if (coref->co_type ==  CO_REFERENCE &&
+	    coref->co_callbacks)
+	    if (co_callback_copy(coref->co_callbacks, callbacks) < 0)
+		goto done;
+    }
 #ifdef _DEBUG_SETS
     fprintf(stderr, "%s %*s match co:%s\n", __FUNCTION__, level*3,"", co_match->co_command);
 #endif
@@ -693,15 +706,17 @@ match_pattern_sets(cligen_handle h,
 	mr0 = NULL;
 	goto ok;
     }
-    if (pt_expand_treeref(h, co_match, co_pt_get(co_match)) < 0) /* sub-tree expansion */
-	goto done;
     if ((ptn = pt_new()) == NULL)
 	goto done;
-    if (pt_expand(h, co_pt_get(co_match), cvv,
+    if (pt_expand1(h,
+		   co_match,
+		   co_pt_get(co_match),
+		   cvv,
 		  !best,  /* If best is set, include hidden commands, otherwise do not */
 		  1,      /* VARS are expanded, eg ? <tab> */
 		  ptn) < 0) /* expand/choice variables */
 	goto done;
+
     /* Check termination criteria */
     lastsyntax = last_pt(ptn); /* 0, 1 or 2 */
     switch (lastsyntax){
@@ -727,6 +742,7 @@ match_pattern_sets(cligen_handle h,
 				   level+1,
 				   best, 
 				   cvv,
+				   callbacks,
 				   &mrc) < 0)
 		goto done;		
 #ifdef _DEBUG_SETS
@@ -761,12 +777,16 @@ match_pattern_sets(cligen_handle h,
 				    level+1, 
 				    best, 
 				    cvv,
+				    callbacks,
 				    &mrc) < 0)
 	    goto done;
     }
     assert(mrc != NULL);
-    /* Clear all CO_FLAGS_MATCH recursively */
-    pt_apply(ptn, co_clearflag, (void*)CO_FLAGS_MATCH);
+    /* Clear all CO_FLAGS_MATCH recursively 
+     * Only co_match is set with CO_FLAGS_MATCH
+     */
+    pt_apply(ptn, co_clearflag, 1, (void*)CO_FLAGS_MATCH);
+    
     /* If child match fails, use previous */
     if (mr_pt_len_get(mrc) == 0 && mrcprev){
 	/* Transfer match flags from ptn to pt if this tree has no more matches */
@@ -815,6 +835,7 @@ match_pattern_sets(cligen_handle h,
  *                       all possible options. Match also hidden options.
  *                       If not set, return all possible matches, do not return hidden options 
  * @param[out] cvv       cligen variable vector containing vars/values pair for completion
+ * @param[out] callbacks Callback structure of expanded treeref (only if reftree_copy is 1)
  * @param[out] mrp       CLIgen match result struct encapsulating several return parameters
  * @retval    -1         Error
  * @retval     0         OK
@@ -829,6 +850,7 @@ match_pattern(cligen_handle h,
 	      parse_tree   *pt, 
 	      int           best,
 	      cvec         *cvv,
+	      cg_callback **callbacks,
 	      match_result **mrp)
 {
     int           retval = -1;
@@ -851,6 +873,7 @@ match_pattern(cligen_handle h,
 			   0,
 			   best, 
 			   cvv, 
+			   callbacks,
 			   &mr) < 0)
 	goto done;
     if (mr == NULL){  /* shouldnt happen */
@@ -862,7 +885,7 @@ match_pattern(cligen_handle h,
      * Hopefully it may be easier to simplify
      */
     /* Clear all CO_FLAGS_MATCH recursively */
-    pt_apply(pt, co_clearflag, (void*)CO_FLAGS_MATCH);
+    pt_apply(pt, co_clearflag, 1, (void*)CO_FLAGS_MATCH);
     if (!last_level(cvt, mr_level_get(mr))){ /* XXX level always 0 */
 	if (mr_pt_len_get(mr) == 1){
 	    co_match = mr_pt_i_get(mr, 0);
@@ -974,6 +997,7 @@ match_pattern_exact(cligen_handle  h,
 		    parse_tree    *pt, 
 		    cvec          *cvv,
 		    cg_obj       **match_obj,
+		    cg_callback  **callbacks,
 		    cligen_result *resultp,
 		    char         **reason
 		    )
@@ -991,6 +1015,7 @@ match_pattern_exact(cligen_handle  h,
 		       pt,       /* command vector */
 		       1,        /* best: Return only best option including hidden options */
 		       cvv,
+		       callbacks,
 		       &mr)) < 0){
 	goto done;
     }
@@ -1005,7 +1030,7 @@ match_pattern_exact(cligen_handle  h,
 	match_obj){
 	/* Must make a copy since the mr will be freed */
 	co = mr_pt_i_get(mr, 0);
-	if (co_copy1(co, NULL, 0, match_obj) < 0)
+	if (co_copy1(co, NULL, 0, 0x0, match_obj) < 0)
 	    goto done;
     }
     *resultp = mr2result(mr);
@@ -1064,6 +1089,7 @@ match_complete(cligen_handle h,
 		      pt,
 		      0, /* best: Return all options, not only best, exclude hidden options */
 		      cvv, 
+		      NULL,
 		      &mr) < 0)
 	goto done;
     if (mr == NULL || mr_pt_len_get(mr) == 0){

@@ -533,7 +533,7 @@ cgy_var_post(cligen_yacc *cy)
     for (; cl; cl = cl->cl_next){
 	coparent = cl->cl_obj;
 	if (cl->cl_next){
-	    if (co_copy(coy, coparent, &coc) < 0) /* duplicate coy to coc */
+	    if (co_copy(coy, coparent, 0x0, &coc) < 0) /* duplicate coy to coc */
 		return -1;
 	}
 	else
@@ -629,21 +629,24 @@ cgy_helpstring(cligen_yacc *cy,
     int              retval = -1;
     struct cgy_list *cl; 
     cg_obj          *co;
+#ifdef CLIGEN_HELPSTRING_VEC
     cg_var          *cv; 
-
+#endif
+    
     if (helpstr == NULL){
 	errno = EINVAL;
 	goto done;
     }
     for (cl = cy->cy_list; cl; cl = cl->cl_next){
 	co = cl->cl_obj;
+#ifdef CLIGEN_HELPSTRING_VEC
 	if (co->co_helpvec == NULL){
 	    if ((co->co_helpvec = cvec_new(0)) == NULL){
 		cligen_parseerror1(cy, "Allocating helpstr");
 		goto done;
 	    }
 	}
-#ifdef CLIGEN_SINGLE_HELPSTRING
+#ifdef CLIGEN_HELPSTRING_SINGLE
 	else
 	    continue;
 #endif
@@ -655,6 +658,22 @@ cgy_helpstring(cligen_yacc *cy,
 	    cligen_parseerror1(cy, "Allocating helpstr");
 	    goto done;
 	}
+#else /* CLIGEN_HELPSTRING_VEC */
+	if (co->co_helpstring){
+	    if ((co->co_helpstring = realloc(co->co_helpstring,
+					     strlen(co->co_helpstring) + strlen(helpstr) + 2)) == NULL){
+		cligen_parseerror1(cy, "Allocating helpstr");
+		goto done;
+	    }
+	    strcat(co->co_helpstring, "\n");
+	    strcat(co->co_helpstring, helpstr);
+	}
+	else
+	    if ((co->co_helpstring = strdup(helpstr)) == NULL){
+		cligen_parseerror1(cy, "Allocating helpstr");
+		goto done;
+	    }
+#endif /* CLIGEN_HELPSTRING_VEC */
     }
     free(helpstr);
     retval = 0;
@@ -702,7 +721,6 @@ cgy_terminal(cligen_yacc *cy)
     struct cgy_list *cl; 
     cg_obj          *co; 
     int              i;
-    cg_callback     *cc;
     cg_callback    **ccp;
     int              retval = -1;
     parse_tree      *ptc;
@@ -764,10 +782,8 @@ cgy_terminal(cligen_yacc *cy)
 	cy->cy_callbacks = NULL;
     else
 #endif
-    while ((cc = cy->cy_callbacks) != NULL){
-	cy->cy_callbacks = co_callback_next(cc);
-	co_callback_free(cc);
-    }
+	if (cy->cy_callbacks)
+	    co_callbacks_free(&cy->cy_callbacks);
     if (cy->cy_cvec){
 	cvec_free(cy->cy_cvec);
 	cy->cy_cvec = NULL;

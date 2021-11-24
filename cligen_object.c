@@ -70,14 +70,113 @@
 #include "cligen_getline.h"
 
 /* Stats: nr of created cligen objects */
+uint64_t _co_created = 0;
 uint64_t _co_count = 0;
 
-/*! Return number of created cligen objects
+/*! Return number of created and existing cligen objects
+ *
+ * @param[out]  created  Number of created CLIgen objects (ever)
+ * @param[out]  nr       Number of existing CLIgen objects (created - freed)
  */
-uint64_t
-co_count_get(void) 
+int
+co_stats_global(uint64_t *created,
+		uint64_t *nr)
 {
-    return _co_count;
+    *created = _co_created;
+    *nr =   _co_count;
+    return 0;
+}
+
+/*! Return the alloced memory of a single CLIgen object
+ * @param[in]   y    YANG object
+ * @param[out]  szp  Size of this YANG obj
+ * @retval      0    OK
+ * (baseline: )
+ */
+static int
+co_stats_one(cg_obj   *co,
+	     size_t   *szp)
+{
+    size_t              sz = 0;
+    struct cg_callback *cc;
+    struct cg_varspec  *cgs;
+    
+    sz += sizeof(struct cg_obj);
+    sz += co->co_pt_len*sizeof(struct parse_tree*);
+    if (co->co_command)
+	sz += strlen(co->co_command) + 1;
+    if (co->co_prefix)
+	sz += strlen(co->co_prefix) + 1;
+    for (cc = co->co_callbacks; cc; cc=cc->cc_next)
+	sz += co_callback_size(cc);
+    if (co->co_cvec)
+	sz += cvec_size(co->co_cvec);
+#ifdef CLIGEN_HELPSTRING_VEC
+    if (co->co_helpvec)
+	sz += cvec_size(co->co_helpvec);
+#else
+    if (co->co_helpstring)
+	sz += strlen(co->co_helpstring) + 1;
+#endif
+    if (co->co_value)
+	sz += strlen(co->co_value) + 1;
+    /* XXX union */
+    if (co->co_type == CO_VARIABLE){
+	cgs = &co->u.cou_var;
+	if (cgs->cgs_show)
+	    sz += strlen(cgs->cgs_show) + 1;
+	if (cgs->cgs_expand_fn_str)
+	    sz += strlen(cgs->cgs_expand_fn_str) + 1;
+	if (cgs->cgs_expand_fn_vec)
+	    sz += cvec_size(cgs->cgs_expand_fn_vec);
+	if (cgs->cgs_translate_fn_str)
+	    sz += strlen(cgs->cgs_translate_fn_str) + 1;
+	if (cgs->cgs_choice)
+	    sz += strlen(cgs->cgs_choice) + 1;
+	if (cgs->cgs_rangecvv_low)
+	    sz += cvec_size(cgs->cgs_rangecvv_low);
+    	if (cgs->cgs_rangecvv_upp)
+	    sz += cvec_size(cgs->cgs_rangecvv_upp);
+	if (cgs->cgs_regex)
+	    sz += cvec_size(cgs->cgs_regex);
+    }
+    if (szp)
+	*szp = sz;
+    return 0;
+}
+
+/*! Return statistics of a CLIgen object recursively
+ * @param[in]   co   CLIgen object
+ * @param[out]  szp  Size of this co recursively
+ * @retval      0    OK
+ * @retval     -1    Error
+ */
+int
+co_stats(cg_obj   *co,
+	 uint64_t *nrp,
+	 size_t   *szp)
+{
+    int         retval = -1;
+    size_t      sz = 0;
+    parse_tree *pt;
+    int         i;
+    
+    if (co == NULL){
+	errno = EINVAL;
+	goto done;
+    }
+    *nrp += 1;
+    co_stats_one(co, &sz);
+    if (szp)
+	*szp += sz;
+    for (i=0; i<co->co_pt_len; i++){
+	if ((pt = co->co_ptvec[i]) != NULL){
+	    pt_stats(pt, nrp, szp);
+	}
+    }
+    retval = 0;
+ done:
+    return retval;
 }
 
 /* Access macro */
@@ -88,7 +187,8 @@ co_up(cg_obj *co)
 }
 
 int
-co_up_set(cg_obj *co, cg_obj *cop) 
+co_up_set(cg_obj *co,
+	  cg_obj *cop) 
 {
     co->co_prev = cop;
     return 0;
@@ -245,7 +345,7 @@ co_prefix_set(cg_obj *co,
 	return -1;
     return 0;
 }
-    
+
 /*! Assign a preference to a cligen variable object
  * Prefer more specific commands/variables  if you have to choose from several. 
  * @param[in] co   Cligen obe
@@ -416,6 +516,7 @@ co_new_only()
 	return NULL;
     memset(co, 0, sizeof(cg_obj));
     _co_count++;
+    _co_created++;
     return co;
 }
 
@@ -486,6 +587,7 @@ cov_new(enum cv_type cvtype,
  *
  * @param[in]  co     The object to copy from
  * @param[in]  parent The parent of the new object, need not be same as parent of co
+ * @param[in]  flags  Copy flagst
  * @param[out] conp   Pointer to the object to copy to (is allocated)
  * @retval     0      OK
  * @retval     -1     Error
@@ -495,6 +597,7 @@ cov_new(enum cv_type cvtype,
 int
 co_copy(cg_obj  *co, 
 	cg_obj  *parent,
+	uint32_t flags,
 	cg_obj **conp)
 {
     int         retval = -1;
@@ -508,9 +611,9 @@ co_copy(cg_obj  *co,
     con->co_ptvec = NULL;
     con->co_pt_len = 0;
     con->co_ref = NULL;
-    if (co->co_treeref_orig)
-	con->co_treeref_orig = co->co_treeref_orig;
-    else
+    /* If called from pt_expand_treeref: the copy (of a tree instance) points to the original tree
+     */
+    if (flags & CO_COPY_FLAGS_TREEREF)
 	con->co_treeref_orig = co;
     co_flags_reset(con, CO_FLAGS_MARK);
     co_flags_reset(con, CO_FLAGS_REFDONE);
@@ -527,14 +630,20 @@ co_copy(cg_obj  *co,
     if (co->co_cvec)
 	con->co_cvec = cvec_dup(co->co_cvec);
     if ((pt = co_pt_get(co)) != NULL){
-	if ((ptn = pt_dup(pt, con)) == NULL) /* sets a new pt under con */
+	if ((ptn = pt_dup(pt, con, flags)) == NULL) /* sets a new pt under con */
 	    goto done;
 	if (co_pt_set(con, ptn) < 0)
 	    goto done;
     }
+#ifdef CLIGEN_HELPSTRING_VEC
     if (co->co_helpvec)
 	if ((con->co_helpvec = cvec_dup(co->co_helpvec)) == NULL)
 	    goto done;
+#else /* CLIGEN_HELPSTRING_VEC */
+    if (co->co_helpstring)
+	if ((con->co_helpstring = strdup(co->co_helpstring)) == NULL)
+	    goto done;
+#endif /* CLIGEN_HELPSTRING_VEC */
     if (co_value_set(con, co->co_value) < 0) /* XXX: free på co->co_value? */
 	goto done;
     if (co->co_type == CO_VARIABLE){
@@ -580,6 +689,7 @@ co_copy(cg_obj  *co,
  * @param[in]  co     The object to copy from
  * @param[in]  parent The parent of the new object, need not be same as parent of co
  * @param[in]  recursive  If set copy recursive, otherwise, only first level object
+ * @param[in]  flags  Copy flags
  * @param[out] conp   Pointer to the object to copy to (is allocated)
  * @retval     0      OK
  * @retval     -1     Error
@@ -591,6 +701,7 @@ int
 co_copy1(cg_obj  *co, 
 	 cg_obj  *parent,
 	 int      recursive,
+	 uint32_t flags,
 	 cg_obj **conp)
 {
     int         retval = -1;
@@ -603,13 +714,10 @@ co_copy1(cg_obj  *co,
     memcpy(con, co, sizeof(cg_obj));
     con->co_ptvec = NULL;
     con->co_pt_len = 0;
-    if (!recursive)
-    	con->co_ref = co->co_ref; // XXX Check this for recursive too
-    else
-	con->co_ref = NULL;
-    if (co->co_treeref_orig)
-	con->co_treeref_orig = co->co_treeref_orig;
-    else
+
+    /* If called from pt_expand_treeref: the copy (of a tree instance) points to the original tree
+     */
+    if (flags & CO_COPY_FLAGS_TREEREF)
 	con->co_treeref_orig = co;
     co_flags_reset(con, CO_FLAGS_MARK);
     co_flags_reset(con, CO_FLAGS_REFDONE);
@@ -628,7 +736,7 @@ co_copy1(cg_obj  *co,
     if ((pt = co_pt_get(co)) != NULL){
 	/* Here this function differs from co_copy */
 	if (recursive){
-	    if ((ptn = pt_dup(pt, con)) == NULL) /* sets a new pt under con */
+	    if ((ptn = pt_dup(pt, con, 0x0)) == NULL) /* sets a new pt under con */
 		goto done;
 	    if (co_pt_set(con, ptn) < 0)
 		goto done;
@@ -638,10 +746,15 @@ co_copy1(cg_obj  *co,
 		goto done;
 	}
     }
-
+#ifdef CLIGEN_HELPSTRING_VEC
     if (co->co_helpvec)
 	if ((con->co_helpvec = cvec_dup(co->co_helpvec)) == NULL)
 	    goto done;
+#else /* CLIGEN_HELPSTRING_VEC */
+    if (co->co_helpstring)
+	if ((con->co_helpstring = strdup(co->co_helpstring)) == NULL)
+	    goto done;
+#endif /* CLIGEN_HELPSTRING_VEC */
     if (co_value_set(con, co->co_value) < 0)
 	goto done;
     if (co->co_type == CO_VARIABLE){
@@ -855,11 +968,15 @@ int
 co_free(cg_obj *co, 
 	int     recursive)
 {
-    cg_callback *cc;
     parse_tree  *pt;
 
+#ifdef CLIGEN_HELPSTRING_VEC
     if (co->co_helpvec) 
 	cvec_free(co->co_helpvec);
+#else /* CLIGEN_HELPSTRING_VEC */
+    if (co->co_helpstring) 
+	free(co->co_helpstring);
+#endif /* CLIGEN_HELPSTRING_VEC */
     if (co->co_command)
 	free(co->co_command);
     if (co->co_prefix)
@@ -868,10 +985,8 @@ co_free(cg_obj *co,
 	free(co->co_value);
     if (co->co_cvec)
 	cvec_free(co->co_cvec);
-    while ((cc = co->co_callbacks) != NULL){
-	co->co_callbacks = co_callback_next(cc);
-	co_callback_free(cc);
-    }
+    if (co->co_callbacks)
+	co_callbacks_free(&co->co_callbacks);
     if (co->co_type == CO_VARIABLE){
 	if (co->co_expand_fn_str)
 	    free(co->co_expand_fn_str);
@@ -896,6 +1011,7 @@ co_free(cg_obj *co,
     if (co->co_ptvec != NULL)
 	free(co->co_ptvec);
     free(co);
+    _co_count--;
     return 0;
 }
 

@@ -58,6 +58,27 @@
 #define CLIGEN_TABMODE_STEPS    0x04
 
 /*
+ * Types
+ */
+/*! CLIgen eval wrap function to check state before and after a callback function 
+ *
+ * @param[in]  arg   Argument to wrap function
+ * @param[in]  wh    Wrap handle. If NULL: init, othewise compare present state with wh
+ * @param[in]  name  A name for logging
+ * @param[in]  fn    A function name for loggin
+ * @retval     -1    Error
+ * @retval      0    Fail (for info only, cligen_eval does not handle fails)
+ * @retval      1    OK
+ * @code
+ *  void *wh = NULL;
+ *  cligen_eval_wrap_cb(h, &wh, "myfn", __FUNCTION__);
+ *  .. User callback
+ *  cligen_eval_wrap_cb(h, &wh, "myfn", __FUNCTION__);
+ * See cligen_eval
+ */
+typedef int (cligen_eval_wrap_fn)(void *arg, void **wh, const char *name, const char *fn);
+
+/*
  * Prototypes
  */
 cligen_handle cligen_init(void);
@@ -143,6 +164,9 @@ int cligen_preference_mode_set(cligen_handle h, int flag);
 cvec *cligen_reftree_filter_get(cligen_handle h);
 int   cligen_reftree_filter_set(cligen_handle h, cvec *cvv);
 
+int   cligen_reftree_copy_set(cligen_handle h, int status);
+int   cligen_reftree_copy_get(cligen_handle h);
+
 int   cligen_caseignore_get(cligen_handle h);
 int   cligen_caseignore_set(cligen_handle h, int ignorecase);
 
@@ -155,5 +179,8 @@ int   cligen_exclude_keys_get(cligen_handle h);
 /* XXX backward compatible, use cligen_ variant below instead */
 int   cv_exclude_keys(int status);
 int   cv_exclude_keys_get(void);
+
+int   cligen_eval_wrap_fn_set(cligen_handle h, cligen_eval_wrap_fn *fn, void *arg);
+int   cligen_eval_wrap_fn_get(cligen_handle h, cligen_eval_wrap_fn **fn, void **arg);
 
 #endif /* _CLIGEN_HANDLE_H_ */
