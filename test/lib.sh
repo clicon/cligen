@@ -14,20 +14,30 @@
 
 >&2 echo "Running $testfile"
 
+# Generated config file from autotools / configure
+if [ -f ./config.sh ]; then
+    . ./config.sh
+    if [ $? -ne 0 ]; then
+	return -1 # error
+    fi
+fi
+
 # Site file, an example of this file in README.md
 if [ -f ./site.sh ]; then
     . ./site.sh
     if [ $? -ne 0 ]; then
 	return -1 # skip
     fi
-    # test skiplist.
-    for f in $SKIPLIST; do
-	if [ "$testfile" = "$f" ]; then
-	    echo "...skipped (see site.sh)"
-	    return -1 # skip
-	fi
-    done
+
 fi
+
+# test skiplist.
+for f in $SKIPLIST; do
+    if [ "$testfile" = "$f" ]; then
+	echo "...skipped (see site.sh and/or SKIPLIST env variable)"
+	return -1 # skip
+    fi
+done
 
 # Test number from start
 : ${testnr:=0}

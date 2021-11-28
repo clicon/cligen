@@ -37,6 +37,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
+#include <inttypes.h>
 #include <errno.h>
 #include <unistd.h>
 #include <sys/wait.h>
@@ -337,6 +339,10 @@ main(int   argc,
 	fflush(stdout);
     }
     if (dump_syntax){
+	uint64_t nr = 0;
+	size_t sz = 0;
+	pt_stats(pt, &nr, &sz);
+	fprintf(stdout, "nr:%" PRIu64 ", size:%" PRIu64 "\n", nr, sz);
 	pt_dump(stdout, pt);
 	fflush(stdout);
     }

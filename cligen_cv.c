@@ -578,7 +578,8 @@ cv_ipv4addr_get(cg_var *cv)
  * @param[in] addr   storage space for address
  */
 struct in_addr *
-cv_ipv4addr_set(cg_var *cv, struct in_addr *addr)
+cv_ipv4addr_set(cg_var *cv,
+		struct in_addr *addr)
 {
     if (cv && addr) 
 	cv->var_ipv4addr = *addr;
@@ -1382,7 +1383,7 @@ parse_bool(char    *str,
 
 /*! Parse an IPv4 address struct
  * @param[in]  str        String to parse
- * @param[in]  val        IPv4 binary address
+ * @param[out]  val        IPv4 binary address
  * @param[out] reason     if given, malloced err string (retval=0), needs freeing
  * @retval -1             fatal error
  * @retval 0              parse error, reason in reason
@@ -2290,7 +2291,7 @@ cv2cbuf(cg_var *cv,
 	break;
     case CGV_IPV4PFX:
 	cprintf(cb, "%s/%u", 
-		inet_ntoa (cv->var_ipv4addr),
+		inet_ntoa(cv->var_ipv4addr),
 		cv->var_ipv4masklen);
 	break;
     case CGV_IPV6ADDR:
