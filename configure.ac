@@ -164,5 +164,6 @@ AH_BOTTOM([#include <cligen_custom.h>])
 AC_OUTPUT([
 	Makefile
 	extras/rpm/Makefile
+        test/config.sh
 ])
 

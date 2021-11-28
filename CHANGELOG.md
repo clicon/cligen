@@ -3,29 +3,26 @@
 ## 5.4.0
 Expected: November 2021
 
-### Minor changes
+### Changes
 
 * Perfomance changes of C code
-  * One usecase with very large auto-cli spec is improved by a factor of 10
-  * Added size functions for co callbacks, and changed free from single to list of callbacks
-  * Changed CLI helpstrings back to use a single malloced string instead of vector
-    * Added CLIGEN_HELPSTRING_VEC to cligen_custom.h, byt default off
   * Added a new expansion of treeref method that does not copy the whole tree but only necessary additions. The old method is still kept as default in cligen, using a new cligen_reftree_copy() API. The no-copy method reduces memory for large specs but does not work in tree recursions and @add/@remove labels.
     * Internally this led to a new callback argument that is passed in all match functions.
   * Rearranged and simplified expansions (at tab and ?) by making a single pt_expand1 API.
+  * Added size functions for co callbacks, and changed free from single to list of callbacks
+  * Changed CLI helpstrings back to use a single malloced string instead of vector
+    * Added CLIGEN_HELPSTRING_VEC to cligen_custom.h, byt default off
   * Added eval wrap function where a higher layer can add hooks around a cligen callback call. See the new cligen_eval_wrap_fn() API.
-  * Added flags in co/pt_copy functions.
   * Changed function name: cligen_ph_active_set -> cligen_ph_active_set_byname
-
-* cliread_parse2() variant of cligen_parse() where fifth cvv parameter changed type from `cvec*` to `cvec**`.
-  * cliread_parse() will be removed after CLIgen 5.4
-* Changes on how cvv callback options
-  * See cligen_tutorial Section 6.1
+* C API changes
+  * cliread_parse() changed where fifth cvv parameter changed type from `cvec*` to `cvec**`.
+  * Added flags in co/pt_copy functions.
+* Changes on cvv callback options
   * Moved cv_exclude_keys() to cligen_exclude_keys_set() and created cvec_exclude_keys()
+  * See cligen_tutorial Section 6.1
   * New: cligen_expand_first_get/set() and cvec_expand_first()
   * Merged the use of cvv and cvvall parameters into a single cvv parameter in match_pattern code
   * Solved [Get the expanded string of entire command executed even if entered string is partial](https://github.com/clicon/cligen/issues/65)
-
 * Same commands with different help strings are now displayed separately
   * See [Help-text support for multiple types](https://github.com/clicon/cligen/issues/27)
 * Added case-insensitive command matching
@@ -39,7 +36,7 @@ Expected: November 2021
 * Fixed: [very slow execution of load_set_file #288](https://github.com/clicon/clixon/issues/288)
   * Large refactoring was made noted elsewhere in this release
 * Fix/Workaround:[Check if cg_obj is optional #38](https://github.com/clicon/cligen/issues/38)
-  * Added a check to not allow double level of options, eg ``[[cc]]``. Do not think this is a costraining fix, (bit may be wrong).
+  * Added a check to not allow double level of options, eg ``[[cc]]``. Do not think this is a constraining fix, (bit may be wrong).
 * Fixed: [Performance issue when parsed string size is damn large #66](https://github.com/clicon/cligen/issues/66)
 
 ## 5.3.0

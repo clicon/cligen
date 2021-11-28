@@ -116,7 +116,7 @@ TAGS:
 # Run a clixon test container.
 # Alt: cd test; ./all.sh
 test:
-	(cd test && ./all.sh)
+	(cd test && SKIPLIST=$(SKIPLIST) ./all.sh)
 
 distclean: clean
 	rm -f Makefile config.log config.status config.h TAGS .depend

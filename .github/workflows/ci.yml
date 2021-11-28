@@ -22,4 +22,4 @@ jobs:
     - name: ldconfig
       run: sudo ldconfig
     - name: make test
-      run: make test
+      run: make test SKIPLIST="test_sets.sh"
