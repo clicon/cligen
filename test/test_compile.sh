@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Compile a simple application and go through types
 # Partly a test for developing
-# pArtly a coverage test of all set/get functions (with no actual testof semantics)
+# Partly a coverage test of all set/get functions (with no actual testof semantics)
+# XXX needs coverage flags
 
 # Magic line must be first in script (see README.md)
 s="$_" ; . ./lib.sh || if [ "$s" = $0 ]; then exit 0; else return 0; fi
@@ -148,16 +149,20 @@ main(int   argc,
     if (h)
 	cligen_exit(h);
     return retval;
-
 }
 EOF
 
 newtest "compile $cfile"
-expectpart "$($CC -g -Wall -I /usr/local/include $cfile -lcligen -o $app)" 0 ""
+if [ "$LINKAGE" = static ]; then
+    COMPILE="$CC -DHAVE_CONFIG_H -g -Wall $CFLAGS -I /usr/local/include $cfile ../libcligen.a -o $app"
+else
+    COMPILE="$CC -DHAVE_CONFIG_H -g -Wall $CFLAGS -I /usr/local/include $cfile -L.. -lcligen -o $app"
+fi
+echo "COMPILE:$COMPILE"
+expectpart "$($COMPILE)" 0 ""
 
 newtest "run $app"
 expectpart "$($app)" 0 "1 : 99" "2 : 9999" "3 : 999999" "4 : 999999000" "5 : 99" "6 : 9999" "7 : 999999" "8 : 9999990000" "9 : 0.123748327482" "10 : true" "11 : foobar" "12 : \"foobar\"" "13 : \"eth/0/1\"" "14 : 1.2.3.4" "15 : 1.2.3.4/24" "16 : ::" "17 : ::/0" "18 : 00:00:00:00:00:00" "19 : http://root:foobar@1.2.3.4//foo/bar" "20 : a0a2feb6-4807-4b41-bb18-beefc5ef6081" "21 : 2008-09-21T18:57:21.003456Z"
-
 
 newtest "endtest"
 endtest

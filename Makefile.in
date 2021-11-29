@@ -115,8 +115,9 @@ TAGS:
 
 # Run a clixon test container.
 # Alt: cd test; ./all.sh
+# CFLAGS/LINKAGE is for test_compile.sh for coverage
 test:
-	(cd test && SKIPLIST=$(SKIPLIST) ./all.sh)
+	(cd test && SKIPLIST="$(SKIPLIST)" CFLAGS="$(CFLAGS)" LINKAGE="$(LINKAGE)" ./all.sh)
 
 distclean: clean
 	rm -f Makefile config.log config.status config.h TAGS .depend
