@@ -1,7 +1,7 @@
 # Cligen Changelog
 	
 ## 5.4.0
-Expected: November 2021
+30 November 2021
 
 ### Changes
 

@@ -69,7 +69,6 @@ int         pt_stats(parse_tree *pt, uint64_t *nrp, size_t *szp);
 cg_obj     *pt_vec_i_get(parse_tree *pt, int i);
 int         pt_vec_i_clear(parse_tree *pt, int i);
 int         pt_vec_i_insert(parse_tree *pt, int i, cg_obj *co);
-int         pt_vec_i_replace(parse_tree *pt, int i, cg_obj *co);
 int         pt_vec_append(parse_tree *pt, cg_obj *co);
 int         pt_vec_i_delete(parse_tree *pt, int i, int recurse);
 int         pt_len_get(parse_tree *pt);

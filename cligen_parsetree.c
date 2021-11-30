@@ -199,26 +199,6 @@ pt_vec_i_insert(parse_tree *pt,
  done:
     return retval;
 }
-int
-pt_vec_i_replace(parse_tree *pt,
-		 int         i,
-		 cg_obj     *co)
-{
-    int       retval = -1;
-    
-    if (pt == NULL){
-       errno = EINVAL;
-       goto done;
-    }
-    if (i<0 || i > pt_len_get(pt)){
-       errno = EINVAL;
-       return -1;
-    }
-    pt->pt_vec[i] = co;
-    retval = 0;
- done:
-    return retval;
-}
 
 int
 pt_vec_append(parse_tree *pt,
