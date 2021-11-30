@@ -13,7 +13,11 @@ cfile=${app}.c
 cat<<EOF > $cfile
 #include <stdio.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
 #include <arpa/inet.h>
+
 #include <cligen/cligen.h>
 
 int
@@ -156,7 +160,7 @@ newtest "compile $cfile"
 if [ "$LINKAGE" = static ]; then
     COMPILE="$CC -DHAVE_CONFIG_H -g -Wall $CFLAGS -I /usr/local/include $cfile ../libcligen.a -o $app"
 else
-    COMPILE="$CC -DHAVE_CONFIG_H -g -Wall $CFLAGS -I /usr/local/include $cfile -L.. -lcligen -o $app"
+    COMPILE="$CC -DHAVE_CONFIG_H -g -Wall $CFLAGS -I /usr/local/include $cfile -L/usr/local/lib -lcligen -o $app"
 fi
 echo "COMPILE:$COMPILE"
 expectpart "$($COMPILE)" 0 ""
