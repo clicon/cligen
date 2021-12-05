@@ -1,5 +1,8 @@
 # Cligen Changelog
 	
+## 5.5.0
+Planned: January, 2022
+
 ## 5.4.0
 30 November 2021
 
