@@ -163,6 +163,12 @@ co2cbuf(cbuf   *cb,
     int          i;
 #endif
 
+    /* Add [] if optional. Note this is neither not complete/correct since it only notes
+     * that the symbol was created within a [], not the exact composition.
+     * Thus, for example, both "[a b]" and "[a[b]]" will be shown as "[a][b]".
+     */
+    if (co_flags_get(co, CO_FLAGS_OPTION))
+	cprintf(cb, "[");
     switch (co->co_type){
     case CO_COMMAND:
 	if (co->co_command)
@@ -179,6 +185,8 @@ co2cbuf(cbuf   *cb,
 	cprintf(cb, ";");
 	break;
     }
+    if (co_flags_get(co, CO_FLAGS_OPTION))
+	cprintf(cb, "]");
     if (brief == 0){
 #ifdef CLIGEN_HELPSTRING_VEC
 	if (co->co_helpvec){

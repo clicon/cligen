@@ -3,6 +3,17 @@
 ## 5.5.0
 Planned: January, 2022
 
+### Changes
+
+* Added proper error message with line# when encountering errors in the CLIgen YACC parsing and its sub-routines, not only for LEX errors.
+
+### Corrected Bugs
+
+* Revisited [Check if cg_obj is optional #38](https://github.com/clicon/cligen/issues/38).
+  * The orignal workaround/fix in [1e9964e](https://github.com/clicon/cligen/commit/1e9964ec5f58ca9a21c39063f8ee596ce4980376) to disallow multiple []: "Do not think this is a costraining fix" was wrong.
+  * Fixed it by adding the CO_FLAGS_OPTION on any new cligen object created when within [].
+  * Also added [] in the print function, although this is not complete.
+
 ## 5.4.0
 30 November 2021
 
