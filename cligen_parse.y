@@ -75,6 +75,8 @@
 /* typecast macro */
 #define _CY ((cligen_yacc *)_cy)
 
+#define _YYERROR(msg) { cligen_parseerror(_CY, (msg)); YYERROR; }
+    
 /* add _cy to error paramaters */
 #define YY_(msgid) msgid 
 
@@ -128,13 +130,14 @@ cligen_parse_debug(int d)
 void cligen_parseerror(void *_cy,
 		       char *s) 
 { 
-  fprintf(stderr, "%s%s%d: Error: %s: at or before: '%s'\n", 
-	  _CY->cy_name,
-	   ":" ,
-	  _CY->cy_linenum ,
-	  s, 
-	  cligen_parsetext); 
-  return;
+    cligen_yacc *cy = (cligen_yacc *)_cy;
+
+    fprintf(stderr, "%s:%d: Error: %s: at or before: '%s'\n", 
+	    cy->cy_name,
+	    cy->cy_linenum ,
+	    s, 
+	    cligen_parsetext); 
+    return;
 }
 
 #define cligen_parseerror1(cy, s) cligen_parseerror(cy, s)
@@ -468,6 +471,9 @@ cgy_var_create(cligen_yacc *cy)
 	cligen_parseerror1(cy, "Allocating cligen object"); 
 	return NULL;
     }
+    if (cy->cy_optional){
+	co_flags_set(co, CO_FLAGS_OPTION);
+    }
     if (debug)
 	fprintf(stderr, "%s: pre\n", __FUNCTION__);
     return co;
@@ -574,6 +580,9 @@ cgy_cmd(cligen_yacc *cy,
 	}
 	if ((co = co_insert(co_pt_get(cop), conew)) == NULL)  /* co_new may be deleted */
 	    return -1;
+	if (cy->cy_optional){
+	    co_flags_set(co, CO_FLAGS_OPTION);
+	}
 	cl->cl_obj = co; /* Replace parent in cgy_list */
     }
     return 0;
@@ -610,6 +619,9 @@ cgy_reference(cligen_yacc *cy,
 	/* Replace parent in cgy_list: not allowed after ref?
 	   but only way to add callbacks to it.
 	*/
+	if (cy->cy_optional){
+	    co_flags_set(cot, CO_FLAGS_OPTION);
+	}
 	cl->cl_obj = cot;
     }
     retval = 0;
@@ -769,7 +781,6 @@ cgy_terminal(cligen_yacc *cy)
 		}
 		coi->co_type = CO_EMPTY;
 		co_insert(co_pt_get(co), coi);
-
 	    }
 	}
 	else{ /* Should never reach here? */
@@ -858,7 +869,6 @@ ctx_peek_swap(cligen_yacc *cy)
     }
     for (cl = cy->cy_list; cl; cl = cl->cl_next){
 	co = cl->cl_obj;
-	co_flags_set(co, CO_FLAGS_OPTION);
 	if (cgy_list_push(co, &cs->cs_saved) < 0)
 	    return -1;
     }
@@ -931,7 +941,6 @@ ctx_pop_add(cligen_yacc *cy)
 	fprintf(stderr, "%s\n", __FUNCTION__);
     for (cl = cy->cy_list; cl; cl = cl->cl_next){
 	co = cl->cl_obj;
-	co_flags_set(co, CO_FLAGS_OPTION);
     }
     if ((cs = cy->cy_stack) == NULL){
 	fprintf(stderr, "%s: cgy_stack empty\n", __FUNCTION__);
@@ -1247,27 +1256,27 @@ preline     : '{'  { $$ = 0; }
 
 line2       : ';' {
                     _PARSE_DEBUG("line2->';'");
-		    if (cgy_terminal(_cy) < 0) YYERROR;
-		    if (ctx_peek_swap2(_cy) < 0) YYERROR;
+		    if (cgy_terminal(_cy) < 0) _YYERROR("line2");
+		    if (ctx_peek_swap2(_cy) < 0) _YYERROR("line2");
                   } 
             | preline {
-   		      if (ctx_push(_cy, $1) < 0) YYERROR;
+   		      if (ctx_push(_cy, $1) < 0) _YYERROR("line2");
 	          } 
               lines
 	      '}' {
 		    _PARSE_DEBUG("line2->'{' lines '}'");
-		    if (ctx_pop(_cy) < 0) YYERROR;
-		    if (ctx_peek_swap2(_cy) < 0) YYERROR;
+		    if (ctx_pop(_cy) < 0) _YYERROR("line2");
+		    if (ctx_peek_swap2(_cy) < 0) _YYERROR("line2");
 	         }
             | ';' 
               preline {
-		    if (cgy_terminal(_cy) < 0) YYERROR;
- 		    if (ctx_push(_cy, $2) < 0) YYERROR;
+		    if (cgy_terminal(_cy) < 0) _YYERROR("line2");
+ 		    if (ctx_push(_cy, $2) < 0) _YYERROR("line2");
 	          }
               lines
               '}' { _PARSE_DEBUG("line2->';' '{' lines '}'");
-		    if (ctx_pop(_cy) < 0) YYERROR;
-		    if (ctx_peek_swap2(_cy) < 0) YYERROR; }
+		    if (ctx_pop(_cy) < 0) _YYERROR("line2");
+		    if (ctx_peek_swap2(_cy) < 0) _YYERROR("line2"); }
             ;
 
 options     : options ',' option {_PARSE_DEBUG("options->options , option");} 
@@ -1289,7 +1298,7 @@ flag        : NAME               { _PARSE_DEBUG("flag->NAME");
             ; 
 
 callback    : NAME               { _PARSE_DEBUG("callback->NAME ( arglist )");
-		                   if (cgy_callback(_cy, $1) < 0) YYERROR;}
+		                   if (cgy_callback(_cy, $1) < 0) _YYERROR("callback");}
               '(' arglist ')'
             ;
 
@@ -1302,7 +1311,7 @@ arglist1    : arglist1 ',' arg
             ;
 
 arg         : typecast arg1 {
-                    if ($2 && cgy_callback_arg(_cy, $1, $2) < 0) YYERROR;
+                    if ($2 && cgy_callback_arg(_cy, $1, $2) < 0) _YYERROR("arg");
 		    if ($1 != NULL) free($1);
 		    if ($2 != NULL) free($2);
               }
@@ -1323,16 +1332,15 @@ decltop     : decllist  { _PARSE_DEBUG("decltop->decllist");}
 
 decllist    : decltop 
               declcomp  { _PARSE_DEBUG("decllist->decltop declcomp");}
-            | decltop '|' { if (ctx_peek_swap(_cy) < 0) YYERROR;} 
+            | decltop '|' { if (ctx_peek_swap(_cy) < 0) _YYERROR("decllist");} 
               declcomp  { _PARSE_DEBUG("decllist->decltop | declcomp");}
             ;
 
-declcomp    : '(' { if (ctx_push(_cy, 0) < 0) YYERROR; }
-               decltop ')' { if (ctx_pop(_cy) < 0) YYERROR;
+declcomp    : '(' { if (ctx_push(_cy, 0) < 0) _YYERROR("declcomp"); }
+               decltop ')' { if (ctx_pop(_cy) < 0) _YYERROR("declcomp");
 		                     _PARSE_DEBUG("declcomp->(decltop)");}
-            | '[' { if(_CY->cy_optional){ fprintf(stderr, "Too many [] levels.\n"); YYERROR;} _CY->cy_optional++;
-		   if (ctx_push(_cy, 0) < 0) YYERROR; }
-                decltop ']' { _CY->cy_optional--; if (ctx_pop_add(_cy) < 0) YYERROR; }  {
+            | '[' {_CY->cy_optional++; if (ctx_push(_cy, 0) < 0) _YYERROR("declcomp"); }
+                decltop ']' { _CY->cy_optional--; if (ctx_pop_add(_cy) < 0) _YYERROR("declcomp"); }  {
 		                     _PARSE_DEBUG("declcomp->[decltop]");}
             | decl                 { _PARSE_DEBUG("declcomp->decl");}
             ;
@@ -1345,12 +1353,12 @@ decl        : cmd                 { _PARSE_DEBUG("decl->cmd");}
 helpstring : helpstring '\n' helpstring1
               {
 		  _PARSE_DEBUG("helpstring -> helpstring helpstring1");
-		  if (cgy_helpstring(_cy, $3) < 0) YYERROR;
+		  if (cgy_helpstring(_cy, $3) < 0) _YYERROR("helpstring");
 	      }
             | helpstring1
 	       {
 		   _PARSE_DEBUG("helpstring -> helpstring1");
-		   if (cgy_helpstring(_cy, $1) < 0) YYERROR;
+		   if (cgy_helpstring(_cy, $1) < 0) _YYERROR("helpstring");
 	       }
             ;
 
@@ -1358,30 +1366,30 @@ helpstring1 : helpstring1 HELPSTR
               {
 		  size_t len = strlen($1);
 		  _PARSE_DEBUG("helpstring1 -> helpstring1 HELPSTR");
-		  if (($$ = realloc($1, len+strlen($2) +1)) == NULL) YYERROR;
+		  if (($$ = realloc($1, len+strlen($2) +1)) == NULL) _YYERROR("cmd");
 		  sprintf($$+len, "%s", $2); 
 	      }
             | HELPSTR
 	       {
     		  _PARSE_DEBUG("helpstring1 -> HELPSTR");
-		   if (($$=strdup($1)) == NULL) YYERROR;
+		   if (($$=strdup($1)) == NULL) _YYERROR("helpstring1");
 	       }
             ;
 
 
 cmd         : NAME           { _PARSE_DEBUG("cmd->NAME");
-		               if (cgy_cmd(_cy, $1) < 0) YYERROR; free($1); } 
+		               if (cgy_cmd(_cy, $1) < 0) _YYERROR("cmd"); free($1); } 
             | '@' NAME       { _PARSE_DEBUG("cmd->@NAME");
-		               if (cgy_reference(_cy, $2, NULL) < 0) YYERROR; free($2); } 
-            | '<'            { if ((_CY->cy_var = cgy_var_create(_CY)) == NULL) YYERROR; }
-               variable '>'  { if (cgy_var_post(_cy) < 0) YYERROR; }
+		               if (cgy_reference(_cy, $2, NULL) < 0) _YYERROR("cmd"); free($2); } 
+            | '<'            { if ((_CY->cy_var = cgy_var_create(_CY)) == NULL) _YYERROR("cmd"); }
+               variable '>'  { if (cgy_var_post(_cy) < 0) _YYERROR("cmd"); }
             ;
 
-variable    : NAME          { if (cgy_var_name_type(_cy, $1, $1)<0) YYERROR; }
-            | NAME ':' NAME { if (cgy_var_name_type(_cy, $1, $3)<0) YYERROR; free($3); }
-            | NAME ' '      { if (cgy_var_name_type(_cy, $1, $1) < 0) YYERROR; }
+variable    : NAME          { if (cgy_var_name_type(_cy, $1, $1)<0) _YYERROR("variable"); }
+            | NAME ':' NAME { if (cgy_var_name_type(_cy, $1, $3)<0) _YYERROR("variable"); free($3); }
+            | NAME ' '      { if (cgy_var_name_type(_cy, $1, $1) < 0) _YYERROR("variable"); }
               keypairs
-	    | NAME ':' NAME ' ' { if (cgy_var_name_type(_cy, $1, $3) < 0) YYERROR; free($3); }
+	    | NAME ':' NAME ' ' { if (cgy_var_name_type(_cy, $1, $3) < 0) _YYERROR("variable"); free($3); }
               keypairs
             ;
 
@@ -1402,27 +1410,27 @@ keypair     : NAME '(' ')' { expand_fn(_cy, $1); }
 		 _CY->cy_var->co_show = $4; 
 	      }
             | V_RANGE '[' numdec ':' numdec ']' { 
-		if (cg_range(_cy, $3, $5) < 0) YYERROR; free($3); free($5); 
+		if (cg_range(_cy, $3, $5) < 0) _YYERROR("keypair"); free($3); free($5); 
 	      }
             | V_RANGE '[' numdec ']' { 
-		if (cg_range(_cy, NULL, $3) < 0) YYERROR; free($3); 
+		if (cg_range(_cy, NULL, $3) < 0) _YYERROR("keypair"); free($3); 
 	      }
             | V_LENGTH '[' NUMBER ':' NUMBER ']' { 
-		if (cg_length(_cy, $3, $5) < 0) YYERROR; free($3); free($5); 
+		if (cg_length(_cy, $3, $5) < 0) _YYERROR("keypair"); free($3); free($5); 
 	      }
             | V_LENGTH '[' NUMBER ']' { 
-		if (cg_length(_cy, NULL, $3) < 0) YYERROR; free($3); 
+		if (cg_length(_cy, NULL, $3) < 0) _YYERROR("keypair"); free($3); 
 	      }
             | V_FRACTION_DIGITS ':' NUMBER { 
-		if (cg_dec64_n(_cy, $3) < 0) YYERROR; free($3); 
+		if (cg_dec64_n(_cy, $3) < 0) _YYERROR("keypair"); free($3); 
 	      }
             | V_CHOICE choices { _CY->cy_var->co_choice = $2; }
             | V_KEYWORD ':' NAME { 
 		_CY->cy_var->co_keyword = $3;  
 		_CY->cy_var->co_vtype=CGV_STRING; 
 	      }
-            | V_REGEXP  ':' DQ charseq DQ { if (cg_regexp(_cy, $4, 0) < 0) YYERROR; free($4); }
-            | V_REGEXP  ':' '!'  DQ charseq DQ { if (cg_regexp(_cy, $5, 1) < 0) YYERROR; free($5);}
+            | V_REGEXP  ':' DQ charseq DQ { if (cg_regexp(_cy, $4, 0) < 0) _YYERROR("keypair"); free($4); }
+            | V_REGEXP  ':' '!'  DQ charseq DQ { if (cg_regexp(_cy, $5, 1) < 0) _YYERROR("keypair"); free($5);}
             | V_TRANSLATE ':' NAME '(' ')' { cg_translate(_cy, $3); }
             ;
 
@@ -1435,7 +1443,7 @@ exparg     : DQ DQ
            ;
 
 exparg     : typecast arg1 {
-                    if ($2 && cgy_callback_arg(_cy, $1, $2) < 0) YYERROR;
+                    if ($2 && cgy_callback_arg(_cy, $1, $2) < 0) _YYERROR("exparg");
 		    if ($1) free($1);
 		    if ($2) free($2);
               }
