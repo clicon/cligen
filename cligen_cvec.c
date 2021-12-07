@@ -944,7 +944,7 @@ cvec_expand_first(cvec *cvv)
     return retval;
 }
 
-/*! Exclude keys from cvec
+/*! Exclude keys from a cvec destructively
  *
  * @param[in,out]  cvv  Remove all contant keywords
  * @see https://github.com/clicon/cligen/issues/65
