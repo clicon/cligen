@@ -828,7 +828,11 @@ cligen_eval(cligen_handle h,
     /* Make a copy of var argument for modifications */
     if ((cvv1 = cvec_dup(cvv)) == NULL)
 	goto done;
-    /* Make modifications to cvv */
+    /* Make modifications to cvv according to options:
+     * 1) expand-first: expand element 0 to a complete command, not a potentially abbreviated command, 
+     *    eg: "co term" -> "configure terminal
+     * 2) exclude-keys: remove all constant keywords, eg "conf <a> b" -> "conf b"
+     */
     if (cligen_expand_first_get(h) &&
 	cvec_expand_first(cvv1) < 0)
 	goto done;

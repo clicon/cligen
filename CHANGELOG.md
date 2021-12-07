@@ -9,6 +9,9 @@ Planned: January, 2022
 
 ### Corrected Bugs
 
+* 5.4.0 introduced an issue with expand if exclude_keys is 0,
+  * <tab> and <query> may return a constant instead of the variable in many cases
+  * May be a reason for a 5.4.1?  
 * Revisited [Check if cg_obj is optional #38](https://github.com/clicon/cligen/issues/38).
   * The orignal workaround/fix in [1e9964e](https://github.com/clicon/cligen/commit/1e9964ec5f58ca9a21c39063f8ee596ce4980376) to disallow multiple []: "Do not think this is a costraining fix" was wrong.
   * Fixed it by adding the CO_FLAGS_OPTION on any new cligen object created when within [].

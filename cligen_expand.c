@@ -723,11 +723,7 @@ pt_expand_fnv(cligen_handle h,
     if ((cvv1 = cvec_dup(cvv)) == NULL)
 	goto done;
     /* Make modifications to cvv */
-    if (cligen_expand_first_get(h) &&
-	cvec_expand_first(cvv1) < 0)
-	goto done;
-    if (cligen_exclude_keys_get(h) &&
-	cvec_exclude_keys(cvv1) < 0)
+    if (cvec_exclude_keys(cvv1) < 0)
 	goto done;
     if ((*co->co_expandv_fn)(cligen_userhandle(h)?cligen_userhandle(h):h, 
 			     co->co_expand_fn_str, 
