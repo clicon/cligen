@@ -155,7 +155,7 @@ cligen_init(void)
     ch->ch_magic = CLIGEN_MAGIC;
     ch->ch_tabmode = 0x0; /* see CLIGEN_TABMODE_* */
     ch->ch_delimiter = ' ';
-    ch->ch_reftree_copy = 1; /* By default make full refrtree copies */
+    ch->ch_reftree_copy = CLIGEN_REFTREE_COPY_DEEP; /* By default make full reftree copies */
     h = (cligen_handle)ch;
     cligen_prompt_set(h, CLIGEN_PROMPT_DEFAULT);
     /* Only if stdin and stdout refers to a terminal make win size check */
@@ -1027,11 +1027,12 @@ cligen_preference_mode_set(cligen_handle h,
     return 0;
 }
 
-/*! Get vector of labels for reference trees that are disabled by default (names are labels)
+/*! Get vector of labels for reference trees that are disabled by default
  *
  * @param[in] h      CLIgen handle
  * @retval    cvv    Filter vector
  * @retval    NULL   None
+ * A label is eg "iamlabel" in foo("doc"), iamlabel, callback();
  */
 cvec *
 cligen_reftree_filter_get(cligen_handle h)
@@ -1059,8 +1060,10 @@ cligen_reftree_filter_set(cligen_handle h,
     return 0;
 }
 
-/*! Set copy status of tree references
+/*! Set copy status of tree references: (0) shallow or (1) deep copy
  *
+ * Set to 1 per default, reset to 0 using -C in cligen_file/cligen_tutorial
+ * 
  * @param[in] h       CLIgen handle
  * @param[in] status
  */
@@ -1074,11 +1077,11 @@ cligen_reftree_copy_set(cligen_handle h,
     return 0;
 }
 
-/*! Get copy status of tree references
+/*! Get copy status of tree references: (0) shallow or (1) deepcopy
  *
  * @param[in] h       CLIgen handle
- * @retval    0       Minimize copying when treeref expand - cannot tree recurse / @add/@remove
- * @retval    1       Copy whole tree reference. - uses more memory 
+ * @retval    0       Minimize copying when treeref expand - cannot tree recurse
+ * @retval    1       Copy whole tree reference. - uses more memory  (default)
  */
 int
 cligen_reftree_copy_get(cligen_handle h)

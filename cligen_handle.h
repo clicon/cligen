@@ -57,6 +57,13 @@
  */
 #define CLIGEN_TABMODE_STEPS    0x04
 
+/* Parameter to cligen_reftree_copy_get() and _set()
+ * shallow: Unfold a single parse-tree level when referencing a tree, recursion not possible ?
+ * deep: Unfold a complete sub-tree when referencing a tree (default)
+ */
+#define CLIGEN_REFTREE_COPY_SHALLOW 0 
+#define CLIGEN_REFTREE_COPY_DEEP    1 
+
 /*
  * Types
  */

@@ -796,15 +796,15 @@ cliread_eval(cligen_handle  h,
 	       
 /*! Evaluate a matched CV and a cv variable list
  *
- * @param[in]  h    CLIgen handle
- * @param[in]  co   Matched CLIgen object.
- * @param[in]  cvv  A vector of cligen variables present in the string.
- *
- * @retval   int If there is a callback, the return value of the callback is returned,
- * @retval   0   otherwise
+ * @param[in]  h           CLIgen handle
+ * @param[in]  co          Matched CLIgen object.
+ * @param[in]  cvv         A vector of cligen variables present in the string.
+ * @param[in]  callbacks0  
+ * @retval     int         If there is a callback, the return value of the callback is returned,
+ * @retval     0           otherwise
  *
  * This is the only place where cligen callbacks are invoked
- * @see clixon_cligen_eval   Almost a copy but added clixon specific sanity check functions
+ * @see pt_expand_fnv where expand callbacks are invoked
  */
 int
 cligen_eval(cligen_handle h, 
@@ -840,7 +840,7 @@ cligen_eval(cligen_handle h,
 	cvec_exclude_keys(cvv1) < 0)
 	goto done;
     cligen_eval_wrap_fn_get(h, &wrapfn, &wraparg);
-    if (cligen_reftree_copy_get(h) == 1){
+    if (cligen_reftree_copy_get(h) == CLIGEN_REFTREE_COPY_DEEP){
 	callbacks = co->co_callbacks;
     }
     else {
