@@ -23,6 +23,7 @@ build-root/*.tar*
 build-root/*.rpm
 build-root/rpmbuild
 build-root/debbuild
+test/config.sh
 
 # Object files
 *.o

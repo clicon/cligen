@@ -307,8 +307,8 @@ cvec_del(cvec   *cvv,
  *
  * @param[in]  cvv   Cligen variable vector
  * @param[in]  del   variable to delete
- * @retvak     n     New cvec length
- * @retvak    -1     Error
+ * @retval     n     New cvec length
+ * @retval    -1     Error
  *
  * @note This is a dangerous command since the cv it deletes (such as created by
  * cvec_add) may have been modified with realloc (eg cvec_add/delete) and

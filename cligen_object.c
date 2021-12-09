@@ -111,6 +111,8 @@ co_stats_one(cg_obj   *co,
 	sz += co_callback_size(cc);
     if (co->co_cvec)
 	sz += cvec_size(co->co_cvec);
+    if (co->co_filter)
+	sz += cvec_size(co->co_filter);
 #ifdef CLIGEN_HELPSTRING_VEC
     if (co->co_helpvec)
 	sz += cvec_size(co->co_helpvec);
@@ -629,6 +631,8 @@ co_copy(cg_obj  *co,
 	goto done;
     if (co->co_cvec)
 	con->co_cvec = cvec_dup(co->co_cvec);
+    if (co->co_filter)
+	con->co_filter = cvec_dup(co->co_filter);
     if ((pt = co_pt_get(co)) != NULL){
 	if ((ptn = pt_dup(pt, con, flags)) == NULL) /* sets a new pt under con */
 	    goto done;
@@ -733,6 +737,8 @@ co_copy1(cg_obj  *co,
 	goto done;
     if (co->co_cvec)
 	con->co_cvec = cvec_dup(co->co_cvec);
+    if (co->co_filter)
+	con->co_filter = cvec_dup(co->co_filter);
     if ((pt = co_pt_get(co)) != NULL){
 	/* Here this function differs from co_copy */
 	if (recursive){
@@ -985,6 +991,8 @@ co_free(cg_obj *co,
 	free(co->co_value);
     if (co->co_cvec)
 	cvec_free(co->co_cvec);
+    if (co->co_filter)
+	cvec_free(co->co_filter);
     if (co->co_callbacks)
 	co_callbacks_free(&co->co_callbacks);
     if (co->co_type == CO_VARIABLE){

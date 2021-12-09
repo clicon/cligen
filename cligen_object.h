@@ -155,6 +155,11 @@ struct cg_obj{
                                        *     @add:<label> and @remove:<label>
 				       * which control tree ref macro expansion
 				       */
+    cvec               *co_filter;    /* List of labels that are filtered (should be removed)
+				       * In this node and all its descendant
+				       * Alt: re-use co_cvec for this.
+				       * See also reftree_filter for global filters
+				       */ 
 #ifdef CLIGEN_HELPSTRING_VEC
     cvec               *co_helpvec;   /* Vector of CLIgen helptexts */
 #else
