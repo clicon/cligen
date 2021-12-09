@@ -107,12 +107,6 @@ struct cligen_handle{
     char        ch_delimiter;    /* Delimiter between objects */
     int         ch_preference_mode;   /* Relaxed variable match preference handling */
     cvec       *ch_reftree_filter; /* Vector of reftree(@tree) labels that are disabled by default */
-    int         ch_reftree_copy; /* 0, shallow: Unfold a single parse-tree level when referencing a 
-                                       tree, recursion not possible ?
-				    1, deep: Unfold a complete sub-tree when referencing a tree (default)
-				    Can be reset to 0 by -C option in some cligen apps
-				    Clixon sets it to 0
-				 */
     int         ch_ignore_case;  /* Set if ignore case of commands, eg aA = aa */
     int         ch_expand_first; /* Set if expand arg 1 of callback cvv */
     int         ch_exclude_keys; /* Set if exclude keywords from callback cvv */

@@ -7,6 +7,7 @@ Planned: January, 2022
 
 * Added reftree @add/@remove support shallow treeref copy.
   * That is, you can use @tree, @remove foo even when reftree_copy is "SHALLOW"
+  * Removed "deep" treeref copy
 * Added proper error message with line# when encountering errors in the CLIgen YACC parsing and its sub-routines, not only for LEX errors.
 
 ### Corrected Bugs

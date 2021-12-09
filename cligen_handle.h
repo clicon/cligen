@@ -57,13 +57,6 @@
  */
 #define CLIGEN_TABMODE_STEPS    0x04
 
-/* Parameter to cligen_reftree_copy_get() and _set()
- * shallow: Unfold a single parse-tree level when referencing a tree, recursion not possible ?
- * deep: Unfold a complete sub-tree when referencing a tree (default)
- */
-#define CLIGEN_REFTREE_COPY_SHALLOW 0 
-#define CLIGEN_REFTREE_COPY_DEEP    1 
-
 /*
  * Types
  */
@@ -170,9 +163,6 @@ int cligen_preference_mode_set(cligen_handle h, int flag);
 
 cvec *cligen_reftree_filter_get(cligen_handle h);
 int   cligen_reftree_filter_set(cligen_handle h, cvec *cvv);
-
-int   cligen_reftree_copy_set(cligen_handle h, int status);
-int   cligen_reftree_copy_get(cligen_handle h);
 
 int   cligen_caseignore_get(cligen_handle h);
 int   cligen_caseignore_set(cligen_handle h, int ignorecase);

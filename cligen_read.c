@@ -840,27 +840,22 @@ cligen_eval(cligen_handle h,
 	cvec_exclude_keys(cvv1) < 0)
 	goto done;
     cligen_eval_wrap_fn_get(h, &wrapfn, &wraparg);
-    if (cligen_reftree_copy_get(h) == CLIGEN_REFTREE_COPY_DEEP){
-	callbacks = co->co_callbacks;
-    }
-    else {
-	if ((callbacks = co->co_callbacks) == NULL)
-	    callbacks = callbacks0;
-	else if (callbacks0){
-	    callbacks->cc_fn_vec = callbacks0->cc_fn_vec;
-	    /* Append original parameters to end of call 
-	     * For example, 
-	     * Before call:
-	     * 0 : "/example:x"
-	     * After call:
-	     * 0 : "/example:x"
-	     * 1 : "candidate" # cc0:s parameter copied and appended to cc
-	     */
-	    if (callbacks0->cc_cvec){
-		cg_var *cv = NULL;
-		while ((cv = cvec_each(callbacks0->cc_cvec, cv)) != NULL)
-		    cvec_append_var(callbacks->cc_cvec, cv);
-	    }
+    if ((callbacks = co->co_callbacks) == NULL)
+	callbacks = callbacks0;
+    else if (callbacks0){
+	callbacks->cc_fn_vec = callbacks0->cc_fn_vec;
+	/* Append original parameters to end of call 
+	 * For example, 
+	 * Before call:
+	 * 0 : "/example:x"
+	 * After call:
+	 * 0 : "/example:x"
+	 * 1 : "candidate" # cc0:s parameter copied and appended to cc
+	 */
+	if (callbacks0->cc_cvec){
+	    cg_var *cv = NULL;
+	    while ((cv = cvec_each(callbacks0->cc_cvec, cv)) != NULL)
+		cvec_append_var(callbacks->cc_cvec, cv);
 	}
     }
     /* Traverse callbacks */
