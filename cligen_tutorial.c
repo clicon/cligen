@@ -340,9 +340,6 @@ main(int   argc,
                 exit(1);
             }
             break;
-	case 'C': /* Dont copy reftree mode */
-	    cligen_reftree_copy_set(h, CLIGEN_REFTREE_COPY_SHALLOW);
-	    break;
         default:
             usage(argv0);
             break;

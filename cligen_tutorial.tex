@@ -7,7 +7,7 @@
 %
 % Title
 %
-\title {CLIgen Manual\\ {\small CLIgen version 5.2}}
+\title {CLIgen Manual\\ {\small CLIgen version 5.4}}
 
 \author{Olof Hagsand}
 %
@@ -398,11 +398,6 @@ data (x y) is the same but the operation(add/del) is different.
 In the example, the 'treename' variable is used to define a new CLIgen
 tree. It is possible using the C-API to change this keyword to
 something else by using the API function {\tt cligen\_treename\_keyword}.
-
-Note, recursive tree references are not possible if {\tt
-  reftree\_copy} is $0$, which is the case for Clixon and many uses of
-CLIgen. However, {\tt reftree\_copy} is $1$ by default, which means
-recursive tree-refs work in plain CLIgen.
 
 \subsubsection{Filtering trees}
 

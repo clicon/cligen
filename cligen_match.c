@@ -835,7 +835,7 @@ match_pattern_sets(cligen_handle h,
  *                       all possible options. Match also hidden options.
  *                       If not set, return all possible matches, do not return hidden options 
  * @param[out] cvv       cligen variable vector containing vars/values pair for completion
- * @param[out] callbacks Callback structure of expanded treeref (only if reftree_copy is 1)
+ * @param[out] callbacks Callback structure of expanded treeref
  * @param[out] mrp       CLIgen match result struct encapsulating several return parameters
  * @retval    -1         Error
  * @retval     0         OK

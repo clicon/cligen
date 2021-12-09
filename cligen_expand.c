@@ -221,75 +221,6 @@ transform_var_to_cmd(cg_obj *co,
     return 0;
 }
 
-/*! Recursively copy callback structure to all terminal nodes in the parse-tree.
- *
- * Problem is that the argument is modified according to reference rule
- * @param[in]  pt   Parse-tree
- * @param[in]  cc0  This is the parameter (calling) callback. eg fn in @sub,fn().
- *
- * The function installs the calling callback in all executable non-terminal nodes.
- * That is, it only install callbacks in non-terminal with NULL child which is 
- * where a ';' is in the syntax, eg:
- *	   a ;{} # Here a is executable
- *	   b {}  # But b is not
- * Somewhat strange semantics though:
- * - Always replace (or add if empty) original callback in co0
- * - Use local argument-list _unless_ there is none, then use callback list from cc0
- * The effect of this is that the generated trees argument are first (eg api-path)
- * and the ones in the @ref call are appended.
- */
-static int
-pt_callback_reference(parse_tree  *pt, 
-		      cg_callback *cc0)
-{
-    int          i;
-    cg_obj      *co;
-    int          retval = -1;
-    cg_callback *cc;
-    cg_var      *cv;
-
-    for (i=0; i<pt_len_get(pt); i++){    
-	if ((co = pt_vec_i_get(pt, i)) == NULL ||
-	    co->co_type == CO_EMPTY)
-	    continue;
-
-	/* Filter out non-executable non-terminals. */
-	if (co_terminal(co)){
-	    /* Copy the callback from top */
-	    if ((cc = co->co_callbacks) == NULL){
-		if (co_callback_copy(cc0, &co->co_callbacks) < 0)
-		    return -1;
-	    }
-	    else {
-		cc->cc_fn_vec = cc0->cc_fn_vec;
-		if (cc0->cc_fn_str){ /* XXX check w strcmp that it is equal */
-		    if (cc->cc_fn_str)
-			free (cc->cc_fn_str);
-		    cc->cc_fn_str = strdup(cc0->cc_fn_str);
-		}
-		/* Append original parameters to end of call 
-		 * For example, 
-		 * Before call:
-		 * 0 : "/example:x"
-		 * After call:
-		 * 0 : "/example:x"
-		 * 1 : "candidate" # cc0:s parameter copied and appended to cc
-		 */
-		if (cc0->cc_cvec){
-		    cv = NULL;
-		    while ((cv = cvec_each(cc0->cc_cvec, cv)) != NULL)
-			cvec_append_var(cc->cc_cvec, cv);
-		}
-	    }
-	}
-	if (pt_callback_reference(co_pt_get(co), cc0) < 0)
-	    goto done;
-    }
-    retval = 0;
-  done:
-    return retval;
-}
-
 /*! Expand treeref one level: make a copy of cot into conp
  * 
  * @param[in]  cot      Original object
@@ -385,47 +316,6 @@ pt_expand_treeref_one(cg_obj  *cot,
  done:
     return retval;
 }
-/*! Recursively remove any parse-tree objects labelled by filter
- *
- * @param[in]  pt       CLIgen parse-tree
- * @param[in]  filter   If statement has this flag, filter it
- * @retval     0        OK
- * @retval    -1        Error
- * @see cligen_reftree_filter_set
- */
-static int
-pt_recurse_filter(parse_tree  *pt,
-		  const char *filter)
-{
-    int         retval = -1;
-    parse_tree *ptc;
-    cg_obj     *co;
-    int         i;
-    cg_var     *cv = NULL;
-    
-    /* Iterate over all objects under pt (note can be removed in loop) */
-    for (i=0; i<pt_len_get(pt); i++){
-	if ((co = pt_vec_i_get(pt, i)) == NULL)
-	    continue;
-	/* Check if filter matches this object, if so remove it */
-	cv = NULL;
-	while ((cv = cvec_each(co->co_cvec, cv)) != NULL)
-	    if (strcmp(filter, cv_name_get(cv)) == 0) /* match */
-		break;
-	if (cv){ /* match -> remove */
-	    if (pt_vec_i_delete(pt, i, 1) < 0)
-		goto done;
-	    i--; /* co is removed, get next in place */
-	    continue;	    
-	}
-	if ((ptc = co_pt_get(co)) != NULL)
-	    if (pt_recurse_filter(ptc, filter) < 0)
-		goto done;
-    }
-    retval = 0;
- done:
-    return retval;
-}
 
 /* Find filter labels defined in "filter:-<label>" or ""filter:+<label> local flags,
  * add/remove to filter cvv list
@@ -463,85 +353,6 @@ co_find_label_filters(cligen_handle h,
     }
     retval = 0;
  done:
-    return retval;
-}
-
-/*! Make a pt expand of single co using deep copy
- *
- * @param[in]     h      Handle needed to resolve tree-references (\@tree)
- * @param[in]     co     Reference object, @tree
- * @param[in]     ptref  Referenced by pt0 orig
- * @param[in,out] pt0    parse-tree to expand. In: original, out: expanded
- * @retval        0      OK
- * @retval       -1      Error
- */
-static int 
-co_expand_treeref_copy_deep(cligen_handle h,
-			    cg_obj       *co,
-			    parse_tree   *ptref,
-			    parse_tree   *pt0)
-{
-    int         retval = -1;
-    cg_obj     *coparent;    
-    parse_tree *pt1ref = NULL;  /* tree referenced by pt0 resolved */
-    cvec       *cvv0;
-    cvec       *cvv = NULL;
-    cg_var     *cv;
-    int         i;
-    char       *filter;
-    cg_obj     *cot;            /* treeref object */
-    
-    /* make a copy of ptref -> pt1ref */
-    coparent = co_up(co);
-    /* From ptref -> pt1ref 
-     * All co in pt1ref point to pt1ref in their co_treeref_orig pointer
-     */
-    if ((pt1ref = pt_dup(ptref, coparent, CO_COPY_FLAGS_TREEREF)) == NULL) 
-	goto done;
-    /* Recursively install callback all through the referenced tree */
-    if (co->co_callbacks && 
-	pt_callback_reference(pt1ref, co->co_callbacks) < 0)
-	goto done;
-    /* Filter label code
-     * Prepare new cvv filter add/subtract to cvvfilter depending on co_cvec */
-    if ((cvv0 = cligen_reftree_filter_get(h)) != NULL){
-	if ((cvv = cvec_dup(cvv0)) == NULL)
-	    goto done;
-    }
-    else
-	if ((cvv = cvec_new(0)) == NULL)
-	    goto done;
-    if (co_find_label_filters(h, co, cvv) < 0)
-	goto done;
-    /* Iterate over the names of cvv and filter out those on pt1ref 
-     * Then traverse pt1ref and remove all objects labelled with "filter"
-     */
-    cv = NULL;
-    while ((cv = cvec_each(cvv, cv)) != NULL){
-	if ((filter = cv_name_get(cv)) != NULL){
-	    if (pt_recurse_filter(pt1ref, filter) < 0)
-		goto done;
-	}
-    }
-    /* Copy top-levels into original parse-tree */
-    for (i=0; i<pt_len_get(pt1ref); i++)
-	if ((cot = pt_vec_i_get(pt1ref, i)) != NULL){
-	    co_flags_set(cot, CO_FLAGS_TREEREF); /* Mark expanded refd tree */
-	    cot->co_ref = co; /* Backpointer so we know where this treeref is from */
-	    if (co_insert(pt0, cot) == NULL) 
-		goto done;
-	    if (pt_vec_i_clear(pt1ref, i) < 0)
-		goto done;
-	}
-    /* Due to loop above, all co in vec should be moved, it should
-       be safe to remove */
-    co_flags_set(co, CO_FLAGS_REFDONE);
-    retval = 0;
- done:
-    if (pt1ref)
-	pt_free(pt1ref, 1);
-    if (cvv)
-	cvec_free(cvv);
     return retval;
 }
 
@@ -654,17 +465,9 @@ pt_expand_treeref(cligen_handle h,
 		ptref = co_pt_get(cow);
 	    else
 		ptref = cligen_ph_parsetree_get(ph);	    
-	    /* One level copy or deep copy */
-	    if (cligen_reftree_copy_get(h) == CLIGEN_REFTREE_COPY_SHALLOW){
-		if (co_expand_treeref_copy_shallow(h, co, ptref, pt0) < 0)
-		    goto done;
-		goto again; 
-	    }
-	    else {  /* Deep copy: cligen_reftree_copy_get == CLIGEN_REFTREE_COPY_DEEP */
-		if (co_expand_treeref_copy_deep(h, co, ptref, pt0) < 0)
-		    goto done;
-		goto again; 
-	    } /* cligen_reftree_copy_get */
+	    if (co_expand_treeref_copy_shallow(h, co, ptref, pt0) < 0)
+		goto done;
+	    goto again; 
 	}
     }
     retval = 0;
@@ -1002,9 +805,7 @@ pt_expand_treeref_cleanup(cligen_handle h,
     int     retval = -1;
     int     i;
     cg_obj *co;
-    int     recurse;
 
-    recurse = (cligen_reftree_copy_get(h) == CLIGEN_REFTREE_COPY_DEEP);
     for (i=0; i<pt_len_get(pt); i++){
       again:
 	if ((co = pt_vec_i_get(pt, i)) != NULL){
@@ -1012,7 +813,7 @@ pt_expand_treeref_cleanup(cligen_handle h,
 		co_flags_reset(co, CO_FLAGS_REFDONE);
 	    }
 	    if (co_flags_get(co, CO_FLAGS_TREEREF)){
-		if (pt_vec_i_delete(pt, i, recurse) < 0)
+		if (pt_vec_i_delete(pt, i, 0) < 0)
 		    goto done;
 		if (i < pt_len_get(pt))
 		    goto again;

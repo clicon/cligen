@@ -32,13 +32,7 @@ newtest "$cligen_tutorial -f $fspec" # To bind the cligen_wp_* functions
 
 function testrun()
 {
-    copies=$1
-
-    if $copies; then
-	options="-q -f $fspec" # default is full copies
-    else
-	options="-q -f $fspec -C" # turn limited copies on
-    fi
+    options="-q -f $fspec" # default is full copies
 
     newtest "cligen show top tree"
     expectpart "$(echo "show" | $cligen_tutorial ${options} 2>&1)" 0 "a;{" "b <v>;{" "d;" "c;"
@@ -95,11 +89,8 @@ EOF
     expectpart "$(cat $fin | $cligen_tutorial ${options} 2>&1)" 0 "a;{" "b <v>;{" "d;" "c;"
 }
 
-newtest "Run mode tests with full treeref copies (default)"
-testrun true
-
-newtest "Run mode tests with limited treeref copies"
-testrun false
+newtest "Run mode tests"
+testrun
 
 newtest "endtest"
 endtest

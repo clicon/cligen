@@ -155,7 +155,6 @@ cligen_init(void)
     ch->ch_magic = CLIGEN_MAGIC;
     ch->ch_tabmode = 0x0; /* see CLIGEN_TABMODE_* */
     ch->ch_delimiter = ' ';
-    ch->ch_reftree_copy = CLIGEN_REFTREE_COPY_DEEP; /* By default make full reftree copies */
     h = (cligen_handle)ch;
     cligen_prompt_set(h, CLIGEN_PROMPT_DEFAULT);
     /* Only if stdin and stdout refers to a terminal make win size check */
@@ -1050,45 +1049,14 @@ cligen_reftree_filter_get(cligen_handle h)
  */
 int
 cligen_reftree_filter_set(cligen_handle h,
-			  cvec         *cvv)
+                         cvec         *cvv)
 {
     struct cligen_handle *ch = handle(h);
     
     if (ch->ch_reftree_filter)
-	cvec_free(ch->ch_reftree_filter);
+       cvec_free(ch->ch_reftree_filter);
     ch->ch_reftree_filter = cvv;
     return 0;
-}
-
-/*! Set copy status of tree references: (0) shallow or (1) deep copy
- *
- * Set to 1 per default, reset to 0 using -C in cligen_file/cligen_tutorial
- * 
- * @param[in] h       CLIgen handle
- * @param[in] status
- */
-int
-cligen_reftree_copy_set(cligen_handle h, 
-			int           status)
-{
-    struct cligen_handle *ch = handle(h);
-
-    ch->ch_reftree_copy = status;
-    return 0;
-}
-
-/*! Get copy status of tree references: (0) shallow or (1) deepcopy
- *
- * @param[in] h       CLIgen handle
- * @retval    0       Minimize copying when treeref expand - cannot tree recurse
- * @retval    1       Copy whole tree reference. - uses more memory  (default)
- */
-int
-cligen_reftree_copy_get(cligen_handle h)
-{
-    struct cligen_handle *ch = handle(h);
-
-    return ch->ch_reftree_copy;
 }
 
 /*! Get status of string case compare 
