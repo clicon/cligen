@@ -49,7 +49,6 @@
  * xx;
  * yy, local; # Filter this
  */
-#define CLIGEN_REF_ADD "@add:"
 #define CLIGEN_REF_REMOVE "@remove:"
 
 /*

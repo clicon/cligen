@@ -832,7 +832,7 @@ match_pattern_sets(cligen_handle h,
  * @param[in]  cvr       Rest variant,  eg remaining string in each step
  * @param[in]  pt        Vector of commands (array of cligen object pointers (cg_obj)
  * @param[in]  best      If set, only return best match (for command evaluation) instead of 
- *                       all possible options. Match also hidden options.
+ *                       all possible options. Match also hidden options. Only from match_pattern_exact
  *                       If not set, return all possible matches, do not return hidden options 
  * @param[out] cvv       cligen variable vector containing vars/values pair for completion
  * @param[out] callbacks Callback structure of expanded treeref
@@ -857,13 +857,13 @@ match_pattern(cligen_handle h,
     match_result *mr = NULL;
     char         *r;
     cg_obj       *co;
-    cg_obj       *co1 = NULL;
-    parse_tree   *ptc;
     int           i;
     int           allvars = 1;
     char         *string1;
     cg_obj       *co_match;
-
+    cg_obj       *co1 = NULL;
+    parse_tree   *ptc;
+    
     if (cvt == NULL || cvr == NULL || mrp == NULL){
 	errno = EINVAL;
 	goto done;
@@ -949,22 +949,31 @@ match_pattern(cligen_handle h,
 	/*
 	 * Special case: if a NULL child is not found, then set result == GC_NOMATCH
 	 */
-	if ((ptc = co_pt_get(co1)) != NULL
-	    && best
-	    ){
-	    for (i=0; i<pt_len_get(ptc); i++){
-		if ((co = pt_vec_i_get(ptc, i)) == NULL ||
+	if ((ptc = co_pt_get(co1)) != NULL && best){
+	    parse_tree   *ptn;
+	    cvec   *cvv;
+	    if ((ptn = pt_new()) == NULL)
+		goto done;
+	    if ((cvv = cvec_new(0)) == NULL)
+		goto done;
+	    if (pt_expand1(h, co1, ptc, cvv, 1, 0, ptn) < 0)
+		goto done;
+	    for (i=0; i<pt_len_get(ptn); i++){
+		if ((co = pt_vec_i_get(ptn, i)) == NULL ||
 		    co->co_type == CO_EMPTY)
 		    break; /* If we match here it is OK, unless no match */
 	    }
-	    if (pt_len_get(ptc) != 0 &&
-		i == pt_len_get(ptc)){
+	    if (pt_len_get(ptn) != 0 && 
+		i == pt_len_get(ptn)){
 		co1 = NULL;
 		if ((r = strdup("Incomplete command")) == NULL)
 		    goto done;
 		mr_reason_set(mr, r);
 		mr_pt_reset(mr);
 	    }
+	    pt_expand1_cleanup(h, ptn);
+	    pt_free(ptn, 0);
+	    cvec_free(cvv);
 	}
 	break;
     default:

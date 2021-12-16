@@ -106,7 +106,6 @@ struct cligen_handle{
     int         ch_regex_xsd;    /* 0: POSIX / REGEX(3); 1: LIBXML2 XSD */
     char        ch_delimiter;    /* Delimiter between objects */
     int         ch_preference_mode;   /* Relaxed variable match preference handling */
-    cvec       *ch_reftree_filter; /* Vector of reftree(@tree) labels that are disabled by default */
     int         ch_ignore_case;  /* Set if ignore case of commands, eg aA = aa */
     int         ch_expand_first; /* Set if expand arg 1 of callback cvv */
     int         ch_exclude_keys; /* Set if exclude keywords from callback cvv */

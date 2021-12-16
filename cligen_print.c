@@ -158,8 +158,8 @@ co2cbuf(cbuf   *cb,
     cg_callback *cc;
     parse_tree  *pt;
     cg_obj      *co1;
-#ifdef CLIGEN_HELPSTRING_VEC
     cg_var      *cv;
+#ifdef CLIGEN_HELPSTRING_VEC
     int          i;
 #endif
 
@@ -209,6 +209,9 @@ co2cbuf(cbuf   *cb,
 #endif /* CLIGEN_HELPSTRING_VEC */
 	if (co_flags_get(co, CO_FLAGS_HIDE))
 	    cprintf(cb, ", hide");
+	cv = NULL;
+	while ((cv = cvec_each(co->co_cvec, cv)) != NULL) 
+	    cprintf(cb, ", %s", cv_name_get(cv));
 	if ((!co_flags_get(co, CO_FLAGS_HIDE)) && (co_flags_get(co, CO_FLAGS_HIDE_DATABASE)))
 		cprintf(cb, ", hide-database");
 	if ((co_flags_get(co, CO_FLAGS_HIDE)) && (co_flags_get(co, CO_FLAGS_HIDE_DATABASE)))
