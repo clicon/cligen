@@ -18,7 +18,7 @@
 
 % If you want a logo
 % \lhead{\includegraphics[height=9mm]{../../doc/logga_crop.png}}
-\date{Apr, 2021}
+\date{December, 2021}
 \maketitle
 \setcounter{tocdepth}{2}
 \tableofcontents
@@ -421,6 +421,22 @@ Then this tree can be referenced as: {\tt @T, @remove:local;} in which case the 
 \end{verbatim}
 
 It is possible to pre-set a set of labels that are filtered by default using {\tt cligen\_reftree\_filter\_set}, in which you can enable a label in a reference using eg {\tt @T, @add:local;}.
+
+\subsubsection{Direct sub-expansion}
+
+If a treeref statement is placed directly on the top level of the
+expanded tree, it will also be expanded.
+\begin{verbatim}
+  treename="main";
+  add @sub;
+  treename="sub";
+  @extra
+  x;
+  treename="extra";
+  y;  
+\end{verbatim}
+
+which means that both {\tt add x} and {\tt add y} are valid statements.
 
 \subsubsection{Tree workpoints}
 

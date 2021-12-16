@@ -161,9 +161,6 @@ int  cligen_delimiter_set(cligen_handle h, char delimiter);
 int cligen_preference_mode(cligen_handle h);
 int cligen_preference_mode_set(cligen_handle h, int flag);
 
-cvec *cligen_reftree_filter_get(cligen_handle h);
-int   cligen_reftree_filter_set(cligen_handle h, cvec *cvv);
-
 int   cligen_caseignore_get(cligen_handle h);
 int   cligen_caseignore_set(cligen_handle h, int ignorecase);
 

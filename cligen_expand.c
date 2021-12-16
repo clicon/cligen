@@ -317,8 +317,8 @@ pt_expand_treeref_one(cg_obj  *cot,
     return retval;
 }
 
-/* Find filter labels defined in "filter:-<label>" or ""filter:+<label> local flags,
- * add/remove to filter cvv list
+/*! Find filter labels defined as "filter:@remove:<label>": and return in cvv  
+ * @param[out]  cvv  Cligen variable vector with filters as names
  */
 static int
 co_find_label_filters(cligen_handle h,
@@ -342,12 +342,6 @@ co_find_label_filters(cligen_handle h,
 			goto done;
 		    cv_name_set(cv1, filter);
 		}
-	    }
-	    else if (strncmp(CLIGEN_REF_ADD, name, strlen(CLIGEN_REF_ADD)) == 0){
-		filter = name+strlen(CLIGEN_REF_ADD);
-		/* If filter in cvv, remove it (set to NULL) */
-		if ((cv1 = cvec_find(cvv, filter)) != NULL)
-		    cv_name_set(cv1, NULL);
 	    }
 	}
     }
@@ -373,7 +367,6 @@ co_expand_treeref_copy_shallow(cligen_handle h,
 {
     int     retval = -1;
     cg_obj *coparent;
-    cvec   *cvv0;
     cvec   *cvv = NULL;
     int     i;
     cg_obj *cot;            /* treeref object */
@@ -383,13 +376,9 @@ co_expand_treeref_copy_shallow(cligen_handle h,
     coparent = co_up(co);
     /* Filter label code
      * Prepare new cvv filter add/subtract to cvvfilter depending on co_cvec */
-    if ((cvv0 = cligen_reftree_filter_get(h)) != NULL){
-	if ((cvv = cvec_dup(cvv0)) == NULL)
-	    goto done;
-    }
-    else
-	if ((cvv = cvec_new(0)) == NULL)
-	    goto done;
+    if ((cvv = cvec_new(0)) == NULL)
+	goto done;
+    /* Find filter labels defined as "filter:@remove:<label>": and return in cvv  */
     if (co_find_label_filters(h, co, cvv) < 0)
 	goto done;
     /* Copy top-levels into original parse-tree */
@@ -397,8 +386,7 @@ co_expand_treeref_copy_shallow(cligen_handle h,
 	if ((cot = pt_vec_i_get(ptref, i)) == NULL)
 	    continue;
 	/* caveats for tree expansion */
-	if (cot->co_type == CO_EMPTY ||
-	    cot->co_type == CO_REFERENCE)
+	if (cot->co_type == CO_EMPTY)
 	    continue;
 	if (pt_expand_treeref_one(cot, coparent, &con) < 0)
 	    goto done;
@@ -664,11 +652,12 @@ co_isfilter(cvec *cvv_filter,
 	    char *label)
 {
     cg_var *cv = NULL;
+    char   *name;
     
     /* use filter cache? 
      */
     while ((cv = cvec_each(cvv_filter, cv)) != NULL){
-	if (strcmp(cv_name_get(cv), label) == 0)
+	if ((name = cv_name_get(cv)) != NULL && strcmp(cv_name_get(cv), label) == 0)
 	    return 1;
     }
     return 0;
