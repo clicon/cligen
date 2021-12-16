@@ -1174,12 +1174,18 @@ co_value_set(cg_obj *co,
     return 0;
 }
 
-/*! co is a terminal command, and therefore should be printed with a ';' 
+/*! co is a "terminal" command
  * 
- * It contains a child that is of type "EMPTY".
+ * It contains a child that is of type "EMPTY" OR there are no children.
+ * Parsingwise, it means it is printed with a ';' 
+ * @param[in]  co   CLIgen object
+ * @param[out] cot  CLIgen object of empty statement, if any
+ * @retval     0    No, it is not a terminal command
+ * @retval     1    Yes, is a terminal command, cot may be returned if exists
  */
 int
-co_terminal(cg_obj *co)
+co_terminal(cg_obj *co,
+	    cg_obj **cot)
 {
     parse_tree *pt;
     cg_obj     *coc;
@@ -1191,8 +1197,11 @@ co_terminal(cg_obj *co)
 	return 1;
     coc = pt_vec_i_get(pt, 0);
     if (coc == NULL ||
-	coc->co_type == CO_EMPTY)
+	coc->co_type == CO_EMPTY){
+	if (cot)
+	    *cot = coc;
 	return 1;
+    }
     return 0;
 }
 

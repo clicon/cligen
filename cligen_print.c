@@ -220,7 +220,7 @@ co2cbuf(cbuf   *cb,
 	    co_callback2cbuf(cb, cc);
 	}
     }
-    if (co_terminal(co))
+    if (co_terminal(co, NULL))
 	cprintf(cb, ";");
     pt = co_pt_get(co);
     if (pt_len_get(pt) > 1){
@@ -290,9 +290,9 @@ pt2cbuf(cbuf       *cb,
  * @see co_print which prints an individual CLIgen syntax object, not vector
  */
 int 
-pt_print(FILE       *f,
-	 parse_tree *pt,
-	 int         brief)
+pt_print1(FILE       *f,
+	  parse_tree *pt,
+	  int         brief)
 {
     int   retval = -1;
     cbuf *cb = NULL;
@@ -311,6 +311,13 @@ pt_print(FILE       *f,
     return retval;
 }
 
+int 
+pt_print(FILE       *f,
+	 parse_tree *pt)
+{
+    return pt_print1(f, pt, 1);
+}
+
 /*! Print CLIgen parse-tree object to file, brief or detailed.
  *
  * @param[in] f      Output file
@@ -320,9 +327,9 @@ pt_print(FILE       *f,
  * @see pt_print  which prints a vector of cligen objects "parse-tree"
  */
 int 
-co_print(FILE    *f,
-	 cg_obj  *co,
-	 int      brief)
+co_print1(FILE    *f,
+	  cg_obj  *co,
+	  int      brief)
 {
     int   retval = -1;
     cbuf *cb = NULL;
@@ -339,6 +346,13 @@ co_print(FILE    *f,
     if (cb)
 	cbuf_free(cb);
     return retval;
+}
+
+int 
+co_print(FILE    *f,
+	 cg_obj  *co)
+{
+    return co_print1(f, co, 1);
 }
 
 static int co_dump1(FILE *f, cg_obj *co, int indent);
@@ -435,7 +449,7 @@ cligen_print_trees(FILE         *f,
     while ((ph = cligen_ph_each(h, ph)) != NULL) {
 	fprintf(stderr, "%s:\n", cligen_ph_name_get(ph));
 	pt = cligen_ph_parsetree_get(ph);
-	if (!brief && pt_print(f, pt, brief) < 0)
+	if (!brief && pt_print1(f, pt, brief) < 0)
 	    goto done;
     }
     retval = 0;

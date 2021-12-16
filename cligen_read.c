@@ -656,7 +656,7 @@ cliread_parse(cligen_handle  h,
     }
     if (cligen_logsyntax(h) > 0){
 	fprintf(stderr, "%s:\n", __FUNCTION__);
-	pt_print(stderr, pt, 0);
+	pt_print1(stderr, pt, 0);
     }
     cli_trim(&string, cligen_comment(h));
     /* Tokenize the string and transform it into two CLIgen vectors: tokens and rests */

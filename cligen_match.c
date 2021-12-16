@@ -669,7 +669,7 @@ match_pattern_sets(cligen_handle h,
 #ifdef _DEBUG_SETS
     fprintf(stderr, "%s %*s level: %d token:%s\npt:\n", __FUNCTION__, level*3,"",
 		level, strlen(token)?token:"\"\"");
-    pt_print(stderr, pt, 1);
+    pt_print1(stderr, pt, 1);
 #endif
     /* Match the current token */
     if (match_pattern_sets_local(h, cvt, cvr, pt, level, best, 
@@ -950,19 +950,31 @@ match_pattern(cligen_handle h,
 	 * Special case: if a NULL child is not found, then set result == GC_NOMATCH
 	 */
 	if ((ptc = co_pt_get(co1)) != NULL && best){
-	    for (i=0; i<pt_len_get(ptc); i++){
-		if ((co = pt_vec_i_get(ptc, i)) == NULL ||
+	    parse_tree *ptn;
+	    cvec       *cvv;
+
+	    if ((ptn = pt_new()) == NULL)
+		goto done;
+	    if ((cvv = cvec_new(0)) == NULL)
+		goto done;
+	    if (pt_expand1(h, co1, ptc, cvv, 1, 0, ptn) < 0)
+		goto done;
+	    for (i=0; i<pt_len_get(ptn); i++){
+		if ((co = pt_vec_i_get(ptn, i)) == NULL ||
 		    co->co_type == CO_EMPTY)
 		    break; /* If we match here it is OK, unless no match */
 	    }
-	    if (pt_len_get(ptc) != 0 && 
-		i == pt_len_get(ptc)){
+	    if (pt_len_get(ptn)==0 ||
+		(pt_len_get(ptn) != 0 && i == pt_len_get(ptn))){
 		co1 = NULL;
 		if ((r = strdup("Incomplete command")) == NULL)
 		    goto done;
 		mr_reason_set(mr, r);
 		mr_pt_reset(mr);
 	    }
+	    pt_expand1_cleanup(h, ptn);
+	    pt_free(ptn, 0);
+	    cvec_free(cvv);
 	}
 	break;
     default:
