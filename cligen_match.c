@@ -950,30 +950,19 @@ match_pattern(cligen_handle h,
 	 * Special case: if a NULL child is not found, then set result == GC_NOMATCH
 	 */
 	if ((ptc = co_pt_get(co1)) != NULL && best){
-	    parse_tree   *ptn;
-	    cvec   *cvv;
-	    if ((ptn = pt_new()) == NULL)
-		goto done;
-	    if ((cvv = cvec_new(0)) == NULL)
-		goto done;
-	    if (pt_expand1(h, co1, ptc, cvv, 1, 0, ptn) < 0)
-		goto done;
-	    for (i=0; i<pt_len_get(ptn); i++){
-		if ((co = pt_vec_i_get(ptn, i)) == NULL ||
+	    for (i=0; i<pt_len_get(ptc); i++){
+		if ((co = pt_vec_i_get(ptc, i)) == NULL ||
 		    co->co_type == CO_EMPTY)
 		    break; /* If we match here it is OK, unless no match */
 	    }
-	    if (pt_len_get(ptn) != 0 && 
-		i == pt_len_get(ptn)){
+	    if (pt_len_get(ptc) != 0 && 
+		i == pt_len_get(ptc)){
 		co1 = NULL;
 		if ((r = strdup("Incomplete command")) == NULL)
 		    goto done;
 		mr_reason_set(mr, r);
 		mr_pt_reset(mr);
 	    }
-	    pt_expand1_cleanup(h, ptn);
-	    pt_free(ptn, 0);
-	    cvec_free(cvv);
 	}
 	break;
     default:
