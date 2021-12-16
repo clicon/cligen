@@ -231,7 +231,7 @@ int         co_free(cg_obj *co, int recursive);
 cg_obj     *co_insert(parse_tree *pt, cg_obj *co);
 cg_obj     *co_find_one(parse_tree *pt, char *name);
 int         co_value_set(cg_obj *co, char *str);
-int         co_terminal(cg_obj *co);
+int         co_terminal(cg_obj *co, cg_obj **cot);
 #if defined(__GNUC__) && __GNUC__ >= 3
 char       *cligen_reason(const char *fmt, ...) __attribute__ ((format (printf, 1, 2)));
 #else

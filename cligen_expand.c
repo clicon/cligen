@@ -647,7 +647,7 @@ pt_expand_choice(cg_obj       *co,
  * @retval    0   No, label is not in co_filter, keep it
  * @retval    1   Yes, it is filtered, remove it
  */
-static int
+int
 co_isfilter(cvec *cvv_filter,
 	    char *label)
 {
@@ -769,7 +769,7 @@ pt_expand(cligen_handle h,
      */
     if (cligen_logsyntax(h) > 0){
 	fprintf(stderr, "%s:\n", __FUNCTION__);
-	pt_print(stderr, ptn, 0);
+	pt_print1(stderr, ptn, 0);
     }
  ok:
     retval = 0;

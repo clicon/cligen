@@ -372,7 +372,7 @@ main(int   argc,
 	while ((ph = cligen_ph_each(h, ph)) != NULL) {
 	    pt = cligen_ph_parsetree_get(ph);
 	    printf("Syntax:\n");
-	    pt_print(stdout, pt, 0);
+	    pt_print1(stdout, pt, 0);
 	}
 	fflush(stdout);
     }

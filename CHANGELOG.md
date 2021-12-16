@@ -5,9 +5,18 @@ Planned: January, 2022
 
 ### Changes
 
-* Added reftree @add/@remove support shallow treeref copy.
-  * That is, you can use @tree, @remove foo even when reftree_copy is "SHALLOW"
-  * Removed "deep" treeref copy
+* Changed pt_print() signature to follow other print functions:
+  * pt_print(FILE*, parsetree*)
+* Added reftree @remove support shallow treeref copy.
+  * That is, fixed "shallow copy" so you can state things like: `@tree, @remove foo`
+  * Removed "deep" treeref copy which consumed lots of memory for large trees
+  * Ensured indirect treeref functionality: eg tree referencing another tree:
+    * `@t0 @t1`
+  * Removed @delete:<label> construct
+  * Removed `cligen_reftree_filter_get()/_set()` functions and `@delete:<label>` constructs
+    * You can now only do eg: `ref @tree, @remove:<label>`
+    * I.e., no default remove labels and no `@add:<label>` supported
+
 * Added proper error message with line# when encountering errors in the CLIgen YACC parsing and its sub-routines, not only for LEX errors.
 
 ### Corrected Bugs

@@ -332,7 +332,7 @@ main(int   argc,
     cvec_free(globals);
 
     if (print_syntax){
-	pt_print(stdout, pt, 0);
+	pt_print1(stdout, pt, 0);
 	fflush(stdout);
     }
     if (dump_syntax){

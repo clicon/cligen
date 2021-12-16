@@ -419,7 +419,7 @@ cligen_wp_show(cligen_handle h,
 	    pt = co_pt_get(cow);
 	else
 	    pt = cligen_ph_parsetree_get(ph);
-	pt_print(stderr, pt, 1);
+	pt_print1(stderr, pt, 1);
     }
     return 0;
 }
