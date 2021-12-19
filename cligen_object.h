@@ -120,9 +120,8 @@ typedef struct cg_varspec cg_varspec;
 #define CO_FLAGS_HIDE_DATABASE 0x40 /* Don't show database */
 #define CO_FLAGS_MARK      0x02  /* Only used internally (for recursion avoidance) */
 #define CO_FLAGS_TREEREF   0x04  /* This node is top of expanded sub-tree */
-#define CO_FLAGS_REFDONE   0x08  /* This reference has already been expanded */
-#define CO_FLAGS_OPTION    0x10  /* Generated from optional [] */
-#define CO_FLAGS_MATCH     0x20  /* For sets: avoid selecting same more than once */
+#define CO_FLAGS_OPTION    0x08  /* Generated from optional [] */
+#define CO_FLAGS_MATCH     0x10  /* For sets: avoid selecting same more than once */
 
 /* Flags for pt_copy and co_copy
  */

@@ -618,7 +618,6 @@ co_copy(cg_obj  *co,
     if (flags & CO_COPY_FLAGS_TREEREF)
 	con->co_treeref_orig = co;
     co_flags_reset(con, CO_FLAGS_MARK);
-    co_flags_reset(con, CO_FLAGS_REFDONE);
     /* Replace all pointers */
     co_up_set(con, parent);
     if (co->co_command)
@@ -724,7 +723,6 @@ co_copy1(cg_obj  *co,
     if (flags & CO_COPY_FLAGS_TREEREF)
 	con->co_treeref_orig = co;
     co_flags_reset(con, CO_FLAGS_MARK);
-    co_flags_reset(con, CO_FLAGS_REFDONE);
     /* Replace all pointers */
     co_up_set(con, parent);
     if (co->co_command)

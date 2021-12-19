@@ -166,7 +166,7 @@ cbuf_get(cbuf *cb)
  * @param[in]   cb  Cligen buffer
  * @see cbuf_buflen
  */
-int // size_t
+size_t
 cbuf_len(cbuf *cb)
 {
     return cb->cb_strlen;
@@ -176,7 +176,7 @@ cbuf_len(cbuf *cb)
  * @param[in]   cb  Cligen buffer
  * @see cbuf_len
  */
-int
+size_t
 cbuf_buflen(cbuf *cb)
 {
     return cb->cb_buflen;
