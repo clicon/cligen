@@ -702,12 +702,12 @@ pt_eq(cligen_handle h,
 	return -1;
     if ((pt1n = pt_new()) == NULL)
 	return -1;
-    if (pt_expand1(h, co0p, pt0, NULL,
+    if (pt_expand(h, co0p, pt0, NULL,
 		  1, /* Include hidden commands */
 		  0, /* VARS are not expanded, eg ? <tab> */
 		  pt0n) < 0)      /* expansion */
 	return -1;
-    if (pt_expand1(h, co1p, pt1, NULL,
+    if (pt_expand(h, co1p, pt1, NULL,
 		  1, /* Include hidden commands */
 		  0, /* VARS are not expanded, eg ? <tab> */
 		  pt1n) < 0)      /* expansion */
@@ -739,9 +739,9 @@ pt_eq(cligen_handle h,
 	if ((eq = pt_eq(h, co0, co_pt_get(co0), co1, co_pt_get(co1))) != 0)
 	    break;
     }
-    if (pt0n && pt_expand1_cleanup(h, pt0n) < 0)
+    if (pt0n && pt_expand_cleanup(h, pt0n) < 0)
 	return -1;
-    if (pt1n && pt_expand1_cleanup(h, pt1n) < 0)
+    if (pt1n && pt_expand_cleanup(h, pt1n) < 0)
 	return -1;
     return eq;
 }
