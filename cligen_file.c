@@ -339,7 +339,7 @@ main(int   argc,
 	uint64_t nr = 0;
 	size_t sz = 0;
 	pt_stats(pt, &nr, &sz);
-	fprintf(stdout, "nr:%" PRIu64 ", size:%" PRIu64 "\n", nr, sz);
+	fprintf(stdout, "nr:%" PRIu64 ", size:%zu\n", nr, sz);
 	pt_dump(stdout, pt);
 	fflush(stdout);
     }
