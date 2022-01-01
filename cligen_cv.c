@@ -1342,6 +1342,20 @@ parse_dec64(char    *str,
  * @retval -1             fatal error
  * @retval 0              parse error, reason in reason
  * @retval 1              OK
+ * @code
+ *    int     ret;
+ *    char   *reason = NULL;
+ *    uint8_t val;
+ *
+ *    if ((ret = parse_bool("true", &val, &reason)) < 0){
+ *       err;
+ *    if (ret == 0)
+ *       fprintf(stderr, "parse error: %s\n", reason); 
+ *    else
+ *        fprintf(stdout, "val: %hu\n", val); 
+ *    if (reason)
+ *	 free(reason);
+ * @endcode
  */
 int
 parse_bool(char    *str, 

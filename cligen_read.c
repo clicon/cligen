@@ -686,8 +686,11 @@ cliread_parse(cligen_handle  h,
     /* Map from ghost object match_obj to real object */
     *co_orig = match_obj;
     *cvvp = cvv;
+    cvv = NULL;
     retval = 0;
   done:
+    if (cvv)
+	cvec_free(cvv);
     if (cvt)
 	cvec_free(cvt);
     if (cvr)

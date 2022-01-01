@@ -422,8 +422,8 @@ co_expand_treeref_copy_shallow(cligen_handle h,
 	    cvec_free(cvv);
 	}
 	else{
-	if (pt_expand_treeref_one(cot, coparent, &con) < 0)
-	    goto done;
+	    if (pt_expand_treeref_one(cot, coparent, &con) < 0)
+		goto done;
 	con->co_ref = co0; /* Backpointer to the "ref" node */
 	if (cvec_len(cvv_filter) &&
 	    (con->co_filter = cvec_dup(cvv_filter)) == NULL)
@@ -658,7 +658,7 @@ pt_expand1_co(cligen_handle h,
 	goto done;
     if (hide && co_flags_get(co, CO_FLAGS_HIDE))
 	goto ok;
-    /* Loop labels from object itself and see if any of the  are filtered, if so skip it
+    /* Loop labels from object itself and see if any of the elements are filtered, if so skip it
      */
     cv = NULL;
     while ((cv = cvec_each(co->co_cvec, cv)) != NULL){
