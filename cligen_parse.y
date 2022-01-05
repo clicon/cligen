@@ -641,9 +641,6 @@ cgy_helpstring(cligen_yacc *cy,
     int              retval = -1;
     struct cgy_list *cl; 
     cg_obj          *co;
-#ifdef CLIGEN_HELPSTRING_VEC
-    cg_var          *cv; 
-#endif
     
     if (helpstr == NULL){
 	errno = EINVAL;
@@ -651,26 +648,6 @@ cgy_helpstring(cligen_yacc *cy,
     }
     for (cl = cy->cy_list; cl; cl = cl->cl_next){
 	co = cl->cl_obj;
-#ifdef CLIGEN_HELPSTRING_VEC
-	if (co->co_helpvec == NULL){
-	    if ((co->co_helpvec = cvec_new(0)) == NULL){
-		cligen_parseerror1(cy, "Allocating helpstr");
-		goto done;
-	    }
-	}
-#ifdef CLIGEN_HELPSTRING_SINGLE
-	else
-	    continue;
-#endif
-	if ((cv = cvec_add(co->co_helpvec, CGV_STRING)) == NULL){
-	    cligen_parseerror1(cy, "Allocating helpstr");
-	    goto done;
-	}
-	if (cv_string_set(cv, helpstr) == NULL){
-	    cligen_parseerror1(cy, "Allocating helpstr");
-	    goto done;
-	}
-#else /* CLIGEN_HELPSTRING_VEC */
 	if (co->co_helpstring){
 	    if ((co->co_helpstring = realloc(co->co_helpstring,
 					     strlen(co->co_helpstring) + strlen(helpstr) + 2)) == NULL){
@@ -685,7 +662,6 @@ cgy_helpstring(cligen_yacc *cy,
 		cligen_parseerror1(cy, "Allocating helpstr");
 		goto done;
 	    }
-#endif /* CLIGEN_HELPSTRING_VEC */
     }
     free(helpstr);
     retval = 0;

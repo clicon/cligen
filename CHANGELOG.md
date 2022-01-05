@@ -5,6 +5,8 @@ Planned: January, 2022
 
 ### Changes
 
+* Removed optional `CLIGEN_HELPSTRING_VEC` and `CLIGEN_HELPSTRING_SINGLE` from cligen_custom.h
+  * turns out when profiling a cvec consumes too much cpu cycles
 * Changed pt_print() signature to follow other print functions:
   * pt_print(FILE*, parsetree*)
 * Added reftree @remove support shallow treeref copy.
@@ -34,7 +36,7 @@ Planned: January, 2022
 
 ### Changes
 
-* Perfomance changes of C code
+* Performance changes of C code
   * Added a new expansion of treeref method that does not copy the whole tree but only necessary additions. The old method is still kept as default in cligen, using a new cligen_reftree_copy() API. The no-copy method reduces memory for large specs but does not work in tree recursions and @add/@remove labels.
     * Internally this led to a new callback argument that is passed in all match functions.
   * Rearranged and simplified expansions (at tab and ?) by making a single pt_expand1 API.

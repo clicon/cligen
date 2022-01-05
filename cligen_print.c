@@ -159,9 +159,6 @@ co2cbuf(cbuf   *cb,
     parse_tree  *pt;
     cg_obj      *co1;
     cg_var      *cv;
-#ifdef CLIGEN_HELPSTRING_VEC
-    int          i;
-#endif
 
     /* Add [] if optional. Note this is neither not complete/correct since it only notes
      * that the symbol was created within a [], not the exact composition.
@@ -188,25 +185,11 @@ co2cbuf(cbuf   *cb,
     if (co_flags_get(co, CO_FLAGS_OPTION))
 	cprintf(cb, "]");
     if (brief == 0){
-#ifdef CLIGEN_HELPSTRING_VEC
-	if (co->co_helpvec){
-	    cbuf_append_str(cb, "(\"");
-	    cv = NULL;
-	    i = 0;
-	    while ((cv = cvec_each(co->co_helpvec, cv)) != NULL) {
-		if (i++)
-		    cprintf(cb, "\n");
-		cv2cbuf(cv, cb);
-	    }
-	    cbuf_append_str(cb, "\")");
-	}
-#else /* CLIGEN_HELPSTRING_VEC */
 	if (co->co_helpstring){
 	    cbuf_append_str(cb, "(\"");
 	    cbuf_append_str(cb, co->co_helpstring);
 	    cbuf_append_str(cb, "\")");
 	}
-#endif /* CLIGEN_HELPSTRING_VEC */
 	if (co_flags_get(co, CO_FLAGS_HIDE))
 	    cprintf(cb, ", hide");
 	cv = NULL;

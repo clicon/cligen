@@ -113,13 +113,8 @@ co_stats_one(cg_obj   *co,
 	sz += cvec_size(co->co_cvec);
     if (co->co_filter)
 	sz += cvec_size(co->co_filter);
-#ifdef CLIGEN_HELPSTRING_VEC
-    if (co->co_helpvec)
-	sz += cvec_size(co->co_helpvec);
-#else
     if (co->co_helpstring)
 	sz += strlen(co->co_helpstring) + 1;
-#endif
     if (co->co_value)
 	sz += strlen(co->co_value) + 1;
     /* XXX union */
@@ -638,15 +633,9 @@ co_copy(cg_obj  *co,
 	if (co_pt_set(con, ptn) < 0)
 	    goto done;
     }
-#ifdef CLIGEN_HELPSTRING_VEC
-    if (co->co_helpvec)
-	if ((con->co_helpvec = cvec_dup(co->co_helpvec)) == NULL)
-	    goto done;
-#else /* CLIGEN_HELPSTRING_VEC */
     if (co->co_helpstring)
 	if ((con->co_helpstring = strdup(co->co_helpstring)) == NULL)
 	    goto done;
-#endif /* CLIGEN_HELPSTRING_VEC */
     if (co_value_set(con, co->co_value) < 0) /* XXX: free på co->co_value? */
 	goto done;
     if (co->co_type == CO_VARIABLE){
@@ -750,15 +739,9 @@ co_copy1(cg_obj  *co,
 		goto done;
 	}
     }
-#ifdef CLIGEN_HELPSTRING_VEC
-    if (co->co_helpvec)
-	if ((con->co_helpvec = cvec_dup(co->co_helpvec)) == NULL)
-	    goto done;
-#else /* CLIGEN_HELPSTRING_VEC */
     if (co->co_helpstring)
 	if ((con->co_helpstring = strdup(co->co_helpstring)) == NULL)
 	    goto done;
-#endif /* CLIGEN_HELPSTRING_VEC */
     if (co_value_set(con, co->co_value) < 0)
 	goto done;
     if (co->co_type == CO_VARIABLE){
@@ -974,13 +957,8 @@ co_free(cg_obj *co,
 {
     parse_tree  *pt;
 
-#ifdef CLIGEN_HELPSTRING_VEC
-    if (co->co_helpvec) 
-	cvec_free(co->co_helpvec);
-#else /* CLIGEN_HELPSTRING_VEC */
     if (co->co_helpstring) 
 	free(co->co_helpstring);
-#endif /* CLIGEN_HELPSTRING_VEC */
     if (co->co_command)
 	free(co->co_command);
     if (co->co_prefix)
