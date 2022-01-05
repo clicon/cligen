@@ -700,10 +700,6 @@ cligen_txt2cvv(char  *str,
 		goto done;
 	    i0 = i+1;
 	    whitespace = 1;
-#ifdef CLIGEN_HELPSTRING_SINGLE
-	    i0 = i; /* disable extra \n */
-	    break;
-#endif
 	}
 	else{
 	    whitespace = 0;

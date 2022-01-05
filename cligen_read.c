@@ -337,12 +337,8 @@ show_help_columns(cligen_handle h,
 		fprintf(stderr, "%s strdup: %s\n", __FUNCTION__, strerror(errno));
 		goto done;
 	    }
-#ifdef CLIGEN_HELPSTRING_VEC
-	    ch->ch_helpvec = co->co_helpvec;
-#else /* CLIGEN_HELPSTRING_VEC */
 	    if (co->co_helpstring && cligen_txt2cvv(co->co_helpstring, &ch->ch_helpvec) < 0)
 		goto done;
-#endif /* CLIGEN_HELPSTRING_VEC */
 	    if (nrcmd && cligen_help_eq(&chvec[nrcmd-1], ch, 0) == 1){
 		cligen_help_clear(ch);
 		continue;

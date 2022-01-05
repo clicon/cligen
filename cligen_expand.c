@@ -100,15 +100,9 @@ co_expand_sub(cg_obj  *co,
 	con->co_filter = cvec_dup(co->co_filter);
     if (co_callback_copy(co->co_callbacks, &con->co_callbacks) < 0)
 	return -1;
-#ifdef CLIGEN_HELPSTRING_VEC
-    if (co->co_helpvec)
-	if ((con->co_helpvec = cvec_dup(co->co_helpvec)) == NULL)
-	    return -1;
-#else /* CLIGEN_HELPSTRING_VEC */
     if (co->co_helpstring)
 	if ((con->co_helpstring = strdup(co->co_helpstring)) == NULL)
 	    return -1;
-#endif /* CLIGEN_HELPSTRING_VEC */
     if (co->co_type == CO_VARIABLE){
 	if (co->co_expand_fn_str)
 	    if ((con->co_expand_fn_str = strdup(co->co_expand_fn_str)) == NULL){
@@ -166,22 +160,12 @@ transform_var_to_cmd(cg_obj *co,
 	free(co->co_command);
     co->co_command = cmd; 
     if (helptext){
-#ifdef CLIGEN_HELPSTRING_VEC
-	if (co->co_helpvec){
-	    cvec_free(co->co_helpvec);
-	    co->co_helpvec = NULL;
-	}
-	/* helpstr can be on the form "txt1\n    txt2" */
-	if (cligen_txt2cvv(helptext, &co->co_helpvec) < 0)
-	    return -1;
-#else /* CLIGEN_HELPSTRING_VEC */
 	if (co->co_helpstring){
 	    free(co->co_helpstring);
 	    co->co_helpstring = NULL;
 	}
 	if (helptext)
 	    co->co_helpstring = strdup(helptext); /* XXX: can change to consume helpstring */
-#endif /* CLIGEN_HELPSTRING_VEC */
     }
     if (co->co_expandv_fn)
 	co->co_expandv_fn = NULL;
@@ -266,15 +250,9 @@ pt_expand_treeref_one(cg_obj  *cot,
 	con->co_filter = cvec_dup(cot->co_filter);
     if (co_callback_copy(cot->co_callbacks, &con->co_callbacks) < 0)
 	goto done;
-#ifdef CLIGEN_HELPSTRING_VEC
-    if (cot->co_helpvec)
-	if ((con->co_helpvec = cvec_dup(cot->co_helpvec)) == NULL)
-	    goto done;
-#else /* CLIGEN_HELPSTRING_VEC */
     if (cot->co_helpstring)
 	if ((con->co_helpstring = strdup(cot->co_helpstring)) == NULL)
 	    goto done;
-#endif /* CLIGEN_HELPSTRING_VEC */
     if (cot->co_type == CO_VARIABLE){
 	if (cot->co_expand_fn_str)
 	    if ((con->co_expand_fn_str = strdup(cot->co_expand_fn_str)) == NULL){

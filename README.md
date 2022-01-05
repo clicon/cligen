@@ -17,12 +17,12 @@ The main documentation is the [cligen tutorial](cligen_tutorial.pdf)
 which is usually kept up-to-date and is probably the best way to
 understand CLIgen.
 
-Some background material can be found on the [CLIgen project page](http://www.cligen.se).
+Some background material can be found on the [CLIgen project page](https://www.cligen.se).
 
 CLIgen is _not_ a system in itself, you need to build your own
 'backend'.  There is another co-project: 'clixon' which is
 actually a whole system where you load dynamic frontend and backend
-modules [CLIXON project page](http://www.clicon.org) and [CLIXON
+modules [CLIXON project page](https://www.clicon.org) and [CLIXON
 github](https://github.com/clicon/clixon). Clixon provides a
 system, with embedded database, commit semantics, YANG and NETCONF
 interface, etc. CLIgen is a part of clixon.

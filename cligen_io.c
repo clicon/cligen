@@ -396,10 +396,8 @@ cligen_help_clear(struct cligen_help *ch)
 	return 0;
     if (ch->ch_cmd)
 	free(ch->ch_cmd);
-#ifndef CLIGEN_HELPSTRING_VEC
     if (ch->ch_helpvec)
 	cvec_free(ch->ch_helpvec);
-#endif
     memset(ch, 0, sizeof(*ch));
     return 0;
 }
@@ -455,12 +453,8 @@ print_help_lines(cligen_handle h,
 	ch = &chvec[nrcmd];
 	if ((ch->ch_cmd = strdup(cmd)) == NULL)
 	    goto done;
-#ifdef CLIGEN_HELPSTRING_VEC
-	ch->ch_helpvec = co->co_helpvec;
-#else /* CLIGEN_HELPSTRING_VEC */
 	if (co->co_helpstring && cligen_txt2cvv(co->co_helpstring, &ch->ch_helpvec) < 0)
 	    goto done;
-#endif /* CLIGEN_HELPSTRING_VEC */
 	if (nrcmd && cligen_help_eq(&chvec[nrcmd-1], ch, 1) == 1){
 	    cligen_help_clear(ch);
 	    continue;

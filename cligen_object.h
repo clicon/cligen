@@ -159,11 +159,7 @@ struct cg_obj{
 				       * Alt: re-use co_cvec for this.
 				       * See also reftree_filter for global filters
 				       */ 
-#ifdef CLIGEN_HELPSTRING_VEC
-    cvec               *co_helpvec;   /* Vector of CLIgen helptexts */
-#else
     char               *co_helpstring; /* String of CLIgen helptexts */
-#endif
     uint32_t            co_flags;     /* General purpose flags, see CO_FLAGS_HIDE and others above */
     struct cg_obj      *co_ref;       /* Ref to original (if this is expanded) 
 				       * Typical from expanded command to original variable
