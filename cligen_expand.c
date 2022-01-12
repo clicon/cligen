@@ -32,7 +32,27 @@
 
   ***** END LICENSE BLOCK *****
 
-*/
+  * "Expand" means make a new "shadow" parse-tree (ptn) from an original (pt) 
+  * The shadow parsetree has new objects, but they in turn do NOT copy their parsetrees if any
+  * The copying is made as follows:
+  * pt -->  [0 1..n]                        [0 1..m]  <-- ptn
+  *          | |  |                          | |  |
+  *          v v  v                          v v  v
+  *          o o  o     --- transform --->   o o  o   <-- new cg_obj:s
+  *            |                               |
+  *            v                               v
+  * ptc -->  [0..n]                          [0..n]   <-- NOT copied
+  *
+  * The transformation rules:
+  * 1. Do not copy if:
+  *    1a. If there is any (remove) filter that matches
+  *    1b. If the HIDE flags is set
+  * 2. If co is VARIABLE and has expand function, copy and insert set of objects returned
+  *    - set co_ref to corresponding object in co
+  * 3. If co is REFERENCE, copy and insert set of objects from original tree
+  *    - set co_treeref_orig to corresponding object in co
+  * 4. Else, copy object
+  */
 #include "cligen_config.h"
 
 #include <ctype.h>
@@ -54,94 +74,94 @@
 #include "cligen_expand.h"
 #include "cligen_syntax.h"
 
-/* Callback function for expand variables */
-
 /*! Copy and expand a cligen object.
- * this object could actually give rise to several if it is a variable
+ *
+ * This object could actually give rise to several if it is a variable
  * with expand (co_exp) or choice (co_choice) set.
  * Set co_ref to point back to the original.
- * @param[in]  co     Original cg_obj
- * @param[in]  co_parent Parent of original co object
- * @param[out] conp   New, shadow object
- * @see co_copy XXX: maybe this could call co_copy?
+ * @param[in]  co0      Original cg_obj
+ * @param[in]  coparent Parent of original co object (as well as of conp)
+ * @param[out] conp     New "shadow" object
+ * @see pt_expand_treeref_one
  */
 static int
-co_expand_sub(cg_obj  *co, 
-	      cg_obj  *co_parent, 
+co_expand_sub(cg_obj  *co0,
+	      cg_obj  *coparent,
 	      cg_obj **conp)
 {
-    cg_obj     *con = NULL;
-    parse_tree *pt;
+    int     retval = -1;
+    cg_obj *con;
 
     if ((con = co_new_only()) == NULL)
-	return -1;
-    memcpy(con, co, sizeof(cg_obj));
+	goto done;
+    memcpy(con, co0, sizeof(cg_obj));
     /* Point to same underlying pt */
     con->co_ptvec = NULL;
     con->co_pt_len = 0;
-    pt = co_pt_get(co);
-    if (co_pt_set(con, pt) < 0)
-	return -1;
+    if (co_pt_set(con, co_pt_get(co0)) < 0)
+	goto done;
     /* Replace all pointers */
-    co_up_set(con, co_parent);
-    if (co->co_command)
-	if ((con->co_command = strdup(co->co_command)) == NULL){
+    co_up_set(con, coparent);
+    if (co0->co_command)
+	if ((con->co_command = strdup(co0->co_command)) == NULL){
 	    fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
-	    return -1;
+	    goto done;
 	}
-    if (co->co_prefix)
-	if ((con->co_prefix = strdup(co->co_prefix)) == NULL){
+    if (co0->co_prefix)
+	if ((con->co_prefix = strdup(co0->co_prefix)) == NULL){
 	    fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
-	    return -1;
+	    goto done;
 	}
-    if (co->co_cvec)
-	con->co_cvec = cvec_dup(co->co_cvec);
-    if (co->co_filter)
-	con->co_filter = cvec_dup(co->co_filter);
-    if (co_callback_copy(co->co_callbacks, &con->co_callbacks) < 0)
-	return -1;
-    if (co->co_helpstring)
-	if ((con->co_helpstring = strdup(co->co_helpstring)) == NULL)
-	    return -1;
-    if (co->co_type == CO_VARIABLE){
-	if (co->co_expand_fn_str)
-	    if ((con->co_expand_fn_str = strdup(co->co_expand_fn_str)) == NULL){
+    if (co0->co_cvec)
+	con->co_cvec = cvec_dup(co0->co_cvec);
+    if (co0->co_filter)
+	con->co_filter = cvec_dup(co0->co_filter);
+    if (co_callback_copy(co0->co_callbacks, &con->co_callbacks) < 0)
+	goto done;
+    if (co0->co_helpstring)
+	if ((con->co_helpstring = strdup(co0->co_helpstring)) == NULL)
+	    goto done;
+    if (co0->co_type == CO_VARIABLE){
+	if (co0->co_expand_fn_str)
+	    if ((con->co_expand_fn_str = strdup(co0->co_expand_fn_str)) == NULL){
 		fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
-		return -1;
+		goto done;
 	    }
-	if (co->co_expand_fn_vec)
-	    if ((con->co_expand_fn_vec = cvec_dup(co->co_expand_fn_vec)) == NULL)
-		return -1;
-	if (co->co_translate_fn_str)
-	    if ((con->co_translate_fn_str = strdup(co->co_translate_fn_str)) == NULL){
+	if (co0->co_expand_fn_vec)
+	    if ((con->co_expand_fn_vec = cvec_dup(co0->co_expand_fn_vec)) == NULL)
+		goto done;
+	if (co0->co_translate_fn_str)
+	    if ((con->co_translate_fn_str = strdup(co0->co_translate_fn_str)) == NULL){
 		fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
-		return -1;
+		goto done;
 	    }
-	if (co->co_show)
-	    if ((con->co_show = strdup(co->co_show)) == NULL){
+	if (co0->co_show)
+	    if ((con->co_show = strdup(co0->co_show)) == NULL){
 		fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
-		return -1;
+		goto done;
 	    }
-	if (co->co_rangecvv_low)
-	    if ((con->co_rangecvv_low = cvec_dup(co->co_rangecvv_low)) == NULL)
-		return -1;
-	if (co->co_rangecvv_upp)
-	    if ((con->co_rangecvv_upp = cvec_dup(co->co_rangecvv_upp)) == NULL)
-		return -1;
-	if (co->co_choice)
-	    if ((con->co_choice = strdup(co->co_choice)) == NULL){
+	if (co0->co_rangecvv_low)
+	    if ((con->co_rangecvv_low = cvec_dup(co0->co_rangecvv_low)) == NULL)
+		goto done;
+	if (co0->co_rangecvv_upp)
+	    if ((con->co_rangecvv_upp = cvec_dup(co0->co_rangecvv_upp)) == NULL)
+		goto done;
+	if (co0->co_choice)
+	    if ((con->co_choice = strdup(co0->co_choice)) == NULL){
 		fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
-		return -1;
+		goto done;
 	    }
-	if (co->co_regex)
-	    if ((con->co_regex = cvec_dup(co->co_regex)) == NULL){
+	if (co0->co_regex)
+	    if ((con->co_regex = cvec_dup(co0->co_regex)) == NULL){
 		fprintf(stderr, "%s: cvec_dup: %s\n", __FUNCTION__, strerror(errno));
-		return -1;
+		goto done;
 	    }
     } /* CO_VARIABLE */
-    con->co_ref = co;
+    con->co_ref = co0; /* Backpointer to the original node */
     *conp = con;
-    return 0;
+    retval = 0;
+ done:
+    return retval;
 }
 
 /*! Transform string variables to commands
@@ -203,96 +223,6 @@ transform_var_to_cmd(cg_obj *co,
     }
     co->co_type = CO_COMMAND;
     return 0;
-}
-
-/*! Expand treeref one level: make a copy of cot into conp
- * 
- * @param[in]  cot      Original object
- * @param[in]  coparent Parent to both cot and con
- * @param[out] conp     New object
- * @retval     0
- * @retval    -1
- */
-static int
-pt_expand_treeref_one(cg_obj  *cot,
-		      cg_obj  *coparent,
-		      cg_obj **conp)
-{
-    int     retval = -1;
-    cg_obj *con;
-
-    /* see co_expand_sub */
-    if ((con = co_new_only()) == NULL)
-	goto done;
-    memcpy(con, cot, sizeof(cg_obj));
-    co_flags_set(con, CO_FLAGS_TREEREF); /* Mark expanded refd tree */
-    con->co_treeref_orig = cot;
-    /* Point to same underlying pt */
-    con->co_ptvec = NULL;
-    con->co_pt_len = 0;
-    if (co_pt_set(con, co_pt_get(cot)) < 0)
-	goto done;
-    /* Replace all pointers */
-    co_up_set(con, coparent);
-    if (cot->co_command)
-	if ((con->co_command = strdup(cot->co_command)) == NULL){
-	    fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
-	    goto done;
-	}
-    if (cot->co_prefix)
-	if ((con->co_prefix = strdup(cot->co_prefix)) == NULL){
-	    fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
-	    goto done;
-	}
-    if (cot->co_cvec)
-	con->co_cvec = cvec_dup(cot->co_cvec);
-    if (cot->co_filter)
-	con->co_filter = cvec_dup(cot->co_filter);
-    if (co_callback_copy(cot->co_callbacks, &con->co_callbacks) < 0)
-	goto done;
-    if (cot->co_helpstring)
-	if ((con->co_helpstring = strdup(cot->co_helpstring)) == NULL)
-	    goto done;
-    if (cot->co_type == CO_VARIABLE){
-	if (cot->co_expand_fn_str)
-	    if ((con->co_expand_fn_str = strdup(cot->co_expand_fn_str)) == NULL){
-		fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
-		goto done;
-	    }
-	if (cot->co_expand_fn_vec)
-	    if ((con->co_expand_fn_vec = cvec_dup(cot->co_expand_fn_vec)) == NULL)
-		goto done;
-	if (cot->co_translate_fn_str)
-	    if ((con->co_translate_fn_str = strdup(cot->co_translate_fn_str)) == NULL){
-		fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
-		goto done;
-	    }
-	if (cot->co_show)
-	    if ((con->co_show = strdup(cot->co_show)) == NULL){
-		fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
-		goto done;
-	    }
-	if (cot->co_rangecvv_low)
-	    if ((con->co_rangecvv_low = cvec_dup(cot->co_rangecvv_low)) == NULL)
-		goto done;
-	if (cot->co_rangecvv_upp)
-	    if ((con->co_rangecvv_upp = cvec_dup(cot->co_rangecvv_upp)) == NULL)
-		goto done;
-	if (cot->co_choice)
-	    if ((con->co_choice = strdup(cot->co_choice)) == NULL){
-		fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
-		goto done;
-	    }
-	if (cot->co_regex)
-	    if ((con->co_regex = cvec_dup(cot->co_regex)) == NULL){
-		fprintf(stderr, "%s: cvec_dup: %s\n", __FUNCTION__, strerror(errno));
-		goto done;
-	    }
-    } /* CO_VARIABLE */
-    *conp = con;
-    retval = 0;
- done:
-    return retval;
 }
 
 static int
@@ -373,11 +303,13 @@ co_expand_treeref_copy_shallow(cligen_handle h,
 			       parse_tree   *ptorig,
 			       parse_tree   *ptnew)
 {
-    int     retval = -1;
-    cg_obj *coparent;
-    int     i;
-    cg_obj *cot;            /* treeref object */
-    cg_obj *con;
+    int         retval = -1;
+    cg_obj     *coparent;
+    int         i;
+    cg_obj     *cot;            /* treeref object */
+    cg_obj     *con;
+    parse_tree *ptref2 = NULL;   /* tree referenced by pt0 orig */
+    cvec       *cvv = NULL;
     
     coparent = co_up(co0);
     for (i=0; i<pt_len_get(ptorig); i++){
@@ -387,27 +319,30 @@ co_expand_treeref_copy_shallow(cligen_handle h,
 	if (cot->co_type == CO_EMPTY)
 	    continue;
 	if (cot->co_type == CO_REFERENCE){
-	    parse_tree *ptref = NULL;   /* tree referenced by pt0 orig */
-	    cvec   *cvv = NULL;
-	    if (tree_resolve(h, cot, &ptref) < 0)
+	    if (tree_resolve(h, cot, &ptref2) < 0)
 		goto done;
 	    if ((cvv = cvec_new(0)) == NULL)
 		goto done;
 	    if (co_find_label_filters(h, cot, cvv) < 0)
 		goto done;
-	    if (co_expand_treeref_copy_shallow(h, co0, cvv, ptref, ptnew) < 0)
+	    if (co_expand_treeref_copy_shallow(h, co0, cvv, ptref2, ptnew) < 0)
 		goto done;
 	    cvec_free(cvv);
 	}
 	else{
-	    if (pt_expand_treeref_one(cot, coparent, &con) < 0)
+	    if (co_expand_sub(cot, coparent, &con) < 0)
 		goto done;
-	con->co_ref = co0; /* Backpointer to the "ref" node */
-	if (cvec_len(cvv_filter) &&
-	    (con->co_filter = cvec_dup(cvv_filter)) == NULL)
-	    goto done;
-	if (co_insert(ptnew, con) == NULL) 
-	    goto done;
+	    /* Backpointer to the "ref" node - overrides co_expand_sub 
+	     * This actually seems to be to the treehead?
+	     */
+	    con->co_ref = co0;
+	    co_flags_set(con, CO_FLAGS_TREEREF); /* Mark expanded refd tree */
+	    con->co_treeref_orig = cot;
+	    if (cvec_len(cvv_filter) &&
+		(con->co_filter = cvec_dup(cvv_filter)) == NULL)
+		goto done;
+	    if (co_insert(ptnew, con) == NULL) 
+		goto done;
 	}
     } /* for i */
     retval = 0;
@@ -473,9 +408,10 @@ cligen_escape(const char* s)
  * variable argument callback variant
  * @param[in]  h       CLIgen handle
  * @param[in]  co      CLIgen object
+ * @param[in]  coparent      CLIgen object parent
+ * @param[in]  transient  co may be "transient" if so use co->co_ref as new co_ref,...
  * @param[out] cvv     Cligen variable vector containing vars/values pair for completion
  * @param[out] ptn     New parse-tree initially an empty pointer, its value is returned.
- * @param[in]  co      CLIgen object parent
  * @retval     0       OK
  * @retval    -1       Error
  * This is the only place where expand callbacks are invoked
@@ -484,9 +420,10 @@ cligen_escape(const char* s)
 static int
 pt_expand_fnv(cligen_handle h, 
 	      cg_obj       *co,     
+	      cg_obj       *co_parent,
+	      int           transient,	      
 	      cvec         *cvv,
-	      parse_tree   *ptn,
-	      cg_obj       *co_parent)
+	      parse_tree   *ptn)
 {
     int         retval = -1;
     cvec       *commands;
@@ -530,12 +467,15 @@ pt_expand_fnv(cligen_handle h,
 	con = NULL;
 	if (co_expand_sub(co, co_parent, &con) < 0)
 	    goto done;
+	if (transient && con->co_ref){
+	    con->co_ref = co->co_ref; 
+	}
 	if (pt_vec_append(ptn, con) < 0)
 	    goto done;
 	value = cv_string_get(cv);
 	escaped = cligen_escape(value);
 	if (escaped == value) {
-	    if ((escaped = strdup(escaped)) == NULL) /* XXX: leaks memory */
+	    if ((escaped = strdup(escaped)) == NULL)
 		goto done;
 	}
 	/* 'escaped' always points to mutable string */
@@ -669,7 +609,7 @@ pt_expand1_co(cligen_handle h,
 	 * this iteration and if not add it?
 	 */
 	if (expandvar){
-	    if (pt_expand_fnv(h, co, cvv_var, ptn, NULL) < 0)
+	    if (pt_expand_fnv(h, co, NULL, transient, cvv_var, ptn) < 0)
 		goto done;
 	}
     }
@@ -678,12 +618,13 @@ pt_expand1_co(cligen_handle h,
 	con = NULL;
 	if (co_expand_sub(co, NULL, &con) < 0)
 	    goto done;
-	if (transient)
-	    con->co_ref = co->co_ref; /* XXX Only if copied from transient */
+	if (transient && con->co_ref){
+	    con->co_ref = co->co_ref;
+	}
 	if (pt_vec_append(ptn, con) < 0)
 	    goto done;
 	if (cvv_filter && cvec_len(cvv_filter))
-	    if ((con->co_filter = cvec_dup(cvv_filter)) == NULL) /* XXX merge? */
+	    if ((con->co_filter = cvec_dup(cvv_filter)) == NULL)
 		goto done;
     }
  ok:
@@ -762,7 +703,6 @@ pt_expand(cligen_handle h,
 		if (co_expand_treeref_copy_shallow(h, co, cvv2, ptref, pttmp) < 0)
 		    goto done;
 		/* Copy the expand tree to the final tree. 
-		 * XXX possibly call pt_expand1_co from inside co_expand_treeref_copy_shallow?
 		 */
 		for (j=0; j<pt_len_get(pttmp); j++){
 		    cot = pt_vec_i_get(pttmp, j);
@@ -777,8 +717,6 @@ pt_expand(cligen_handle h,
 		    pt_free(pttmp, 0);
 		    pttmp = NULL;
 		}
-
-
 	    }
 	    else
 		if (pt_expand1_co(h, co, hide, expandvar, cvv_filter, cvv_var, 0, ptn) < 0)

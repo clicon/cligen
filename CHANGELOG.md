@@ -5,6 +5,10 @@ Planned: January, 2022
 
 ### Changes
 
+
+* Removed `hide-database` and `hide-database-auto-completion` labels
+  * They were no-ops, only `hide` has meaning.
+  * C flag `CO_FLAGS_HIDE_DATABASE` removed
 * Removed optional `CLIGEN_HELPSTRING_VEC` and `CLIGEN_HELPSTRING_SINGLE` from cligen_custom.h
   * turns out when profiling a cvec consumes too much cpu cycles
 * Changed pt_print() signature to follow other print functions:

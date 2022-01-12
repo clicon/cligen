@@ -448,7 +448,8 @@ match_bindvars(cligen_handle h,
     cg_obj *co_orig;
 
     /* co_orig is original object in case of expansion */
-    co_orig = co->co_ref?co->co_ref: co;
+    if ((co_orig = co->co_treeref_orig) == NULL)
+	co_orig = co->co_ref;
     if (co->co_type == CO_VARIABLE){
 	/* Once so translate only is done once */
 	if ((cv = add_cov_to_cvec(h, co, token, cvv)) == NULL)
@@ -602,7 +603,6 @@ match_pattern_sets_local(cligen_handle h,
     case 0:
 	break;
     case 1:
-	assert(co_match);
 	if (co_match->co_type == CO_COMMAND &&
 	    co_orig && co_orig->co_type == CO_VARIABLE)
 	    if (co_value_set(co_orig, co_match->co_command) < 0)
@@ -690,8 +690,9 @@ match_pattern_sets(cligen_handle h,
     if (callbacks &&
 	co_flags_get(co_match, CO_FLAGS_TREEREF)){
 	cg_obj *coref = co_match;
-	while (coref->co_ref)
+	while (coref->co_ref){
 	    coref = coref->co_ref;
+	}
 	if (coref->co_type ==  CO_REFERENCE &&
 	    coref->co_callbacks)
 	    if (co_callback_copy(coref->co_callbacks, callbacks) < 0)
@@ -716,7 +717,6 @@ match_pattern_sets(cligen_handle h,
 		  1,      /* VARS are expanded, eg ? <tab> */
 		  ptn) < 0) /* expand/choice variables */
 	goto done;
-
     /* Check termination criteria */
     lastsyntax = last_pt(ptn); /* 0, 1 or 2 */
     switch (lastsyntax){
@@ -781,7 +781,6 @@ match_pattern_sets(cligen_handle h,
 				    &mrc) < 0)
 	    goto done;
     }
-    assert(mrc != NULL);
     /* Clear all CO_FLAGS_MATCH recursively 
      * Only co_match is set with CO_FLAGS_MATCH
      */
@@ -813,7 +812,6 @@ match_pattern_sets(cligen_handle h,
     retval = 0;
  done:
     if (mrcprev && mrcprev != mrc){
-	assert(mrcprev != *mrp);
 	mr_free(mrcprev);
     }
     if (ptn)

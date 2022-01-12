@@ -117,7 +117,6 @@ typedef struct cg_varspec cg_varspec;
 /* General purpose flags for cg_obj co_flags type 
  */
 #define CO_FLAGS_HIDE      0x01  /* Don't show in help/completion */
-#define CO_FLAGS_HIDE_DATABASE 0x40 /* Don't show database */
 #define CO_FLAGS_MARK      0x02  /* Only used internally (for recursion avoidance) */
 #define CO_FLAGS_TREEREF   0x04  /* This node is top of expanded sub-tree */
 #define CO_FLAGS_OPTION    0x08  /* Generated from optional [] */
@@ -128,17 +127,16 @@ typedef struct cg_varspec cg_varspec;
 #define CO_COPY_FLAGS_TREEREF 0x01 /* If called from pt_expand_treeref: the copy point to the original */
 
 /*! cligen gen object is a parse-tree node. A cg_obj is either a command or a variable
- * A cg_obj 
- * @code
+ * A cg_obj:
  *      o <--- cg_obj
  *      ^
  *      |
  *      up
- *   [0 1..n]
+ *   [0 1..n] <--- parsetree
  *    | |  |
  *    v v  v
  *    o o  o   <--- cg_obj
- * @endcode
+ *
  */
 struct cg_obj{
     parse_tree        **co_ptvec;     /* Child parse-tree (see co_next macro below) */

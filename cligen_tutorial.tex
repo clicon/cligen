@@ -7,7 +7,7 @@
 %
 % Title
 %
-\title {CLIgen Manual\\ {\small CLIgen version 5.4}}
+\title {CLIgen Manual\\ {\small CLIgen version 5.5}}
 
 \author{Olof Hagsand}
 %
@@ -18,7 +18,7 @@
 
 % If you want a logo
 % \lhead{\includegraphics[height=9mm]{../../doc/logga_crop.png}}
-\date{December, 2021}
+\date{January, 2022}
 \maketitle
 \setcounter{tocdepth}{2}
 \tableofcontents
@@ -277,10 +277,6 @@ In the current release, there are three pre-defined local variables:
 \begin{itemize}
 \item
 {\tt hide} : specifies that a command is not visible in auto completion, meaning when listing or completing commands with '?' and 'TAB'. This can be useful if there are commands that should be known only by expert users.
-\item
-{\tt hide-database} : specifies that a command is not visible in database. This can be useful for setting passwords and not exposing them to users.
-\item
-{\tt hide-database-auto-completion} : specifies that a command is not visible in database and in auto completion. This can be useful for a password that was put in device by super user, not be changed.
 \end{itemize}
 
 In the following example, {\tt aa bb cb dd} and {\tt aa bb cc} are not visible in database and/or auto completion
