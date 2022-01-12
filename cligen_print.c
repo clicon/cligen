@@ -142,7 +142,6 @@ cov2cbuf(cbuf   *cb,
 	}
     }
     retval = 0;
-//  done:
     return retval;
 }
 
@@ -195,10 +194,6 @@ co2cbuf(cbuf   *cb,
 	cv = NULL;
 	while ((cv = cvec_each(co->co_cvec, cv)) != NULL) 
 	    cprintf(cb, ", %s", cv_name_get(cv));
-	if ((!co_flags_get(co, CO_FLAGS_HIDE)) && (co_flags_get(co, CO_FLAGS_HIDE_DATABASE)))
-		cprintf(cb, ", hide-database");
-	if ((co_flags_get(co, CO_FLAGS_HIDE)) && (co_flags_get(co, CO_FLAGS_HIDE_DATABASE)))
-		cprintf(cb, ", hide-database-auto-completion");
 	for (cc = co->co_callbacks; cc; cc = co_callback_next(cc)){
 	    co_callback2cbuf(cb, cc);
 	}
@@ -376,13 +371,22 @@ co_dump1(FILE    *f,
 	fprintf(f, "%*s %p co %s", indent*3, "", co, co->co_command);
 	if (co_sets_get(co))
 	    fprintf(f, " SETS");
+	if (co->co_ref){
+	    fprintf(f, " ref:%p", co->co_ref);
+	    fprintf(f, "(%d)", co->co_ref->co_type);
+	}
 	fprintf(f, "\n");
 	break;
     case CO_REFERENCE:
 	fprintf(f, "%*s %p co @%s\n", indent*3, "", co, co->co_command);
 	break;
     case CO_VARIABLE:
-	fprintf(f, "%*s %p co <%s>\n", indent*3, "", co, co->co_command);
+	fprintf(f, "%*s %p co <%s> ", indent*3, "", co, co->co_command);
+	if (co->co_ref){
+	    fprintf(f, " ref:%p", co->co_ref);
+	    fprintf(f, "(%d)", co->co_ref->co_type);
+	}
+	fprintf(f, "\n");
 	break;
     case CO_EMPTY:
 	fprintf(f, "%*s %p empty;\n", indent*3, "", co);
