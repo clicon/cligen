@@ -94,8 +94,7 @@ static int cli_complete(cligen_handle h, int *lenp, parse_tree *pt, cvec *cvv);
  */
 static int
 cli_show_help_commands(cligen_handle h,
-		       char         *string,
-		       int           column)
+		       char         *string)
 {
     int           retval = -1;
     parse_tree   *pt=NULL;     /* Orig parse-tree */
@@ -114,12 +113,8 @@ cli_show_help_commands(cligen_handle h,
 		  0, /* VARS are not expanded, eg ? <tab> */
 		  ptn) < 0)      /* expansion */
 	goto done;
-    if (column){
-	if (show_help_line(h, stdout, string, ptn, cvv) < 0)
-	    goto done;
-    }
-    else if (show_help_columns(h, stdout, cligen_buf(h), ptn, cvv) < 0)
-	    goto done;
+    if (show_help_line(h, stdout, string, ptn, cvv) < 0)
+	goto done;
  ok:
     retval = 0;
  done:
@@ -145,7 +140,7 @@ static int
 cli_qmark_hook(cligen_handle h,
 	       char         *string)
 {
-    return cli_show_help_commands(h, string, 1);
+    return cli_show_help_commands(h, string);
 }
 
 /*! Callback from getline: TAB has been typed on keyboard
