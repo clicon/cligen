@@ -825,7 +825,6 @@ match_pattern_sets(cligen_handle h,
 
 /*! CLIgen object matching function
  * @param[in]  h         CLIgen handle
- * @param[in]  string    Input string to match
  * @param[in]  cvt       Tokenized string: vector of tokens
  * @param[in]  cvr       Rest variant,  eg remaining string in each step
  * @param[in]  pt        Vector of commands (array of cligen object pointers (cg_obj)
