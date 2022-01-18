@@ -612,8 +612,13 @@ cgy_reference(cligen_yacc *cy,
 	    goto done;
 	}
 	cot->co_type = CO_REFERENCE;
-	if (cvv && (cot->co_cvec = cvec_dup(cvv)) == NULL)
-	    goto done;
+	
+	if (cvv){
+	    if (cot->co_cvec)
+		cvec_free(cot->co_cvec);
+	    if ((cot->co_cvec = cvec_dup(cvv)) == NULL)
+		goto done;
+	}
 	if ((cot = co_insert(co_pt_get(cop), cot)) == NULL)  /* cot may be deleted */
 	    goto done;
 	/* Replace parent in cgy_list: not allowed after ref?
@@ -733,7 +738,9 @@ cgy_terminal(cligen_yacc *cy)
 	    if (cvec_find(cy->cy_cvec, "hide") != NULL)
 		co_flags_set(co, CO_FLAGS_HIDE);
 	    /* generic variables */
-	    if ((co->co_cvec = cvec_dup(cy->cy_cvec)) == NULL){
+	    if (co->co_cvec)
+		cvec_free(co->co_cvec);
+	    if ((co->co_cvec = cvec_dup(cy->cy_cvec)) == NULL){ /* this leaks */
 		fprintf(stderr, "%s: cvec_dup: %s\n", __FUNCTION__, strerror(errno));
 		goto done;
 	    }

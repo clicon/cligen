@@ -410,6 +410,7 @@ cligen_escape(const char* s)
  * @param[in]  co      CLIgen object
  * @param[in]  coparent      CLIgen object parent
  * @param[in]  transient  co may be "transient" if so use co->co_ref as new co_ref,...
+
  * @param[out] cvv     Cligen variable vector containing vars/values pair for completion
  * @param[out] ptn     New parse-tree initially an empty pointer, its value is returned.
  * @retval     0       OK
@@ -422,6 +423,7 @@ pt_expand_fnv(cligen_handle h,
 	      cg_obj       *co,     
 	      cg_obj       *co_parent,
 	      int           transient,	      
+	      cvec         *cvv_filter,
 	      cvec         *cvv,
 	      parse_tree   *ptn)
 {
@@ -472,6 +474,9 @@ pt_expand_fnv(cligen_handle h,
 	}
 	if (pt_vec_append(ptn, con) < 0)
 	    goto done;
+	if (cvv_filter && cvec_len(cvv_filter))
+	    if ((con->co_filter = cvec_dup(cvv_filter)) == NULL)
+		goto done;
 	value = cv_string_get(cv);
 	escaped = cligen_escape(value);
 	if (escaped == value) {
@@ -609,7 +614,7 @@ pt_expand1_co(cligen_handle h,
 	 * this iteration and if not add it?
 	 */
 	if (expandvar){
-	    if (pt_expand_fnv(h, co, NULL, transient, cvv_var, ptn) < 0)
+	    if (pt_expand_fnv(h, co, NULL, transient, cvv_filter, cvv_var, ptn) < 0)
 		goto done;
 	}
     }
