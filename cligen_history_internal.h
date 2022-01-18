@@ -18,7 +18,7 @@
  * Modifications are under: 
   ***** BEGIN LICENSE BLOCK *****
  
-  Copyright (C) 2001-2021 Olof Hagsand
+  Copyright (C) 2001-2022 Olof Hagsand
 
   This file is part of CLIgen.
 
