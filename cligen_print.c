@@ -157,6 +157,7 @@ co2cbuf(cbuf   *cb,
     cg_callback *cc;
     parse_tree  *pt;
     cg_obj      *co1;
+    cg_obj      *cot;
     cg_var      *cv;
 
     /* Add [] if optional. Note this is neither not complete/correct since it only notes
@@ -198,8 +199,15 @@ co2cbuf(cbuf   *cb,
 	    co_callback2cbuf(cb, cc);
 	}
     }
-    if (co_terminal(co, NULL))
+    cv = NULL;
+    while ((cv = cvec_each(co->co_cvec, cv)) != NULL)
+	cprintf(cb, ", %s", cv_name_get(cv));
+    if (co_terminal(co, &cot)){
+	cg_var *cv = NULL;
+	while ((cv = cvec_each(cot->co_cvec, cv)) != NULL)
+	    cprintf(cb, ", %s", cv_name_get(cv));
 	cprintf(cb, ";");
+    }
     pt = co_pt_get(co);
     if (pt_len_get(pt) > 1){
 	if (co_sets_get(co))
@@ -239,8 +247,9 @@ pt2cbuf(cbuf       *cb,
     cg_obj *co;
 
     for (i=0; i<pt_len_get(pt); i++){
-	if ((co = pt_vec_i_get(pt, i)) == NULL ||
-	    co->co_type == CO_EMPTY)
+	if ((co = pt_vec_i_get(pt, i)) == NULL)
+	    continue;
+	if (co->co_type == CO_EMPTY)
 	    continue;
 	if (pt_len_get(pt) > 1)
 	    cprintf(cb, "%*s", marginal, "");
@@ -365,33 +374,34 @@ co_dump1(FILE    *f,
 	 int      indent)
 {
     parse_tree *pt;
-
+    cg_var *cv;
+    
     switch (co->co_type){
     case CO_COMMAND:
 	fprintf(f, "%*s %p co %s", indent*3, "", co, co->co_command);
 	if (co_sets_get(co))
 	    fprintf(f, " SETS");
-	if (co->co_ref){
+	if (co->co_ref)
 	    fprintf(f, " ref:%p", co->co_ref);
-	    fprintf(f, "(%d)", co->co_ref->co_type);
-	}
-	fprintf(f, "\n");
 	break;
     case CO_REFERENCE:
-	fprintf(f, "%*s %p co @%s\n", indent*3, "", co, co->co_command);
+	fprintf(f, "%*s %p co @%s", indent*3, "", co, co->co_command);
 	break;
     case CO_VARIABLE:
 	fprintf(f, "%*s %p co <%s> ", indent*3, "", co, co->co_command);
-	if (co->co_ref){
+	if (co->co_ref)
 	    fprintf(f, " ref:%p", co->co_ref);
-	    fprintf(f, "(%d)", co->co_ref->co_type);
-	}
-	fprintf(f, "\n");
+	if (co->co_treeref_orig)
+	    fprintf(f, " treeref:%p", co->co_treeref_orig);
 	break;
     case CO_EMPTY:
-	fprintf(f, "%*s %p empty;\n", indent*3, "", co);
+	fprintf(f, "%*s %p empty", indent*3, "", co);
 	break;
     }
+    cv = NULL;
+    while ((cv = cvec_each(co->co_cvec, cv)) != NULL)
+	fprintf(f, ", label=%s", cv_name_get(cv));
+    fprintf(f, "\n");
     if ((pt = co_pt_get(co)) != NULL)
 	pt_dump1(f, pt, indent);
     return 0;

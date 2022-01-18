@@ -51,7 +51,6 @@ typedef int (cg_fnstype_t)(cligen_handle h, cvec *vars, cg_var *arg); /* XXX obs
 
 typedef struct cg_callback cg_callback; /* struct defined in cligen_callback.c.c */
 
-#if 1
 /*! A CLIgen object may have one or several callbacks. This type defines one callback
  */
 struct cg_callback  { /* Linked list of command callbacks */
@@ -60,7 +59,6 @@ struct cg_callback  { /* Linked list of command callbacks */
     char                *cc_fn_str;  /**< callback/function name. malloced */
     cvec                *cc_cvec;    /**< callback/function arguments */
 };
-#endif
 
 /*
  * Prototypes
