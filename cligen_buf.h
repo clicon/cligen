@@ -64,13 +64,9 @@ cbuf    *cbuf_new_alloc(size_t sz);
 
 void     cbuf_free(cbuf *cb);
 char    *cbuf_get(cbuf *cb);
-size_t   cbuf_len(cbuf *cb); /* XXX size_t */
+size_t   cbuf_len(cbuf *cb);
 size_t   cbuf_buflen(cbuf *cb);
-#if defined(__GNUC__) && __GNUC__ >= 3
 int      cprintf(cbuf *cb, const char *format, ...) __attribute__ ((format (printf, 2, 3)));
-#else
-int      cprintf(cbuf *cb, const char *format, ...);
-#endif
 void     cbuf_reset(cbuf *cb);
 int      cbuf_append(cbuf *cb, int c);
 int      cbuf_append_str(cbuf *cb, char *str);
