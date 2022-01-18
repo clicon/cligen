@@ -5,7 +5,7 @@ Planned: January, 2022
 
 ### Changes
 
-
+* Removed ifdef __GNUC__ around printf-like prototypes since both clang and gcc have format/printf macros defined
 * Removed `hide-database` and `hide-database-auto-completion` labels
   * They were no-ops, only `hide` has meaning.
   * C flag `CO_FLAGS_HIDE_DATABASE` removed
