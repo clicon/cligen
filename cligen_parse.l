@@ -209,7 +209,11 @@ stripdup(char *s0)
 
 <STRING>\n                { _CY->cy_linenum++; }
 <STRING>\"                { BEGIN(_CY->cy_lex_string_state); return DQ; }
-<STRING>[^"\n]+           { cligen_parselval.string = strdup(yytext);
+<STRING>\\\"              { cligen_parselval.string = strdup(yytext);
+                            return CHARS;}
+<STRING>\\              { cligen_parselval.string = strdup(yytext);
+                            return CHARS;}
+<STRING>[^\\"\n]+         { cligen_parselval.string = strdup(yytext);
                             return CHARS;}
 
 <ESCAPE>.                 { BEGIN(_CY->cy_lex_state); 
