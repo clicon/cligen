@@ -1,36 +1,33 @@
 # Cligen Changelog
 	
 ## 5.5.0
-Planned: January, 2022
+20 January 2022
 
 ### Changes
 
-* Fixed: clispec parser escaped double quote: \" was not parsed correctly
-* Removed ifdef __GNUC__ around printf-like prototypes since both clang and gcc have format/printf macros defined
+* Refactor and optimize tree-reference handling
+  * Removed "deep" treeref copy which consumed lots of memory for large trees
+    * In other words, use "shallow" copy instead so you can state things like: `@tree, @remove foo;`
+  * Ensured indirect treeref functionality: eg tree referencing another tree:
+    * `@t0; treeref="t0"; @t1;`
+  * Removed `cligen_reftree_filter_get()/_set()` functions and `@delete:<label>` constructs
+    * You can now only do eg: `ref @tree, @remove:<label>`
+    * I.e., no default remove labels and no `@add:<label>` supported
+* Removed `ifdef __GNUC__` around printf-like prototypes since both clang and gcc have format/printf macros defined
 * Removed `hide-database` and `hide-database-auto-completion` labels
   * They were no-ops, only `hide` has meaning.
   * C flag `CO_FLAGS_HIDE_DATABASE` removed
 * Removed optional `CLIGEN_HELPSTRING_VEC` and `CLIGEN_HELPSTRING_SINGLE` from cligen_custom.h
-  * turns out when profiling a cvec consumes too much cpu cycles
-* Changed pt_print() signature to follow other print functions:
+  * Turns out when profiling a cvec consumes too much cpu cycles
+* Added proper error message with line number when encountering errors in the CLIgen YACC parsing and its sub-routines, not only for LEX errors.
+* Changed `pt_print()` signature to follow other print functions:
   * pt_print(FILE*, parsetree*)
-* Added reftree @remove support shallow treeref copy.
-  * That is, fixed "shallow copy" so you can state things like: `@tree, @remove foo`
-  * Removed "deep" treeref copy which consumed lots of memory for large trees
-  * Ensured indirect treeref functionality: eg tree referencing another tree:
-    * `@t0 @t1`
-  * Removed @delete:<label> construct
-  * Removed `cligen_reftree_filter_get()/_set()` functions and `@delete:<label>` constructs
-    * You can now only do eg: `ref @tree, @remove:<label>`
-    * I.e., no default remove labels and no `@add:<label>` supported
-
-* Added proper error message with line# when encountering errors in the CLIgen YACC parsing and its sub-routines, not only for LEX errors.
 
 ### Corrected Bugs
 
-* 5.4.0 introduced an issue with expand if exclude_keys is 0,
+* Fixed: clispec parser escaped double quote: `\"` was not parsed correctly
+* Fixed: 5.4.0 introduced an issue with expand if exclude_keys is 0,
   * <tab> and <query> may return a constant instead of the variable in many cases
-  * May be a reason for a 5.4.1?  
 * Revisited [Check if cg_obj is optional #38](https://github.com/clicon/cligen/issues/38).
   * The orignal workaround/fix in [1e9964e](https://github.com/clicon/cligen/commit/1e9964ec5f58ca9a21c39063f8ee596ce4980376) to disallow multiple []: "Do not think this is a costraining fix" was wrong.
   * Fixed it by adding the CO_FLAGS_OPTION on any new cligen object created when within [].
