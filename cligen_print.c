@@ -160,6 +160,10 @@ co2cbuf(cbuf   *cb,
     cg_obj      *cot;
     cg_var      *cv;
 
+    if (co == NULL){
+	errno = EINVAL;
+	goto done;
+    }
     /* Add [] if optional. Note this is neither not complete/correct since it only notes
      * that the symbol was created within a [], not the exact composition.
      * Thus, for example, both "[a b]" and "[a[b]]" will be shown as "[a][b]".
@@ -246,6 +250,10 @@ pt2cbuf(cbuf       *cb,
     int     i;
     cg_obj *co;
 
+    if (pt == NULL){
+	errno = EINVAL;
+	goto done;
+    }
     for (i=0; i<pt_len_get(pt); i++){
 	if ((co = pt_vec_i_get(pt, i)) == NULL)
 	    continue;

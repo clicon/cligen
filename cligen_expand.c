@@ -274,9 +274,10 @@ co_find_label_filters(cligen_handle h,
 		filter = name+strlen(CLIGEN_REF_REMOVE);
 		/* If filter not in cvv, add it */
 		if (cvec_find(cvv, filter) == NULL){
-		    if ((cv1 = cvec_add(cvv, CGV_STRING)) == NULL)
+		    if ((cv1 = cvec_add(cvv, CGV_BOOL)) == NULL)
 			goto done;
 		    cv_name_set(cv1, filter);
+		    cv_bool_set(cv1, 0); /* remove */
 		}
 	    }
 	}
@@ -295,6 +296,11 @@ co_find_label_filters(cligen_handle h,
  * @param[out]  ptnew   Expanded parse-tree to expand. In: original, out: expanded
  * @retval      0       OK
  * @retval     -1       Error
+ * Makes recursive unfolding of tree references which means it handles eg:
+ * @a
+ * a:
+ * @b
+ * This is to handle cases of predefined trees, like @datamodel
  */
 static int 
 co_expand_treeref_copy_shallow(cligen_handle h,
@@ -310,6 +316,7 @@ co_expand_treeref_copy_shallow(cligen_handle h,
     cg_obj     *con;
     parse_tree *ptref2 = NULL;   /* tree referenced by pt0 orig */
     cvec       *cvv = NULL;
+    cg_var     *cv;
     
     coparent = co_up(co0);
     for (i=0; i<pt_len_get(ptorig); i++){
@@ -325,6 +332,14 @@ co_expand_treeref_copy_shallow(cligen_handle h,
 		goto done;
 	    if (co_find_label_filters(h, cot, cvv) < 0)
 		goto done;
+	    /* Merge with cvv_filter */
+	    cv = NULL;
+	    while ((cv = cvec_each(cvv_filter, cv)) != NULL) {
+		if (cv_name_get(cv) && cvec_find(cvv, cv_name_get(cv)) != NULL)
+		    continue;
+		if (cvec_append_var(cvv, cv) == NULL)
+		    goto done;
+	    }
 	    if (co_expand_treeref_copy_shallow(h, co0, cvv, ptref2, ptnew) < 0)
 		goto done;
 	    cvec_free(cvv);
