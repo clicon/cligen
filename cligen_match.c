@@ -1155,7 +1155,7 @@ match_complete(cligen_handle h,
 	string[strlen(string)+1] = '\0';
 	string[strlen(string)] = cligen_delimiter(h);
 	level++;
-	slen = 0;
+	*slenp = 0;
 	co1 = NULL;
     }
     retval = append?1:0;

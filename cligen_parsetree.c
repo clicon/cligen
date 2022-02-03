@@ -137,11 +137,17 @@ cg_obj *
 pt_vec_i_get(parse_tree *pt,
 	     int         i)
 {
-    if (pt == NULL || i<0){
+    struct cg_obj **ptvec;
+    if (pt == NULL || i<0 || i>pt->pt_len){
        errno = EINVAL;
        return NULL;
     }
-    return pt->pt_vec?pt->pt_vec[i]:NULL;
+    if (pt->pt_vec != NULL){
+	ptvec = pt->pt_vec;
+	return ptvec[i];
+    }
+    else
+	return NULL;
 }
 
 /*! Clear the i:th CLIgen object child of a parse-tree (without freeing existing)
@@ -429,6 +435,7 @@ pt_dup(parse_tree *pt,
     if ((ptn = pt_new()) == NULL)
 	goto done;
     if (pt_copy(pt, cop, flags, ptn) < 0){
+	free(ptn);
 	ptn = NULL;
 	goto done;
     }

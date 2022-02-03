@@ -277,18 +277,20 @@ cgy_assignment(cligen_yacc *cy,
     char            *treename_keyword;
     cligen_handle    h = cy->cy_handle;
 
+    if (cs == NULL){
+	errno = EINVAL;
+	goto done;	
+    }
     if (debug)
 	fprintf(stderr, "%s: %s=%s\n", __FUNCTION__, var, val);
-    if (cs == NULL){
-	fprintf(stderr, "%s: Error, stack should not be NULL\n", __FUNCTION__);
-    }
-     if (cs->cs_next != NULL){ /* local */
-	 if (cy->cy_cvec == NULL)
-	     if ((cy->cy_cvec = cvec_new(0)) == NULL){
-		 fprintf(stderr, "%s: cvec_new:%s\n", __FUNCTION__, strerror(errno));
-		 goto done;
-	     }
-	 if ((cv = cvec_add(cy->cy_cvec, CGV_STRING)) == NULL){
+
+    if (cs->cs_next != NULL){ /* local */
+	if (cy->cy_cvec == NULL)
+	    if ((cy->cy_cvec = cvec_new(0)) == NULL){
+		fprintf(stderr, "%s: cvec_new:%s\n", __FUNCTION__, strerror(errno));
+		goto done;
+	    }
+	if ((cv = cvec_add(cy->cy_cvec, CGV_STRING)) == NULL){
 	    fprintf(stderr, "%s: realloc:%s\n", __FUNCTION__, strerror(errno));
 	    goto done;
 	}
@@ -313,7 +315,7 @@ cgy_assignment(cligen_yacc *cy,
 	}
     }
     retval = 0;
-  done:
+ done:
     return retval;
 }
 
@@ -910,15 +912,9 @@ ctx_pop_add(cligen_yacc *cy)
 
     if (debug)
 	fprintf(stderr, "%s\n", __FUNCTION__);
-    for (cl = cy->cy_list; cl; cl = cl->cl_next){
-	co = cl->cl_obj;
-    }
     if ((cs = cy->cy_stack) == NULL){
 	fprintf(stderr, "%s: cgy_stack empty\n", __FUNCTION__);
 	return -1; /* shouldnt happen */
-    }
-    for (cl = cs->cs_list; cl; cl = cl->cl_next){
-	co = cl->cl_obj;
     }
     cy->cy_stack = cs->cs_next;
     /* We could have saved some heap work by moving the cs_list,... */
@@ -953,8 +949,6 @@ ctx_pop(cligen_yacc *cy)
 	fprintf(stderr, "%s: cgy_stack empty\n", __FUNCTION__);
 	return -1; /* shouldnt happen */
     }
-    for (cl = cs->cs_list; cl; cl = cl->cl_next)
-	co = cl->cl_obj;
     cy->cy_stack = cs->cs_next;
     for (cl = cs->cs_saved; cl; cl = cl->cl_next){
 	co = cl->cl_obj;

@@ -334,7 +334,7 @@ int
 gl_select()
 {
     int i;
-    fd_set fdset;
+    fd_set fdset = {0,};
 
     while (1){
 	FD_ZERO(&fdset);

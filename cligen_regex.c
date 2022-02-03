@@ -112,11 +112,15 @@ cligen_regex_posix_compile(char  *regexp,
     if ((re = malloc(sizeof(regex_t))) == NULL)
 	goto done;
     memset(re, 0, sizeof(regex_t));
-    if (regcomp(re, cbuf_get(cb), REG_NOSUB|REG_EXTENDED) != 0) 
+    if (regcomp(re, cbuf_get(cb), REG_NOSUB|REG_EXTENDED) != 0) {
 	goto fail;
+    }
     *recomp = re;
+    re = NULL;
     retval = 1;
  done:
+    if (re)
+	free(re);
     if (cb)
 	cbuf_free(cb);
     return retval;
@@ -327,9 +331,8 @@ match_regexp(cligen_handle h,
 	goto fail;
     retval = 1;
  done:
-    if (re){
+    if (re != NULL)
 	cligen_regex_free(h, re);
-    }
     return retval;
  fail:
     retval = 0;

@@ -1546,7 +1546,7 @@ parse_url(char   *url,
 	  cg_var *cv, 
 	  char  **reason)
 {
-    char    *str0;
+    char    *str0 = NULL;
     char    *str;
     char    *tmp;
     char    *tmp2;
@@ -1594,10 +1594,10 @@ parse_url(char   *url,
 	free(str0);
     return retval;
   warn:
-    if (reason && (*reason = cligen_reason("%s: Invalid URL", url)) == NULL)
-	return -1;
     if (str0)
 	free(str0);
+    if (reason && (*reason = cligen_reason("%s: Invalid URL", url)) == NULL)
+	return -1;
     return 0;
 }
 
@@ -1791,7 +1791,7 @@ str2time(char           *in,
     int        min;
     int        sec;
     int        usec = 0;
-    struct tm *tm; 
+    struct tm *tm = NULL;
     time_t     t;
     char       frac[7];
 
@@ -1915,11 +1915,12 @@ str2time(char           *in,
 	t = t - tz.tz_minuteswest*60; 
     }
 #endif
-    free(tm);
     tv->tv_sec = t; 
     tv->tv_usec = usec;
     retval = 0;
 done:
+    if (tm)
+	free(tm);
     return retval;
 }
 
@@ -3368,7 +3369,6 @@ cv_validate(cligen_handle h,
 	break;
     case CGV_ERR:
     case CGV_VOID:
-	retval = 0;
 	if (reason)
 	    *reason = cligen_reason("Invalid cv");
 	retval = 0;

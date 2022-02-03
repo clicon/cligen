@@ -159,8 +159,10 @@ cligen_init(void)
     cligen_prompt_set(h, CLIGEN_PROMPT_DEFAULT);
     /* Only if stdin and stdout refers to a terminal make win size check */
     if (isatty(0) && isatty(1)){
-	if (cligen_gwinsz(h) < 0)
+	if (cligen_gwinsz(h) < 0){
+	    free(ch);
 	    return NULL;
+	}
 	cligen_interrupt_hook(h, cligen_gwinsz);
 	memset(&sigh, 0, sizeof(sigh));
 	sigh.sa_handler = sigwinch_handler;
