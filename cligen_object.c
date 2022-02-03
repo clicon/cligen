@@ -541,10 +541,15 @@ co_new(char   *cmd,
 	co->co_command = strdup(cmd);
     co_up_set(co, parent);
     /* parse-tree created implicitly */
-    if ((pt = pt_new()) == NULL)
+    if ((pt = pt_new()) == NULL){
+	free(co);
 	return NULL;
-    if (co_pt_set(co, pt) < 0)
+    }
+    if (co_pt_set(co, pt) < 0){
+	free(pt);
+	free(co);
 	return NULL;
+    }
     return co;
 }
 
@@ -573,10 +578,15 @@ cov_new(enum cv_type cvtype,
 	co_up_set(co, parent);
     co->co_dec64_n = CGV_DEC64_N_DEFAULT;
     /* parse-tree created implicitly */
-    if ((pt = pt_new()) == NULL)
+    if ((pt = pt_new()) == NULL){
+	free(co);
 	return NULL;
-    if (co_pt_set(co, pt) < 0)
+    }
+    if (co_pt_set(co, pt) < 0){
+	free(pt);
+	free(co);
 	return NULL;
+    }
     return co;
 }
 

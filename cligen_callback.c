@@ -79,29 +79,31 @@ int
 co_callback_copy(cg_callback  *cc0, 
 		 cg_callback **ccn)
 {
+    int                  retval = -1;
     struct cg_callback  *cc;
-    struct cg_callback  *cc1;
+    struct cg_callback  *cc1 = NULL;
     struct cg_callback **ccp;
 
     ccp = ccn;
     for (cc = cc0; cc; cc=cc->cc_next){
-	if ((cc1 = malloc(sizeof(*cc1))) == NULL){
-	    fprintf(stderr, "%s: malloc: %s\n", __FUNCTION__, strerror(errno));
-	    return -1;
-	}
+	if ((cc1 = malloc(sizeof(*cc1))) == NULL)
+	    goto done;
 	memset(cc1, 0, sizeof(*cc1));
 	cc1->cc_fn_vec = cc->cc_fn_vec;
 	if (cc->cc_fn_str)
-	    if ((cc1->cc_fn_str = strdup(cc->cc_fn_str)) == NULL){
-		fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
-		return -1;
-	    }
+	    if ((cc1->cc_fn_str = strdup(cc->cc_fn_str)) == NULL)
+		goto done;
 	if (cc->cc_cvec && ((cc1->cc_cvec = cvec_dup(cc->cc_cvec)) == NULL))
-	    return -1;
+	    goto done;
 	*ccp = cc1;
 	ccp = &cc1->cc_next;
+	cc1 = NULL;
     }
-    return 0;
+    retval = 0;
+ done:
+    if (cc1)
+	free(cc1);
+    return retval;
 }
 
 /*! Free a single callback structure

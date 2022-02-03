@@ -199,8 +199,10 @@ mr_new(void)
     if ((mr = malloc(sizeof(*mr))) == NULL)
 	return NULL;
     memset(mr, 0, sizeof(*mr));
-    if ((mr->mr_pt = pt_new()) == NULL)
+    if ((mr->mr_pt = pt_new()) == NULL){
+	free(mr);
 	return NULL;
+    }
     return mr;
 }
 

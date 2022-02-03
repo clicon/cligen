@@ -120,8 +120,10 @@ cbuf_new_alloc(size_t sz)
 	return NULL;
     memset(cb, 0, sizeof(*cb));
     cb->cb_buflen = sz;
-    if ((cb->cb_buffer = malloc(cb->cb_buflen)) == NULL)
+    if ((cb->cb_buffer = malloc(cb->cb_buflen)) == NULL){
+	free(cb);
 	return NULL;
+    }
     memset(cb->cb_buffer, 0, cb->cb_buflen);
     cb->cb_strlen = 0;
     return cb;

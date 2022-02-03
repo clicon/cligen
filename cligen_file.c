@@ -83,7 +83,7 @@ cligen_exec_cb(cligen_handle handle,
 	}
 	cv2str(cvec_i(argv, 0), buf, sizeof(buf)-1);
 	ret = system(buf);
-	exit(0);
+	exit(ret);
     }
     /* Wait for child to finish */
     if(waitpid (pid, &status, 0) == pid)

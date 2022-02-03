@@ -450,9 +450,11 @@ cvec_dup(cvec *old)
 	return NULL;
     if ((new = cvec_new(old->vr_len)) == NULL)
 	return NULL;
-    if (old->vr_name)
-	if ((new->vr_name = strdup4(old->vr_name)) == NULL)
-	    return NULL;
+    if (old->vr_name &&
+	(new->vr_name = strdup4(old->vr_name)) == NULL){
+	free(new);
+	return NULL;
+    }
     i = 0;
     while ((cv0 = cvec_each(old, cv0)) != NULL) {
 	cv1 = cvec_i(new, i++);
@@ -855,7 +857,7 @@ cligen_str2cvv(char  *string,
     cvec   *cvt = NULL; /* token vector */
     cvec   *cvr = NULL; /* rest vector */
     cg_var *cv;
-    char   *t;
+    char   *t = NULL;
     int     trail;
     int     i;
 
@@ -868,6 +870,7 @@ cligen_str2cvv(char  *string,
 	goto done;
     i = 0;
     while (s != NULL) {
+	t = NULL;
 	if (next_token(&s, &t, &sr, &trail) < 0)
 	    goto done;
 	/* If there is no token, stop, 
@@ -884,8 +887,10 @@ cligen_str2cvv(char  *string,
 	    goto done;
 	if (cv_string_set(cv, t?t:"") == NULL) /* XXX memleak */
 	    goto done;
-	if (t)
+	if (t){
 	    free(t);
+	    t = NULL;
+	}
 	i++;
     }
     retval = 0;
@@ -898,6 +903,8 @@ cligen_str2cvv(char  *string,
 	cvr = NULL;
     }
  done:
+    if (t)
+	free(t);
     if (s0)
 	free(s0);
     if (cvt)
