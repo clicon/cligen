@@ -1,5 +1,9 @@
 # Cligen Changelog
 	
+## 5.6.0
+Expected: March 2022
+
+
 ## 5.5.0
 20 January 2022
 
@@ -13,7 +17,7 @@
   * Removed `cligen_reftree_filter_get()/_set()` functions and `@delete:<label>` constructs
     * You can now only do eg: `ref @tree, @remove:<label>`
     * I.e., no default remove labels and no `@add:<label>` supported
-* Removed `ifdef __GNUC__` around printf-like prototypes since both clang and gcc have format/printf macros defined
+* Removed `#ifdef __GNUC__` around printf-like prototypes since both clang and gcc have format/printf macros defined
 * Removed `hide-database` and `hide-database-auto-completion` labels
   * They were no-ops, only `hide` has meaning.
   * C flag `CO_FLAGS_HIDE_DATABASE` removed
