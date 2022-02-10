@@ -3,7 +3,13 @@
 ## 5.6.0
 Expected: March 2022
 
+### Corrected Bugs
 
+* Fixed: Duplicates in autocli expansion of leafs and treeref includes:
+  * https://github.com/clicon/cligen/issues/73
+  * https://github.com/clicon/clixon/issues/301
+  * This was introduced in CLIgen 5.4
+ 
 ## 5.5.0
 20 January 2022
 

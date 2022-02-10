@@ -1089,15 +1089,17 @@ co_insert_pos(parse_tree *pt,
  * There is som complexity if co == NULL.
  * @param[in] pt   Parse-tree
  * @param[in] co1  CLIgen object
+ * @param[in] recursive  Recursive delete?
  * @retval    co   object if found (old _or_ new). NOTE: you must replace calling 
  *                 cg_obj with return.
  * @retval    NULL error
- * @note co1 maye be deleted in this call. Dont use co after this call,use retval
+ * @note co1 may be deleted in this call. Dont use co after this call,use retval
  * XXX: pt=[a b] + co1=[b] -> [a b] but children of one b is lost,..
  */
 cg_obj*
-co_insert(parse_tree *pt, 
-	  cg_obj     *co1)
+co_insert1(parse_tree *pt, 
+	   cg_obj     *co1,
+	   int         recursive)
 {
     int     pos;
     cg_obj *co2;
@@ -1111,13 +1113,21 @@ co_insert(parse_tree *pt,
 	    return NULL;
 	if (co1 && co2 && co_eq(co1, co2)==0){
 	    cligen_parsetree_merge(co_pt_get(co2), co2, co_pt_get(co1));
-	    co_free(co1, 1);
+	    co_free(co1, recursive);
 	    return co2;
 	}
     }
     if (pt_vec_i_insert(pt, pos, co1) < 0)
 	return NULL;
     return co1;
+}
+
+/* Backward compatible */
+cg_obj*
+co_insert(parse_tree *pt, 
+	  cg_obj     *co1)
+{
+    return co_insert1(pt, co1, 1);
 }
 
 /*! Given a parse tree, find the first CLIgen object that matches 
