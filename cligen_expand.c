@@ -638,11 +638,12 @@ pt_expand1_co(cligen_handle h,
 	con = NULL;
 	if (co_expand_sub(co, NULL, &con) < 0)
 	    goto done;
+	/* con may be deleted in the call and need to be replaced */
+	if ((con = co_insert1(ptn, con, 0)) == NULL) 
+	    goto done;
 	if (transient && con->co_ref){
 	    con->co_ref = co->co_ref;
 	}
-	if (pt_vec_append(ptn, con) < 0)
-	    goto done;
 	if (cvv_filter && cvec_len(cvv_filter))
 	    if ((con->co_filter = cvec_dup(cvv_filter)) == NULL)
 		goto done;
@@ -720,6 +721,7 @@ pt_expand(cligen_handle h,
 		    goto done;
 		if (co_find_label_filters(h, co, cvv2) < 0)
 		    goto done;
+		/* Expand ptref to pttmp */
 		if (co_expand_treeref_copy_shallow(h, co, cvv2, ptref, pttmp) < 0)
 		    goto done;
 		/* Copy the expand tree to the final tree. 
@@ -744,9 +746,9 @@ pt_expand(cligen_handle h,
 	} /* for */
     } /* for */
     /* Sorting (Alt: ensure all elements are inserted properly)
-     * Sorting is disabled for now. Left this comment but seems to work fine without
-     *    cligen_parsetree_sort(ptn, 1);
+     * Sorting must be here so that duplicates can be detected
      */
+    cligen_parsetree_sort(ptn, 0);
     if (cligen_logsyntax(h) > 0){
 	fprintf(stderr, "%s:\n", __FUNCTION__);
 	pt_print1(stderr, ptn, 0);

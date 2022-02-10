@@ -221,6 +221,7 @@ int         co_copy(cg_obj *co, cg_obj *parent, uint32_t flags, cg_obj **conp);
 int         co_copy1(cg_obj *co, cg_obj *parent, int recursive, uint32_t flags, cg_obj **conp);
 int         co_eq(cg_obj *co1, cg_obj *co2);
 int         co_free(cg_obj *co, int recursive);
+cg_obj     *co_insert1(parse_tree *pt, cg_obj *co, int recursive);
 cg_obj     *co_insert(parse_tree *pt, cg_obj *co);
 cg_obj     *co_find_one(parse_tree *pt, char *name);
 int         co_value_set(cg_obj *co, char *str);
