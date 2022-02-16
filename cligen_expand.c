@@ -541,9 +541,10 @@ pt_expand_choice(cg_obj       *co,
 	    con = NULL;
 	    if (co_expand_sub(co, NULL, &con) < 0)
 		goto done;
-	    if (pt_vec_append(ptn, con) < 0)
-		goto done;
 	    if (transform_var_to_cmd(con, strdup(c), NULL) < 0) 
+		goto done;
+	    /* con may be deleted in the call and need to be replaced */
+	    if ((con = co_insert1(ptn, con, 0)) == NULL) 
 		goto done;
 	}
     }
