@@ -7,7 +7,7 @@
 %
 % Title
 %
-\title {CLIgen Manual\\ {\small CLIgen version 5.5}}
+\title {CLIgen Manual\\ {\small CLIgen version 5.6}}
 
 \author{Olof Hagsand}
 %
@@ -1217,9 +1217,9 @@ In the example, the cligen variable vector {\tt cvv} has four elements and can b
 \item A CLIgen integer variable containing 67.
 \end{enumerate}
 
-Two API functions control the format of {\tt cvv} and changes the rules above:
+Two API functions control the format of {\tt cvv} and changes the rules above (should be called initially in the program):
 \begin{enumerate}
-\item {\tt cligen\_expand\_first\_set()}.: Instead of showing the first {\tt cvv} argument as the user typed it, the \emph{expanded} variant (after completion) is shown. Example: the user types {\tt per m 67}, whereas the expanded version of that string is {\tt person male 67}.
+\item {\tt cligen\_expand\_first\_set()}: Instead of showing the first {\tt cvv} argument as the user typed it, the \emph{expanded} variant (after completion) is shown. Example: the user types {\tt per m 67}, whereas the expanded version of that string is {\tt person male 67}.
 \item {\tt cligen\_exclude\_keys\_set()}: Do \emph{not} include keywords in the {\tt ccv} argument. With this option enabled, there are only two elements in {\tt cvv} of the example: The complete command string; and the integer, while the two keywords {\tt person} and {\tt male} are omitted.
 \end{enumerate}
 
