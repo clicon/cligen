@@ -5,6 +5,7 @@ Expected: March 2022
 
 ### Corrected Bugs
 
+* Fixed: helpstrings were duplicated in conjunction with option `[]`
 * Fixed: Duplicates in autocli expansion of leafs and treeref includes:
   * https://github.com/clicon/cligen/issues/73
   * https://github.com/clicon/clixon/issues/301

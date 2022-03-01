@@ -639,10 +639,12 @@ cgy_reference(cligen_yacc *cy,
 /*! Add one line of helpstr
  *
  * @param[in]  cy       CLIgen yacc parse struct
+ * @param[in]  merge    OK to merge
  * @param[in]  helpstr  Malloced help string, stripped of spaces, consumed here
  */
 static int
 cgy_helpstring(cligen_yacc *cy,
+	       int          merge,
 	       char        *helpstr)
 {
     int              retval = -1;
@@ -656,13 +658,15 @@ cgy_helpstring(cligen_yacc *cy,
     for (cl = cy->cy_list; cl; cl = cl->cl_next){
 	co = cl->cl_obj;
 	if (co->co_helpstring){
-	    if ((co->co_helpstring = realloc(co->co_helpstring,
-					     strlen(co->co_helpstring) + strlen(helpstr) + 2)) == NULL){
-		cligen_parseerror1(cy, "Allocating helpstr");
-		goto done;
+	    if (merge){
+		if ((co->co_helpstring = realloc(co->co_helpstring,
+						 strlen(co->co_helpstring) + strlen(helpstr) + 2)) == NULL){
+		    cligen_parseerror1(cy, "Allocating helpstr");
+		    goto done;
+		}
+		strcat(co->co_helpstring, "\n");
+		strcat(co->co_helpstring, helpstr);
 	    }
-	    strcat(co->co_helpstring, "\n");
-	    strcat(co->co_helpstring, helpstr);
 	}
 	else
 	    if ((co->co_helpstring = strdup(helpstr)) == NULL){
@@ -674,7 +678,7 @@ cgy_helpstring(cligen_yacc *cy,
     retval = 0;
  done:
     return retval;
-}
+ }
 
 /*! Append a new choice option to a choice variable string 
  * @param[in]  cy   CLIgen yacc parse struct
@@ -1318,12 +1322,12 @@ decl        : cmd                 { _PARSE_DEBUG("decl->cmd");}
 helpstring : helpstring '\n' helpstring1
               {
 		  _PARSE_DEBUG("helpstring -> helpstring helpstring1");
-		  if (cgy_helpstring(_cy, $3) < 0) _YYERROR("helpstring");
+		  if (cgy_helpstring(_cy, 1, $3) < 0) _YYERROR("helpstring");
 	      }
             | helpstring1
 	       {
 		   _PARSE_DEBUG("helpstring -> helpstring1");
-		   if (cgy_helpstring(_cy, $1) < 0) _YYERROR("helpstring");
+		   if (cgy_helpstring(_cy, 0, $1) < 0) _YYERROR("helpstring");
 	       }
             ;
 
