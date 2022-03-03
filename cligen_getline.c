@@ -597,7 +597,7 @@ gl_getline(cligen_handle h,
     gl_fixup(h, gl_prompt, -2, cligen_buf_size(h));
     while ((c = gl_getc(h)) >= 0) {
 	gl_extent = 0;  	/* reset to full extent */
-	if (isprint(c) || (escape&&c=='\n')) {
+	if (isprint(c) || (escape && c=='\n')) {
 	    if (escape == 0 && c == '\\')
                escape++;
             else{
@@ -619,7 +619,10 @@ gl_getline(cligen_handle h,
 	} else {
 	    escape = 0;
 	    if (gl_search_mode) { /* after ^S or ^R */
-	        if (c == '\033' || c == '\016' || c == '\020') { /* ESC, ^N, ^P */
+	        if (c == '\033') { /* ESC */
+	            search_term(h);
+		}
+		else  if (c == '\016' || c == '\020') { /* ^N, ^P */
 	            search_term(h);
 	            c = 0;     		/* ignore the character */
 		} else if (c == '\010' || c == '\177') { /* del */
