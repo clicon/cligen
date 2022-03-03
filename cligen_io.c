@@ -123,6 +123,13 @@ cli_output_status(void)
  * process), but all output functions need to pass though this code.
  * For now (2) is used and extended also for clixon functions. However (1) could still be 
  * implemented as an option.
+ *
+ * Chop up input buffers as follows:
+ * in:    01234567890123456789\n0123456
+ * width: |----------|
+ * line1: 012345678901
+ * line2: 23456789
+ * line3: 0123456
  */
 int
 cligen_output(FILE       *f,
@@ -132,16 +139,22 @@ cligen_output(FILE       *f,
     int     retval = -1;
     va_list args;
     char   *buf = NULL;
+    char   *linebuf = NULL;
+    ssize_t linelen;
+    int     cr;
     char   *start;
     char   *end;
     char   *bufend;
     char    c;
     int     term_rows;
-    int     len;
+    int     term_width;
+    ssize_t len;
 
+    /* Get terminal width and height, note discussion regarding NULL handle */
     term_rows = cligen_terminal_rows(NULL);
-    /* form a string in buf from all args */
+    term_width = cligen_terminal_width(NULL);
 
+    /* form a string in buf from all args */
     va_start(args, template);
     len = vsnprintf(NULL, 0, template, args);
     va_end(args);
@@ -152,22 +165,42 @@ cligen_output(FILE       *f,
     vsnprintf(buf, len, template, args);
     va_end(args);
 
+    if (term_width > 0 && len > term_width)
+	linelen = term_width;
+    else
+	linelen = len;
+    if ((linebuf = malloc(linelen+1)) == NULL)
+	goto done;
+    
     /* if writing to stdout, format output
      */
     if ((term_rows) && (f == stdout)){
 	start = end = buf;
 	bufend = buf + strlen(buf);
 	while (end < bufend){
-	    end = strstr(start, "\n");
-	    if (end) /* got a NL */{
+	    cr = 0;
+	    /* end should start on char excluded (that should be a \n) */
+	    if ((end = strstr(start, "\n")) != NULL){
+		if ((end - start) > linelen)
+		    end = start + linelen;
+		else
+		    cr++;
+	    }
+	    else if (strlen(start) > linelen)
+		end = start + linelen;
+	    if (end){ /* got a NL */
+		memcpy(linebuf, start, (end-start));
+		linebuf[(end-start)] = '\0';
 		if (D_LINES >= 0)
 		    D_LINES++;
-		*end = '\0';
-		if (D_LINES > -1)
-		    fprintf(f, "%s\n", start);
-	      
-		if (end < bufend)
-		    start = end+1;
+		if (D_LINES > -1){
+		    fprintf(f, "%s\n", linebuf);
+		}
+		if (end < bufend){
+		    start = end;
+		    if (cr)
+			start++;
+		}
 	      
 		if (D_LINES >= (term_rows -1)){		    
 		    gl_char_init();
@@ -177,7 +210,7 @@ cligen_output(FILE       *f,
 		    if (c == '\n')
 			D_LINES--;
 		    else if (c == ' ')
-			    D_LINES = 0;
+			D_LINES = 0;
 		    else if (c == 'q' || c == 3) /* ^c */
 			D_LINES = -1;
 		    else if (c == '?')
