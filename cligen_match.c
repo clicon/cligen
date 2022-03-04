@@ -856,7 +856,6 @@ match_pattern(cligen_handle h,
     cg_obj       *co;
     int           i;
     int           allvars = 1;
-    char         *string1;
     cg_obj       *co_match;
     cg_obj       *co1 = NULL;
     parse_tree   *ptc;
@@ -909,17 +908,9 @@ match_pattern(cligen_handle h,
      * Note can convert len>1 to len=1
      */
     if (mr_pt_len_get(mr) > 1){ 
-	string1 = cvec_i_str(cvt, cligen_cvv_levels(cvt)+1);
+	//	string1 = cvec_i_str(cvt, cligen_cvv_levels(cvt)+1);
 	for (i=0; i<mr_pt_len_get(mr); i++){
 	    co = mr_pt_i_get(mr, i);
-	    /* XXX If variable dont compare co_command */
-	    if (co->co_type == CO_COMMAND && string1)
-		if ((!cligen_caseignore_get(h) && strcmp(string1, co->co_command)==0) ||
-		    (cligen_caseignore_get(h) && strcasecmp(string1, co->co_command)==0)){
-		    if (mr_pt_trunc(mr, 1))
-			goto done;
-		    break;
-		}
 	    if (co->co_type != CO_VARIABLE)
 		allvars = 0; /* should mean onlyvars*/
 	}

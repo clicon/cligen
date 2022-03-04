@@ -123,6 +123,25 @@ expectpart "$(echo "z	" | $cligen_file -t 0 -e -f $fspec 2>&1)" 0 'CLI syntax er
 newtest "cligen z<tab> tabmode:4"
 expectpart "$(echo "z	" | $cligen_file -t 4 -e -f $fspec 2>&1)" 0 "za zb zc" "1 name:za type:string value:za" "2 name:zb type:string value:zb" "3 name:zc type:string value:zc"
 
+#----------------------------
+
+# Multi-command expansions
+cat > $fspec <<EOF
+  prompt="cli> ";              # Assignment of prompt
+  comment="#";                 # Same comment as in syntax
+  treename="tutorial";         # Name of syntax (used when referencing)
+
+  # Expand example
+  aaa {
+    value;
+    value1;
+    value2;
+  }
+EOF
+
+newtest "multiple options"
+expectpart "$(echo "aaa value?" | $cligen_file -t 0 -e -f $fspec 2>&1)" 0 value1 value2
+
 newtest "endtest"
 endtest
 
