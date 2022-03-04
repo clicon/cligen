@@ -236,6 +236,8 @@ cligen_output(FILE       *f,
     fflush(f);
     retval = 0;
  done:
+    if (linebuf)
+	free(linebuf);
     if (buf)
 	free(buf);
     return retval;
