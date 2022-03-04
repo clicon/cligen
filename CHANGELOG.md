@@ -5,6 +5,7 @@ Expected: March 2022
 
 ### Corrected Bugs
 
+* Fixed: [Multiple commands with common beginning gets collapsed into one](https://github.com/clicon/cligen/issues/75)
 * Fixed: cligen output scrolling did not work if lines are wrapped
 * Fixed: [Ctlr R(reverse-i-search) adds additional character '[C' on pressing right arrow](https://github.com/clicon/cligen/issues/74)
 * Fixed: helpstrings were duplicated in conjunction with option `[]`
