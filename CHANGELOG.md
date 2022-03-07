@@ -6,9 +6,9 @@ Expected: March 2022
 ### Corrected Bugs
 
 * Fixed: [Multiple commands with common beginning gets collapsed into one](https://github.com/clicon/cligen/issues/75)
-* Fixed: cligen output scrolling did not work if lines are wrapped
-* Fixed: [Ctlr R(reverse-i-search) adds additional character '[C' on pressing right arrow](https://github.com/clicon/cligen/issues/74)
-* Fixed: helpstrings were duplicated in conjunction with option `[]`
+* Fixed: CLIgen output scrolling did not work if lines were wrapped
+* Fixed: `[Ctlr R`(reverse-i-search) adds additional character C on pressing right arrow](https://github.com/clicon/cligen/issues/74)
+* Fixed: Helpstrings were duplicated in conjunction with option `[]`
 * Fixed: Duplicates in autocli expansion of leafs and treeref includes:
   * https://github.com/clicon/cligen/issues/73
   * https://github.com/clicon/clixon/issues/301
