@@ -81,6 +81,7 @@
  * Local variables
  */
 static int D_LINES=0; /* XXX: global */
+static int D_COLUMNS=0; /* XXX: global */
 
 /*! Reset cligen_output to initial state
  * For new output or when 'q' is pressed that sets d_line to -1
@@ -89,6 +90,7 @@ int
 cli_output_reset(void)
 {
     D_LINES = 0;
+    D_COLUMNS = 0;
     return 0;
 }
 
@@ -98,9 +100,107 @@ cli_output_status(void)
     return D_LINES;
 }
 
+/*! cligen_output support function for the actual scrolling
+ *
+ * @param[in] f           Open stdio FILE pointer
+ * @param[in] ibuf        Input buffer containing all chars to be printed including 0 or many \n
+ * @param[in] linelen     Length of single printable line, less than or equal to width of 
+ *                        terminal window, unless the terminal window is 0
+ * @param[in] term_rows   Height of terminal window
+ * @see cligen_output
+ */
+#include <assert.h> // XXX
+static int
+cligen_output_scroll(FILE   *f,
+		     char   *ibuf,
+		     ssize_t linelen,
+		     int     term_rows)
+{
+    int     retval = -1;
+    char   *ibend;
+    char   *ib0;  /* Moving window start */
+    char   *ib1;  /* Moving window end */
+    char   *ibcr; 
+    char    c;
+    char   *linebuf = NULL;
+    ssize_t remain;
+    
+    ib0 = ibuf;
+    ib1 = ibuf;
+    ibend = ibuf + strlen(ibuf);
+    /* A terminal line */
+    if ((linebuf = malloc(linelen+1)) == NULL)
+	goto done;
+    remain = linelen - D_COLUMNS;
+    while (ib1 < ibend && D_LINES >= 0){
+	/* Four cases:
+	 * 1. There is a CR in [ib0,ibend]
+	 *   1a) greater than remaining: (inc D_LINE)
+	 *   1b) less than or equal to remain: Only case where line has (terminating) CR
+	 * 2. No CR
+	 *   2a) greater than remain: (inc D_LINE)
+	 *   2b) less than or equal to remain: 
+	 */
+	if ((ibcr = strstr(ib0, "\n")) != NULL){
+	    if ((ibcr - ib0) > remain){
+		ib1 = ib0 + remain; /* 1a */
+		D_LINES++;
+		remain = linelen;
+	    }
+	    else{
+		ib1 = ibcr+1;        /* 1b */
+		D_LINES++;
+		remain = linelen;
+	    }
+	}
+	else if (ibend - ib0 > remain){
+	    ib1 = ib0 + remain;     /* 2a */
+	    D_LINES++;
+	    remain = linelen;
+	}
+	else{
+	    remain -= ibend-ib1;
+	    assert(remain<=linelen && remain>=0);
+	    ib1 = ibend;             /* 2b */
+	}
+	if (ib0 == ib1)
+	    break;
+	memcpy(linebuf, ib0, (ib1-ib0));
+	linebuf[(ib1-ib0)] = '\0';
+	assert(*ib0 != '\0');
+	fprintf(f, "%s", linebuf);
+	ib0 = ib1;
+	if (D_LINES >= (term_rows -1)){
+	    gl_char_init();
+	    
+	    fprintf(f, "--More--");
+	    c = fgetc(stdin);
+	    if (c == '\n')
+		D_LINES--;
+	    else if (c == ' ')
+		D_LINES = 0;
+	    else if (c == 'q' || c == 3) /* ^c */
+		D_LINES = -1;
+	    else if (c == '?')
+		fprintf(f, "Press CR for one more line, SPACE for next page, q to quit\n");
+	    else 
+		D_LINES = 0;  
+	    fprintf(f, "        ");
+	    gl_char_cleanup();
+	}
+    }
+    D_COLUMNS=linelen-remain;
+    retval = 0;
+ done:
+    if (linebuf)
+	free(linebuf);
+    return retval;
+}
+
 /*! CLIgen output function. All printf-style output should be made via this function.
  * 
- * It deals with formatting, page breaks, etc. 
+ * Note only scrolling for stdout
+ * It deals with formatting, page breaks, etc, (but only if f is stdout)
  * @param[in] f           Open stdio FILE pointer
  * @param[in] template... See man printf(3)
  *
@@ -138,108 +238,46 @@ cligen_output(FILE       *f,
 {
     int     retval = -1;
     va_list args;
-    char   *buf = NULL;
-    char   *linebuf = NULL;
+    char   *inbuf = NULL;
     ssize_t linelen;
-    int     cr;
-    char   *start;
-    char   *end;
-    char   *bufend;
-    char    c;
     int     term_rows;
     int     term_width;
-    ssize_t len;
-
+    ssize_t inbuflen;
+    
     /* Get terminal width and height, note discussion regarding NULL handle */
     term_rows = cligen_terminal_rows(NULL);
     term_width = cligen_terminal_width(NULL);
 
-    /* form a string in buf from all args */
+    /* form a string in inbuf from all args */
     va_start(args, template);
-    len = vsnprintf(NULL, 0, template, args);
-    va_end(args);
-    len++;
-    if ((buf = malloc(len)) == NULL)
-	goto done;
-    va_start(args, template);
-    vsnprintf(buf, len, template, args);
+    inbuflen = vsnprintf(NULL, 0, template, args);
     va_end(args);
 
-    if (term_width > 0 && len > term_width)
+    if ((inbuf = malloc(inbuflen+1)) == NULL)
+	goto done;
+    va_start(args, template);
+    vsnprintf(inbuf, inbuflen+1, template, args);
+    va_end(args);
+
+    if (term_width > 0)
 	linelen = term_width;
     else
-	linelen = len;
-    if ((linebuf = malloc(linelen+1)) == NULL)
-	goto done;
-    
+	linelen = inbuflen;
+
     /* if writing to stdout, format output
      */
-    if ((term_rows) && (f == stdout)){
-	start = end = buf;
-	bufend = buf + strlen(buf);
-	while (end < bufend){
-	    cr = 0;
-	    /* end should start on char excluded (that should be a \n) */
-	    if ((end = strstr(start, "\n")) != NULL){
-		if ((end - start) > linelen)
-		    end = start + linelen;
-		else
-		    cr++;
-	    }
-	    else if (strlen(start) > linelen)
-		end = start + linelen;
-	    if (end){ /* got a NL */
-		memcpy(linebuf, start, (end-start));
-		linebuf[(end-start)] = '\0';
-		if (D_LINES >= 0)
-		    D_LINES++;
-		if (D_LINES > -1){
-		    fprintf(f, "%s\n", linebuf);
-		}
-		if (end < bufend){
-		    start = end;
-		    if (cr)
-			start++;
-		}
-	      
-		if (D_LINES >= (term_rows -1)){		    
-		    gl_char_init();
-
-		    fprintf(f, "--More--");
-		    c = fgetc(stdin);
-		    if (c == '\n')
-			D_LINES--;
-		    else if (c == ' ')
-			D_LINES = 0;
-		    else if (c == 'q' || c == 3) /* ^c */
-			D_LINES = -1;
-		    else if (c == '?')
-			fprintf(f, "Press CR for one more line, SPACE for next page, q to quit\n");
-		    else 
-			D_LINES = 0;  
-		    fprintf(f, "        ");
-		    gl_char_cleanup();
-		}
-	    } /* NL */
-	    else{
-		/* do only print if we have data */
-		if (D_LINES >=0 && *start != '\0')
-		    fprintf(f, "%s", start);
-		end = start + strlen(start);
-		start = end;
-	    }
-	}
+    if (term_rows && (f == stdout)){
+	if (cligen_output_scroll(f, inbuf, linelen, term_rows) < 0)
+	    goto done;
     }
     else{
-	fprintf(f, "%s", buf);
+	fprintf(f, "%s", inbuf);
     }  
     fflush(f);
     retval = 0;
  done:
-    if (linebuf)
-	free(linebuf);
-    if (buf)
-	free(buf);
+    if (inbuf)
+	free(inbuf);
     return retval;
 }
 
