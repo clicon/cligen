@@ -61,8 +61,6 @@ line40-abcdefghijklmnopqrstuvwxyz-abcdefghijklmnopqrstuvwxyz-abcdefghijklmnopqrs
 );
 EOF
 
-stty rows 20 cols 128
-
 newtest "Scroll wide lines no wrapping using expect"
 expect ./test_scroll_wide.exp $fspec
 
@@ -70,13 +68,7 @@ if [ $? -ne 0 ]; then
     err "OK" "Failed"
 fi
 
-echo "fspec0:$fspec"
-ls -l $fspec
-
-stty rows 20 cols 100
 newtest "Scroll wrap lines using expect"
-echo "fspec:$fspec"
-ls -l $fspec
 expect ./test_scroll_wrap.exp $fspec
 
 if [ $? -ne 0 ]; then

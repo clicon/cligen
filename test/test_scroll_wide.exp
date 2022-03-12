@@ -4,6 +4,8 @@
 set timeout 1
 #log_user 0
 
+set stty_init "rows 20 cols 128"
+
 send_user "\nTest Wide lines no wrapping\n"
 
 set fspec [lrange $argv 0 1]
@@ -73,5 +75,3 @@ send "\d"
 close
 
 send_user "\nTest OK\n"
-
-
