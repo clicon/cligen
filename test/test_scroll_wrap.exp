@@ -7,8 +7,6 @@
 set timeout 1
 #log_user 0
 
-#stty rows 20 cols 100
-
 send_user "\nTest Wrap lines wrapping\n"
 
 set fspec [lrange $argv 0 1]
