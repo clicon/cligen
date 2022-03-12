@@ -61,8 +61,6 @@ line40-abcdefghijklmnopqrstuvwxyz-abcdefghijklmnopqrstuvwxyz-abcdefghijklmnopqrs
 );
 EOF
 
-oldstty=$(stty -g)
-
 stty rows 20 cols 128
 
 newtest "Scroll wide lines no wrapping using expect"
@@ -71,7 +69,6 @@ expect ./test_scroll_wide.exp $fspec
 if [ $? -ne 0 ]; then
     err "OK" "Failed"
 fi
-stty $oldstty
 
 echo "fspec0:$fspec"
 ls -l $fspec
