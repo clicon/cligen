@@ -1,5 +1,15 @@
 # Cligen Changelog
 	
+## 5.7.0
+Expected: May 2022
+
+### Corrected Bugs
+
+* Fixed again: CLIgen output scrolling did not work if lines were wrapped
+  * Did not work if cligen_output was called without \n
+* Fixed: [Compiling with -DNDEBUG results in failure of test applications.](https://github.com/clicon/cligen/issues/76)
+
+
 ## 5.6.0
 8 March 2022
 

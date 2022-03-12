@@ -1,0 +1,84 @@
+#!/usr/bin/env expect -f
+# Tests of more/scrolling for 20 rows and 100 width: wrapping of all except first line
+# Note that the line is written in two chunks by the cligen_file() callback routine,
+# First "arg %d:" , Then " line%d-abcdefgc.....\n"
+# 100 width is more than the second part
+
+set timeout 1
+#log_user 0
+
+#stty rows 20 cols 100
+
+send_user "\nTest Wrap lines wrapping\n"
+
+set fspec [lrange $argv 0 1]
+spawn ../cligen_file -f $fspec
+
+send "command\n"
+
+expect {
+  timeout { send_user "\nline 9 not received.\n"; exit 1}
+  "arg 9: line9-abcdefghijklmnopqrstuvw" { send_user "\nline 9 OK.\n";}
+}
+
+expect {
+  timeout { send_user "\nline 10 received.\n";}
+  "arg 10: line10-abcdefghijklmnopqrstuvw" { send_user "\nline 10 not expected.\n"; exit 1}
+}
+
+expect {
+  timeout { send_user "\nMore 1 not received.\n"; exit 1}
+    -ex  "--More--" {send_user "\nMore 1 OK.\n"}
+}
+
+send "\n"
+
+expect {
+  timeout { send_user "\nline 10 not received.\n"; exit 1}
+  "arg 10: line10-abcdefghijklmnopqrstuvw" { send_user "\nline 10 OK.\n"}
+}
+
+expect {
+  "arg 11: line11-abcdefghijklmnopqrstuvw" { send_user "\nline 11 not expected.\n"; exit 1}
+}
+
+expect {
+  timeout { send_user "\nMore 2 not received.\n"; exit 1}
+    -ex  "--More--" { send_user "\nMore 2 OK.\n"}
+}
+
+send " "
+
+expect {
+  timeout { send_user "\nline 11 not received.\n"; exit 1}
+  "arg 11: line11-abcdefghijklmnopqrstuvw" {send_user "\nLine 11 OK.\n" }
+}
+
+expect {
+  timeout { send_user "\nline 19 not received.\n"; exit 1}
+  "arg 19: line19-abcdefghijklmnopqrstuvw" { send_user "\Line 19 OK.\n" }
+}
+
+expect {
+  timeout { send_user "\nMore 3 not received.\n"; exit 1}
+    -ex  "--More--" { send_user "\nMore 3 OK.\n" }
+}
+
+send "q"
+
+expect {
+  "arg 20: line20-abcdefghijklmnopqrstuvw" { send_user "\nline 20 not expected.\n"; exit 1}
+}
+
+expect {
+  -ex  "--More--" { send_user "\nMore not expected.\n"; exit 1}
+}
+
+send "\d"
+close
+
+send_user "\nTest OK\n"
+
+
+
+

@@ -1,0 +1,82 @@
+#!/usr/bin/env expect -f
+# Tests of more/scrolling for 20 rows and 128 width: no wrapping
+
+set timeout 1
+#log_user 0
+
+set oldstty [stty -g]
+#stty rows 20 cols 128
+
+send_user "\nTest Wide lines no wrapping\n"
+
+set fspec [lrange $argv 0 1]
+spawn ../cligen_file -f $fspec
+
+send "command\n"
+
+expect {
+  timeout { send_user "\nline 18 not received.\n"; exit 1}
+  "arg 18: line18-abcdefghijklmnopqrstuvw" { send_user "\nline 18 OK.\n";}
+}
+
+expect {
+  timeout { send_user "\nline 19 received.\n";}
+  "arg 19: line19-abcdefghijklmnopqrstuvw" { send_user "\nline 19 not expected.\n"; exit 1}
+}
+
+expect {
+  timeout { send_user "\nMore 1 not received.\n"; exit 1}
+    -ex  "--More--" {send_user "\nMore 1 OK.\n"}
+}
+
+send "\n"
+
+expect {
+  timeout { send_user "\nline 19 not received.\n"; exit 1}
+  "arg 19: line19-abcdefghijklmnopqrstuvw" { send_user "\nline 19 OK.\n"}
+}
+
+expect {
+  "arg 20: line20-abcdefghijklmnopqrstuvw" { send_user "\nline 19 not expected.\n"; exit 1}
+}
+
+expect {
+  timeout { send_user "\nMore 2 not received.\n"; exit 1}
+    -ex  "--More--" { send_user "\nMore 2 OK.\n"}
+}
+
+send " "
+
+expect {
+  timeout { send_user "\nline 20 not received.\n"; exit 1}
+  "arg 20: line20-abcdefghijklmnopqrstuvw" {send_user "\nLine 20 OK.\n" }
+}
+
+expect {
+  timeout { send_user "\nline 38 not received.\n"; exit 1}
+  "arg 38: line38-abcdefghijklmnopqrstuvw" { send_user "\Line 38 OK.\n" }
+}
+
+expect {
+  timeout { send_user "\nMore 3 not received.\n"; exit 1}
+    -ex  "--More--" { send_user "\nMore 3 OK.\n" }
+}
+
+send "q"
+
+expect {
+  "arg 39: line39-abcdefghijklmnopqrstuvw" { send_user "\nline 39 not expected.\n"; exit 1}
+}
+
+expect {
+  -ex  "--More--" { send_user "\nMore not expected.\n"; exit 1}
+}
+
+send "\d"
+close
+
+send_user "\nTest OK\n"
+
+#stty $oldstty
+
+

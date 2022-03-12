@@ -102,8 +102,8 @@ callback(cligen_handle handle,
 {
     int     i = 0;
     cg_var *cv;
-    char    buf[64];
-
+    char    buf[256];
+    
     cligen_output(stderr, "function: %s\n", cligen_fn_str_get(handle));
     cligen_output(stderr, "variables:\n");
     cv = NULL;
@@ -121,9 +121,11 @@ callback(cligen_handle handle,
 	    i=0;
 	    while ((cv = cvec_each(argv, cv)) != NULL) {
 		cv2str(cv, buf, sizeof(buf)-1);
-		cligen_output(stderr, "arg %d: %s\n", i++, buf);
+		cligen_output(stdout, "arg %d:", i++);
+		cligen_output(stdout, " %s\n", buf); /* Separaration for test/test_more.sh */
 	    }
 	}
+    cli_output_reset();
     return 0;
 }
 
