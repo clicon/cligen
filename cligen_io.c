@@ -174,6 +174,7 @@ cligen_output_scroll(FILE   *f,
 	    gl_char_init();
 	    
 	    fprintf(f, "--More--");
+	    fflush(f);
 	    c = fgetc(stdin);
 	    if (c == '\n')
 		D_LINES--;
