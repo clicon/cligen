@@ -11,7 +11,7 @@ set stty_init "rows 20 cols 100"
 
 send_user "\nTest Wrap lines wrapping\n"
 
-set fspec [lrange $argv 0 1]
+set fspec [lindex $argv 0]
 spawn ../cligen_file -f $fspec
 
 send "command\n"
