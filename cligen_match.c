@@ -640,6 +640,7 @@ match_pattern_sets_local(cligen_handle h,
  *                          all possible options. Match also hidden options.
  *                          If not set, return all possible matches, do not return hidden options 
  * @param[in,out] cvv       cligen variable vector containing vars/values pair for completion
+ * @param[out]    callbacks Callback structure of expanded treeref
  * @param[out]    mrp       Match result including how many matches, level, reason for nomatc, etc
  * @retval        0         OK. result returned in mrp
  * @retval        -1        Error
@@ -686,7 +687,10 @@ match_pattern_sets(cligen_handle h,
     /* Unique match */
     co_match = mr_pt_i_get(mr0, 0);
 
-    /* If instantiated tree reference copy the callbacks */
+    /* If instantiated tree reference copy the callbacks 
+     * See also callbacks code in pt_expand1_co
+     * This code may need refactoring
+     */
     if (callbacks &&
 	co_flags_get(co_match, CO_FLAGS_TREEREF)){
 	cg_obj *coref = co_match;
@@ -947,6 +951,7 @@ match_pattern(cligen_handle h,
 		goto done;
 	    if (pt_expand(h, co1, ptc, cvv, 1, 0, ptn) < 0)
 		goto done;
+	    /* Loop sets i which is used below */
 	    for (i=0; i<pt_len_get(ptn); i++){
 		if ((co = pt_vec_i_get(ptn, i)) == NULL ||
 		    co->co_type == CO_EMPTY)
@@ -982,6 +987,7 @@ match_pattern(cligen_handle h,
  * @param[in]  pt        CLIgen parse tree, vector of cligen objects.
  * @param[out] cvv       CLIgen variable vector containing vars for matching path
  * @param[out] match_obj Exact object to return, must be freed by caller
+ * @param[out] callbacks Callback structure of expanded treeref
  * @param[out] resultp   Result, < 0: errors, >=0 number of matches (only if retval == 0)
  * @param[out] reason    If retval is 0 and matchlen != 1, contains reason 
  *                       for not matching variables, if given. Need to be free:d
