@@ -592,6 +592,8 @@ pt_expand1_co(cligen_handle h,
     int     retval = -1;
     cg_var *cv;
     cg_obj *con = NULL;
+    cg_obj *coref = NULL;
+    cg_callback *callbacks = NULL;
 
     if (co_value_set(co, NULL) < 0)
 	goto done;
@@ -639,9 +641,28 @@ pt_expand1_co(cligen_handle h,
 	con = NULL;
 	if (co_expand_sub(co, NULL, &con) < 0)
 	    goto done;
+	/* If instantiated tree reference copy the callbacks 
+	 * See also callbacks code in match_pattern_sets()
+	 * This code may need refactoring
+	 */
+	if ((con->co_flags & CO_FLAGS_TREEREF) != 0){
+	    coref = con;
+	    while (coref->co_ref){
+		coref = coref->co_ref;
+	    }
+	    if (coref->co_type ==  CO_REFERENCE &&
+		coref->co_callbacks)
+		if (co_callback_copy(coref->co_callbacks, &callbacks) < 0)
+		    goto done;	    
+	}
 	/* con may be deleted in the call and need to be replaced */
 	if ((con = co_insert1(ptn, con, 0)) == NULL) 
 	    goto done;
+	if (callbacks && (con->co_flags & CO_FLAGS_TREEREF)==0){
+	    co_flags_set(con, CO_FLAGS_TREEREF);
+	    con->co_callbacks = callbacks;
+	    callbacks = NULL;
+	}
 	if (transient && con->co_ref){
 	    con->co_ref = co->co_ref;
 	}
@@ -652,6 +673,8 @@ pt_expand1_co(cligen_handle h,
  ok:
     retval = 0;
  done:
+    if (callbacks)
+	co_callbacks_free(&callbacks);
     return retval;
 }
 

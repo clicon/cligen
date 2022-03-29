@@ -5,6 +5,7 @@ Expected: May 2022
 
 ### Corrected Bugs
 
+* Fixed: [Bug that happens when having the same container name in .cli file and yang file](https://github.com/clicon/clixon/issues/309)
 * Fixed again: CLIgen output scrolling did not work if lines were wrapped
   * Did not work if cligen_output was called without \n
 * Fixed: [Compiling with -DNDEBUG results in failure of test applications.](https://github.com/clicon/cligen/issues/76)
