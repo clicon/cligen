@@ -859,7 +859,6 @@ match_pattern(cligen_handle h,
     char         *r;
     cg_obj       *co;
     int           i;
-    int           allvars = 1;
     cg_obj       *co_match;
     cg_obj       *co1 = NULL;
     parse_tree   *ptc;
@@ -912,16 +911,35 @@ match_pattern(cligen_handle h,
      * Note can convert len>1 to len=1
      */
     if (mr_pt_len_get(mr) > 1){ 
-	//	string1 = cvec_i_str(cvt, cligen_cvv_levels(cvt)+1);
+	char         *string1;
 	for (i=0; i<mr_pt_len_get(mr); i++){
 	    co = mr_pt_i_get(mr, i);
 	    if (co->co_type != CO_VARIABLE)
-		allvars = 0; /* should mean onlyvars*/
+		break;
 	}
-	if (allvars && cligen_preference_mode(h)){
+	if (i==mr_pt_len_get(mr) && cligen_preference_mode(h)){
 	    if (mr_pt_trunc(mr, 1))
 		goto done;
 	}
+	string1 = NULL;
+	for (i=0; i<mr_pt_len_get(mr); i++){
+	    co = mr_pt_i_get(mr, i);
+	    /* XXX If variable dont compare co_command */
+	    if (co->co_type != CO_COMMAND)
+		break;
+	    if (i == 0)
+		string1 = co->co_command;
+	    else if (string1){
+		if ((!cligen_caseignore_get(h) && strcmp(string1, co->co_command)==0) ||
+		    (cligen_caseignore_get(h) && strcasecmp(string1, co->co_command)==0))
+		    ;
+		else
+		    break;
+	    }
+	}
+	if (string1 != NULL && i==mr_pt_len_get(mr))
+	    if (mr_pt_trunc(mr, 1))
+		goto done;
     }
     switch (mr_pt_len_get(mr)){
     case 0:
