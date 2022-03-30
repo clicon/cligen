@@ -5,6 +5,7 @@ Expected: May 2022
 
 ### Corrected Bugs
 
+* Fixed: [CLI combination of cligen choice and expand dbvar gives ambiguous command](https://github.com/clicon/clixon/issues/321)
 * Fixed: [Bug that happens when having the same container name in .cli file and yang file](https://github.com/clicon/clixon/issues/309)
 * Fixed again: CLIgen output scrolling did not work if lines were wrapped
   * Did not work if cligen_output was called without \n
