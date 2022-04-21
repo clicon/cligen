@@ -74,7 +74,6 @@ cligen_parse_file(cligen_handle h,
 		  parse_tree   *obsolete,
 		  cvec         *globals);
 
-int cligen_callback_str2fn(parse_tree *pt, cg_str2fn_t *str2fn, void *arg);
 int cligen_callbackv_str2fn(parse_tree *pt, cgv_str2fn_t *str2fn, void *arg);
 int cligen_expandv_str2fn(parse_tree *pt, expandv_str2fn_t *str2fn, void *arg);
 int cligen_translate_str2fn(parse_tree *pt, translate_str2fn_t *str2fn, void *arg);
