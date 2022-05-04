@@ -814,6 +814,30 @@ cligen_userhandle_set(cligen_handle h,
     return 0;
 }
 
+/*! Get app-specific data associated with cligen handle
+ * @param[in] h       CLIgen handle
+ */
+void*
+cligen_userdata(cligen_handle h)
+{
+    struct cligen_handle *ch = handle(h);
+
+    return ch->ch_userdata;
+}
+
+/*! Set app-specific data to associate with cligen handle.
+ * @param[in] h       CLIgen handle
+ */
+int
+cligen_userdata_set(cligen_handle h, 
+		      void         *userdata)
+{
+    struct cligen_handle *ch = handle(h);
+
+    ch->ch_userdata = userdata;
+    return 0;
+}
+
 /*! Get regex engine / method
  *
  * @param[in] h   CLIgen handle
