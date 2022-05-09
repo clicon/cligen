@@ -72,7 +72,7 @@
 #define MIN(x,y) ((x)<(y)?(x):(y))
 #endif
 
-#define ISREST(co) ((co)->co_type == CO_VARIABLE && (co)->co_vtype == CGV_REST)
+#define ISREST(co) (((co)->co_type == CO_VARIABLE && (co)->co_vtype == CGV_REST) || ((co)->co_ref && (co)->co_ref->co_type == CO_VARIABLE && (co)->co_ref->co_vtype == CGV_REST))
 
 /* Development debugging for sets matching */
 #undef _DEBUG_SETS
