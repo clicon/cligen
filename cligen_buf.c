@@ -107,7 +107,7 @@ cbuf_alloc_set(size_t start,
  * which dynamically print a string.
  * The handle should be freed by cbuf_free()
  * @param[in]   How much buffer space for initial allocation
- * @retval cb   The allocated objecyt handle on success.
+ * @retval cb   The allocated object handle on success.
  * @retval NULL Error.
  * @see cbuf_new  with auto buffer allocation
  */
@@ -266,10 +266,11 @@ cprintf(cbuf       *cb,
   *
   * An optimized special case of cprintf
   * @param [in]  cb  cligen buffer allocated by cbuf_new(), may be reallocated.
-  * @param [in]  str string
+  * @param [in]  str NULL terminated string
   * @retval 0    OK
   * @retval -1   Error
   * @see cprintf for the generic function
+
   */
 int
 cbuf_append_str(cbuf       *cb,
