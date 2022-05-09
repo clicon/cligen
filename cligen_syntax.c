@@ -224,7 +224,6 @@ cligen_parse_file(cligen_handle h,
  * @retval    -1       Error and statement written on stderr
  *
  * @see cligen_expandv_str2fn    For expansion/completion callbacks
- * @see cligen_callback_str2fn Same but for callback single argument
  * @note str2fn may return NULL on error and should then supply a (static) error string 
  */
 int

@@ -1251,15 +1251,7 @@ libraries and making a lookup in real-time using {\tt dl\_open}, {\tt
   mmap}, or similar C library functions. This is actually the
 preferred option, the other approaches described here are not as good.
 
-The simplest way used in this tutorial is to map all callbacks to the
-same function:
-\begin{verbatim}
-  cligen_callback_register(pt, callback);
-\end{verbatim}
-It is then up to {\tt callback} to determine
-in which context it was called using its arguments.
-
-A better way is to map each callback specified to a different
+One way is to map each callback specified to a different
 function. This can be made by defining a function that maps between
 function name strings and actual functions and calling a mapping
 funtion, for example:

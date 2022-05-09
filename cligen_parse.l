@@ -63,11 +63,6 @@
 /* typecast macro */
 #define _CY ((cligen_yacc *)_cy)
 
-#define     MAXBUF  4*4*64*1024
-
-#define MAX(x,y) ((x)>(y)?(x):(y))
-#define MIN(x,y) ((x)<(y)?(x):(y))
-
 #undef cligen_parsewrap
 int 
 cligen_parsewrap(void)
