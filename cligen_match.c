@@ -72,8 +72,6 @@
 #define MIN(x,y) ((x)<(y)?(x):(y))
 #endif
 
-#define ISREST(co) (((co)->co_type == CO_VARIABLE && (co)->co_vtype == CGV_REST) || ((co)->co_ref && (co)->co_ref->co_type == CO_VARIABLE && (co)->co_ref->co_vtype == CGV_REST))
-
 /* Development debugging for sets matching */
 #undef _DEBUG_SETS
 
@@ -403,21 +401,21 @@ match_vec(cligen_handle h,
 	    assert(tmpreason == NULL);
 	    if (best){ /* only save best match */
 		if (p == pref_upper){
-		    if (mr_pt_append(mr, co) < 0)
+		    if (mr_pt_append(mr, co, ISREST(co)?resttokens:token) < 0)
 			goto done;
 		}
 		else if (p > pref_upper){ /* Start again at this level */
 		    pref_upper = p;
 		    if (mr_pt_reset(mr) < 0)
 			goto done;
-		    if (mr_pt_append(mr, co) < 0)
+		    if (mr_pt_append(mr, co, ISREST(co)?resttokens:token) < 0)
 			goto done;
 		}
 		else{ /* p < pref_upper : skip */
 		}
 	    } /* if best */
 	    else {
-		if (mr_pt_append(mr, co) < 0)
+		if (mr_pt_append(mr, co, ISREST(co)?resttokens:token) < 0)
 		    goto done;
 	    }
 	} /* switch match */
@@ -457,7 +455,9 @@ match_bindvars(cligen_handle h,
     }
     else if (co->co_type == CO_COMMAND && co_orig->co_type == CO_VARIABLE){
 	/* Once so translate only is done once */
-	if ((cv = add_cov_to_cvec(h, co_orig, co->co_command, cvv)) == NULL)
+	if ((cv = add_cov_to_cvec(h, co_orig,
+				  co->co_value?co->co_value:co->co_command,
+				  cvv)) == NULL)
 	    goto done;
     }
     else{
@@ -879,16 +879,18 @@ match_pattern(cligen_handle h,
 	errno = EFAULT;
 	goto done;
     }
-    /* XXX Lots of complex code follows, 
+    /* Clear all CO_FLAGS_MATCH recursively */
+    pt_apply(pt, co_clearflag, 1, (void*)CO_FLAGS_MATCH);
+    /* Lots of complex code follows, 
      * Good news is that these have been moved from calling functions to here
      * Hopefully it may be easier to simplify
      */
-    /* Clear all CO_FLAGS_MATCH recursively */
-    pt_apply(pt, co_clearflag, 1, (void*)CO_FLAGS_MATCH);
     if (!last_level(cvt, mr_level_get(mr))){ /* XXX level always 0 */
 	if (mr_pt_len_get(mr) == 1){
 	    co_match = mr_pt_i_get(mr, 0);
 	    if (co_match->co_type == CO_VARIABLE && ISREST(co_match))
+		;
+	    else if (ISREST(co_match))
 		;
 	    else{
 		if (mr_reason_get(mr) == NULL){ /* If pre-existing error reason use that */
@@ -1081,8 +1083,7 @@ match_complete(cligen_handle h,
 	       size_t       *slenp, 
 	       cvec         *cvv)
 {
-    int      level;
-    int      slen;
+    int      slen = 0;
     int      equal;
     int      i;
     int      j;
@@ -1093,11 +1094,12 @@ match_complete(cligen_handle h,
     cvec    *cvr = NULL;      /* Rest variant,  eg remaining string in each step */
     char    *string;
     char    *s;
-    char    *ss;
     int      append = 0; /* Has appended characters */
     int      retval = -1;
     size_t   len;
     match_result *mr = NULL;
+    char    *command;
+    char    *command1 = NULL; /* prev */
 
     /* ignore any leading whitespace */
     string = *stringp;
@@ -1118,12 +1120,6 @@ match_complete(cligen_handle h,
 	retval = 0;
 	goto done; /*  No matches */
     }
-    if ((level = cligen_cvv_levels(cvt)) < 0)
-	goto done;
-    ss = cvec_i_str(cvt, level+1);
-    slen = ss?strlen(ss):0;
-
-    minmatch = slen;
     equal = 1;
     for (i=0; i<mr_pt_len_get(mr); i++){
 	co = mr_pt_i_get(mr, i);
@@ -1135,20 +1131,24 @@ match_complete(cligen_handle h,
 	    if (co->co_type != CO_COMMAND)
 		continue;
 	}
+	command = co->co_value?co->co_value:co->co_command;
 	if (co1 == NULL){
-	    minmatch = strlen(co->co_command);
+	    slen = strlen(mr_token_get(mr));
+	    minmatch = strlen(command);
 	    co1 = co;
+	    command1 = command;
 	}
 	else{
-	    if (!cligen_caseignore_get(h) && strcmp(co1->co_command, co->co_command)==0)
+	    command1 = co1->co_value?co1->co_value:co1->co_command;
+	    if (!cligen_caseignore_get(h) && strcmp(command1, command)==0)
 		; /* equal */
-	    else if (cligen_caseignore_get(h) && strcasecmp(co1->co_command, co->co_command)==0)
+	    else if (cligen_caseignore_get(h) && strcasecmp(command1, command)==0)
 		; /* equal */
 	    else{
 		equal = 0;
-		len = MIN(strlen(co1->co_command), strlen(co->co_command));
+		len = MIN(strlen(command1), strlen(command));
 		for (j=0; j<len; j++)
-		    if (co1->co_command[j] != co->co_command[j])
+		    if (command1[j] != command[j])
 			break;
 		minmatch = MIN(minmatch, j);
 	    }
@@ -1164,12 +1164,11 @@ match_complete(cligen_handle h,
 	    goto done;
 	string = *stringp;
     }
-    strncat(string, &co1->co_command[slen], minmatch-slen);
+    strncat(string, &command1[slen], minmatch-slen);
     append = append || minmatch-slen;
     if (equal){ /* add space */
 	string[strlen(string)+1] = '\0';
 	string[strlen(string)] = cligen_delimiter(h);
-	level++;
 	*slenp = 0;
 	co1 = NULL;
     }
