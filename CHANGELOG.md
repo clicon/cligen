@@ -5,6 +5,8 @@ Expected: May 2022
 
 ### Corrected Bugs
 
+* Fixes to make "rest" variables with delimiters work better
+  * This includes expansion, re-adding, etc that had several flaws
 * Fixed: [CLI combination of cligen choice and expand dbvar gives ambiguous command](https://github.com/clicon/clixon/issues/321)
 * Fixed: [Bug that happens when having the same container name in .cli file and yang file](https://github.com/clicon/clixon/issues/309)
 * Fixed again: CLIgen output scrolling did not work if lines were wrapped

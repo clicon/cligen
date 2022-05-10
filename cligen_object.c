@@ -646,7 +646,8 @@ co_copy(cg_obj  *co,
     if (co->co_helpstring)
 	if ((con->co_helpstring = strdup(co->co_helpstring)) == NULL)
 	    goto done;
-    if (co_value_set(con, co->co_value) < 0) /* XXX: free på co->co_value? */
+    con->co_value = NULL;
+    if (co_value_set(con, co->co_value) < 0)
 	goto done;
     if (co->co_type == CO_VARIABLE){
 	if (co->co_expand_fn_str)
@@ -752,6 +753,7 @@ co_copy1(cg_obj  *co,
     if (co->co_helpstring)
 	if ((con->co_helpstring = strdup(co->co_helpstring)) == NULL)
 	    goto done;
+    con->co_value = NULL;
     if (co_value_set(con, co->co_value) < 0)
 	goto done;
     if (co->co_type == CO_VARIABLE){

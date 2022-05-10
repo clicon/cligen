@@ -195,6 +195,8 @@ typedef struct cg_obj cg_obj;
 #define co_regex         u.cou_var.cgs_regex
 #define co_dec64_n       u.cou_var.cgs_dec64_n
 
+#define ISREST(co) (((co)->co_type == CO_VARIABLE && (co)->co_vtype == CGV_REST) || ((co)->co_ref && (co)->co_ref->co_type == CO_VARIABLE && (co)->co_ref->co_vtype == CGV_REST))
+
 /*
  * Prototypes
  */

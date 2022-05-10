@@ -63,6 +63,7 @@ struct match_result{
 			     * to store first error in case it is needed in a later error */
     int          mr_level;
     int          mr_last;
+    char        *mr_token;  /* Direct, not copied */
     cg_obj      *mr_co_match_orig; /* Kludge, save (latest) matched object, see 
                                       mr_flags_set_co_match() */
 };
@@ -101,13 +102,15 @@ mr_pt_trunc(match_result *mr,
 
 int
 mr_pt_append(match_result *mr,
-	     cg_obj       *co)
+	     cg_obj       *co,
+	     char         *token)
 {
     cg_obj *co1 = NULL;
 
     if (co_copy1(co, NULL, 0, 0x0, &co1) < 0)
 	return -1;
     mr->mr_co_match_orig = co;
+    mr->mr_token = token;
     return pt_vec_append(mr->mr_pt, co1);
 }
 
@@ -156,6 +159,12 @@ mr_level_set(match_result *mr,
 {
     mr->mr_level = level;
     return 0;
+}
+
+char *
+mr_token_get(match_result *mr)
+{
+    return mr->mr_token;
 }
 
 int

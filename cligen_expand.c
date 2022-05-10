@@ -168,17 +168,17 @@ co_expand_sub(cg_obj  *co0,
  * Expansion of choice or expand takes a variable (<expand> <choice>)
  * and transform them to a set of commands: <string>...<string>
  * @param[in]  co        The variable to transform to a command
- * @param[in]  cmd       Command name
+ * @param[in]  cmd       Command name (must be malloced, consumed here)
  * @param[out] helptext  Helptext of command, can be NULL, is copied
  */
 static int
 transform_var_to_cmd(cg_obj *co, 
-		     char   *cmd, 
+		     char   *cmd,
 		     char   *helptext)
 {
     if (co->co_command)
 	free(co->co_command);
-    co->co_command = cmd; 
+    co->co_command = cmd;
     if (helptext){
 	if (co->co_helpstring){
 	    free(co->co_helpstring);
@@ -369,10 +369,10 @@ co_expand_treeref_copy_shallow(cligen_handle h,
  *  If no escaping is required, return original string.
  *  Otherwise, allocate a new string for escaped result.
  *
- * @param[in]   s   Raw string.
+ * @param[in]   s    Original string.
+ * @retval      e    Escaped string, malloced, must be freed
+ * @retval      NULL Error
  *
- * @return  Either original string equal to @paramref s
- *          or a escaped string which must be freed by the caller.
  **/
 static const char*
 cligen_escape(const char* s)
@@ -383,6 +383,10 @@ cligen_escape(const char* s)
 	const char *spec;
 	int         i, j;
 
+	if (s == NULL){
+	    errno = EINVAL;
+	    return NULL;
+	}
 	spec = s;
 	//	while ((spec = strpbrk(spec, "?\\"))) {
 	while ((spec = strpbrk(spec, "?\\ \t"))) {
@@ -396,13 +400,12 @@ cligen_escape(const char* s)
 	}
 
 	if (!chars_to_escape) {
-		return s;
+	    return s;
 	}
 
 	len = strlen(s);
 
-	copy = (char*)malloc(len + 1 + chars_to_escape);
-	if (!copy) {
+	if ((copy = (char*)malloc(len + 1 + chars_to_escape)) == NULL){
 		return NULL;
 	}
 
@@ -450,7 +453,7 @@ pt_expand_fnv(cligen_handle h,
     cg_obj     *con = NULL;
     int         i;
     const char *value;
-    const char *escaped;
+    const char *cmd;
     cvec       *cvv1 = NULL; /* Modified */
 
     if (cvv == NULL){
@@ -493,14 +496,18 @@ pt_expand_fnv(cligen_handle h,
 	    if ((con->co_filter = cvec_dup(cvv_filter)) == NULL)
 		goto done;
 	value = cv_string_get(cv);
-	escaped = cligen_escape(value);
-	if (escaped == value) {
-	    if ((escaped = strdup(escaped)) == NULL)
+	if ((cmd = cligen_escape(value)) == NULL)
+	    goto done;
+	if (cmd == value) {
+	    if ((cmd = strdup(cmd)) == NULL)
 		goto done;
 	}
-	/* 'escaped' always points to mutable string */
-	if (transform_var_to_cmd(con, (char*)escaped, helpstr) < 0)
+	/* 'cmd' always points to mutable string */
+	if (transform_var_to_cmd(con, (char*)cmd, helpstr) < 0)
 	    goto done;
+	/* Save the unescaped string */
+	if (cmd != value)
+	    co_value_set(con, (char*)value);
 	if (helpstr){
 	    free(helpstr);
 	    helpstr = NULL;
