@@ -110,6 +110,7 @@ cli_output_status(void)
  * @see cligen_output
  */
 #include <assert.h> // XXX
+
 static int
 cligen_output_scroll(FILE   *f,
 		     char   *ibuf,
@@ -153,7 +154,7 @@ cligen_output_scroll(FILE   *f,
 		remain = linelen;
 	    }
 	}
-	else if (ibend - ib0 > remain){
+	else if (ibend - ib0 >= remain){
 	    ib1 = ib0 + remain;     /* 2a */
 	    D_LINES++;
 	    remain = linelen;
@@ -190,7 +191,7 @@ cligen_output_scroll(FILE   *f,
 	    gl_char_cleanup();
 	}
     }
-    D_COLUMNS=linelen-remain;
+    D_COLUMNS = linelen-remain;
     retval = 0;
  done:
     if (linebuf)

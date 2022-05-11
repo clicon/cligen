@@ -5,6 +5,7 @@ Expected: May 2022
 
 ### Corrected Bugs
 
+* Fixed: cligen_output wrap problem: word dropped if exactly on line width
 * Fixes to make "rest" variables with delimiters work better
   * This includes expansion, re-adding, etc that had several flaws
 * Fixed: [CLI combination of cligen choice and expand dbvar gives ambiguous command](https://github.com/clicon/clixon/issues/321)
