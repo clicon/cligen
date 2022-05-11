@@ -908,21 +908,31 @@ match_pattern(cligen_handle h,
 	    mr_pt_reset(mr);
 	}
     }
-    /* There is some magic to this. Collapse many choices to one
-     * if all alternatives are variables.
-     * Note can convert len>1 to len=1
-     */
+    /* If more than one choice */
     if (mr_pt_len_get(mr) > 1){ 
-	char         *string1;
-	for (i=0; i<mr_pt_len_get(mr); i++){
-	    co = mr_pt_i_get(mr, i);
-	    if (co->co_type != CO_VARIABLE)
-		break;
+	char *string1;
+	int   pref = 0;
+
+	/* Collapse many choices with same pref to one
+	 * if all alternatives are variables with same pref */
+	if (cligen_preference_mode(h)){
+	    for (i=0; i<mr_pt_len_get(mr); i++){
+		co = mr_pt_i_get(mr, i);
+		if (co->co_type != CO_VARIABLE)
+		    break;
+		continue;
+		if (pref == 0)
+		    pref = co_pref(co, 0);
+		else if (pref != co_pref(co, 0))
+		    break;
+	    }
+	    if (i==mr_pt_len_get(mr)){ /* No break in loop: only vraiables with same preference */
+		if (mr_pt_trunc(mr, 1))
+		    goto done;
+	    }
 	}
-	if (i==mr_pt_len_get(mr) && cligen_preference_mode(h)){
-	    if (mr_pt_trunc(mr, 1))
-		goto done;
-	}
+	/* Collapse many choices to one
+	 * if all alternatives are equal commands */
 	string1 = NULL;
 	for (i=0; i<mr_pt_len_get(mr); i++){
 	    co = mr_pt_i_get(mr, i);
@@ -939,7 +949,7 @@ match_pattern(cligen_handle h,
 		    break;
 	    }
 	}
-	if (string1 != NULL && i==mr_pt_len_get(mr))
+	if (string1 != NULL && i==mr_pt_len_get(mr)) /* No break in loop */
 	    if (mr_pt_trunc(mr, 1))
 		goto done;
     }

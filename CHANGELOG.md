@@ -5,6 +5,8 @@ Expected: May 2022
 
 ### Corrected Bugs
 
+* Fixed: Preference mode (used by clixon) collapsed all <var>:s into one. to avoid ambiguity.
+  It now collapses all <var>:s with the same preference into one.
 * Fixed: cligen_output wrap problem: word dropped if exactly on line width
 * Fixes to make "rest" variables with delimiters work better
   * This includes expansion, re-adding, etc that had several flaws
