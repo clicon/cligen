@@ -920,7 +920,6 @@ match_pattern(cligen_handle h,
 		co = mr_pt_i_get(mr, i);
 		if (co->co_type != CO_VARIABLE)
 		    break;
-		continue;
 		if (pref == 0)
 		    pref = co_pref(co, 0);
 		else if (pref != co_pref(co, 0))
