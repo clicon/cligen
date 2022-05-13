@@ -208,7 +208,7 @@ int time2str(struct timeval tv, char *fmt, int len);
 
 enum cv_type cv_str2type(char *str);
 char   *cv_type2str(enum cv_type type);
-int     cv_len(cg_var *cgv);
+size_t  cv_len(cg_var *cgv);
 int     cv2cbuf(cg_var *cv, cbuf *cb);
 int     cv2str(cg_var *cv, char *str, size_t size);
 char   *cv2str_dup(cg_var *cv);

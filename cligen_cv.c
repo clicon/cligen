@@ -2104,7 +2104,6 @@ cv_type2str(enum cv_type type)
     return str;
 }
 
-#ifdef NOTUSED
 /*! Return length of cligen variable value (as stored in binary)
  *
  * @param[in] cv     CLIgen variable
@@ -2113,7 +2112,7 @@ cv_type2str(enum cv_type type)
  * In that case the lengths of the strings pointed to are added, trailing
  * null included.
  */
-int
+size_t
 cv_len(cg_var *cv)
 {
     int len = 0;
@@ -2197,7 +2196,6 @@ cv_len(cg_var *cv)
     }
     return len;
 }
-#endif
 
 /*! Print a dec64 cv to a string 
  *
@@ -2638,7 +2636,6 @@ cv_print(FILE   *f,
     return len;
 }
 
-#ifdef NOTUSED
 /*! Print max value of a CLIgen variable type as string
  * @param[in]   type  CLIgen variable type
  * @param[out]  str   Max value printed in this string
@@ -2720,7 +2717,6 @@ cvtype_max2str_dup(enum cv_type type)
     }
     return str;
 }
-#endif
 
 int
 cv_max_set(cg_var *cv)
