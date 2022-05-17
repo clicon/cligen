@@ -1,13 +1,13 @@
 # Cligen Changelog
 	
 ## 5.7.0
-16 May 2022
+17 May 2022
 
 ### Corrected Bugs
 
 * Fixed: Preference mode (used by clixon) collapsed all `<var>`:s into one to avoid ambiguity.
 * Fixed: `cligen_output` wrap problem: word dropped if exactly on line width
-* Fixes to make "rest" variables with delimiters work better
+* Fixes to make `<rest>` variables with delimiters work better
   * This includes expansion, re-adding, etc that had several flaws
 * Fixed: [CLI combination of cligen choice and expand dbvar gives ambiguous command](https://github.com/clicon/clixon/issues/321)
 * Fixed: [Bug that happens when having the same container name in .cli file and yang file](https://github.com/clicon/clixon/issues/309)
