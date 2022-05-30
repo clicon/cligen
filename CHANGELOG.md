@@ -1,5 +1,8 @@
 # Cligen Changelog
 	
+## 5.8.0
+Expected: July 2022
+
 ## 5.7.0
 17 May 2022
 
