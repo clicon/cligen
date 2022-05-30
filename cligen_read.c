@@ -181,6 +181,11 @@ cli_tab_hook(cligen_handle h,
 	if (cli_complete(h, cursorp, ptn, cvv) < 0) /* XXX expand-cleanup must be done here before show commands */
 	    goto done;
     } while (cligen_tabmode(h)&CLIGEN_TABMODE_STEPS && prev_cursor != *cursorp);
+    if (cvv){
+	cvec_free(cvv);
+	if ((cvv = cvec_start(cligen_buf(h))) == NULL)
+	    goto done; 
+    }
     fputs("\n", stdout);
     if (cligen_tabmode(h) & CLIGEN_TABMODE_COLUMNS){
 	if (show_help_line(h, stdout, cligen_buf(h), ptn, cvv) <0)
@@ -491,7 +496,7 @@ show_help_line(cligen_handle h,
  * @param[in]  string  Input string to match
  * @param[in]  cursorp Pointer to the current cursor in string.
  * @param[in]  pt      Vector of commands (array of cligen object pointers)
- * @param[out] cvv    cligen variable vector containing vars/values pair for completion
+ * @param[out] cvv     cligen variable vector containing vars/values pair for completion
  * @retval    -1       Error
  * @retval     0       Success
  */

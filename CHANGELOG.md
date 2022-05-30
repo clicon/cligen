@@ -3,6 +3,10 @@
 ## 5.8.0
 Expected: July 2022
 
+### Corrected Bugs
+
+* [Expansion does not work properly for inner hierarchical nodes on pressing TAB](https://github.com/clicon/clixon/issues/332)
+
 ## 5.7.0
 17 May 2022
 
