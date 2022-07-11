@@ -699,7 +699,7 @@ pt_expand1_co(cligen_handle h,
  * parse-tree. Therefore this new parse-tree cannot be free:d recursively.
  *
  * @param[in]  h       Cligen handle
- * @param[in]  co      Parent, if any
+ * @param[in]  co0     Parent, if any
  * @param[in]  pt      Original parse-tree consisting of a vector of cligen objects
  * @param[out] cvv     Cligen variable vector containing vars/values pair for completion
  * @param[in]  hide    If not set, include hidden commands. If set, do not include hidden 
