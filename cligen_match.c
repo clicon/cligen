@@ -77,10 +77,10 @@
 
 /*! Match variable against input string
  * 
- * @param[in]  string  Input string to match
- * @param[in]  pvt     variable type (from definition)
- * @param[in]  cmd     variable string (from definition) - can contain range
- * 
+ * @param[in]  h       CLIgen handle
+ * @param[in]  co      cligen object
+ * @param[in]  str     Input string to match
+ * @param[out] reason  if not match and co type is 0, reason points to a (malloced) err string
  * @retval     -1      Error (print msg on stderr)
  * @retval     0       Not match and reason returned as malloced string.
  * @retval     1       Match
@@ -116,7 +116,9 @@ match_variable(cligen_handle h,
 }
 
 /*! Given a string and one cligen object, return if the string matches
- * @param[in]  string  Input string to match (NULL is match)
+ *
+ * @param[in]  h       CLIgen handle
+ * @param[in]  str     Input string to match (NULL is match)
  * @param[in]  co      cligen object
  * @param[in]  best    Only return best match (for command evaluation) instead of all possible options
  * @param[out] exact   1 if match is exact (CO_COMMANDS). VARS is 0.
@@ -345,6 +347,7 @@ match_vec(cligen_handle h,
 	  parse_tree   *pt,
 	  char         *token,
 	  char         *resttokens,
+	  int           lasttoken,
 	  int           best,
 	  match_result *mr)
 {
@@ -356,6 +359,7 @@ match_vec(cligen_handle h,
     char   *tmpreason = NULL;
     int     i;
     cg_obj *co;
+    cg_obj *cop;
     int     match;
 
     /* Loop through parse-tree at this level to find matches */
@@ -401,8 +405,23 @@ match_vec(cligen_handle h,
 	    assert(tmpreason == NULL);
 	    if (best){ /* only save best match */
 		if (p == pref_upper){
-		    if (mr_pt_append(mr, co, ISREST(co)?resttokens:token) < 0)
-			goto done;
+		    if (cligen_preference_mode(h) == 1 &&
+			lasttoken &&
+			cop->co_type == CO_VARIABLE && 
+			co->co_type == CO_VARIABLE) /* Skip terminal pref if preference mode */
+			;
+		    else if (cligen_preference_mode(h) == 2 &&
+			!lasttoken &&
+			cop->co_type == CO_VARIABLE && 
+			co->co_type == CO_VARIABLE) /* Skip same pref if preference mode */
+			;
+		    else if (cligen_preference_mode(h) == 3 &&
+			cop->co_type == CO_VARIABLE && 
+			co->co_type == CO_VARIABLE) /* Skip same pref if preference mode */
+			;
+		    else
+			if (mr_pt_append(mr, co, ISREST(co)?resttokens:token) < 0)
+			    goto done;
 		}
 		else if (p > pref_upper){ /* Start again at this level */
 		    pref_upper = p;
@@ -410,6 +429,7 @@ match_vec(cligen_handle h,
 			goto done;
 		    if (mr_pt_append(mr, co, ISREST(co)?resttokens:token) < 0)
 			goto done;
+		    cop = co;
 		}
 		else{ /* p < pref_upper : skip */
 		}
@@ -528,8 +548,9 @@ match_pattern_sets_local(cligen_handle h,
     /* How many matches of cvt[level+1] in pt */
     if (match_vec(h,
 		  pt, token, resttokens,
+		  lasttoken,
 		  lasttoken?best:1, /* use best preference match in non-terminal matching*/
-		   mr0) < 0)
+		  mr0) < 0)
 	goto done;
     /* Number of matches is 0 (no match), 1 (exact) or many */
     switch (mr_pt_len_get(mr0)){
@@ -556,6 +577,7 @@ match_pattern_sets_local(cligen_handle h,
 	    goto ok; /* will return matches > 1 */ 
 	}
 	mr_pt_reset(mr0);
+	mr_reason_set(mr0, strdup("Ambiguous command"));
 	goto ok;  /* will return matches = 0 */
 	break;
     } /* switch matches */
@@ -885,6 +907,13 @@ match_pattern(cligen_handle h,
      * Good news is that these have been moved from calling functions to here
      * Hopefully it may be easier to simplify
      */
+    /* Intermediate match, have not matched whole command set, stopped short. 
+     * Cases:
+     * 1) Single match: 
+     *      - special case: can accept if REST command, 
+     *      - otherwise set to no match
+     * 2) Multiple match: set no match
+     */
     if (!last_level(cvt, mr_level_get(mr))){ /* XXX level always 0 */
 	if (mr_pt_len_get(mr) == 1){
 	    co_match = mr_pt_i_get(mr, 0);
@@ -901,41 +930,26 @@ match_pattern(cligen_handle h,
 		mr_pt_reset(mr);
 	    }
 	}
-	else {
-	    if ((r = strdup("Unknown command")) == NULL)
-		goto done;
-	    mr_reason_set(mr, r);
-	    mr_pt_reset(mr);
+	else { /* */
+	    if (mr_reason_get(mr) == NULL){
+		if ((r = strdup("Unknown command")) == NULL)
+		    goto done;
+		mr_reason_set(mr, r);
+		mr_pt_reset(mr);
+	    }
 	}
     }
-    /* If more than one choice */
+    /* If multiple match (at final command), collapse to single command if:
+     * 1) All are commands and commands are equal
+     */
     if (mr_pt_len_get(mr) > 1){ 
 	char *string1;
-	int   pref = 0;
 
-	/* Collapse many choices with same pref to one
-	 * if all alternatives are variables with same pref */
-	if (cligen_preference_mode(h)){
-	    for (i=0; i<mr_pt_len_get(mr); i++){
-		co = mr_pt_i_get(mr, i);
-		if (co->co_type != CO_VARIABLE)
-		    break;
-		if (pref == 0)
-		    pref = co_pref(co, 0);
-		else if (pref != co_pref(co, 0))
-		    break;
-	    }
-	    if (i==mr_pt_len_get(mr)){ /* No break in loop: only vraiables with same preference */
-		if (mr_pt_trunc(mr, 1))
-		    goto done;
-	    }
-	}
 	/* Collapse many choices to one
 	 * if all alternatives are equal commands */
 	string1 = NULL;
 	for (i=0; i<mr_pt_len_get(mr); i++){
 	    co = mr_pt_i_get(mr, i);
-	    /* XXX If variable dont compare co_command */
 	    if (co->co_type != CO_COMMAND)
 		break;
 	    if (i == 0)
@@ -952,6 +966,11 @@ match_pattern(cligen_handle h,
 	    if (mr_pt_trunc(mr, 1))
 		goto done;
     }
+    /* Final check:
+     * 1) If no match ensure there is an error message
+     * 2) If single match, ensure there is a NULL child (eg ";" in cligen syntax)
+     *    - if not set to no match
+     */
     switch (mr_pt_len_get(mr)){
     case 0:
 	/* If no match fix an error message */
@@ -968,7 +987,7 @@ match_pattern(cligen_handle h,
 	 * only one sibling to it. */
 	co1 = mr_pt_i_get(mr, 0);
 	/*
-	 * Special case: if a NULL child is not found, then set result == GC_NOMATCH
+	 * Special case: if a NULL child is not found, then set result == CG_NOMATCH
 	 */
 	if ((ptc = co_pt_get(co1)) != NULL && best){
 	    parse_tree *ptn;

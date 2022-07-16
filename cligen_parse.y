@@ -44,7 +44,7 @@
 }
 
 %token MY_EOF
-%token V_RANGE V_LENGTH V_CHOICE V_KEYWORD V_REGEXP V_FRACTION_DIGITS V_SHOW V_TREENAME V_TRANSLATE
+%token V_RANGE V_LENGTH V_CHOICE V_KEYWORD V_REGEXP V_FRACTION_DIGITS V_SHOW V_TREENAME V_TRANSLATE V_PREFERENCE
 %token DOUBLEPARENT /* (( */
 %token DQ           /* " */
 %token DQP          /* ") */
@@ -417,6 +417,24 @@ cg_translate(cligen_yacc *cy,
 	     char        *fn)
 {
     cy->cy_var->co_translate_fn_str = fn;
+    return 0;
+}
+
+static int
+cg_preference(cligen_yacc *cy,
+	      char        *pref)
+{
+    cg_obj *yv;
+    char   *reason = NULL;
+    
+    if ((yv = cy->cy_var) == NULL){
+	fprintf(stderr, "No var obj");
+	return -1;
+    }
+    if (parse_uint16(pref, &yv->co_preference, &reason) != 1){
+	cligen_parseerror1(cy, reason); 
+	return -1;
+    }
     return 0;
 }
 
@@ -1401,6 +1419,7 @@ keypair     : NAME '(' ')' { expand_fn(_cy, $1); }
             | V_REGEXP  ':' DQ charseq DQ { if (cg_regexp(_cy, $4, 0) < 0) _YYERROR("keypair"); free($4); }
             | V_REGEXP  ':' '!'  DQ charseq DQ { if (cg_regexp(_cy, $5, 1) < 0) _YYERROR("keypair"); free($5);}
             | V_TRANSLATE ':' NAME '(' ')' { cg_translate(_cy, $3); }
+            | V_PREFERENCE ':' NUMBER { cg_preference(_cy, $3); free($3); }
             ;
 
 exparglist : exparglist ',' exparg

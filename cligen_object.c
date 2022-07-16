@@ -40,11 +40,11 @@
 #include <stdarg.h>
 #include <inttypes.h>
 #include <unistd.h>
+#include <ctype.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <ctype.h>
 #ifdef HAVE_STRVERSCMP
 #define _GNU_SOURCE
 #define __USE_GNU
@@ -432,7 +432,9 @@ cov_pref(cg_obj *co)
 	pref = 1;
 	break;
     case CGV_STRING:
-	if (co->co_regex)
+	if (co->co_expand_fn_str != NULL)
+	    pref = 8;
+	else if (co->co_regex)
 	    pref = 7;
 	else
 	    pref = 5;
@@ -465,13 +467,14 @@ cov_pref(cg_obj *co)
     case CGV_EMPTY: 
 	break;
     }
+
     return pref;
 }
 
 /*! Assign a preference to a cligen object
  *
  * @param[in]  co    cligen_object
- * @param[in]  exact if match was exact (only applies to CO_COMMAND)
+ * @param[in]  exact if this match is exact (only applies to CO_COMMAND)
  * @retval     pref  Preference: positive integer
  *
  * The higher the better
@@ -486,20 +489,24 @@ co_pref(cg_obj *co,
 {
     int pref = 0;;
 
-    switch (co->co_type){
-    case CO_COMMAND:
-	if (co->co_ref && !exact)
-	    pref = 3; /* expand */
-	else
-	    pref = 100;
-	break;
-    case CO_VARIABLE:
-	pref = cov_pref(co);
-	break;
-    case CO_REFERENCE:
-    case CO_EMPTY:
-	break;
-    }
+    if (co->co_preference > 0)
+	pref = co->co_preference;
+    else
+	switch (co->co_type){
+	case CO_COMMAND:
+	    /* Give full preference to exact command match, low to partial (prefix) command match */
+	    if (exact == 0)
+		pref = 3;
+	    else
+		pref = 100;
+	    break;
+	case CO_VARIABLE:
+	    pref = cov_pref(co);
+	    break;
+	case CO_REFERENCE:
+	case CO_EMPTY:
+	    break;
+	}
     return pref;
 }
 

@@ -203,7 +203,7 @@ usage(char *argv)
 	    "\t-e \t\tSet automatic expansion/completion for all expand() functions\n"
     	    "\t-E \t\tExclude keys in callback cvv. Default include keys\n"
 	    "\t-c \t\tExpand first arg of callback cvv to string matching keywords\n"
-	    "\t-P \t\tSet preference mode to 1, ie return first if several have same pref\n"
+	    "\t-P <mode> \t\tSet preference mode: 1: tiebreak terminals, 2: also non-terminals\n"
 	    "\t-t <nr> \tSet tab mode: 1:columns, 2: same pref for vars, 4: all steps\n"
 	    "\t-s <nr> \tScrolling 0: disable line scrolling, 1: enable line scrolling (default 1)\n"
 	    "\t-u \t\tEnable experimental UTF-8 mode\n"
@@ -267,8 +267,9 @@ main(int   argc,
 	case 'c': /* Expand first arg of callback cvv */
 	    expand_first++;
 	    break;
-	case 'P': /* Return first if several have same preference */
-	    set_preference++;
+	case 'P': /* Return first if several have same preference, for terminals */
+	    argc--;argv++;
+	    set_preference = atoi(*argv);
 	    break;
 	case 'f' : 
 	    argc--;argv++;

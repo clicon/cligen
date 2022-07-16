@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # CLI variable preference
 # tests multiple variable matches with different preferences
+# Tie-breaks with equal preferences for terminal and non-terminals and preference keyword
 
 # Magic line must be first in script (see README.md)
 s="$_" ; . ./lib.sh || if [ "$s" = $0 ]; then exit 0; else return 0; fi
@@ -14,6 +15,13 @@ cat > $fspec <<EOF
 
   # Example of variable preferences
   values (<int32> | <string regexp:"[a-z][0-9]*"> | <int64> | aa), callback();
+  # Example of preference tie break, terminal and non-terminal
+  tiebreak (<reg1:string regexp:"[a-z]*"> | <reg2:string regexp:"[a-z]*[0-9]*">), callback();{
+    port <nr:int16>, callback();
+  }
+  tiebreak_keyword (<reg1:string regexp:"[a-z]*" preference:9> | <reg2:string regexp:"[a-z]*[0-9]*">), callback();{
+    port <nr:int16>, callback();
+  }
 EOF
 
 newtest "$cligen_file -f $fspec"
@@ -39,6 +47,49 @@ expectpart "$(echo "values 427438287432" | $cligen_file -f $fspec 2>&1)" 0 "cli>
 # Maybe failure should be string regexp failure?
 newtest "cligen pref no match"
 expectpart "$(echo "values 9aa" | $cligen_file -f $fspec 2>&1)" 0 "CLI syntax error in: \"values 9aa\": \"9aa\" is invalid input for cli command: string"
+
+# -----------tiebreak
+
+newtest "tiebreak terminal OK"
+expectpart "$(echo "tiebreak abc99" | $cligen_file -f $fspec 2>&1)" 0 "2 name:reg2 type:string value:abc99"
+
+newtest "tiebreak terminal OK query"
+expectpart "$(echo -n "tiebreak abc99 ?" | $cligen_file -f $fspec 2>&1)" 0 "<cr>" "port"
+
+newtest "tiebreak terminal ambiguous"
+expectpart "$(echo "tiebreak abc" | $cligen_file -f $fspec 2>&1)" 0 "Ambiguous command"
+
+newtest "tiebreak terminal query"
+expectpart "$(echo -n "tiebreak abc ?" | $cligen_file -f $fspec 2>&1)" 0 --not-- "<cr>" "por"t
+
+newtest "tiebreak non-terminal OK"
+expectpart "$(echo "tiebreak abc99 port 42" | $cligen_file -f $fspec 2>&1)" 0 "2 name:reg2 type:string value:abc99" "4 name:nr type:int16 value:42"
+
+newtest "tiebreak non-terminal ambiguous"
+expectpart "$(echo "tiebreak abc port 42" | $cligen_file -f $fspec 2>&1)" 0 "Ambiguous command"
+
+#----- Break tiebreak
+newtest "tiebreak break terminal (-P 1)"
+expectpart "$(echo "tiebreak abc" | $cligen_file -P 1 -f $fspec 2>&1)" 0 "2 name:reg1 type:string value:abc" --not-- "Ambiguous command"
+
+newtest "tiebreak not break terminal (-P 2) "
+expectpart "$(echo "tiebreak abc" | $cligen_file -P 2 -f $fspec 2>&1)" 0 "Ambiguous command"
+
+newtest "tiebreak break terminal (-P 3)"
+expectpart "$(echo "tiebreak abc" | $cligen_file -P 3 -f $fspec 2>&1)" 0 "2 name:reg1 type:string value:abc" --not-- "Ambiguous command"
+
+newtest "tiebreak not break non-terminal (-P 1)"
+expectpart "$(echo "tiebreak abc port 42" | $cligen_file -P 1 -f $fspec 2>&1)" 0  "Ambiguous command"
+
+newtest "tiebreak break non-terminal (-P 2)"
+expectpart "$(echo "tiebreak abc port 42" | $cligen_file -P 2 -f $fspec 2>&1)" 0  "2 name:reg1 type:string value:abc" "4 name:nr type:int16 value:42" --not-- "Ambiguous command"
+
+newtest "tiebreak break non-terminal (-P 3)"
+expectpart "$(echo "tiebreak abc port 42" | $cligen_file -P 3 -f $fspec 2>&1)" 0  "2 name:reg1 type:string value:abc" "4 name:nr type:int16 value:42" --not-- "Ambiguous command"
+
+#----- Break tiebreak with preference keyword
+newtest "tiebreak break terminal using preference keyword"
+expectpart "$(echo "tiebreak_keyword abc" | $cligen_file -f $fspec 2>&1)" 0 "2 name:reg1 type:string value:abc" --not-- "Ambiguous command"
 
 newtest "endtest"
 endtest

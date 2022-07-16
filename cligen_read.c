@@ -467,7 +467,8 @@ show_help_line(cligen_handle h,
 				&result,
 				NULL) < 0)
 	    goto done;
-	if (result == CG_MATCH || result == CG_MULTIPLE){
+
+	if (result == CG_MATCH){
 	    fprintf(fout, "  <cr>\n");
 	    fflush(fout);
 	}

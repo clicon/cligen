@@ -1031,13 +1031,37 @@ cligen_preference_mode(cligen_handle h)
     return ch->ch_preference_mode;
 }
 
-/*! Set preference mode, return all with same pref(ambiguous) or first (1)
- * More specifically, if several cligen object variables match with same preference,
- * select the first, do not match all.
- * Example:
+/*! Set preference mode, return all with same pref(ambiguous) or first 0-4
+ *
+ * Often, multiple matches will resolve by preference, but not if several matches have same.
+ * This applies to complete (terminal matches), assume length of a is <=4:
+ * @code
  * key (<a:string length[4]> | <a:string length[40]>);
+ * @endcode
+ * Assume the user types the following command which matches both variables:
+ *   key foo
+ * Will lead to: "Ambiguous command"
+ * If set to 1 or 3 will select first variable.
+ *
+ * For non-terminals, example:
+ * @code
+ * key (<a:string length[4]> | <a:string length[40]>){
+ *     port <nr:int32>;
+ * }
+ * @endcode
+ * If set to 2 or 3 will select first variable.
+ *
+ * Do NOT use this if the two variables leads to different choices, eg:
+ * @code
+ * key <a:string length[4]>{
+ *     port <nr:int32>;
+ * }
+ * key <a:string length[40]>){
+ *     description <text:string>;
+ * }
+ * @endcode
  * @param[in] h      CLIgen handle
- * @param[in] flag   Set to 1 to return first, 0 if ambiguous
+ * @param[in] flag   0: ambiguous error, 1: terminal first, 2: non-terminal first match, 3: non-terminal+terminal
  * @retval    0      OK
  */
 int 

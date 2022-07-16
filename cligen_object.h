@@ -144,6 +144,7 @@ struct cg_obj{
     struct cg_obj      *co_prev;      /* Parent */
     enum cg_objtype     co_type;      /* Type of object: command, variable or tree
 					 reference */
+    uint16_t            co_preference; /* Overrides default variable preference if != 0*/
     char               *co_command;   /* malloc:ed matching string / name or type */
     char               *co_prefix;    /* Prefix. Can be used in cases where co_command is not unique */
     cg_callback        *co_callbacks; /* linked list of callbacks and arguments */
