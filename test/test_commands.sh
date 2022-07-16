@@ -32,7 +32,7 @@ newtest "ab ambiguous"
 expectpart "$(echo "ab" | $cligen_file -f $fspec)" 0 "Ambiguous command"
 
 newtest "ab ambiguous preference mode"
-expectpart "$(echo "ab" | $cligen_file -P -f $fspec 2>&1)" 0 "Ambiguous command"
+expectpart "$(echo "ab" | $cligen_file -P 1 -f $fspec 2>&1)" 0 "Ambiguous command"
 
 newtest "abc ok"
 expectpart "$(echo "abc" | $cligen_file -f $fspec 2>&1)" 0 "1 name:abc type:string value:abc"

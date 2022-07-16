@@ -139,27 +139,27 @@ int   cligen_buf_increase(cligen_handle h, size_t size);
 int   cligen_killbuf_increase(cligen_handle h, size_t size);
 
 /* hack */
-int cligen_parsetree_expand(cligen_handle h, parse_tree ***pt, int **e_len, int **e_i);
+int   cligen_parsetree_expand(cligen_handle h, parse_tree ***pt, int **e_len, int **e_i);
 
-int cligen_lexicalorder(cligen_handle h);
-int cligen_lexicalorder_set(cligen_handle h, int n);
-int cligen_ignorecase(cligen_handle h);
-int cligen_ignorecase_set(cligen_handle h, int n);
+int   cligen_lexicalorder(cligen_handle h);
+int   cligen_lexicalorder_set(cligen_handle h, int n);
+int   cligen_ignorecase(cligen_handle h);
+int   cligen_ignorecase_set(cligen_handle h, int n);
 
-int cligen_logsyntax(cligen_handle h);
-int cligen_logsyntax_set(cligen_handle h, int n);
+int   cligen_logsyntax(cligen_handle h);
+int   cligen_logsyntax_set(cligen_handle h, int n);
 
 void *cligen_userhandle(cligen_handle h);
-int cligen_userhandle_set(cligen_handle h, void *userhandle);
+int   cligen_userhandle_set(cligen_handle h, void *userhandle);
 
-int cligen_regex_xsd(cligen_handle h);
-int cligen_regex_xsd_set(cligen_handle h, int mode);
+int   cligen_regex_xsd(cligen_handle h);
+int   cligen_regex_xsd_set(cligen_handle h, int mode);
 
-char cligen_delimiter(cligen_handle h);
-int  cligen_delimiter_set(cligen_handle h, char delimiter);
+char  cligen_delimiter(cligen_handle h);
+int   cligen_delimiter_set(cligen_handle h, char delimiter);
 
-int cligen_preference_mode(cligen_handle h);
-int cligen_preference_mode_set(cligen_handle h, int flag);
+int   cligen_preference_mode(cligen_handle h);
+int   cligen_preference_mode_set(cligen_handle h, int flag);
 
 int   cligen_caseignore_get(cligen_handle h);
 int   cligen_caseignore_set(cligen_handle h, int ignorecase);

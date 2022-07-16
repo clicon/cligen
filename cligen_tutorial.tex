@@ -7,7 +7,7 @@
 %
 % Title
 %
-\title {CLIgen Manual\\ {\small CLIgen version 5.6}}
+\title {CLIgen Manual\\ {\small CLIgen version 5.8}}
 
 \author{Olof Hagsand}
 %
@@ -18,7 +18,7 @@
 
 % If you want a logo
 % \lhead{\includegraphics[height=9mm]{../../doc/logga_crop.png}}
-\date{January, 2022}
+\date{July, 2022}
 \maketitle
 \setcounter{tocdepth}{2}
 \tableofcontents
@@ -504,7 +504,7 @@ It is now possible to traverse the tree using the ``T'' tree as the following ex
 \end{verbatim}
 
 \subsection{Sets}
-
+\label{sec:sets}
 By default, listing several commands within {\tt \{\}} gives a choice of commands, but if instead commands are within the set operator {\tt @\{\}}, the commands can be given on any order, and at least once. For example:
 \begin{verbatim}
   x @{
@@ -841,6 +841,88 @@ In this example, {\tt incstr} simply increments every character in the variable.
 In the same way, a clear text password could be translated to an encrypted string.
 For information on how to implement a translator function, see Section~\ref{sec:translate}.
 
+
+\subsection{Variable preference}
+
+There are situations when a command matches multiple variables. For
+this purpose, there is variable {\em preference} to resolve
+tiebreaks. 
+
+For example, consider the CLI syntax:
+\begin{verbatim}
+  mycommand;
+  <name:string regexp:"[a-z]+">;
+  <name:string>;
+\end{verbatim}
+
+If a user types the command ``mycommand'', it matches all three rules, ``foo''
+matches the two variables and ``foo42'' matches only the last.
+
+Variable types have a default preference to resolve tie-breaks like
+these. The highest preference is the best match. In the example, the
+command ``mycommand'' has the highest preference, thereafter the
+regexp, and finally the unqualified string type.
+
+This means that typing ``mycommand'' matches the command, ``foo''
+matches the regexp and ``foo42'' matches the string type.
+
+The default variable preference table is available in Appendix~D.
+
+\subsubsection{Resolving tie-breaks}
+
+Even with variable preferences, there may be several matching
+variables with same preference. For example strings with regular expressions may overlap:
+\begin{verbatim}
+  <name:string regexp:"[a-b]+">;
+  <name:string regexp:"[b-c]+">;
+\end{verbatim}
+where the string ``bbb'' matches both rules with equal preference, which results in ``Ambiguous command'' in the CLI.
+
+There are two methods in CLIgen to break this tie-break:
+\begin{enumerate}
+\item {\tt preference} keyword
+\item {\tt cligen\_preference\_mode\_set()} API function
+\end{enumerate}
+
+The {\tt preference} keyword alters the preference of a variable, such as follows:
+\begin{verbatim}
+  <name:string regexp:"[a-b]+" preference:9>;
+  <name:string regexp:"[b-c]+">;
+\end{verbatim}
+
+The effect is that the default preference ($7$) is overruled ($9$) in the first rule and therefore preferred over the second.
+
+Using the {\tt cligen\_preference\_mode()} API, a tie-break can be
+resolved by choosing the {\em first} matching command for {\em all}
+preference tie-breaks in a system. This may be useful if one knows
+that this does not pose a problem.
+
+However, you need to be careful if effects of the commands are different. For example, in a syntax such as:
+\begin{verbatim}
+  <name:string regexp:"[a-b]+">, A();
+  <name:string regexp:"[b-c]+">, B();
+\end{verbatim}
+
+it may be dangerous to use the API method, if A() and B() do different things.
+
+But if all cases of tie-breaks are on the following form:
+
+\begin{verbatim}
+  (<name:string regexp:"[a-b]+"> | <name:string regexp:"[b-c]+">) A();
+\end{verbatim}
+
+it can be considered safe.
+
+Differentiation between terminals and non-terminals menas tie-breaks in the terminating command (such as: {\tt foo (<var>|<var>);} or an intermediate such as: {\tt foo (<var>|<var>) command; }
+
+The settings are:
+
+\begin{enumerate}
+\item Terminals, ie the 
+\item Non-terminals
+\item Terminals and non-terminals
+\end{enumerate}
+
 \section{Operators}
 \label{sec:operators}
 
@@ -852,7 +934,6 @@ In the regular syntax format, there are (implicit) sequence and choices. For exa
 defines a choice between the sequence {\tt aa bb} and {\tt cc}.
 
 It is also possible to explicitly define choices, optional elements and syntactical groupings.
-
 
 \subsection{Choice and grouping}
 Explit choice between several elements can be made as follows:
@@ -946,6 +1027,8 @@ As an assistant, you can use the {\tt -p} option to {\tt cligen\_file} to see wh
    }
    c;
 \end{verbatim}
+
+As an alternative solution, you can use the set mechanism as described in Sections~\ref{sec:sets}.
 
 \section{API}
 \label{sec:api}
@@ -1456,5 +1539,54 @@ ESC + F & Move one word forward & \\
 ESC + B & Move one word backward & \\
 \hline
 \end{tabular}
+
+\newpage
+\section*{Appendix D: Default variable preference}
+\label{app:varpref}
+The full default preference table is as follows:
+
+\begin{tabular}{ | l | l | }
+\hline
+  \textbf{ Type} & \textbf{Preference} \\
+\hline
+command         & $100$  \\
+time            & $74$   \\
+uuid            & $73$   \\
+macaddr         & $72$   \\
+ipv6addr        & $71$   \\
+ipv4addr        & $70$   \\
+decimal64       & $62$   \\
+int8 (range)    & $60$   \\
+uint8 (range)   & $59$   \\
+int16 (range)   & $58$   \\
+uint16 (range)  & $57$   \\
+int32 (range)   & $56$   \\
+uint32 (range)  & $55$   \\
+int64 (range)   & $54$   \\
+uint64 (range)  & $53$   \\
+int8            & $52$   \\
+uint8           & $51$   \\
+int16           & $50$   \\
+uint16          & $49$   \\
+int32           & $48$   \\
+uint32          & $47$   \\
+int64           & $46$   \\
+uint64          & $45$   \\
+url             & $20$   \\
+bool            & $12$   \\
+string (expand) & $8$    \\
+string (regexp) & $7$    \\
+string          & $5$    \\
+command (partial) & $3$ \\
+rest            & $1$    \\
+\hline
+\end{tabular}
+
+Note that integers with ranges have higher preference than integers lacking ranges.
+
+Also, expanded strings have higher regexp:s than strings with regexp:s and regular strings.
+
+Note also that ``command'' occurs twice, first as exact command match with preference $100$, second as partial matchwith preference $3$.
+
 
 \end{document}

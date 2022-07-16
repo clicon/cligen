@@ -170,6 +170,7 @@ stripdup(char *s0)
 <VARIABLE>keyword         { return V_KEYWORD; }
 <VARIABLE>regexp          { return V_REGEXP; }
 <VARIABLE>translate       { return V_TRANSLATE; }
+<VARIABLE>preference      { return V_PREFERENCE; }
 <VARIABLE>[-+]?[0-9]+\.[0-9]+ { cligen_parselval.string = strdup(yytext); return DECIMAL;}
 <VARIABLE>[-+]?[0-9]+     { cligen_parselval.string = strdup(yytext); return NUMBER;}
 <VARIABLE>([^ \t\n>:\|\"\(\)\[\]]|\\.)+ { 

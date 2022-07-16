@@ -3,6 +3,17 @@
 ## 5.8.0
 Expected: July 2022
 
+### New Features
+
+* The Variable preference implementation have been updated and documented
+  * If CLIgen matches more than one variable with the same preference, an "Ambiguos command" error is returned
+  * Such tiebreaks can be broken by a new "preference" keyword, eg: `<string preference:20>`
+  * There is also an extended API: `cligen_preference_mode_set()`
+  * Changes to variable preferenes that may effect code:
+    * string variable with expand function has higher preference than without
+    * `Ambiguous command` error is returned in more cases
+  * Described in Section 3.14 of the CLIgen tutorial
+
 ### Corrected Bugs
 
 * [Expansion does not work properly for inner hierarchical nodes on pressing TAB](https://github.com/clicon/clixon/issues/332)
