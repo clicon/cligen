@@ -844,9 +844,8 @@ For information on how to implement a translator function, see Section~\ref{sec:
 
 \subsection{Variable preference}
 
-There are situations when a command matches multiple variables. For
-this purpose, there is variable {\em preference} to resolve
-tiebreaks. 
+There are situations when a command matches multiple variables, and CLIgen may return {\em Ambiguous command}. For this purpose, variable {\em preference} can resolve
+tiebreaks.
 
 For example, consider the CLI syntax:
 \begin{verbatim}
@@ -855,36 +854,40 @@ For example, consider the CLI syntax:
   <name:string>;
 \end{verbatim}
 
-If a user types the command ``mycommand'', it matches all three rules, ``foo''
-matches the two variables and ``foo42'' matches only the last.
+If a user types the command {\tt mycommand}, it matches all three rules; typing {\tt foo}
+matches the two variables; and {\tt foo42} matches only the last.
 
 Variable types have a default preference to resolve tie-breaks like
 these. The highest preference is the best match. In the example, the
 command ``mycommand'' has the highest preference, thereafter the
 regexp, and finally the unqualified string type.
 
-This means that typing ``mycommand'' matches the command, ``foo''
-matches the regexp and ``foo42'' matches the string type.
+This means that typing {\tt mycommand} matches the first command rule; {\tt foo}
+matches the regexp rule; and {\tt foo42} matches the last string type.
 
 The default variable preference table is available in Appendix~D.
 
 \subsubsection{Resolving tie-breaks}
 
-Even with variable preferences, there may be several matching
-variables with same preference. For example strings with regular expressions may overlap:
+Even with default variable preferences, there may be cases where a
+command matches several rules with the same same default
+preference. For example, strings with regular expressions that overlap
+as follows:
 \begin{verbatim}
   <name:string regexp:"[a-b]+">;
   <name:string regexp:"[b-c]+">;
 \end{verbatim}
-where the string ``bbb'' matches both rules with equal preference, which results in ``Ambiguous command'' in the CLI.
+If a user types the string {\tt bbb}, it matches both rules with equal preference, which results in {\em Ambiguous command} error in the CLI.
 
-There are two methods in CLIgen to break this tie-break:
+There are two methods in CLIgen to resolve this tie-break:
 \begin{enumerate}
 \item {\tt preference} keyword
 \item {\tt cligen\_preference\_mode\_set()} API function
 \end{enumerate}
 
-The {\tt preference} keyword alters the preference of a variable, such as follows:
+\subsubsection{Preference keyword}
+
+First, the {\tt preference} keyword alters the preference of a variable, such as in the following example:
 \begin{verbatim}
   <name:string regexp:"[a-b]+" preference:9>;
   <name:string regexp:"[b-c]+">;
@@ -892,36 +895,28 @@ The {\tt preference} keyword alters the preference of a variable, such as follow
 
 The effect is that the default preference ($7$) is overruled ($9$) in the first rule and therefore preferred over the second.
 
-Using the {\tt cligen\_preference\_mode()} API, a tie-break can be
-resolved by choosing the {\em first} matching command for {\em all}
+\subsubsection{Preference API}
+
+Second, using the {\tt cligen\_preference\_mode()} API, a tie-break can be
+resolved by choosing the first matching command for {\em all}
 preference tie-breaks in a system. This may be useful if one knows
 that this does not pose a problem.
 
-However, you need to be careful if effects of the commands are different. For example, in a syntax such as:
-\begin{verbatim}
-  <name:string regexp:"[a-b]+">, A();
-  <name:string regexp:"[b-c]+">, B();
-\end{verbatim}
-
-it may be dangerous to use the API method, if A() and B() do different things.
-
-But if all cases of tie-breaks are on the following form:
-
+More specifically, if all cases of tie-breaks are on the following form:
 \begin{verbatim}
   (<name:string regexp:"[a-b]+"> | <name:string regexp:"[b-c]+">) A();
 \end{verbatim}
 
-it can be considered safe.
+it can be considered safe, since both options lead to the same result {\tt A()}.
 
-Differentiation between terminals and non-terminals menas tie-breaks in the terminating command (such as: {\tt foo (<var>|<var>);} or an intermediate such as: {\tt foo (<var>|<var>) command; }
+However, you need to be careful if effects of the commands are different. For example, given the following syntax:
+\begin{verbatim}
+  <name:string regexp:"[a-b]+">, A();
+  <name:string regexp:"[b-c]+"> { sub-command, B(); }
+\end{verbatim}
 
-The settings are:
-
-\begin{enumerate}
-\item Terminals, ie the 
-\item Non-terminals
-\item Terminals and non-terminals
-\end{enumerate}
+In this example, the API method should be avoided, since choosing one of the two 
+options lead to different results, in one case {\tt A()} is called, in the other a sub-menu is selected.
 
 \section{Operators}
 \label{sec:operators}
