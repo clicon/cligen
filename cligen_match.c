@@ -359,7 +359,7 @@ match_vec(cligen_handle h,
     char   *tmpreason = NULL;
     int     i;
     cg_obj *co;
-    cg_obj *cop;
+    cg_obj *cop = NULL;
     int     match;
 
     /* Loop through parse-tree at this level to find matches */
@@ -407,6 +407,7 @@ match_vec(cligen_handle h,
 		if (p == pref_upper){
 		    if (cligen_preference_mode(h) == 1 &&
 			lasttoken &&
+			cop &&
 			cop->co_type == CO_VARIABLE && 
 			co->co_type == CO_VARIABLE) /* Skip terminal pref if preference mode */
 			;
