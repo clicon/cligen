@@ -1,18 +1,18 @@
 # Cligen Changelog
 	
 ## 5.8.0
-Expected: July 2022
+28 July 2022
 
 ### New Features
 
-* The Variable preference implementation have been updated and documented
-  * If CLIgen matches more than one variable with the same preference, an "Ambiguos command" error is returned
-  * Such tiebreaks can be broken by a new "preference" keyword, eg: `<string preference:20>`
+* The Variable preference implementation has been updated and documented
+  * If more than one variable have the same preference, an "Ambiguos command" error is returned
+  * Such tiebreaks can be resolved by a new "preference" keyword, eg: `<string preference:20>`
   * There is also an extended API: `cligen_preference_mode_set()`
-  * Changes to variable preferenes that may effect code:
-    * string variable with expand function has higher preference than without
+  * This change may affect existing code in the following ways:
+    * A string variable with "expand()" function has higher preference than without expand function
     * `Ambiguous command` error is returned in more cases
-  * Described in Section 3.14 of the CLIgen tutorial
+  * More info: Section 3.14 of the CLIgen tutorial
 
 ### Corrected Bugs
 
