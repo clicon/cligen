@@ -80,7 +80,7 @@
  */
 int
 cligen_regex_posix_compile(char  *regexp,
-			   void **recomp)
+                           void **recomp)
 {
     int      retval = -1;
     cbuf    *cb = NULL;
@@ -89,40 +89,40 @@ cligen_regex_posix_compile(char  *regexp,
 
     len0 = strlen(regexp);
     if ((cb = cbuf_new()) == NULL)
-	goto done;
+        goto done;
     /* Check if prepended by ^ */
     if (len0 > 0 && regexp[0] == '^'){
-	if (regexp[len0-1] == '$')
-	    cprintf(cb, "%s", regexp);
-	else if (len0 > 1 && regexp[1] == '(')
-	    cprintf(cb, "%s)$", regexp);
-	else
-	    cprintf(cb, "%s$", regexp);
+        if (regexp[len0-1] == '$')
+            cprintf(cb, "%s", regexp);
+        else if (len0 > 1 && regexp[1] == '(')
+            cprintf(cb, "%s)$", regexp);
+        else
+            cprintf(cb, "%s$", regexp);
     }
     /* Check if terminated by $ only */
     else if (len0 > 0 && regexp[len0-1] == '$'){
-	if (len0 > 1 && regexp[len0-2] == ')')
-	    cprintf(cb, "^(%s", regexp);
-	else
-	    cprintf(cb, "^%s", regexp);
+        if (len0 > 1 && regexp[len0-2] == ')')
+            cprintf(cb, "^(%s", regexp);
+        else
+            cprintf(cb, "^%s", regexp);
     }
     else /* Neither ^or $ */
-	cprintf(cb, "^(%s)$", regexp);
+        cprintf(cb, "^(%s)$", regexp);
 
     if ((re = malloc(sizeof(regex_t))) == NULL)
-	goto done;
+        goto done;
     memset(re, 0, sizeof(regex_t));
     if (regcomp(re, cbuf_get(cb), REG_NOSUB|REG_EXTENDED) != 0) {
-	goto fail;
+        goto fail;
     }
     *recomp = re;
     re = NULL;
     retval = 1;
  done:
     if (re)
-	free(re);
+        free(re);
     if (cb)
-	cbuf_free(cb);
+        cbuf_free(cb);
     return retval;
  fail:
     retval = 0;
@@ -138,7 +138,7 @@ cligen_regex_posix_compile(char  *regexp,
  */
 int
 cligen_regex_posix_exec(void *recomp,
-			char *string)
+                        char *string)
 {
     int      retval = -1;
     int      status;
@@ -148,10 +148,10 @@ cligen_regex_posix_exec(void *recomp,
     re = (regex_t*)recomp;
     status = regexec(re, string, (size_t) 0, NULL, 0);
     if (status == 0) 
-	retval = 1;
+        retval = 1;
     else {
-	regerror(status, re, errbuf, sizeof(errbuf)); /* XXX error is ignored */
-	retval = 0;
+        regerror(status, re, errbuf, sizeof(errbuf)); /* XXX error is ignored */
+        retval = 0;
     }
     return retval;
 }
@@ -163,7 +163,7 @@ int
 cligen_regex_posix_free(void *recomp)
 {
     if (recomp){
-	regfree(recomp);
+        regfree(recomp);
     }
     return 0;
 }
@@ -178,7 +178,7 @@ cligen_regex_posix_free(void *recomp)
  */
 int
 cligen_regex_libxml2_compile(char  *regexp0,
-			     void **recomp)    
+                             void **recomp)    
 {
     int        retval = -1;
 #ifdef HAVE_LIBXML_XMLREGEXP_H
@@ -186,7 +186,7 @@ cligen_regex_libxml2_compile(char  *regexp0,
     xmlRegexp *xrp = NULL;
     
     if ((xrp = xmlRegexpCompile(regexp)) == NULL)
-	goto fail;
+        goto fail;
     *recomp = xrp;
     retval = 1;
  done:
@@ -207,7 +207,7 @@ cligen_regex_libxml2_compile(char  *regexp0,
  */
 int
 cligen_regex_libxml2_exec(void *recomp,
-			  char *string0)
+                          char *string0)
 {
     int        retval = -1;
 #ifdef HAVE_LIBXML_XMLREGEXP_H
@@ -216,7 +216,7 @@ cligen_regex_libxml2_exec(void *recomp,
     
     /* Returns 1 if matches, 0 if not and a negative value in case of error */
     if ((retval = xmlRegexpExec(xrp, content)) < 0)
-	goto done;
+        goto done;
  done:
 #endif
     return retval;
@@ -230,7 +230,7 @@ cligen_regex_libxml2_free(void *recomp)
 {
 #ifdef HAVE_LIBXML_XMLREGEXP_H
     if (recomp)
-	xmlRegFreeRegexp(recomp);
+        xmlRegFreeRegexp(recomp);
 #endif
     return 0;
 }
@@ -246,15 +246,15 @@ cligen_regex_libxml2_free(void *recomp)
  */
 int
 cligen_regex_compile(cligen_handle h,
-		     char         *regexp,
-		     void        **recomp)
+                     char         *regexp,
+                     void        **recomp)
 {
     int   retval = -1;
 
     if (cligen_regex_xsd(h) == 0) 
-	retval = cligen_regex_posix_compile(regexp, recomp);
+        retval = cligen_regex_posix_compile(regexp, recomp);
     else 
-	retval = cligen_regex_libxml2_compile(regexp, recomp);
+        retval = cligen_regex_libxml2_compile(regexp, recomp);
     return retval;
 }
 
@@ -264,15 +264,15 @@ cligen_regex_compile(cligen_handle h,
  */
 int
 cligen_regex_exec(cligen_handle h,
-		  void         *recomp,
-		  char         *string)
+                  void         *recomp,
+                  char         *string)
 {
     int   retval = -1;
 
     if (cligen_regex_xsd(h) == 0) 
-	retval = cligen_regex_posix_exec(recomp, string);
+        retval = cligen_regex_posix_exec(recomp, string);
     else 
-	retval = cligen_regex_libxml2_exec(recomp, string);
+        retval = cligen_regex_libxml2_exec(recomp, string);
     return retval;
 }
 
@@ -282,16 +282,16 @@ cligen_regex_exec(cligen_handle h,
  */
 int
 cligen_regex_free(cligen_handle h,
-		  void         *recomp)
+                  void         *recomp)
 {
     int   retval = -1;
 
     if (cligen_regex_xsd(h) == 0) {
-	retval = cligen_regex_posix_free(recomp);
-	free(recomp);
+        retval = cligen_regex_posix_free(recomp);
+        free(recomp);
     }
     else 
-	retval = cligen_regex_libxml2_free(recomp);
+        retval = cligen_regex_libxml2_free(recomp);
     return retval;
 }
 
@@ -307,32 +307,32 @@ cligen_regex_free(cligen_handle h,
  */
 int 
 match_regexp(cligen_handle h,
-	     char         *string, 
-	     char         *pattern,
-	     int           invert)
+             char         *string, 
+             char         *pattern,
+             int           invert)
 {
     int   retval = -1;
     int   ret;
     void *re = NULL;
 
     if (string == NULL || pattern == NULL){
-	errno = EINVAL;
-	goto done;
+        errno = EINVAL;
+        goto done;
     }
     if ((ret = cligen_regex_compile(h, pattern, &re)) < 0)
-	goto done;
+        goto done;
     if (ret == 0)
-	goto fail;
+        goto fail;
     if ((ret = cligen_regex_exec(h, re, string)) < 0)
-	goto done;
+        goto done;
     if (invert)
-	ret = !ret;
+        ret = !ret;
     if (ret == 0)
-	goto fail;
+        goto fail;
     retval = 1;
  done:
     if (re != NULL)
-	cligen_regex_free(h, re);
+        cligen_regex_free(h, re);
     return retval;
  fail:
     retval = 0;

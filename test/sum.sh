@@ -16,9 +16,9 @@ for testfile in $pattern; do # For lib.sh the variable must be called testfile
     ./$testfile  > /dev/null 2>&1
     errcode=$?
     if [ $errcode -ne 0 ]; then
-	err=1
-	echo -e "\e[31mError in $testfile errcode=$errcode"
-	echo -ne "\e[0m"
+        err=1
+        echo -e "\e[31mError in $testfile errcode=$errcode"
+        echo -ne "\e[0m"
     fi
 done
 if [ $err -eq 0 ]; then 

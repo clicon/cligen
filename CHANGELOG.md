@@ -1,5 +1,14 @@
 # Cligen Changelog
-	
+        
+## 6.0.0
+Expected: End of 2022
+
+### Minor features
+
+* [Code formatting: Change indentation style to space](https://github.com/clicon/clixon/issues/379)
+  * Applies to all c/h/y/l/sh files and .editorconfig
+
+
 ## 5.8.0
 28 July 2022
 
@@ -341,7 +350,7 @@ No new functionality, just a release number bump to synchronize with Clixon
 * Added XSD regexp w libxml2 support
   * Added libxml2 regex compile and exec functions
   * Added libxml2 to configure, enable it at install-time with:
-    * `./configure --with-libxml2`	
+    * `./configure --with-libxml2`      
   * Enable libxml2 based regexp:s at program start with: `cligen_regexp_xsd_set(h, 1)`
 * [Choice with space is not working in CLIgen code](https://github.com/olofhagsand/cligen/issues/24) is fixed, but you need to use escape backslash character `\` to make it work.
   * Example using spec: `choice <string choice:nospace|with\ space>;`
@@ -394,14 +403,14 @@ No new functionality, just a release number bump to synchronize with Clixon
 * Added cv_min_set() and cv_max_set() to set min and max values of a cligen variable respectively
 * Added cligen_print_trees() function
 * Fixed problem reported by mgsmith at netgate.com where two files loaded will not call callback after "a b" command:
-	```
-	a b c, fn();
-	a b, fn();
+        ```
+        a b c, fn();
+        a b, fn();
 
-	CLICON_MODE="master";
-	CLICON_PLUGIN="example_cli";
-	a b, fn();
-	```
+        CLICON_MODE="master";
+        CLICON_PLUGIN="example_cli";
+        a b, fn();
+        ```
 
 ## 3.8.0
 6 Nov 2018
@@ -424,7 +433,7 @@ No new functionality, just a release number bump to synchronize with Clixon
   * CLIGEN_TABMODE_STEPS:   0: complete single step. 1: all steps at once
   * Deprecated `cligen_completion_set() and cligen_completion()`, use cligen_tabmode() instead.
 * Append arguments to reference callback
-  * such as: @datamodel:example, cli_show_auto("candidate", "text");		   
+  * such as: @datamodel:example, cli_show_auto("candidate", "text");               
 * Added --enable-debug to configure. Thanks rbgarga
 * Removed support for single callback functions
   * Enable by defining CALLBACK_SINGLEARG
@@ -451,7 +460,7 @@ No new functionality, just a release number bump to synchronize with Clixon
   in some circumstances. Detected by Netgate.
 
 * Accept input with multiple lines into a single variable. (Thanks Matthew Smith)
-	
+        
 ## R3.6.0 (19 November 2017)
 
 * Fixed newline for non-line scrolling mode
@@ -468,7 +477,7 @@ No new functionality, just a release number bump to synchronize with Clixon
 
 * Added support for multi-argument callback CLI expand functions.
     See cligen_expandv_str2fn()
-	
+        
 * Added support for multi-argument callback CLI functions. See below where the third argument is a vector instead of a single argument.
   To use this, all CLI callback functions need to be rewritten.
   The old style remains but cannot be mixed with the new.
@@ -476,8 +485,8 @@ No new functionality, just a release number bump to synchronize with Clixon
 ```
     int callback(cligen_handle handle, cvec *cvv, cvec *argv);
 ```
-	
-* Removed alias int for int32.	
+        
+* Removed alias int for int32.  
 * Added option for "relaxed" handling of variable matching. So that 
   * eg <a:string length[4]> | <a:string length[40]> is allowed. 
   * See cligen_match_cgvar_same().
@@ -490,7 +499,7 @@ No new functionality, just a release number bump to synchronize with Clixon
 * Fixed parse bugs for some choices syntax, eg <a choice:1.0|length> did not work.
 
 * Merge sub-trees with original trees containing same symbols. Eg a cligen-spec:
-	"a @TREE; a b;"
+        "a @TREE; a b;"
   if TREE contains the symbol 'b', the two 'b:s' were not merged properly.
 
 * Allow CR/LF in help-texts
@@ -506,13 +515,13 @@ No new functionality, just a release number bump to synchronize with Clixon
   * 'int' will remain as an alias for int32.
 
 * Rename types :
--	CGV_INT  -> CGV_INT32
--	CGV_LONG -> CGV_INT64
+-       CGV_INT  -> CGV_INT32
+-       CGV_LONG -> CGV_INT64
 * Rename cv access functions:
--	 cv_int_get -> cv_int32_get
--	 cv_int_set -> cv_int32_set
--	 cv_long_get -> cv_int64_get
--	 cv_long_set -> cv_int64_set
+-        cv_int_get -> cv_int32_get
+-        cv_int_set -> cv_int32_set
+-        cv_long_get -> cv_int64_get
+-        cv_long_set -> cv_int64_set
   * For the new int types, see Section 5.1 in the CLIgen tutorial
 
 * A new decimal64 type is added. Decimal64 defined in the YANG standard
@@ -524,13 +533,13 @@ written as: 123.4567. Ranges allowed for decimal64 as well.
 but is still part of the release.
 
 * Cligen variable vectors (cvec) extended with 'name'. New functions:
-	char *cvec_name_get(cvec *vr);
-	char *cvec_name_set(cvec *vr, char *name);
+        char *cvec_name_get(cvec *vr);
+        char *cvec_name_set(cvec *vr, char *name);
 
 A new module: cligen_buf.[ch] is added. This adds a simple variable buffer allocation
 (cbuf) functionality. Example:
-	cbuf *cb = cbuf_new();
-	cprintf(cb, "%d %s", 43, "go");
+        cbuf *cb = cbuf_new();
+        cprintf(cb, "%d %s", 43, "go");
         write(1, cbuf_get(cb), cbuf_len(cb)) < 0)
         cbuf_free(cb);
 
@@ -544,7 +553,7 @@ suppressed:
    <x:int32 range[125]>;
 
 Added a 'show' field in the variable syntax to distinguish between a name of a variable used for reference and how it is displayed in the CLI:
-	<x:int32 show:number>;
+        <x:int32 show:number>;
 Here, 'x' is used to reference the variable in callbacks, but 'number' is used when displaying the variable.
 
 Added support for multiple CLIgen trees in a single file. Example:
@@ -602,7 +611,7 @@ fields. The default field is removed and can be implemented by
 userdata.
 
 Added an empty variable type that has no values (thanks Benny)
-	
+        
 Added pt_apply that applies a function call recursively on all cg_obj:s in a parse-tree
 
 Added cligen_logsyntax[_set]() as a debug-function to track dynamic

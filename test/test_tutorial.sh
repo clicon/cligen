@@ -9,7 +9,7 @@ fspec=../tutorial.cli
 newtest "$cligen_tutorial -f $fspec"
 
 newtest "? TAB"
-expectpart "$(echo "?	" | $cligen_tutorial -f $fspec)" 0 access-list
+expectpart "$(echo "?   " | $cligen_tutorial -f $fspec)" 0 access-list
 
 newtest "aa bb ca 42"
 expectpart "$(echo "aa bb ca 42" | $cligen_tutorial -q -f $fspec)" 0 ca

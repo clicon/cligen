@@ -113,9 +113,9 @@ cli_output_status(void)
 
 static int
 cligen_output_scroll(FILE   *f,
-		     char   *ibuf,
-		     ssize_t linelen,
-		     int     term_rows)
+                     char   *ibuf,
+                     ssize_t linelen,
+                     int     term_rows)
 {
     int     retval = -1;
     char   *ibend;
@@ -131,71 +131,71 @@ cligen_output_scroll(FILE   *f,
     ibend = ibuf + strlen(ibuf);
     /* A terminal line */
     if ((linebuf = malloc(linelen+1)) == NULL)
-	goto done;
+        goto done;
     remain = linelen - D_COLUMNS;
     while (ib1 < ibend && D_LINES >= 0){
-	/* Four cases:
-	 * 1. There is a CR in [ib0,ibend]
-	 *   1a) greater than remaining: (inc D_LINE)
-	 *   1b) less than or equal to remain: Only case where line has (terminating) CR
-	 * 2. No CR
-	 *   2a) greater than remain: (inc D_LINE)
-	 *   2b) less than or equal to remain: 
-	 */
-	if ((ibcr = strstr(ib0, "\n")) != NULL){
-	    if ((ibcr - ib0) > remain){
-		ib1 = ib0 + remain; /* 1a */
-		D_LINES++;
-		remain = linelen;
-	    }
-	    else{
-		ib1 = ibcr+1;        /* 1b */
-		D_LINES++;
-		remain = linelen;
-	    }
-	}
-	else if (ibend - ib0 >= remain){
-	    ib1 = ib0 + remain;     /* 2a */
-	    D_LINES++;
-	    remain = linelen;
-	}
-	else{
-	    remain -= ibend-ib1;
-	    assert(remain<=linelen && remain>=0);
-	    ib1 = ibend;             /* 2b */
-	}
-	if (ib0 == ib1)
-	    break;
-	memcpy(linebuf, ib0, (ib1-ib0));
-	linebuf[(ib1-ib0)] = '\0';
-	assert(*ib0 != '\0');
-	fprintf(f, "%s", linebuf);
-	ib0 = ib1;
-	if (D_LINES >= (term_rows -1)){
-	    gl_char_init();
-	    
-	    fprintf(f, "--More--");
-	    fflush(f);
-	    c = fgetc(stdin);
-	    if (c == '\n')
-		D_LINES--;
-	    else if (c == ' ')
-		D_LINES = 0;
-	    else if (c == 'q' || c == 3) /* ^c */
-		D_LINES = -1;
-	    else if (c == '?')
-		fprintf(f, "Press CR for one more line, SPACE for next page, q to quit\n");
-	    else 
-		D_LINES = 0;  
-	    fprintf(f, "        ");
-	    gl_char_cleanup();
-	}
+        /* Four cases:
+         * 1. There is a CR in [ib0,ibend]
+         *   1a) greater than remaining: (inc D_LINE)
+         *   1b) less than or equal to remain: Only case where line has (terminating) CR
+         * 2. No CR
+         *   2a) greater than remain: (inc D_LINE)
+         *   2b) less than or equal to remain: 
+         */
+        if ((ibcr = strstr(ib0, "\n")) != NULL){
+            if ((ibcr - ib0) > remain){
+                ib1 = ib0 + remain; /* 1a */
+                D_LINES++;
+                remain = linelen;
+            }
+            else{
+                ib1 = ibcr+1;        /* 1b */
+                D_LINES++;
+                remain = linelen;
+            }
+        }
+        else if (ibend - ib0 >= remain){
+            ib1 = ib0 + remain;     /* 2a */
+            D_LINES++;
+            remain = linelen;
+        }
+        else{
+            remain -= ibend-ib1;
+            assert(remain<=linelen && remain>=0);
+            ib1 = ibend;             /* 2b */
+        }
+        if (ib0 == ib1)
+            break;
+        memcpy(linebuf, ib0, (ib1-ib0));
+        linebuf[(ib1-ib0)] = '\0';
+        assert(*ib0 != '\0');
+        fprintf(f, "%s", linebuf);
+        ib0 = ib1;
+        if (D_LINES >= (term_rows -1)){
+            gl_char_init();
+            
+            fprintf(f, "--More--");
+            fflush(f);
+            c = fgetc(stdin);
+            if (c == '\n')
+                D_LINES--;
+            else if (c == ' ')
+                D_LINES = 0;
+            else if (c == 'q' || c == 3) /* ^c */
+                D_LINES = -1;
+            else if (c == '?')
+                fprintf(f, "Press CR for one more line, SPACE for next page, q to quit\n");
+            else 
+                D_LINES = 0;  
+            fprintf(f, "        ");
+            gl_char_cleanup();
+        }
     }
     D_COLUMNS = linelen-remain;
     retval = 0;
  done:
     if (linebuf)
-	free(linebuf);
+        free(linebuf);
     return retval;
 }
 
@@ -235,8 +235,8 @@ cligen_output_scroll(FILE   *f,
  */
 int
 cligen_output(FILE       *f,
-	      const char *template,
-	      ... )
+              const char *template,
+              ... )
 {
     int     retval = -1;
     va_list args;
@@ -256,30 +256,30 @@ cligen_output(FILE       *f,
     va_end(args);
 
     if ((inbuf = malloc(inbuflen+1)) == NULL)
-	goto done;
+        goto done;
     va_start(args, template);
     vsnprintf(inbuf, inbuflen+1, template, args);
     va_end(args);
 
     if (term_width > 0)
-	linelen = term_width;
+        linelen = term_width;
     else
-	linelen = inbuflen;
+        linelen = inbuflen;
 
     /* if writing to stdout, format output
      */
     if (term_rows && (f == stdout)){
-	if (cligen_output_scroll(f, inbuf, linelen, term_rows) < 0)
-	    goto done;
+        if (cligen_output_scroll(f, inbuf, linelen, term_rows) < 0)
+            goto done;
     }
     else{
-	fprintf(f, "%s", inbuf);
+        fprintf(f, "%s", inbuf);
     }  
     fflush(f);
     retval = 0;
  done:
     if (inbuf)
-	free(inbuf);
+        free(inbuf);
     return retval;
 }
 
@@ -290,16 +290,16 @@ cligen_output(FILE       *f,
 int
 cli_yesno(const char *fmt, ...)
 {
-    va_list	  ap;
-    char	  buf[1024];
+    va_list       ap;
+    char          buf[1024];
 
     va_start(ap, fmt);
     vsnprintf(buf, sizeof(buf)-1, fmt, ap);
     va_end(ap);
     printf("%s [yes/no]: ", buf);
     if (cli_getln(buf, sizeof(buf)) == 0)
-	if (strlen(buf) && !strncasecmp(buf, "yes", strlen(buf)))
-	    return 1;
+        if (strlen(buf) && !strncasecmp(buf, "yes", strlen(buf)))
+            return 1;
     return 0;
 }
 #endif
@@ -330,7 +330,7 @@ cligen_redraw(cligen_handle h)
  */
 int
 cligen_susp_hook(cligen_handle     h, 
-		 cligen_susp_cb_t *fn)
+                 cligen_susp_cb_t *fn)
 {
     gl_susp_hook = fn; /* XXX global */
     return 0;
@@ -340,7 +340,7 @@ cligen_susp_hook(cligen_handle     h,
  */
 int
 cligen_interrupt_hook(cligen_handle          h, 
-		      cligen_interrupt_cb_t *fn)
+                      cligen_interrupt_cb_t *fn)
 {
     gl_interrupt_hook = fn; 
     return 0;
@@ -350,7 +350,7 @@ cligen_interrupt_hook(cligen_handle          h,
  */
 void 
 cligen_exitchar_add(cligen_handle h, 
-		    char          c)
+                    char          c)
 {
     gl_exitchar_add(c); /* XXX global */
 }
@@ -365,9 +365,9 @@ cligen_exitchar_add(cligen_handle h,
  */
 static int
 print_help_line(cligen_handle    h,
-		FILE            *fout,
-		int              column_width,
-		struct cligen_help *ch)
+                FILE            *fout,
+                int              column_width,
+                struct cligen_help *ch)
 {
     int     retval = -1;
     cg_var *cv = NULL;
@@ -378,39 +378,39 @@ print_help_line(cligen_handle    h,
     int     linesmax;
     int     termwidth;
     int     truncate;
-	    
+            
     /* First print command */
     fprintf(fout, "  %*s", -column_width, ch->ch_cmd);
     /* Then print help */
     if (ch->ch_helpvec && cvec_len(ch->ch_helpvec)){
-	linesmax = cligen_helpstring_lines(h);
-	truncate = cligen_helpstring_truncate(h);
-	termwidth = cligen_terminal_width(h);
-	j = 0;
-	while ((cv = cvec_each(ch->ch_helpvec, cv)) != NULL &&
-	       (linesmax==0 || j<linesmax)){
-	    w = termwidth - column_width - CLIGEN_HELP_LEFT_MARGIN;
-	    str = cv_string_get(cv);
-	    if (j > 0) /* skip first line */
-		fprintf(fout, "  %*s", -column_width, "");
-	    if (truncate == 0 ||
-		strlen(str) < w){
-		fprintf(fout, " %*s", -w, str);
-	    }
-	    else {
-		if ((str2 = strdup(str)) == NULL)
-		    goto done;
-		str2[w] = '\0';
-		fprintf(fout, " %*s", -w, str2);
-		free(str2);
-		str2 = NULL;
-	    }
-	    fprintf(fout, "\n");
-	    j++;
-	}
+        linesmax = cligen_helpstring_lines(h);
+        truncate = cligen_helpstring_truncate(h);
+        termwidth = cligen_terminal_width(h);
+        j = 0;
+        while ((cv = cvec_each(ch->ch_helpvec, cv)) != NULL &&
+               (linesmax==0 || j<linesmax)){
+            w = termwidth - column_width - CLIGEN_HELP_LEFT_MARGIN;
+            str = cv_string_get(cv);
+            if (j > 0) /* skip first line */
+                fprintf(fout, "  %*s", -column_width, "");
+            if (truncate == 0 ||
+                strlen(str) < w){
+                fprintf(fout, " %*s", -w, str);
+            }
+            else {
+                if ((str2 = strdup(str)) == NULL)
+                    goto done;
+                str2[w] = '\0';
+                fprintf(fout, " %*s", -w, str2);
+                free(str2);
+                str2 = NULL;
+            }
+            fprintf(fout, "\n");
+            j++;
+        }
     }
     else
-	fprintf(fout, "\n");
+        fprintf(fout, "\n");
     retval = 0;
  done:
     return retval;
@@ -430,8 +430,8 @@ print_help_line(cligen_handle    h,
  */
 int
 cligen_help_eq(struct cligen_help *ch0,
-	       struct cligen_help *ch1,
-	       int                 help)
+               struct cligen_help *ch1,
+               int                 help)
 {
     char   *cmd0  = ch0->ch_cmd;
     char   *cmd1  = ch1->ch_cmd;
@@ -441,25 +441,25 @@ cligen_help_eq(struct cligen_help *ch0,
     cg_var *cv1;
 
     if (cmd0 == NULL && cmd1 == NULL)
-	return 1;
+        return 1;
     if (cmd0 == NULL || cmd1 == NULL)
-	return 0;
+        return 0;
     if (strcmp(cmd0, cmd1) != 0)
-	return 0;
+        return 0;
     if (help == 0)
-	return 1;
+        return 1;
     /* Commands are equal, check help string */
     if (help0 == NULL && help1 == NULL)
-	return 1;
+        return 1;
     if (help0 == NULL || help1 == NULL)
-	return 0;
+        return 0;
     /* Get first line only as equality check */
     cv0 = cvec_i(help0, 0);
     cv1 = cvec_i(help1, 0);
     if (cv0 == NULL && help1 == NULL)
-	return 1;
+        return 1;
     if (cv0 == NULL || help1 == NULL)
-	return 0;
+        return 0;
     return strcmp(cv_string_get(cv0), cv_string_get(cv1)) == 0;
 }
 
@@ -468,11 +468,11 @@ int
 cligen_help_clear(struct cligen_help *ch)
 {
     if (ch == NULL)
-	return 0;
+        return 0;
     if (ch->ch_cmd)
-	free(ch->ch_cmd);
+        free(ch->ch_cmd);
     if (ch->ch_helpvec)
-	cvec_free(ch->ch_helpvec);
+        cvec_free(ch->ch_helpvec);
     memset(ch, 0, sizeof(*ch));
     return 0;
 }
@@ -486,8 +486,8 @@ cligen_help_clear(struct cligen_help *ch)
  */
 int
 print_help_lines(cligen_handle h,
-		 FILE         *fout, 
-		 parse_tree   *ptmatch)
+                 FILE         *fout, 
+                 parse_tree   *ptmatch)
 {
     int              retval = -1;
     cg_obj          *co;
@@ -501,61 +501,61 @@ print_help_lines(cligen_handle h,
     int              column_width;
 
     if ((cb = cbuf_new()) == NULL)
-	return -1;
+        return -1;
     /* Go through match vector and collect commands and helps */
     if ((chvec = calloc(pt_len_get(ptmatch), sizeof(struct cligen_help))) ==NULL){
-	perror("calloc");
-	goto done;
+        perror("calloc");
+        goto done;
     }
     for (i=0; i<pt_len_get(ptmatch); i++){
-	co = pt_vec_i_get(ptmatch, i);
-	if (co->co_command == NULL)
-	    continue;
-	cmd = NULL;
-	switch(co->co_type){
-	case CO_VARIABLE:
-	    cbuf_reset(cb);
-	    cov2cbuf(cb, co, 1);
-	    cmd = cbuf_get(cb);
-	    break;
-	case CO_COMMAND:
-	    cmd = co->co_command;
-	    break;
-	default:
-	    continue;
-	    break;
-	}
-	ch = &chvec[nrcmd];
-	if ((ch->ch_cmd = strdup(cmd)) == NULL)
-	    goto done;
-	if (co->co_helpstring && cligen_txt2cvv(co->co_helpstring, &ch->ch_helpvec) < 0)
-	    goto done;
-	if (nrcmd && cligen_help_eq(&chvec[nrcmd-1], ch, 1) == 1){
-	    cligen_help_clear(ch);
-	    continue;
-	}
-	nrcmd++;
-	/* Compute longest command */
-	maxlen = strlen(cmd)>maxlen?strlen(cmd):maxlen;
+        co = pt_vec_i_get(ptmatch, i);
+        if (co->co_command == NULL)
+            continue;
+        cmd = NULL;
+        switch(co->co_type){
+        case CO_VARIABLE:
+            cbuf_reset(cb);
+            cov2cbuf(cb, co, 1);
+            cmd = cbuf_get(cb);
+            break;
+        case CO_COMMAND:
+            cmd = co->co_command;
+            break;
+        default:
+            continue;
+            break;
+        }
+        ch = &chvec[nrcmd];
+        if ((ch->ch_cmd = strdup(cmd)) == NULL)
+            goto done;
+        if (co->co_helpstring && cligen_txt2cvv(co->co_helpstring, &ch->ch_helpvec) < 0)
+            goto done;
+        if (nrcmd && cligen_help_eq(&chvec[nrcmd-1], ch, 1) == 1){
+            cligen_help_clear(ch);
+            continue;
+        }
+        nrcmd++;
+        /* Compute longest command */
+        maxlen = strlen(cmd)>maxlen?strlen(cmd):maxlen;
     }
     maxlen++;
     column_width = maxlen<COLUMN_MIN_WIDTH?COLUMN_MIN_WIDTH:maxlen;
     /* Actually print */
     for (i = 0; i<nrcmd; i++){
-	ch = &chvec[i];
-	if (print_help_line(h, fout, column_width, ch) < 0)
-	    goto done;
+        ch = &chvec[i];
+        if (print_help_line(h, fout, column_width, ch) < 0)
+            goto done;
     }
     fflush(fout);
     retval = 0;
  done:
     if (chvec){
-	for (i=0; i<nrcmd; i++)
-	    cligen_help_clear(&chvec[i]);
-	free(chvec);
+        for (i=0; i<nrcmd; i++)
+            cligen_help_clear(&chvec[i]);
+        free(chvec);
     }
     if (cb)
-	cbuf_free(cb);
+        cbuf_free(cb);
     return retval;
 }
 
@@ -565,8 +565,8 @@ print_help_lines(cligen_handle h,
  */
 int
 cligen_help(cligen_handle h,
-	    FILE         *fout, 
-	    parse_tree   *pt)
+            FILE         *fout, 
+            parse_tree   *pt)
 {
     return print_help_lines(h, fout, pt);
 }
