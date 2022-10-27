@@ -80,7 +80,7 @@ uint64_t _co_count = 0;
  */
 int
 co_stats_global(uint64_t *created,
-		uint64_t *nr)
+                uint64_t *nr)
 {
     *created = _co_created;
     *nr =   _co_count;
@@ -95,7 +95,7 @@ co_stats_global(uint64_t *created,
  */
 static int
 co_stats_one(cg_obj   *co,
-	     size_t   *szp)
+             size_t   *szp)
 {
     size_t              sz = 0;
     struct cg_callback *cc;
@@ -104,41 +104,41 @@ co_stats_one(cg_obj   *co,
     sz += sizeof(struct cg_obj);
     sz += co->co_pt_len*sizeof(struct parse_tree*);
     if (co->co_command)
-	sz += strlen(co->co_command) + 1;
+        sz += strlen(co->co_command) + 1;
     if (co->co_prefix)
-	sz += strlen(co->co_prefix) + 1;
+        sz += strlen(co->co_prefix) + 1;
     for (cc = co->co_callbacks; cc; cc=cc->cc_next)
-	sz += co_callback_size(cc);
+        sz += co_callback_size(cc);
     if (co->co_cvec)
-	sz += cvec_size(co->co_cvec);
+        sz += cvec_size(co->co_cvec);
     if (co->co_filter)
-	sz += cvec_size(co->co_filter);
+        sz += cvec_size(co->co_filter);
     if (co->co_helpstring)
-	sz += strlen(co->co_helpstring) + 1;
+        sz += strlen(co->co_helpstring) + 1;
     if (co->co_value)
-	sz += strlen(co->co_value) + 1;
+        sz += strlen(co->co_value) + 1;
     /* XXX union */
     if (co->co_type == CO_VARIABLE){
-	cgs = &co->u.cou_var;
-	if (cgs->cgs_show)
-	    sz += strlen(cgs->cgs_show) + 1;
-	if (cgs->cgs_expand_fn_str)
-	    sz += strlen(cgs->cgs_expand_fn_str) + 1;
-	if (cgs->cgs_expand_fn_vec)
-	    sz += cvec_size(cgs->cgs_expand_fn_vec);
-	if (cgs->cgs_translate_fn_str)
-	    sz += strlen(cgs->cgs_translate_fn_str) + 1;
-	if (cgs->cgs_choice)
-	    sz += strlen(cgs->cgs_choice) + 1;
-	if (cgs->cgs_rangecvv_low)
-	    sz += cvec_size(cgs->cgs_rangecvv_low);
-    	if (cgs->cgs_rangecvv_upp)
-	    sz += cvec_size(cgs->cgs_rangecvv_upp);
-	if (cgs->cgs_regex)
-	    sz += cvec_size(cgs->cgs_regex);
+        cgs = &co->u.cou_var;
+        if (cgs->cgs_show)
+            sz += strlen(cgs->cgs_show) + 1;
+        if (cgs->cgs_expand_fn_str)
+            sz += strlen(cgs->cgs_expand_fn_str) + 1;
+        if (cgs->cgs_expand_fn_vec)
+            sz += cvec_size(cgs->cgs_expand_fn_vec);
+        if (cgs->cgs_translate_fn_str)
+            sz += strlen(cgs->cgs_translate_fn_str) + 1;
+        if (cgs->cgs_choice)
+            sz += strlen(cgs->cgs_choice) + 1;
+        if (cgs->cgs_rangecvv_low)
+            sz += cvec_size(cgs->cgs_rangecvv_low);
+        if (cgs->cgs_rangecvv_upp)
+            sz += cvec_size(cgs->cgs_rangecvv_upp);
+        if (cgs->cgs_regex)
+            sz += cvec_size(cgs->cgs_regex);
     }
     if (szp)
-	*szp = sz;
+        *szp = sz;
     return 0;
 }
 
@@ -150,8 +150,8 @@ co_stats_one(cg_obj   *co,
  */
 int
 co_stats(cg_obj   *co,
-	 uint64_t *nrp,
-	 size_t   *szp)
+         uint64_t *nrp,
+         size_t   *szp)
 {
     int         retval = -1;
     size_t      sz = 0;
@@ -159,17 +159,17 @@ co_stats(cg_obj   *co,
     int         i;
     
     if (co == NULL){
-	errno = EINVAL;
-	goto done;
+        errno = EINVAL;
+        goto done;
     }
     *nrp += 1;
     co_stats_one(co, &sz);
     if (szp)
-	*szp += sz;
+        *szp += sz;
     for (i=0; i<co->co_pt_len; i++){
-	if ((pt = co->co_ptvec[i]) != NULL){
-	    pt_stats(pt, nrp, szp);
-	}
+        if ((pt = co->co_ptvec[i]) != NULL){
+            pt_stats(pt, nrp, szp);
+        }
     }
     retval = 0;
  done:
@@ -185,7 +185,7 @@ co_up(cg_obj *co)
 
 int
 co_up_set(cg_obj *co,
-	  cg_obj *cop) 
+          cg_obj *cop) 
 {
     co->co_prev = cop;
     return 0;
@@ -199,7 +199,7 @@ co_top(cg_obj *co0)
     cg_obj *co1;
 
     while ((co1 = co_up(co)) != NULL)
-	co = co1;
+        co = co1;
     return co;
 }
 
@@ -208,10 +208,10 @@ co_pt_realloc(cg_obj *co)
 {
     int retval = -1;
     if (co->co_pt_len == 0){
-	co->co_pt_len++;
-	//	if ((co->co_ptvec = realloc(co->co_ptvec, (co->co_pt_len)*sizeof(parse_tree *))) == 0)
-	if ((co->co_ptvec = calloc(co->co_pt_len, sizeof(parse_tree *))) == 0)
-	    goto done;
+        co->co_pt_len++;
+        //      if ((co->co_ptvec = realloc(co->co_ptvec, (co->co_pt_len)*sizeof(parse_tree *))) == 0)
+        if ((co->co_ptvec = calloc(co->co_pt_len, sizeof(parse_tree *))) == 0)
+            goto done;
     }
     retval = 0;
  done:
@@ -241,19 +241,19 @@ co_pt_get(cg_obj *co)
  */
 int
 co_pt_set(cg_obj     *co,
-	  parse_tree *pt)
+          parse_tree *pt)
 {
     if (co == NULL){
        errno = EINVAL;
        return -1;
     }
     if (co->co_pt_len == 0){
-	if (co_pt_realloc(co) < 0)
-	    return -1;
+        if (co_pt_realloc(co) < 0)
+            return -1;
     }
     else {
-	if (co->co_ptvec[0])
-	    pt_free(co->co_ptvec[0], 1);
+        if (co->co_ptvec[0])
+            pt_free(co->co_ptvec[0], 1);
     }
     co->co_ptvec[0] = pt; 
     return 0;
@@ -274,8 +274,8 @@ co_pt_clear(cg_obj *co)
        return -1;
     }
     if (co->co_pt_len == 0){
-	if (co_pt_realloc(co) < 0)
-	    return -1;
+        if (co_pt_realloc(co) < 0)
+            return -1;
     }
     co->co_ptvec[0] = NULL; 
     return 0;
@@ -283,21 +283,21 @@ co_pt_clear(cg_obj *co)
 
 void
 co_flags_set(cg_obj  *co,
-	     uint32_t flag)
+             uint32_t flag)
 {
     co->co_flags |= flag;
 }
 
 void
 co_flags_reset(cg_obj  *co,
-	       uint32_t flag)
+               uint32_t flag)
 {
     co->co_flags &= ~flag;
 }
 
 int
 co_flags_get(cg_obj  *co,
-	     uint32_t flag)
+             uint32_t flag)
 {
     return (co->co_flags & flag) ? 1 : 0;
 }
@@ -308,19 +308,19 @@ co_sets_get(cg_obj *co)
     parse_tree *pt;
 
     if ((pt = co_pt_get(co)) != NULL)
-	return pt_sets_get(pt);
+        return pt_sets_get(pt);
     else
-	return 0;
+        return 0;
 }
 
 void
 co_sets_set(cg_obj *co,
-	    int     sets)
+            int     sets)
 
 {
     parse_tree *pt;
     if ((pt = co_pt_get(co)) != NULL)
-	pt_sets_set(pt, sets);
+        pt_sets_set(pt, sets);
 }
 
 char*
@@ -331,15 +331,15 @@ co_prefix_get(cg_obj *co)
 
 int
 co_prefix_set(cg_obj *co,
-	      char   *prefix)
+              char   *prefix)
 {
     if (co->co_prefix != NULL){
-	free(co->co_prefix);
-	co->co_prefix = NULL;
+        free(co->co_prefix);
+        co->co_prefix = NULL;
     }
     if (prefix &&
-	(co->co_prefix = strdup(prefix)) == NULL)
-	return -1;
+        (co->co_prefix = strdup(prefix)) == NULL)
+        return -1;
     return 0;
 }
 
@@ -371,101 +371,101 @@ cov_pref(cg_obj *co)
 
     switch (co->co_vtype){
     case CGV_ERR:
-	pref = 0; /* Illegal */
-	break;
-	/* ints in range 22-60 */
+        pref = 0; /* Illegal */
+        break;
+        /* ints in range 22-60 */
     case CGV_INT8:
-	if (co->co_rangelen)
-	    pref = 60;
-	else
-	    pref = 52;
-	break;
+        if (co->co_rangelen)
+            pref = 60;
+        else
+            pref = 52;
+        break;
     case CGV_INT16:
-	if (co->co_rangelen)
-	    pref = 58;
-	else
-	    pref = 50;
-	break;
+        if (co->co_rangelen)
+            pref = 58;
+        else
+            pref = 50;
+        break;
     case CGV_INT32:
-	if (co->co_rangelen)
-	    pref = 56;
-	else
-	    pref = 48;
-	break;
+        if (co->co_rangelen)
+            pref = 56;
+        else
+            pref = 48;
+        break;
     case CGV_INT64:
-	if (co->co_rangelen)
-	    pref = 54;
-	else
-	    pref = 46;
-	break;
+        if (co->co_rangelen)
+            pref = 54;
+        else
+            pref = 46;
+        break;
     case CGV_UINT8:
-	if (co->co_rangelen)
-	    pref = 59;
-	else
-	    pref = 51;
-	break;
+        if (co->co_rangelen)
+            pref = 59;
+        else
+            pref = 51;
+        break;
     case CGV_UINT16:
-	if (co->co_rangelen)
-	    pref = 57;
-	else
-	    pref = 49;
-	break;
+        if (co->co_rangelen)
+            pref = 57;
+        else
+            pref = 49;
+        break;
     case CGV_UINT32:
-	if (co->co_rangelen)
-	    pref = 55;
-	else
-	    pref = 47;
-	break;
+        if (co->co_rangelen)
+            pref = 55;
+        else
+            pref = 47;
+        break;
     case CGV_UINT64:
-	if (co->co_rangelen)
-	    pref = 53;
-	else
-	    pref = 45;
-	break;
+        if (co->co_rangelen)
+            pref = 53;
+        else
+            pref = 45;
+        break;
     case CGV_DEC64:
-	pref = 62;
-	break;
+        pref = 62;
+        break;
     case CGV_BOOL:
-	pref = 12;
-	break;
+        pref = 12;
+        break;
     case CGV_REST:
-	pref = 1;
-	break;
+        pref = 1;
+        break;
     case CGV_STRING:
-	if (co->co_expand_fn_str != NULL)
-	    pref = 8;
-	else if (co->co_regex)
-	    pref = 7;
-	else
-	    pref = 5;
-	break;
+        if (co->co_expand_fn_str != NULL)
+            pref = 8;
+        else if (co->co_regex)
+            pref = 7;
+        else
+            pref = 5;
+        break;
     case CGV_INTERFACE:
-	pref = 10;
-	break;
+        pref = 10;
+        break;
     case CGV_IPV4ADDR:
     case CGV_IPV4PFX:
-	pref = 70;
-	break;
+        pref = 70;
+        break;
     case CGV_IPV6ADDR:
     case CGV_IPV6PFX:
-	pref = 71;
-	break;
+        pref = 71;
+        break;
     case CGV_MACADDR:
-	pref = 72;
-	break;
+        pref = 72;
+        break;
     case CGV_URL:
-	pref = 20;
-	break;
+        pref = 20;
+        break;
     case CGV_UUID:
-	pref = 73;
-	break;
+        pref = 73;
+        break;
     case CGV_TIME:
-	pref = 74;
-	break;
+        pref = 74;
+        break;
     case CGV_VOID: /* N/A */
-	break;
+        break;
     case CGV_EMPTY: 
-	break;
+        break;
     }
 
     return pref;
@@ -485,28 +485,28 @@ cov_pref(cg_obj *co)
  */
 int
 co_pref(cg_obj *co, 
-	int     exact)
+        int     exact)
 {
     int pref = 0;;
 
     if (co->co_preference > 0)
-	pref = co->co_preference;
+        pref = co->co_preference;
     else
-	switch (co->co_type){
-	case CO_COMMAND:
-	    /* Give full preference to exact command match, low to partial (prefix) command match */
-	    if (exact == 0)
-		pref = 3;
-	    else
-		pref = 100;
-	    break;
-	case CO_VARIABLE:
-	    pref = cov_pref(co);
-	    break;
-	case CO_REFERENCE:
-	case CO_EMPTY:
-	    break;
-	}
+        switch (co->co_type){
+        case CO_COMMAND:
+            /* Give full preference to exact command match, low to partial (prefix) command match */
+            if (exact == 0)
+                pref = 3;
+            else
+                pref = 100;
+            break;
+        case CO_VARIABLE:
+            pref = cov_pref(co);
+            break;
+        case CO_REFERENCE:
+        case CO_EMPTY:
+            break;
+        }
     return pref;
 }
 
@@ -517,7 +517,7 @@ co_new_only()
     cg_obj *co;
 
     if ((co = malloc(sizeof(cg_obj))) == NULL)
-	return NULL;
+        return NULL;
     memset(co, 0, sizeof(cg_obj));
     _co_count++;
     _co_created++;
@@ -542,20 +542,20 @@ co_new(char   *cmd,
     parse_tree *pt;
 
     if ((co = co_new_only()) == NULL)
-	return NULL;
+        return NULL;
     co->co_type    = CO_COMMAND;
     if (cmd)
-	co->co_command = strdup(cmd);
+        co->co_command = strdup(cmd);
     co_up_set(co, parent);
     /* parse-tree created implicitly */
     if ((pt = pt_new()) == NULL){
-	free(co);
-	return NULL;
+        free(co);
+        return NULL;
     }
     if (co_pt_set(co, pt) < 0){
-	free(pt);
-	free(co);
-	return NULL;
+        free(pt);
+        free(co);
+        return NULL;
     }
     return co;
 }
@@ -572,27 +572,27 @@ co_new(char   *cmd,
  */
 cg_obj *
 cov_new(enum cv_type cvtype, 
-	cg_obj      *parent)
+        cg_obj      *parent)
 {
     cg_obj     *co;
     parse_tree *pt;
 
     if ((co = co_new_only()) == NULL)
-	return NULL;
+        return NULL;
     co->co_type    = CO_VARIABLE;
     co->co_vtype   = cvtype;
     if (parent)
-	co_up_set(co, parent);
+        co_up_set(co, parent);
     co->co_dec64_n = CGV_DEC64_N_DEFAULT;
     /* parse-tree created implicitly */
     if ((pt = pt_new()) == NULL){
-	free(co);
-	return NULL;
+        free(co);
+        return NULL;
     }
     if (co_pt_set(co, pt) < 0){
-	free(pt);
-	free(co);
-	return NULL;
+        free(pt);
+        free(co);
+        return NULL;
     }
     return co;
 }
@@ -610,9 +610,9 @@ cov_new(enum cv_type cvtype,
  */
 int
 co_copy(cg_obj  *co, 
-	cg_obj  *parent,
-	uint32_t flags,
-	cg_obj **conp)
+        cg_obj  *parent,
+        uint32_t flags,
+        cg_obj **conp)
 {
     int         retval = -1;
     cg_obj     *con = NULL;
@@ -620,7 +620,7 @@ co_copy(cg_obj  *co,
     parse_tree *ptn;
 
     if ((con = co_new_only()) == NULL)
-	goto done;
+        goto done;
     memcpy(con, co, sizeof(cg_obj));
     con->co_ptvec = NULL;
     con->co_pt_len = 0;
@@ -628,61 +628,61 @@ co_copy(cg_obj  *co,
     /* If called from pt_expand_treeref: the copy (of a tree instance) points to the original tree
      */
     if (flags & CO_COPY_FLAGS_TREEREF)
-	con->co_treeref_orig = co;
+        con->co_treeref_orig = co;
     co_flags_reset(con, CO_FLAGS_MARK);
     /* Replace all pointers */
     co_up_set(con, parent);
     if (co->co_command)
-	if ((con->co_command = strdup(co->co_command)) == NULL)
-	    goto done;
+        if ((con->co_command = strdup(co->co_command)) == NULL)
+            goto done;
     if (co->co_prefix)
-	if ((con->co_prefix = strdup(co->co_prefix)) == NULL)
-	    goto done;
+        if ((con->co_prefix = strdup(co->co_prefix)) == NULL)
+            goto done;
     if (co_callback_copy(co->co_callbacks, &con->co_callbacks) < 0)
-	goto done;
+        goto done;
     if (co->co_cvec)
-	con->co_cvec = cvec_dup(co->co_cvec);
+        con->co_cvec = cvec_dup(co->co_cvec);
     if (co->co_filter)
-	con->co_filter = cvec_dup(co->co_filter);
+        con->co_filter = cvec_dup(co->co_filter);
     if ((pt = co_pt_get(co)) != NULL){
-	if ((ptn = pt_dup(pt, con, flags)) == NULL) /* sets a new pt under con */
-	    goto done;
-	if (co_pt_set(con, ptn) < 0)
-	    goto done;
+        if ((ptn = pt_dup(pt, con, flags)) == NULL) /* sets a new pt under con */
+            goto done;
+        if (co_pt_set(con, ptn) < 0)
+            goto done;
     }
     if (co->co_helpstring)
-	if ((con->co_helpstring = strdup(co->co_helpstring)) == NULL)
-	    goto done;
+        if ((con->co_helpstring = strdup(co->co_helpstring)) == NULL)
+            goto done;
     con->co_value = NULL;
     if (co_value_set(con, co->co_value) < 0)
-	goto done;
+        goto done;
     if (co->co_type == CO_VARIABLE){
-	if (co->co_expand_fn_str)
-	    if ((con->co_expand_fn_str = strdup(co->co_expand_fn_str)) == NULL)
-		goto done;
-	if (co->co_translate_fn_str)
-	    if ((con->co_translate_fn_str = strdup(co->co_translate_fn_str)) == NULL)
-		goto done;
-	if (co->co_show)
-	    if ((con->co_show = strdup(co->co_show)) == NULL)
-		goto done;
-	if (co->co_rangecvv_low)
-	    if ((con->co_rangecvv_low = cvec_dup(co->co_rangecvv_low)) == NULL)
-		goto done;
-	if (co->co_rangecvv_upp)
-	    if ((con->co_rangecvv_upp = cvec_dup(co->co_rangecvv_upp)) == NULL)
-		goto done;
-	if (co->co_expand_fn_vec)
-	    if ((con->co_expand_fn_vec = cvec_dup(co->co_expand_fn_vec)) == NULL)
-		goto done;
-	if (co->co_choice){
-	    if ((con->co_choice = strdup(co->co_choice)) == NULL)
-		goto done;
-	}
-	if (co->co_regex){
-	    if ((con->co_regex = cvec_dup(co->co_regex)) == NULL)
-		goto done;
-	}
+        if (co->co_expand_fn_str)
+            if ((con->co_expand_fn_str = strdup(co->co_expand_fn_str)) == NULL)
+                goto done;
+        if (co->co_translate_fn_str)
+            if ((con->co_translate_fn_str = strdup(co->co_translate_fn_str)) == NULL)
+                goto done;
+        if (co->co_show)
+            if ((con->co_show = strdup(co->co_show)) == NULL)
+                goto done;
+        if (co->co_rangecvv_low)
+            if ((con->co_rangecvv_low = cvec_dup(co->co_rangecvv_low)) == NULL)
+                goto done;
+        if (co->co_rangecvv_upp)
+            if ((con->co_rangecvv_upp = cvec_dup(co->co_rangecvv_upp)) == NULL)
+                goto done;
+        if (co->co_expand_fn_vec)
+            if ((con->co_expand_fn_vec = cvec_dup(co->co_expand_fn_vec)) == NULL)
+                goto done;
+        if (co->co_choice){
+            if ((con->co_choice = strdup(co->co_choice)) == NULL)
+                goto done;
+        }
+        if (co->co_regex){
+            if ((con->co_regex = cvec_dup(co->co_regex)) == NULL)
+                goto done;
+        }
     } /* VARIABLE */
     *conp = con;
     retval = 0;
@@ -709,10 +709,10 @@ co_copy(cg_obj  *co,
  */
 int
 co_copy1(cg_obj  *co, 
-	 cg_obj  *parent,
-	 int      recursive,
-	 uint32_t flags,
-	 cg_obj **conp)
+         cg_obj  *parent,
+         int      recursive,
+         uint32_t flags,
+         cg_obj **conp)
 {
     int         retval = -1;
     cg_obj     *con = NULL;
@@ -720,7 +720,7 @@ co_copy1(cg_obj  *co,
     parse_tree *ptn;
 
     if ((con = co_new_only()) == NULL)
-	goto done;
+        goto done;
     memcpy(con, co, sizeof(cg_obj));
     con->co_ptvec = NULL;
     con->co_pt_len = 0;
@@ -728,68 +728,68 @@ co_copy1(cg_obj  *co,
     /* If called from pt_expand_treeref: the copy (of a tree instance) points to the original tree
      */
     if (flags & CO_COPY_FLAGS_TREEREF)
-	con->co_treeref_orig = co;
+        con->co_treeref_orig = co;
     co_flags_reset(con, CO_FLAGS_MARK);
     /* Replace all pointers */
     co_up_set(con, parent);
     if (co->co_command)
-	if ((con->co_command = strdup(co->co_command)) == NULL)
-	    goto done;
+        if ((con->co_command = strdup(co->co_command)) == NULL)
+            goto done;
     if (co->co_prefix)
-	if ((con->co_prefix = strdup(co->co_prefix)) == NULL)
-	    goto done;
+        if ((con->co_prefix = strdup(co->co_prefix)) == NULL)
+            goto done;
     if (co_callback_copy(co->co_callbacks, &con->co_callbacks) < 0)
-	goto done;
+        goto done;
     if (co->co_cvec)
-	con->co_cvec = cvec_dup(co->co_cvec);
+        con->co_cvec = cvec_dup(co->co_cvec);
     if (co->co_filter)
-	con->co_filter = cvec_dup(co->co_filter);
+        con->co_filter = cvec_dup(co->co_filter);
     if ((pt = co_pt_get(co)) != NULL){
-	/* Here this function differs from co_copy */
-	if (recursive){
-	    if ((ptn = pt_dup(pt, con, 0x0)) == NULL) /* sets a new pt under con */
-		goto done;
-	    if (co_pt_set(con, ptn) < 0)
-		goto done;
-	}
-	else {
-	    if (co_pt_set(con, pt) < 0)
-		goto done;
-	}
+        /* Here this function differs from co_copy */
+        if (recursive){
+            if ((ptn = pt_dup(pt, con, 0x0)) == NULL) /* sets a new pt under con */
+                goto done;
+            if (co_pt_set(con, ptn) < 0)
+                goto done;
+        }
+        else {
+            if (co_pt_set(con, pt) < 0)
+                goto done;
+        }
     }
     if (co->co_helpstring)
-	if ((con->co_helpstring = strdup(co->co_helpstring)) == NULL)
-	    goto done;
+        if ((con->co_helpstring = strdup(co->co_helpstring)) == NULL)
+            goto done;
     con->co_value = NULL;
     if (co_value_set(con, co->co_value) < 0)
-	goto done;
+        goto done;
     if (co->co_type == CO_VARIABLE){
-	if (co->co_expand_fn_str)
-	    if ((con->co_expand_fn_str = strdup(co->co_expand_fn_str)) == NULL)
-		goto done;
-	if (co->co_translate_fn_str)
-	    if ((con->co_translate_fn_str = strdup(co->co_translate_fn_str)) == NULL)
-		goto done;
-	if (co->co_show)
-	    if ((con->co_show = strdup(co->co_show)) == NULL)
-		goto done;
-	if (co->co_rangecvv_low)
-	    if ((con->co_rangecvv_low = cvec_dup(co->co_rangecvv_low)) == NULL)
-		goto done;
-	if (co->co_rangecvv_upp)
-	    if ((con->co_rangecvv_upp = cvec_dup(co->co_rangecvv_upp)) == NULL)
-		goto done;
-	if (co->co_expand_fn_vec)
-	    if ((con->co_expand_fn_vec = cvec_dup(co->co_expand_fn_vec)) == NULL)
-		goto done;
-	if (co->co_choice){
-	    if ((con->co_choice = strdup(co->co_choice)) == NULL)
-		goto done;
-	}
-	if (co->co_regex){
-	    if ((con->co_regex = cvec_dup(co->co_regex)) == NULL)
-		goto done;
-	}
+        if (co->co_expand_fn_str)
+            if ((con->co_expand_fn_str = strdup(co->co_expand_fn_str)) == NULL)
+                goto done;
+        if (co->co_translate_fn_str)
+            if ((con->co_translate_fn_str = strdup(co->co_translate_fn_str)) == NULL)
+                goto done;
+        if (co->co_show)
+            if ((con->co_show = strdup(co->co_show)) == NULL)
+                goto done;
+        if (co->co_rangecvv_low)
+            if ((con->co_rangecvv_low = cvec_dup(co->co_rangecvv_low)) == NULL)
+                goto done;
+        if (co->co_rangecvv_upp)
+            if ((con->co_rangecvv_upp = cvec_dup(co->co_rangecvv_upp)) == NULL)
+                goto done;
+        if (co->co_expand_fn_vec)
+            if ((con->co_expand_fn_vec = cvec_dup(co->co_expand_fn_vec)) == NULL)
+                goto done;
+        if (co->co_choice){
+            if ((con->co_choice = strdup(co->co_choice)) == NULL)
+                goto done;
+        }
+        if (co->co_regex){
+            if ((con->co_regex = cvec_dup(co->co_regex)) == NULL)
+                goto done;
+        }
     } /* VARIABLE */
     *conp = con;
     retval = 0;
@@ -815,23 +815,23 @@ co_copy1(cg_obj  *co,
  */
 static inline int
 str_cmp(char *s1, 
-	char *s2)
+        char *s2)
 {
     if (s1 == NULL && s2 == NULL) 
-	return 0;
+        return 0;
     if (s1 == NULL) /* empty string first */
-	return -1;
+        return -1;
     if (s2 == NULL)
-	return 1;
+        return 1;
     /*
      * XXX: the cligen handler code uses NULL here which is wrong, but those
      * options are for now global settings.
      */
 #ifdef  HAVE_STRVERSCMP
     if (cligen_lexicalorder(NULL))
-	return strverscmp(s1, s2); /* can't combine lexicalorder and ignorecase */
+        return strverscmp(s1, s2); /* can't combine lexicalorder and ignorecase */
     else
-	return cligen_ignorecase(NULL) ? strcasecmp(s1, s2) : strcmp(s1, s2);
+        return cligen_ignorecase(NULL) ? strcasecmp(s1, s2) : strcmp(s1, s2);
 #else /* HAVE_STRVERSCMP */
     return cligen_ignorecase(NULL) ? strcasecmp(s1, s2) : strcmp(s1, s2);
 #endif /* HAVE_STRVERSCMP */
@@ -862,99 +862,99 @@ co_eq(cg_obj *co1,
     /* eq == 0 means equal */
     eq = !(co1->co_type == co2->co_type);
     if (eq){ /* Unequal type of command, variable and reference.
-		but need to check special case, 
-		if the variable is a KEYWORD, then it can be eq to a command. */
-	/* Let References be last (more than) everything else */
-	if (co1->co_type == CO_REFERENCE){
-	    eq = 1;
-	    goto done;
-	}
-	if (co2->co_type == CO_REFERENCE){
-	    eq = -1;
-	    goto done;
-	}
-	/* EMPTY shoyuld always be first */
-	if (co1->co_type == CO_EMPTY){
-	    eq = -1;
-	    goto done;
-	}   
-	if (co2->co_type == CO_EMPTY){
-	    eq = 1;
-	    goto done;
-	}   
-	/* Here one is command and one is variable */
-	eq = strcmp(co1->co_command, co2->co_command);
-	goto done;
+                but need to check special case, 
+                if the variable is a KEYWORD, then it can be eq to a command. */
+        /* Let References be last (more than) everything else */
+        if (co1->co_type == CO_REFERENCE){
+            eq = 1;
+            goto done;
+        }
+        if (co2->co_type == CO_REFERENCE){
+            eq = -1;
+            goto done;
+        }
+        /* EMPTY shoyuld always be first */
+        if (co1->co_type == CO_EMPTY){
+            eq = -1;
+            goto done;
+        }   
+        if (co2->co_type == CO_EMPTY){
+            eq = 1;
+            goto done;
+        }   
+        /* Here one is command and one is variable */
+        eq = strcmp(co1->co_command, co2->co_command);
+        goto done;
     }
     switch (co1->co_type){
     case CO_COMMAND:
     case CO_REFERENCE:
-	eq = str_cmp(co1->co_command, co2->co_command);
-	break;
+        eq = str_cmp(co1->co_command, co2->co_command);
+        break;
     case CO_VARIABLE:
-	eq = (co1->co_vtype == co2->co_vtype)?0:(co1->co_vtype < co2->co_vtype)?-1:1;
-	/* Same variable type */
-	if (eq != 0)
-	    goto done;
-	/* Examine expand: at least one set, and then strcmp */
-	if (co1->co_expand_fn_str!=NULL || co2->co_expand_fn_str!=NULL){
-	    eq = str_cmp(co1->co_expand_fn_str, co2->co_expand_fn_str);
-	    goto done;
-	}
-	/* Should we examine co_translate_fn_str? */
-	/* Examine choice: at least one set, and then strcmp */
-	if (co1->co_choice!=NULL || co2->co_choice!=NULL){
-	    eq = str_cmp(co1->co_choice, co2->co_choice);
-	    goto done;
-	}
-	/* Examine regexp, at least one set, and then strcmp */
-	if (co1->co_regex!=NULL || co2->co_regex!=NULL){
-	    cg_var *cv1, *cv2;
-	    if (co1->co_regex == NULL)
-		eq = -1;
-	    else if (co2->co_regex == NULL)
-		eq = 1;
-	    else{
-		int i, min;
-		min = cvec_len(co1->co_regex)<cvec_len(co2->co_regex)?cvec_len(co1->co_regex):cvec_len(co2->co_regex);
-		for (i=0; i<min; i++){
-		    cv1 = cvec_i(co1->co_regex, i);
-		    cv2 = cvec_i(co2->co_regex, i);
-		    if ((eq = str_cmp(cv_string_get(cv1), cv_string_get(cv2))) != 0)
-			goto done;
-		}
-		if (cvec_len(co1->co_regex) < cvec_len(co2->co_regex))
-		    eq = -1;
-		else if (cvec_len(co1->co_regex) > cvec_len(co2->co_regex))
-		    eq = 1;
-		else
-		    eq = 0;
-	    }
-	    if (eq)
-		goto done;
-	}
-	/* Examine int and range */
-	if (cv_isint(co1->co_vtype) || cv_isstring(co1->co_vtype)) {
-	    int i;
-	    cg_var *cv1, *cv2;
-	    if ((eq = co1->co_rangelen - co2->co_rangelen) != 0)
-		goto done;
-	    /* either both 0 or both same length */
-	    for (i=0; i<co1->co_rangelen; i++){
-		cv1 = cvec_i(co1->co_rangecvv_low, i);
-		cv2 = cvec_i(co2->co_rangecvv_low, i);
-		if ((eq = cv_cmp(cv1, cv2)) != 0)
-			goto done;
-		cv1 = cvec_i(co1->co_rangecvv_upp, i);
-		cv2 = cvec_i(co2->co_rangecvv_upp, i);
-		if ((eq = cv_cmp(cv1, cv2)) != 0)
-			goto done;
-	    }
-	} /* range */
-	break;
+        eq = (co1->co_vtype == co2->co_vtype)?0:(co1->co_vtype < co2->co_vtype)?-1:1;
+        /* Same variable type */
+        if (eq != 0)
+            goto done;
+        /* Examine expand: at least one set, and then strcmp */
+        if (co1->co_expand_fn_str!=NULL || co2->co_expand_fn_str!=NULL){
+            eq = str_cmp(co1->co_expand_fn_str, co2->co_expand_fn_str);
+            goto done;
+        }
+        /* Should we examine co_translate_fn_str? */
+        /* Examine choice: at least one set, and then strcmp */
+        if (co1->co_choice!=NULL || co2->co_choice!=NULL){
+            eq = str_cmp(co1->co_choice, co2->co_choice);
+            goto done;
+        }
+        /* Examine regexp, at least one set, and then strcmp */
+        if (co1->co_regex!=NULL || co2->co_regex!=NULL){
+            cg_var *cv1, *cv2;
+            if (co1->co_regex == NULL)
+                eq = -1;
+            else if (co2->co_regex == NULL)
+                eq = 1;
+            else{
+                int i, min;
+                min = cvec_len(co1->co_regex)<cvec_len(co2->co_regex)?cvec_len(co1->co_regex):cvec_len(co2->co_regex);
+                for (i=0; i<min; i++){
+                    cv1 = cvec_i(co1->co_regex, i);
+                    cv2 = cvec_i(co2->co_regex, i);
+                    if ((eq = str_cmp(cv_string_get(cv1), cv_string_get(cv2))) != 0)
+                        goto done;
+                }
+                if (cvec_len(co1->co_regex) < cvec_len(co2->co_regex))
+                    eq = -1;
+                else if (cvec_len(co1->co_regex) > cvec_len(co2->co_regex))
+                    eq = 1;
+                else
+                    eq = 0;
+            }
+            if (eq)
+                goto done;
+        }
+        /* Examine int and range */
+        if (cv_isint(co1->co_vtype) || cv_isstring(co1->co_vtype)) {
+            int i;
+            cg_var *cv1, *cv2;
+            if ((eq = co1->co_rangelen - co2->co_rangelen) != 0)
+                goto done;
+            /* either both 0 or both same length */
+            for (i=0; i<co1->co_rangelen; i++){
+                cv1 = cvec_i(co1->co_rangecvv_low, i);
+                cv2 = cvec_i(co2->co_rangecvv_low, i);
+                if ((eq = cv_cmp(cv1, cv2)) != 0)
+                        goto done;
+                cv1 = cvec_i(co1->co_rangecvv_upp, i);
+                cv2 = cvec_i(co2->co_rangecvv_upp, i);
+                if ((eq = cv_cmp(cv1, cv2)) != 0)
+                        goto done;
+            }
+        } /* range */
+        break;
     case CO_EMPTY:
-	eq = 0;
-	break;
+        eq = 0;
+        break;
     }
   done:
     return eq;
@@ -972,47 +972,47 @@ co_eq(cg_obj *co1,
  */
 int 
 co_free(cg_obj *co, 
-	int     recursive)
+        int     recursive)
 {
     parse_tree  *pt;
 
     if (co->co_helpstring) 
-	free(co->co_helpstring);
+        free(co->co_helpstring);
     if (co->co_command)
-	free(co->co_command);
+        free(co->co_command);
     if (co->co_prefix)
-	free(co->co_prefix);
+        free(co->co_prefix);
     if (co->co_value)
-	free(co->co_value);
+        free(co->co_value);
     if (co->co_cvec)
-	cvec_free(co->co_cvec);
+        cvec_free(co->co_cvec);
     if (co->co_filter)
-	cvec_free(co->co_filter);
+        cvec_free(co->co_filter);
     if (co->co_callbacks)
-	co_callbacks_free(&co->co_callbacks);
+        co_callbacks_free(&co->co_callbacks);
     if (co->co_type == CO_VARIABLE){
-	if (co->co_expand_fn_str)
-	    free(co->co_expand_fn_str);
-	if (co->co_translate_fn_str)
-	    free(co->co_translate_fn_str);
-	if (co->co_show)
-	    free(co->co_show);
-	if (co->co_expand_fn_vec)
-	    cvec_free(co->co_expand_fn_vec);
-	if (co->co_choice)
-	    free(co->co_choice);
-	if (co->co_regex)
-	    cvec_free(co->co_regex);
-	if (co->co_rangecvv_low)
-	    cvec_free(co->co_rangecvv_low);
-	if (co->co_rangecvv_upp)
-	    cvec_free(co->co_rangecvv_upp);
+        if (co->co_expand_fn_str)
+            free(co->co_expand_fn_str);
+        if (co->co_translate_fn_str)
+            free(co->co_translate_fn_str);
+        if (co->co_show)
+            free(co->co_show);
+        if (co->co_expand_fn_vec)
+            cvec_free(co->co_expand_fn_vec);
+        if (co->co_choice)
+            free(co->co_choice);
+        if (co->co_regex)
+            cvec_free(co->co_regex);
+        if (co->co_rangecvv_low)
+            cvec_free(co->co_rangecvv_low);
+        if (co->co_rangecvv_upp)
+            cvec_free(co->co_rangecvv_upp);
     }
     if (recursive && (pt = co_pt_get(co)) != NULL){ 
-	pt_free(pt, 1); /* recursive */ 
+        pt_free(pt, 1); /* recursive */ 
     }
     if (co->co_ptvec != NULL)
-	free(co->co_ptvec);
+        free(co->co_ptvec);
     free(co);
     _co_count--;
     return 0;
@@ -1029,27 +1029,27 @@ co_free(cg_obj *co,
  */
 static cg_obj *
 co_search1(parse_tree *pt, 
-	   char       *name, 
-	   int         low, 
-	   int         upper)
+           char       *name, 
+           int         low, 
+           int         upper)
 {
     int     mid;
     int     cmp;
     cg_obj *co;
 
     if (upper < low)
-	return NULL; /* not found */
+        return NULL; /* not found */
     mid = (low + upper) / 2;
     if (mid >= pt_len_get(pt))  /* beyond range */
-	return NULL;
+        return NULL;
     co = pt_vec_i_get(pt, mid);
     cmp = str_cmp(name, co ? co->co_command : NULL);
     if (cmp < 0)
-	return co_search1(pt, name, low, mid-1);
+        return co_search1(pt, name, low, mid-1);
     else if (cmp > 0)
-	return co_search1(pt, name, mid+1, upper);
+        return co_search1(pt, name, mid+1, upper);
     else
-	return co;
+        return co;
 }
 
 /*! Position where to insert cligen object into a parse-tree list alphabetically
@@ -1063,32 +1063,32 @@ co_search1(parse_tree *pt,
  */
 static int
 co_insert_pos(parse_tree *pt, 
-	      cg_obj     *co1, 
-	      int         low, 
-	      int         upper)
+              cg_obj     *co1, 
+              int         low, 
+              int         upper)
 {
     int     mid;
     int     cmp;
     cg_obj *co2; /* variable for objects in list */
 
     if (upper < low)
-	return low; /* not found */
+        return low; /* not found */
     mid = (low + upper) / 2;
     if (mid >= pt_len_get(pt))
-	return pt_len_get(pt); 
+        return pt_len_get(pt); 
     if (co1 == NULL)
-	return 0; /* Insert in 1st pos */
+        return 0; /* Insert in 1st pos */
     co2 = pt_vec_i_get(pt, mid);
     if (co2 == NULL)
-	cmp = 1;
+        cmp = 1;
     else
-	cmp = co_eq(co1, co2); /* -1 if co1 < co2,.. */
+        cmp = co_eq(co1, co2); /* -1 if co1 < co2,.. */
     if (cmp < 0)
-	return co_insert_pos(pt, co1, low, mid-1);
+        return co_insert_pos(pt, co1, low, mid-1);
     else if (cmp > 0)
-	return co_insert_pos(pt, co1, mid+1, upper);
+        return co_insert_pos(pt, co1, mid+1, upper);
     else
-	return mid;
+        return mid;
 }
 
 /*! Add a cligen object (co1) to a parsetree(pt) alphabetically.
@@ -1107,8 +1107,8 @@ co_insert_pos(parse_tree *pt,
  */
 cg_obj*
 co_insert1(parse_tree *pt, 
-	   cg_obj     *co1,
-	   int         recursive)
+           cg_obj     *co1,
+           int         recursive)
 {
     int     pos;
     cg_obj *co2;
@@ -1117,24 +1117,24 @@ co_insert1(parse_tree *pt,
     pos = co_insert_pos(pt, co1, 0, pt_len_get(pt));
     /* check if exists */
     if (pos < pt_len_get(pt)){
-	co2 = pt_vec_i_get(pt, pos); /* insert after co2 */
-	if (co1 == NULL && co2==NULL)
-	    return NULL;
-	if (co1 && co2 && co_eq(co1, co2)==0){
-	    cligen_parsetree_merge(co_pt_get(co2), co2, co_pt_get(co1));
-	    co_free(co1, recursive);
-	    return co2;
-	}
+        co2 = pt_vec_i_get(pt, pos); /* insert after co2 */
+        if (co1 == NULL && co2==NULL)
+            return NULL;
+        if (co1 && co2 && co_eq(co1, co2)==0){
+            cligen_parsetree_merge(co_pt_get(co2), co2, co_pt_get(co1));
+            co_free(co1, recursive);
+            return co2;
+        }
     }
     if (pt_vec_i_insert(pt, pos, co1) < 0)
-	return NULL;
+        return NULL;
     return co1;
 }
 
 /* Backward compatible */
 cg_obj*
 co_insert(parse_tree *pt, 
-	  cg_obj     *co1)
+          cg_obj     *co1)
 {
     return co_insert1(pt, co1, 1);
 }
@@ -1151,7 +1151,7 @@ co_insert(parse_tree *pt,
  */
 cg_obj *
 co_find_one(parse_tree *pt,
-	    char       *name)
+            char       *name)
 {
     return co_search1(pt, name, 0, pt_len_get(pt));
 }
@@ -1165,17 +1165,17 @@ co_find_one(parse_tree *pt,
  */
 int
 co_value_set(cg_obj *co, 
-	     char   *str)
+             char   *str)
 {
     if (co->co_value){ /* This can happen in '?/TAB' since we call match twice */
-	free(co->co_value);
-	co->co_value = NULL;
+        free(co->co_value);
+        co->co_value = NULL;
     }
     if (str != NULL)
-	if ((co->co_value = strdup(str)) == NULL){
-	    fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
-	    return -1;
-	}
+        if ((co->co_value = strdup(str)) == NULL){
+            fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
+            return -1;
+        }
     return 0;
 }
 
@@ -1190,7 +1190,7 @@ co_value_set(cg_obj *co,
  */
 int
 co_terminal(cg_obj *co,
-	    cg_obj **cot)
+            cg_obj **cot)
 {
     parse_tree *pt;
     cg_obj     *coc;
@@ -1199,13 +1199,13 @@ co_terminal(cg_obj *co,
     pt = co_pt_get(co);
     ptlen = pt_len_get(pt);
     if (ptlen == 0)
-	return 1;
+        return 1;
     coc = pt_vec_i_get(pt, 0);
     if (coc == NULL ||
-	coc->co_type == CO_EMPTY){
-	if (cot)
-	    *cot = coc;
-	return 1;
+        coc->co_type == CO_EMPTY){
+        if (cot)
+            *cot = coc;
+        return 1;
     }
     return 0;
 }
@@ -1229,13 +1229,13 @@ cligen_reason(const char *fmt, ...)
     len++;
     va_end(ap);
     if ((reason = malloc(len)) == NULL)
-	return NULL;
+        return NULL;
     va_start(ap, fmt);
     if ((res = vsnprintf(reason, len, fmt, ap)) < 0){
-	free(reason);
-	reason = NULL;
+        free(reason);
+        reason = NULL;
     }
     va_end(ap);
-    return reason;	
+    return reason;      
 }
 

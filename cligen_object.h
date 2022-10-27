@@ -60,12 +60,12 @@ enum cg_objtype{
           -1 on error.
 */
 typedef int (expandv_cb)(cligen_handle h,       /* handler: cligen or userhandle */
-			 char         *name,    /* name of this function (in text) */
-			 cvec         *cvv,     /* vars vector of values in command */
-			 cvec         *argv,    /* argument vector given to callback */
-			 cvec         *commands,/* vector of commands */
-			 cvec         *helptexts /* vector of help-texts */
-			     );
+                         char         *name,    /* name of this function (in text) */
+                         cvec         *cvv,     /* vars vector of values in command */
+                         cvec         *argv,    /* argument vector given to callback */
+                         cvec         *commands,/* vector of commands */
+                         cvec         *helptexts /* vector of help-texts */
+                             );
 
 /*! Callback for translating a variable, 
  * Typical usecase is translate a cleartext to encrypt passwords. 
@@ -143,7 +143,7 @@ struct cg_obj{
     int                 co_pt_len;    /* Length of parse-tree vector */
     struct cg_obj      *co_prev;      /* Parent */
     enum cg_objtype     co_type;      /* Type of object: command, variable or tree
-					 reference */
+                                         reference */
     uint16_t            co_preference; /* Overrides default variable preference if != 0*/
     char               *co_command;   /* malloc:ed matching string / name or type */
     char               *co_prefix;    /* Prefix. Can be used in cases where co_command is not unique */
@@ -151,27 +151,27 @@ struct cg_obj{
     cvec               *co_cvec;      /* List of cligen local variables, such as "hide" 
                                        * Special labels on @treerefs are: 
                                        *     @add:<label> and @remove:<label>
-				       * which control tree ref macro expansion
-				       */
+                                       * which control tree ref macro expansion
+                                       */
     cvec               *co_filter;    /* List of labels that are filtered (should be removed)
-				       * In this node and all its descendant
-				       * Alt: re-use co_cvec for this.
-				       * See also reftree_filter for global filters
-				       */ 
+                                       * In this node and all its descendant
+                                       * Alt: re-use co_cvec for this.
+                                       * See also reftree_filter for global filters
+                                       */ 
     char               *co_helpstring; /* String of CLIgen helptexts */
     uint32_t            co_flags;     /* General purpose flags, see CO_FLAGS_HIDE and others above */
     struct cg_obj      *co_ref;       /* Ref to original (if this is expanded) 
-				       * Typical from expanded command to original variable
-				       */
+                                       * Typical from expanded command to original variable
+                                       */
     struct cg_obj      *co_treeref_orig; /* Ref to original (if this is a tree reference) 
-					  * Only set in co_copy 
-					  */
+                                          * Only set in co_copy 
+                                          */
     char               *co_value;     /* Expanded value can be a string with a constant. 
-					 Store the constant in the original variable. */
+                                         Store the constant in the original variable. */
     union {                           /* depends on co_type: */
-	struct {        } cou_cmd;    /* CO_COMMAND */
-	struct cg_varspec cou_var;    /* CO_VARIABLE */
-	//	struct cg_varspec cou_tree;   /* CO_REFERENCE */
+        struct {        } cou_cmd;    /* CO_COMMAND */
+        struct cg_varspec cou_var;    /* CO_VARIABLE */
+        //      struct cg_varspec cou_tree;   /* CO_REFERENCE */
     } u;
 };
 
@@ -184,14 +184,14 @@ typedef struct cg_obj cg_obj;
 #define co_vtype         u.cou_var.cgs_vtype
 #define co_show          u.cou_var.cgs_show
 #define co_expand_fn_str u.cou_var.cgs_expand_fn_str
-#define co_expandv_fn  	 u.cou_var.cgs_expandv_fn
+#define co_expandv_fn    u.cou_var.cgs_expandv_fn
 #define co_expand_fn_vec u.cou_var.cgs_expand_fn_vec
 #define co_translate_fn_str u.cou_var.cgs_translate_fn_str
 #define co_translate_fn  u.cou_var.cgs_translate_fn
-#define co_choice	 u.cou_var.cgs_choice
-#define co_keyword	 u.cou_var.cgs_choice
-#define co_rangelen	 u.cou_var.cgs_rangelen 
-#define co_rangecvv_low	 u.cou_var.cgs_rangecvv_low
+#define co_choice        u.cou_var.cgs_choice
+#define co_keyword       u.cou_var.cgs_choice
+#define co_rangelen      u.cou_var.cgs_rangelen 
+#define co_rangecvv_low  u.cou_var.cgs_rangecvv_low
 #define co_rangecvv_upp  u.cou_var.cgs_rangecvv_upp
 #define co_regex         u.cou_var.cgs_regex
 #define co_dec64_n       u.cou_var.cgs_dec64_n

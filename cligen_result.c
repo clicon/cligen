@@ -60,7 +60,7 @@
 struct match_result{
     parse_tree  *mr_pt;        
     char        *mr_reason; /* Error reason if mr_len=0. Can also be carried by a mr_len!=0 
-			     * to store first error in case it is needed in a later error */
+                             * to store first error in case it is needed in a later error */
     int          mr_level;
     int          mr_last;
     char        *mr_token;  /* Direct, not copied */
@@ -72,7 +72,7 @@ int
 mr_pt_len_get(match_result *mr)
 {
     if (mr->mr_pt == NULL)
-	return 0;
+        return 0;
     return pt_len_get(mr->mr_pt);
 }
 
@@ -83,7 +83,7 @@ mr_pt_reset(match_result *mr)
 {
     pt_free(mr->mr_pt, 0);
     if ((mr->mr_pt = pt_new()) == NULL)
-	return -1;
+        return -1;
     return 0;
 }
 
@@ -95,20 +95,20 @@ mr_pt_reset(match_result *mr)
  */
 int
 mr_pt_trunc(match_result *mr,
-	    int           len)
+            int           len)
 {
     return pt_trunc(mr->mr_pt, len);
 }
 
 int
 mr_pt_append(match_result *mr,
-	     cg_obj       *co,
-	     char         *token)
+             cg_obj       *co,
+             char         *token)
 {
     cg_obj *co1 = NULL;
 
     if (co_copy1(co, NULL, 0, 0x0, &co1) < 0)
-	return -1;
+        return -1;
     mr->mr_co_match_orig = co;
     mr->mr_token = token;
     return pt_vec_append(mr->mr_pt, co1);
@@ -116,7 +116,7 @@ mr_pt_append(match_result *mr,
 
 cg_obj*
 mr_pt_i_get(match_result *mr,
-	    int           i)
+            int           i)
 {
     return pt_vec_i_get(mr->mr_pt, i);
 }
@@ -139,10 +139,10 @@ mr_reason_get(match_result *mr)
  */
 int
 mr_reason_set(match_result *mr,
-	      char         *reason)
+              char         *reason)
 {
     if (mr->mr_reason)
-    	free(mr->mr_reason);
+        free(mr->mr_reason);
     mr->mr_reason = reason;
     return 0;
 }
@@ -155,7 +155,7 @@ mr_level_get(match_result *mr)
 
 int
 mr_level_set(match_result *mr,
-	     int           level)
+             int           level)
 {
     mr->mr_level = level;
     return 0;
@@ -185,14 +185,14 @@ mr_last_set(match_result *mr)
  */
 int
 mr_mv_reason(match_result *from,
-	     match_result *to)
+             match_result *to)
 {
     char *reason;
 
     if ((reason = from->mr_reason) != NULL &&
-	to->mr_reason == NULL){
-	to->mr_reason = reason;
-	from->mr_reason = NULL;
+        to->mr_reason == NULL){
+        to->mr_reason = reason;
+        from->mr_reason = NULL;
     }
     return 0;
 }
@@ -206,11 +206,11 @@ mr_new(void)
     match_result *mr;
     
     if ((mr = malloc(sizeof(*mr))) == NULL)
-	return NULL;
+        return NULL;
     memset(mr, 0, sizeof(*mr));
     if ((mr->mr_pt = pt_new()) == NULL){
-	free(mr);
-	return NULL;
+        free(mr);
+        return NULL;
     }
     return mr;
 }
@@ -222,10 +222,10 @@ int
 mr_free(match_result *mr)
 {
     if (mr->mr_pt){
-	pt_free(mr->mr_pt, 0);
+        pt_free(mr->mr_pt, 0);
     }
     if (mr->mr_reason)
-	free(mr->mr_reason);
+        free(mr->mr_reason);
     free(mr);
     return 0;
 }
@@ -238,17 +238,17 @@ mr2result(match_result *mr)
 {
     switch (mr_pt_len_get(mr)){
     case -1: /* shouldnt happen */
-	return CG_ERROR;
-	break;
+        return CG_ERROR;
+        break;
     case 0:
-	return CG_NOMATCH;
-	break;
+        return CG_NOMATCH;
+        break;
     case 1:
-	return CG_MATCH;
-	break;
+        return CG_MATCH;
+        break;
     default:
-	return CG_MULTIPLE;
-	break;
+        return CG_MULTIPLE;
+        break;
     }
 }
 
@@ -258,7 +258,7 @@ mr2result(match_result *mr)
  */
 int
 mr_flags_set_co_match(match_result *mr,
-		      cg_obj       *co)
+                      cg_obj       *co)
 {
     co_flags_set(mr->mr_co_match_orig, CO_FLAGS_MATCH);
     co_flags_set(co, CO_FLAGS_MATCH);

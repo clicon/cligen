@@ -63,16 +63,16 @@ typedef translate_cb_t *(translate_str2fn_t)(char *str, void *arg, char **err);
  */
 int
 cligen_parse_str(cligen_handle  h,
-		 char          *str,
-		 char          *name, 
-		 parse_tree    *pt,
-		 cvec          *globals);
+                 char          *str,
+                 char          *name, 
+                 parse_tree    *pt,
+                 cvec          *globals);
 int
 cligen_parse_file(cligen_handle h,
-		  FILE         *f,
-		  char         *name, 
-		  parse_tree   *obsolete,
-		  cvec         *globals);
+                  FILE         *f,
+                  char         *name, 
+                  parse_tree   *obsolete,
+                  cvec         *globals);
 
 int cligen_callbackv_str2fn(parse_tree *pt, cgv_str2fn_t *str2fn, void *arg);
 int cligen_expandv_str2fn(parse_tree *pt, expandv_str2fn_t *str2fn, void *arg);

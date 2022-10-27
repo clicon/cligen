@@ -89,9 +89,9 @@
  */
 static int
 match_variable(cligen_handle h,
-	       cg_obj       *co, 
-	       char         *str, 
-	       char        **reason)
+               cg_obj       *co, 
+               char         *str, 
+               char        **reason)
 {
     int         retval = -1;
     cg_var     *cv; /* Just a temporary cv for validation */
@@ -99,19 +99,19 @@ match_variable(cligen_handle h,
 
     cs = &co->u.cou_var;
     if ((cv = cv_new(co->co_vtype)) == NULL)
-	goto done;
+        goto done;
     if (co->co_vtype == CGV_DEC64) /* XXX: Seems misplaced? / too specific */
-	cv_dec64_n_set(cv, cs->cgs_dec64_n);
+        cv_dec64_n_set(cv, cs->cgs_dec64_n);
     if ((retval = cv_parse1(str, cv, reason)) <= 0) 
-	goto done;
+        goto done;
     /* here retval should be 1 */
     /* Validate value */
     if ((retval = cv_validate(h, cv, cs, co->co_command, reason)) <= 0)
-	goto done;
+        goto done;
     /* here retval should be 1 */
   done:
     if (cv)
-	cv_free(cv);
+        cv_free(cv);
     return retval; 
 }
 
@@ -132,11 +132,11 @@ match_variable(cligen_handle h,
  */
 static int 
 match_object(cligen_handle h,
-	     char         *str,
-	     cg_obj       *co,
-	     int           best, 
-	     int          *exact,
-	     char        **reason)
+             char         *str,
+             cg_obj       *co,
+             int           best, 
+             int          *exact,
+             char        **reason)
 {
   int    match = 0;
   size_t len = 0;
@@ -150,53 +150,53 @@ match_object(cligen_handle h,
   switch (co->co_type){
   case CO_COMMAND:
       if (str == NULL)
-	  match++;
+          match++;
       else{
-	  if (best && *co->co_command == '\"'){ /* escaped */
-	      if (cligen_caseignore_get(h))
-		  match = (strncasecmp(co->co_command+1, str, len) == 0);
-	      else
-		  match = (strncmp(co->co_command+1, str, len) == 0);
-	      if (exact)
-		  *exact = strlen(co->co_command+1) == len;
-	  }
-	  else{
-	      if (cligen_caseignore_get(h))
-		  match = (strncasecmp(co->co_command, str, len) == 0);
-	      else
-		  match = (strncmp(co->co_command, str, len) == 0);
-	      if (exact)
-		  *exact = strlen(co->co_command) == len;
-	  }
-	  if (match == 0 && reason){
-	      if ((*reason = strdup("Unknown command")) == NULL)
-		  return -1;
-	  }
+          if (best && *co->co_command == '\"'){ /* escaped */
+              if (cligen_caseignore_get(h))
+                  match = (strncasecmp(co->co_command+1, str, len) == 0);
+              else
+                  match = (strncmp(co->co_command+1, str, len) == 0);
+              if (exact)
+                  *exact = strlen(co->co_command+1) == len;
+          }
+          else{
+              if (cligen_caseignore_get(h))
+                  match = (strncasecmp(co->co_command, str, len) == 0);
+              else
+                  match = (strncmp(co->co_command, str, len) == 0);
+              if (exact)
+                  *exact = strlen(co->co_command) == len;
+          }
+          if (match == 0 && reason){
+              if ((*reason = strdup("Unknown command")) == NULL)
+                  return -1;
+          }
       }
     break;
   case CO_VARIABLE:
       if (str == NULL || len==0)
-	  match++;
+          match++;
       else
-	  if ((match = match_variable(h, co, str, reason)) < 0)
-	      return -1;
+          if ((match = match_variable(h, co, str, reason)) < 0)
+              return -1;
     break;
   case CO_REFERENCE: /* This should never match, it is an abstract object that is expanded */
       if (reason){
-	  if ((*reason = strdup("Reference")) == NULL)
-	      return -1;
+          if ((*reason = strdup("Reference")) == NULL)
+              return -1;
       }
       break;
   case CO_EMPTY: /* Nothing match with empty (same as co = NULL) */
       if (reason){
-	  if ((*reason = strdup("Empty")) == NULL)
-	      return -1;
+          if ((*reason = strdup("Empty")) == NULL)
+              return -1;
       }
       break;
   }
   if (match == 0){
       if (reason)
-	  assert(*reason != NULL);
+          assert(*reason != NULL);
       return 0;
   }
   else
@@ -220,10 +220,10 @@ cligen_cvv_levels(cvec *cvv)
     size_t sz;
     
     if (cvv == NULL)
-	return -1;
+        return -1;
     sz = cvec_len(cvv);
     if (sz == 0)
-	return -1;
+        return -1;
     else return sz - 2;
 }
 
@@ -231,13 +231,13 @@ cligen_cvv_levels(cvec *cvv)
  */
 static int
 last_level(cvec *cvt,
-	   int   level)
+           int   level)
 {
     int levels;
     
     levels = cligen_cvv_levels(cvt);
     if (level >= levels)
-	return 1;
+        return 1;
     return 0;
 }
 
@@ -260,11 +260,11 @@ last_pt(parse_tree *pt)
 
     len = pt_len_get(pt);
     if (len == 0)
-	return 1;
+        return 1;
     for (i=0; i<len; i++){
-	if ((co = pt_vec_i_get(pt, i)) == NULL ||
-	    co->co_type == CO_EMPTY)
-	    return len==1?1:2;
+        if ((co = pt_vec_i_get(pt, i)) == NULL ||
+            co->co_type == CO_EMPTY)
+            return len==1?1:2;
     }
     return 0;
 }
@@ -282,13 +282,13 @@ pt_onlyvars(parse_tree *pt)
     int     onlyvars = 0;
 
     for (i=0; i<pt_len_get(pt); i++){ 
-	if ((co = pt_vec_i_get(pt, i)) == NULL)
-	    continue;
-	if (co->co_type != CO_VARIABLE && co->co_ref == NULL){
-	    onlyvars = 0;
-	    break;
-	}
-	onlyvars = 1;
+        if ((co = pt_vec_i_get(pt, i)) == NULL)
+            continue;
+        if (co->co_type != CO_VARIABLE && co->co_ref == NULL){
+            onlyvars = 0;
+            break;
+        }
+        onlyvars = 1;
     }
     return onlyvars;
 }
@@ -306,28 +306,28 @@ pt_onlyvars(parse_tree *pt)
  */
 static cg_var *
 add_cov_to_cvec(cligen_handle h,
-		cg_obj       *co, 
-		char         *cmd, 
-		cvec         *cvv)
+                cg_obj       *co, 
+                char         *cmd, 
+                cvec         *cvv)
 {
     cg_var *cv = NULL;
 
     if ((cv = cvec_add(cvv, co->co_vtype)) == NULL)
-	return NULL;
+        return NULL;
     cv_name_set(cv, co->co_command);
     if (co->co_vtype == CGV_DEC64) /* XXX: Seems misplaced? / too specific */
-	cv_dec64_n_set(cv, co->co_dec64_n);
+        cv_dec64_n_set(cv, co->co_dec64_n);
     if (cv_parse(cmd, cv) < 0) {
-	cv_reset(cv);
-	cvec_del(cvv, cv);
-	return NULL;
+        cv_reset(cv);
+        cvec_del(cvv, cv);
+        return NULL;
     }
     //    if (co->co_show)
-    //	cv->var_show = strdup4(co->co_show);
+    //  cv->var_show = strdup4(co->co_show);
     /* If translator function defined, here translate value */
     if (co->co_translate_fn != NULL &&
-	co->co_translate_fn(h, cv) < 0)
-	return NULL;
+        co->co_translate_fn(h, cv) < 0)
+        return NULL;
     return cv;
 }
 
@@ -344,12 +344,12 @@ add_cov_to_cvec(cligen_handle h,
  */
 static int
 match_vec(cligen_handle h,
-	  parse_tree   *pt,
-	  char         *token,
-	  char         *resttokens,
-	  int           lasttoken,
-	  int           best,
-	  match_result *mr)
+          parse_tree   *pt,
+          char         *token,
+          char         *resttokens,
+          int           lasttoken,
+          int           best,
+          match_result *mr)
 {
     int     retval = -1;
     int32_t pref_lower = INT32_MAX; /* Preference lower bound */
@@ -364,87 +364,87 @@ match_vec(cligen_handle h,
 
     /* Loop through parse-tree at this level to find matches */
     for (i=0; i<pt_len_get(pt); i++){
-	if ((co = pt_vec_i_get(pt, i)) == NULL)
-	    continue;
-	/* Return -1: error, 0: nomatch, 1: match */
-	tmpreason = NULL;
-	if ((match = match_object(h,
-				  ISREST(co)?resttokens:token,
-				  co, best, &exact,
-				  &tmpreason      /* if match == 0 */
-				  )) < 0)
-	    goto done;
-	p = co_pref(co, exact); /* get match preferences (higher is better match) */
-	if (match == 0){ /* No match */
-	    assert(tmpreason != NULL);
-	    /* If all fails, save lowest(widest) preference error message,
-	     * for variables only
-	     */
-	    if (p < pref_lower && co->co_type == CO_VARIABLE){
-		pref_lower = p;
-		mr_reason_set(mr, tmpreason);
-		tmpreason = NULL;
-	    }
-	    if (tmpreason){
-		free(tmpreason);
-		tmpreason = NULL;
-	    }
-	}
-	/* An alternative is to sort away these after the call in match_pattern_sets_local */
-	else if (co_flags_get(co, CO_FLAGS_MATCH)){
-	    p = 1; /* XXX lower than any variables*/
-	    if (p < pref_lower){
-		char *r;
-		pref_lower = p;
-		if ((r = strdup("Already matched")) == NULL)
-		    goto done;
-		mr_reason_set(mr, r);
-	    }
-	}
-	else { /* Match: if best compare and save highest preference */
-	    assert(tmpreason == NULL);
-	    if (best){ /* only save best match */
-		if (p == pref_upper){
-		    if (cligen_preference_mode(h) == 1 &&
-			lasttoken &&
-			cop &&
-			cop->co_type == CO_VARIABLE && 
-			co->co_type == CO_VARIABLE) /* Skip terminal pref if preference mode */
-			;
-		    else if (cligen_preference_mode(h) == 2 &&
-			!lasttoken &&
-			cop->co_type == CO_VARIABLE && 
-			co->co_type == CO_VARIABLE) /* Skip same pref if preference mode */
-			;
-		    else if (cligen_preference_mode(h) == 3 &&
-			cop->co_type == CO_VARIABLE && 
-			co->co_type == CO_VARIABLE) /* Skip same pref if preference mode */
-			;
-		    else
-			if (mr_pt_append(mr, co, ISREST(co)?resttokens:token) < 0)
-			    goto done;
-		}
-		else if (p > pref_upper){ /* Start again at this level */
-		    pref_upper = p;
-		    if (mr_pt_reset(mr) < 0)
-			goto done;
-		    if (mr_pt_append(mr, co, ISREST(co)?resttokens:token) < 0)
-			goto done;
-		    cop = co;
-		}
-		else{ /* p < pref_upper : skip */
-		}
-	    } /* if best */
-	    else {
-		if (mr_pt_append(mr, co, ISREST(co)?resttokens:token) < 0)
-		    goto done;
-	    }
-	} /* switch match */
-	assert(tmpreason == NULL);
+        if ((co = pt_vec_i_get(pt, i)) == NULL)
+            continue;
+        /* Return -1: error, 0: nomatch, 1: match */
+        tmpreason = NULL;
+        if ((match = match_object(h,
+                                  ISREST(co)?resttokens:token,
+                                  co, best, &exact,
+                                  &tmpreason      /* if match == 0 */
+                                  )) < 0)
+            goto done;
+        p = co_pref(co, exact); /* get match preferences (higher is better match) */
+        if (match == 0){ /* No match */
+            assert(tmpreason != NULL);
+            /* If all fails, save lowest(widest) preference error message,
+             * for variables only
+             */
+            if (p < pref_lower && co->co_type == CO_VARIABLE){
+                pref_lower = p;
+                mr_reason_set(mr, tmpreason);
+                tmpreason = NULL;
+            }
+            if (tmpreason){
+                free(tmpreason);
+                tmpreason = NULL;
+            }
+        }
+        /* An alternative is to sort away these after the call in match_pattern_sets_local */
+        else if (co_flags_get(co, CO_FLAGS_MATCH)){
+            p = 1; /* XXX lower than any variables*/
+            if (p < pref_lower){
+                char *r;
+                pref_lower = p;
+                if ((r = strdup("Already matched")) == NULL)
+                    goto done;
+                mr_reason_set(mr, r);
+            }
+        }
+        else { /* Match: if best compare and save highest preference */
+            assert(tmpreason == NULL);
+            if (best){ /* only save best match */
+                if (p == pref_upper){
+                    if (cligen_preference_mode(h) == 1 &&
+                        lasttoken &&
+                        cop &&
+                        cop->co_type == CO_VARIABLE && 
+                        co->co_type == CO_VARIABLE) /* Skip terminal pref if preference mode */
+                        ;
+                    else if (cligen_preference_mode(h) == 2 &&
+                        !lasttoken &&
+                        cop->co_type == CO_VARIABLE && 
+                        co->co_type == CO_VARIABLE) /* Skip same pref if preference mode */
+                        ;
+                    else if (cligen_preference_mode(h) == 3 &&
+                        cop->co_type == CO_VARIABLE && 
+                        co->co_type == CO_VARIABLE) /* Skip same pref if preference mode */
+                        ;
+                    else
+                        if (mr_pt_append(mr, co, ISREST(co)?resttokens:token) < 0)
+                            goto done;
+                }
+                else if (p > pref_upper){ /* Start again at this level */
+                    pref_upper = p;
+                    if (mr_pt_reset(mr) < 0)
+                        goto done;
+                    if (mr_pt_append(mr, co, ISREST(co)?resttokens:token) < 0)
+                        goto done;
+                    cop = co;
+                }
+                else{ /* p < pref_upper : skip */
+                }
+            } /* if best */
+            else {
+                if (mr_pt_append(mr, co, ISREST(co)?resttokens:token) < 0)
+                    goto done;
+            }
+        } /* switch match */
+        assert(tmpreason == NULL);
     } /* for pt_len_get(pt) */
     /* Only return reason if matches == 0 */
     if (mr_pt_len_get(mr) != 0)
-	mr_reason_set(mr, NULL);
+        mr_reason_set(mr, NULL);
     retval = 0;
  done:
     return retval;
@@ -458,9 +458,9 @@ match_vec(cligen_handle h,
  */
 static int
 match_bindvars(cligen_handle h,
-	       cg_obj       *co,
-	       char         *token,
-	       cvec         *cvv)
+               cg_obj       *co,
+               char         *token,
+               cvec         *cvv)
 {
     int     retval = -1;
     cg_var *cv = NULL;
@@ -468,26 +468,26 @@ match_bindvars(cligen_handle h,
 
     /* co_orig is original object in case of expansion */
     if ((co_orig = co->co_treeref_orig) == NULL)
-	co_orig = co->co_ref;
+        co_orig = co->co_ref;
     if (co->co_type == CO_VARIABLE){
-	/* Once so translate only is done once */
-	if ((cv = add_cov_to_cvec(h, co, token, cvv)) == NULL)
-	    goto done;
+        /* Once so translate only is done once */
+        if ((cv = add_cov_to_cvec(h, co, token, cvv)) == NULL)
+            goto done;
     }
     else if (co->co_type == CO_COMMAND && co_orig->co_type == CO_VARIABLE){
-	/* Once so translate only is done once */
-	if ((cv = add_cov_to_cvec(h, co_orig,
-				  co->co_value?co->co_value:co->co_command,
-				  cvv)) == NULL)
-	    goto done;
+        /* Once so translate only is done once */
+        if ((cv = add_cov_to_cvec(h, co_orig,
+                                  co->co_value?co->co_value:co->co_command,
+                                  cvv)) == NULL)
+            goto done;
     }
     else{
-	if ((cv = cvec_add(cvv, co->co_vtype)) == NULL)
-	    goto done;
-	cv_name_set(cv, co->co_command);
-	cv_type_set(cv, CGV_STRING);
-	cv_string_set(cv, co->co_command);
-	cv_const_set(cv, 1);
+        if ((cv = cvec_add(cvv, co->co_vtype)) == NULL)
+            goto done;
+        cv_name_set(cv, co->co_command);
+        cv_type_set(cv, CGV_STRING);
+        cv_string_set(cv, co->co_command);
+        cv_const_set(cv, 1);
     }
     retval = 0;
  done:
@@ -496,7 +496,7 @@ match_bindvars(cligen_handle h,
 
 static int
 co_clearflag(cg_obj *co,
-	     void   *arg)
+             void   *arg)
 {
     co_flags_reset(co, (intptr_t)arg);
     return 0;
@@ -519,13 +519,13 @@ co_clearflag(cg_obj *co,
  */
 static int 
 match_pattern_sets_local(cligen_handle h, 
-			 cvec         *cvt,
-			 cvec         *cvr,
-			 parse_tree   *pt,
-			 int           level,
-			 int           best,
-			 cvec         *cvv,
-			 match_result **mrp)
+                         cvec         *cvt,
+                         cvec         *cvr,
+                         parse_tree   *pt,
+                         int           level,
+                         int           best,
+                         cvec         *cvv,
+                         match_result **mrp)
 {
     int         retval = -1;
     cg_obj     *co_match = NULL;
@@ -536,7 +536,7 @@ match_pattern_sets_local(cligen_handle h,
     match_result *mr0 = NULL;
 
     if ((mr0 = mr_new()) == NULL)
-	goto done;
+        goto done;
     /* Tokens of this level */
     token = cvec_i_str(cvt, level+1);
     /* Is this last token? */
@@ -548,43 +548,43 @@ match_pattern_sets_local(cligen_handle h,
 
     /* How many matches of cvt[level+1] in pt */
     if (match_vec(h,
-		  pt, token, resttokens,
-		  lasttoken,
-		  lasttoken?best:1, /* use best preference match in non-terminal matching*/
-		  mr0) < 0)
-	goto done;
+                  pt, token, resttokens,
+                  lasttoken,
+                  lasttoken?best:1, /* use best preference match in non-terminal matching*/
+                  mr0) < 0)
+        goto done;
     /* Number of matches is 0 (no match), 1 (exact) or many */
     switch (mr_pt_len_get(mr0)){
     case 0: /* no matches */
-	if (pt_onlyvars(pt))
-	    ; /* XXX Uuh mr0 already has a reason,... */
-	mr_pt_reset(mr0);
-	goto ok; 
-	break;
+        if (pt_onlyvars(pt))
+            ; /* XXX Uuh mr0 already has a reason,... */
+        mr_pt_reset(mr0);
+        goto ok; 
+        break;
     case 1: /* exactly one match */
-	break;
+        break;
     default: /* multiple matches:
-	      * note that there is code in match_patter_exact that can collapse multiple matches 
-	      * to one under certain circumstances
-	      */
-	if (lasttoken){
-	    if (best){
-		co_match = mr_pt_i_get(mr0, 0);
-		if (match_bindvars(h, co_match, 
-				   ISREST(co_match)?resttokens:token,
-				   cvv) < 0)
-		    goto done;
-	    }
-	    goto ok; /* will return matches > 1 */ 
-	}
-	mr_pt_reset(mr0);
-	mr_reason_set(mr0, strdup("Ambiguous command"));
-	goto ok;  /* will return matches = 0 */
-	break;
+              * note that there is code in match_patter_exact that can collapse multiple matches 
+              * to one under certain circumstances
+              */
+        if (lasttoken){
+            if (best){
+                co_match = mr_pt_i_get(mr0, 0);
+                if (match_bindvars(h, co_match, 
+                                   ISREST(co_match)?resttokens:token,
+                                   cvv) < 0)
+                    goto done;
+            }
+            goto ok; /* will return matches > 1 */ 
+        }
+        mr_pt_reset(mr0);
+        mr_reason_set(mr0, strdup("Ambiguous command"));
+        goto ok;  /* will return matches = 0 */
+        break;
     } /* switch matches */
     if (mr_pt_len_get(mr0) != 1){
-	errno = EFAULT; /* shouldnt happen */
-	goto done;
+        errno = EFAULT; /* shouldnt happen */
+        goto done;
     }
     /* Get the single match object */
     co_match = mr_pt_i_get(mr0, 0);
@@ -593,30 +593,30 @@ match_pattern_sets_local(cligen_handle h,
 
     /* Already matched (sets functionality) */
     if (co_flags_get(co_match, CO_FLAGS_MATCH)){ /* XXX: orig?? */
-	char *r;
-	if ((r = strdup("Already matched")) == NULL)
-	    goto done;
-	mr_reason_set(mr0, r);
-	mr_pt_reset(mr0);
-	goto ok; /* will return matches = 0 */
+        char *r;
+        if ((r = strdup("Already matched")) == NULL)
+            goto done;
+        mr_reason_set(mr0, r);
+        mr_pt_reset(mr0);
+        goto ok; /* will return matches = 0 */
     }
 
     /* Do it if not last or best */
     if (!lasttoken || best){
-	/* Bind vars and constants to variable vectors used for completion and callbacks */
-	if (match_bindvars(h, co_match, 
-			   ISREST(co_match)?resttokens:token,
-			   cvv) < 0)
-	    goto done;
+        /* Bind vars and constants to variable vectors used for completion and callbacks */
+        if (match_bindvars(h, co_match, 
+                           ISREST(co_match)?resttokens:token,
+                           cvv) < 0)
+            goto done;
     }
     if (lasttoken ||
-	(co_match->co_type == CO_VARIABLE && ISREST(co_match))){
-	/* 
-	 * Special case: we have matched a REST variable (anything) and
-	 * there is more text have this word, then we can match REST
-	 * This is "inline" of match_terminal
-	 */
-	mr_last_set(mr0); /* dont go to children */
+        (co_match->co_type == CO_VARIABLE && ISREST(co_match))){
+        /* 
+         * Special case: we have matched a REST variable (anything) and
+         * there is more text have this word, then we can match REST
+         * This is "inline" of match_terminal
+         */
+        mr_last_set(mr0); /* dont go to children */
     }
  ok: 
     /* mr0:local or mrc:child
@@ -624,15 +624,15 @@ match_pattern_sets_local(cligen_handle h,
      */
     switch (mr_pt_len_get(mr0)) {
     case 0:
-	break;
+        break;
     case 1:
-	if (co_match->co_type == CO_COMMAND &&
-	    co_orig && co_orig->co_type == CO_VARIABLE)
-	    if (co_value_set(co_orig, co_match->co_command) < 0)
-		goto done;
-	break;
+        if (co_match->co_type == CO_COMMAND &&
+            co_orig && co_orig->co_type == CO_VARIABLE)
+            if (co_value_set(co_orig, co_match->co_command) < 0)
+                goto done;
+        break;
     default:
-	break;
+        break;
     } /* matches */
     *mrp = mr0;
     mr0 = NULL;
@@ -640,13 +640,13 @@ match_pattern_sets_local(cligen_handle h,
  done:
 #if 0 /* Only if no match? */
     if (cv){ /* cv may be stale */
-	cv = cvec_i(cvv, cvec_len(cvv)-1);
-	cv_reset(cv);
-	cvec_del(cvv, cv);
+        cv = cvec_i(cvv, cvec_len(cvv)-1);
+        cv_reset(cv);
+        cvec_del(cvv, cv);
     }
 #endif
     if (mr0)
-	mr_free(mr0);
+        mr_free(mr0);
     /* Only the last level may have multiple matches */
     return retval;
 } /* match_pattern_sets_local */
@@ -671,14 +671,14 @@ match_pattern_sets_local(cligen_handle h,
  */
 static int 
 match_pattern_sets(cligen_handle h, 
-		   cvec         *cvt,
-		   cvec         *cvr,
-		   parse_tree   *pt,
-		   int           level,
-		   int           best,
-		   cvec         *cvv,
-		   cg_callback **callbacks,
-		   match_result **mrp)
+                   cvec         *cvt,
+                   cvec         *cvr,
+                   parse_tree   *pt,
+                   int           level,
+                   int           best,
+                   cvec         *cvv,
+                   cg_callback **callbacks,
+                   match_result **mrp)
 {
     int           retval = -1;
     match_result *mr0 = NULL; /* Local */
@@ -692,20 +692,20 @@ match_pattern_sets(cligen_handle h,
     token = cvec_i_str(cvt, level+1); /* for debugging */
 #ifdef _DEBUG_SETS
     fprintf(stderr, "%s %*s level: %d token:%s\npt:\n", __FUNCTION__, level*3,"",
-		level, strlen(token)?token:"\"\"");
+                level, strlen(token)?token:"\"\"");
     pt_print(stderr, pt);
 #endif
     /* Match the current token */
     if (match_pattern_sets_local(h, cvt, cvr, pt, level, best, 
-				 cvv, &mr0) < 0)
-	goto done;
+                                 cvv, &mr0) < 0)
+        goto done;
 #ifdef _DEBUG_SETS
     fprintf(stderr, "%s %*s matchnr:%d\n", __FUNCTION__, level*3,"", mr_pt_len_get(mr0));
 #endif
     if (mr_pt_len_get(mr0) != 1){ /* If not unique match exit here */
-	*mrp = mr0;
-	mr0 = NULL;
-	goto ok;
+        *mrp = mr0;
+        mr0 = NULL;
+        goto ok;
     }
     /* Unique match */
     co_match = mr_pt_i_get(mr0, 0);
@@ -715,98 +715,98 @@ match_pattern_sets(cligen_handle h,
      * This code may need refactoring
      */
     if (callbacks &&
-	co_flags_get(co_match, CO_FLAGS_TREEREF)){
-	cg_obj *coref = co_match;
-	while (coref->co_ref){
-	    coref = coref->co_ref;
-	}
-	if (coref->co_type ==  CO_REFERENCE &&
-	    coref->co_callbacks)
-	    if (co_callback_copy(coref->co_callbacks, callbacks) < 0)
-		goto done;
+        co_flags_get(co_match, CO_FLAGS_TREEREF)){
+        cg_obj *coref = co_match;
+        while (coref->co_ref){
+            coref = coref->co_ref;
+        }
+        if (coref->co_type ==  CO_REFERENCE &&
+            coref->co_callbacks)
+            if (co_callback_copy(coref->co_callbacks, callbacks) < 0)
+                goto done;
     }
 #ifdef _DEBUG_SETS
     fprintf(stderr, "%s %*s match co:%s\n", __FUNCTION__, level*3,"", co_match->co_command);
 #endif
     if (mr_last_get(mr0) && (strcmp(token,"") != 0)){
-	mr_flags_set_co_match(mr0, co_match);
-	*mrp = mr0;
-	mr0 = NULL;
-	goto ok;
+        mr_flags_set_co_match(mr0, co_match);
+        *mrp = mr0;
+        mr0 = NULL;
+        goto ok;
     }
     if ((ptn = pt_new()) == NULL)
-	goto done;
+        goto done;
     if (pt_expand(h,
-		   co_match,
-		   co_pt_get(co_match),
-		   cvv,
-		  !best,  /* If best is set, include hidden commands, otherwise do not */
-		  1,      /* VARS are expanded, eg ? <tab> */
-		  ptn) < 0) /* expand/choice variables */
-	goto done;
+                   co_match,
+                   co_pt_get(co_match),
+                   cvv,
+                  !best,  /* If best is set, include hidden commands, otherwise do not */
+                  1,      /* VARS are expanded, eg ? <tab> */
+                  ptn) < 0) /* expand/choice variables */
+        goto done;
     /* Check termination criteria */
     lastsyntax = last_pt(ptn); /* 0, 1 or 2 */
     switch (lastsyntax){
     case 0: /* Not last in syntax tree, continue */
-	break;
+        break;
     case 1: /* Last in syntax tree (not token) */
-	mr_flags_set_co_match(mr0, co_match);
-	*mrp = mr0;
-	mr0 = NULL;
-	goto ok;
-	break;
+        mr_flags_set_co_match(mr0, co_match);
+        *mrp = mr0;
+        mr0 = NULL;
+        goto ok;
+        break;
     case 2: /* Last in syntax tree but can continue,... */
-	break;
+        break;
     }
     if (pt_sets_get(ptn)){ /* For sets, iterate */
 #ifdef _DEBUG_SETS
-	fprintf(stderr, "%s %*s sets:\n", __FUNCTION__, level*3,"");
+        fprintf(stderr, "%s %*s sets:\n", __FUNCTION__, level*3,"");
 #endif
-	while (!last_level(cvt, level)){
-	    if (mrc != NULL)
-		mrc = NULL;
-	    if (match_pattern_sets(h, cvt, cvr, ptn,
-				   level+1,
-				   best, 
-				   cvv,
-				   callbacks,
-				   &mrc) < 0)
-		goto done;		
+        while (!last_level(cvt, level)){
+            if (mrc != NULL)
+                mrc = NULL;
+            if (match_pattern_sets(h, cvt, cvr, ptn,
+                                   level+1,
+                                   best, 
+                                   cvv,
+                                   callbacks,
+                                   &mrc) < 0)
+                goto done;              
 #ifdef _DEBUG_SETS
-	    fprintf(stderr, "%s %*s sets matchnr: %d\n", __FUNCTION__, level*3,"", mr_pt_len_get(mrc));
+            fprintf(stderr, "%s %*s sets matchnr: %d\n", __FUNCTION__, level*3,"", mr_pt_len_get(mrc));
 #endif
-	    if (mr_pt_len_get(mrc) != 1)
-		break;
+            if (mr_pt_len_get(mrc) != 1)
+                break;
 #ifdef _DEBUG_SETS
-	    fprintf(stderr, "%s %*s sets match co: %s\n", __FUNCTION__, level*3,"",
-		    mr_pt_i_get(mrc, 0)->co_command);
+            fprintf(stderr, "%s %*s sets match co: %s\n", __FUNCTION__, level*3,"",
+                    mr_pt_i_get(mrc, 0)->co_command);
 #endif
-	    if (mrcprev != NULL){
-		mr_free(mrcprev);
-		mrcprev = NULL;
-	    }
-	    mrcprev = mrc;
-	    level = mr_level_get(mrc); /* XXX level always 0 */
-	} /* while */
-	if (mrc == NULL){
-	    *mrp = mr0;
-	    mr0 = NULL;
-	    goto ok;
-	}
+            if (mrcprev != NULL){
+                mr_free(mrcprev);
+                mrcprev = NULL;
+            }
+            mrcprev = mrc;
+            level = mr_level_get(mrc); /* XXX level always 0 */
+        } /* while */
+        if (mrc == NULL){
+            *mrp = mr0;
+            mr0 = NULL;
+            goto ok;
+        }
     }
     else{
-	if (last_level(cvt, level)){
-	    *mrp = mr0;
-	    mr0 = NULL;
-	    goto ok;    
-	}
-	else if (match_pattern_sets(h, cvt, cvr, ptn,
-				    level+1, 
-				    best, 
-				    cvv,
-				    callbacks,
-				    &mrc) < 0)
-	    goto done;
+        if (last_level(cvt, level)){
+            *mrp = mr0;
+            mr0 = NULL;
+            goto ok;    
+        }
+        else if (match_pattern_sets(h, cvt, cvr, ptn,
+                                    level+1, 
+                                    best, 
+                                    cvv,
+                                    callbacks,
+                                    &mrc) < 0)
+            goto done;
     }
     /* Clear all CO_FLAGS_MATCH recursively 
      * Only co_match is set with CO_FLAGS_MATCH
@@ -815,38 +815,38 @@ match_pattern_sets(cligen_handle h,
     
     /* If child match fails, use previous */
     if (mr_pt_len_get(mrc) == 0 && mrcprev){
-	/* Transfer match flags from ptn to pt if this tree has no more matches */
-	mr_flags_set_co_match(mr0, co_match);
-	mr_mv_reason(mrc, mrcprev); 	/* transfer error reason if any from child */
-	*mrp = mrcprev;
-	mrcprev = NULL;
+        /* Transfer match flags from ptn to pt if this tree has no more matches */
+        mr_flags_set_co_match(mr0, co_match);
+        mr_mv_reason(mrc, mrcprev);     /* transfer error reason if any from child */
+        *mrp = mrcprev;
+        mrcprev = NULL;
     }
     else if (mr_pt_len_get(mrc) == 0 && lastsyntax == 2){ /* If no child match, then use local */
-	mr_flags_set_co_match(mr0, co_match);
-	mr_mv_reason(mrc, mr0); 	/* transfer error reason if any from child */
-	*mrp = mr0;
-	mr0 = NULL;
+        mr_flags_set_co_match(mr0, co_match);
+        mr_mv_reason(mrc, mr0);         /* transfer error reason if any from child */
+        *mrp = mr0;
+        mr0 = NULL;
     }
     else{ /* child match,  use that */
-	if (mr_pt_len_get(mrc) == 1)
-	    mr_flags_set_co_match(mr0, co_match);
-	*mrp = mrc;
-	if (mrcprev == mrc)
-	    mrcprev = NULL;
-	mrc = NULL;
+        if (mr_pt_len_get(mrc) == 1)
+            mr_flags_set_co_match(mr0, co_match);
+        *mrp = mrc;
+        if (mrcprev == mrc)
+            mrcprev = NULL;
+        mrc = NULL;
     }
  ok:
     retval = 0;
  done:
     if (mrcprev && mrcprev != mrc){
-	mr_free(mrcprev);
+        mr_free(mrcprev);
     }
     if (ptn)
-	pt_free(ptn, 0);
+        pt_free(ptn, 0);
     if (mrc)
-	mr_free(mrc);
+        mr_free(mrc);
     if (mr0)
-	mr_free(mr0);
+        mr_free(mr0);
     return retval;   
 } /* match_pattern_sets */
 
@@ -869,13 +869,13 @@ match_pattern_sets(cligen_handle h,
  */
 int 
 match_pattern(cligen_handle h,
-	      cvec         *cvt,
-	      cvec         *cvr,
-	      parse_tree   *pt, 
-	      int           best,
-	      cvec         *cvv,
-	      cg_callback **callbacks,
-	      match_result **mrp)
+              cvec         *cvt,
+              cvec         *cvr,
+              parse_tree   *pt, 
+              int           best,
+              cvec         *cvv,
+              cg_callback **callbacks,
+              match_result **mrp)
 {
     int           retval = -1;
     match_result *mr = NULL;
@@ -887,20 +887,20 @@ match_pattern(cligen_handle h,
     parse_tree   *ptc;
     
     if (cvt == NULL || cvr == NULL || mrp == NULL){
-	errno = EINVAL;
-	goto done;
+        errno = EINVAL;
+        goto done;
     }
     if (match_pattern_sets(h, cvt, cvr,
-			   pt,
-			   0,
-			   best, 
-			   cvv, 
-			   callbacks,
-			   &mr) < 0)
-	goto done;
+                           pt,
+                           0,
+                           best, 
+                           cvv, 
+                           callbacks,
+                           &mr) < 0)
+        goto done;
     if (mr == NULL){  /* shouldnt happen */
-	errno = EFAULT;
-	goto done;
+        errno = EFAULT;
+        goto done;
     }
     /* Clear all CO_FLAGS_MATCH recursively */
     pt_apply(pt, co_clearflag, 1, (void*)CO_FLAGS_MATCH);
@@ -916,56 +916,56 @@ match_pattern(cligen_handle h,
      * 2) Multiple match: set no match
      */
     if (!last_level(cvt, mr_level_get(mr))){ /* XXX level always 0 */
-	if (mr_pt_len_get(mr) == 1){
-	    co_match = mr_pt_i_get(mr, 0);
-	    if (co_match->co_type == CO_VARIABLE && ISREST(co_match))
-		;
-	    else if (ISREST(co_match))
-		;
-	    else{
-		if (mr_reason_get(mr) == NULL){ /* If pre-existing error reason use that */
-		    if ((r = strdup("Unknown command")) == NULL) /* else create unknown error */
-			goto done;
-		    mr_reason_set(mr, r);
-		}
-		mr_pt_reset(mr);
-	    }
-	}
-	else { /* */
-	    if (mr_reason_get(mr) == NULL){
-		if ((r = strdup("Unknown command")) == NULL)
-		    goto done;
-		mr_reason_set(mr, r);
-		mr_pt_reset(mr);
-	    }
-	}
+        if (mr_pt_len_get(mr) == 1){
+            co_match = mr_pt_i_get(mr, 0);
+            if (co_match->co_type == CO_VARIABLE && ISREST(co_match))
+                ;
+            else if (ISREST(co_match))
+                ;
+            else{
+                if (mr_reason_get(mr) == NULL){ /* If pre-existing error reason use that */
+                    if ((r = strdup("Unknown command")) == NULL) /* else create unknown error */
+                        goto done;
+                    mr_reason_set(mr, r);
+                }
+                mr_pt_reset(mr);
+            }
+        }
+        else { /* */
+            if (mr_reason_get(mr) == NULL){
+                if ((r = strdup("Unknown command")) == NULL)
+                    goto done;
+                mr_reason_set(mr, r);
+                mr_pt_reset(mr);
+            }
+        }
     }
     /* If multiple match (at final command), collapse to single command if:
      * 1) All are commands and commands are equal
      */
     if (mr_pt_len_get(mr) > 1){ 
-	char *string1;
+        char *string1;
 
-	/* Collapse many choices to one
-	 * if all alternatives are equal commands */
-	string1 = NULL;
-	for (i=0; i<mr_pt_len_get(mr); i++){
-	    co = mr_pt_i_get(mr, i);
-	    if (co->co_type != CO_COMMAND)
-		break;
-	    if (i == 0)
-		string1 = co->co_command;
-	    else if (string1){
-		if ((!cligen_caseignore_get(h) && strcmp(string1, co->co_command)==0) ||
-		    (cligen_caseignore_get(h) && strcasecmp(string1, co->co_command)==0))
-		    ;
-		else
-		    break;
-	    }
-	}
-	if (string1 != NULL && i==mr_pt_len_get(mr)) /* No break in loop */
-	    if (mr_pt_trunc(mr, 1))
-		goto done;
+        /* Collapse many choices to one
+         * if all alternatives are equal commands */
+        string1 = NULL;
+        for (i=0; i<mr_pt_len_get(mr); i++){
+            co = mr_pt_i_get(mr, i);
+            if (co->co_type != CO_COMMAND)
+                break;
+            if (i == 0)
+                string1 = co->co_command;
+            else if (string1){
+                if ((!cligen_caseignore_get(h) && strcmp(string1, co->co_command)==0) ||
+                    (cligen_caseignore_get(h) && strcasecmp(string1, co->co_command)==0))
+                    ;
+                else
+                    break;
+            }
+        }
+        if (string1 != NULL && i==mr_pt_len_get(mr)) /* No break in loop */
+            if (mr_pt_trunc(mr, 1))
+                goto done;
     }
     /* Final check:
      * 1) If no match ensure there is an error message
@@ -974,53 +974,53 @@ match_pattern(cligen_handle h,
      */
     switch (mr_pt_len_get(mr)){
     case 0:
-	/* If no match fix an error message */
-	if (mr_pt_len_get(mr) == 0){
-	    if (mr_reason_get(mr) == NULL){
-		if ((r = strdup("Unknown command")) == NULL)
-		    goto done;
-		mr_reason_set(mr, r);
-	    }
-	}
-	break;
+        /* If no match fix an error message */
+        if (mr_pt_len_get(mr) == 0){
+            if (mr_reason_get(mr) == NULL){
+                if ((r = strdup("Unknown command")) == NULL)
+                    goto done;
+                mr_reason_set(mr, r);
+            }
+        }
+        break;
     case 1:
-	/* Here we have an obj that is unique so far. We need to see if there is 
-	 * only one sibling to it. */
-	co1 = mr_pt_i_get(mr, 0);
-	/*
-	 * Special case: if a NULL child is not found, then set result == CG_NOMATCH
-	 */
-	if ((ptc = co_pt_get(co1)) != NULL && best){
-	    parse_tree *ptn;
-	    cvec       *cvv;
+        /* Here we have an obj that is unique so far. We need to see if there is 
+         * only one sibling to it. */
+        co1 = mr_pt_i_get(mr, 0);
+        /*
+         * Special case: if a NULL child is not found, then set result == CG_NOMATCH
+         */
+        if ((ptc = co_pt_get(co1)) != NULL && best){
+            parse_tree *ptn;
+            cvec       *cvv;
 
-	    if ((ptn = pt_new()) == NULL)
-		goto done;
-	    if ((cvv = cvec_new(0)) == NULL)
-		goto done;
-	    if (pt_expand(h, co1, ptc, cvv, 1, 0, ptn) < 0)
-		goto done;
-	    /* Loop sets i which is used below */
-	    for (i=0; i<pt_len_get(ptn); i++){
-		if ((co = pt_vec_i_get(ptn, i)) == NULL ||
-		    co->co_type == CO_EMPTY)
-		    break; /* If we match here it is OK, unless no match */
-	    }
-	    if (pt_len_get(ptn)==0 ||
-		(pt_len_get(ptn) != 0 && i == pt_len_get(ptn))){
-		co1 = NULL;
-		if ((r = strdup("Incomplete command")) == NULL)
-		    goto done;
-		mr_reason_set(mr, r);
-		mr_pt_reset(mr);
-	    }
-	    pt_expand_cleanup(h, ptn);
-	    pt_free(ptn, 0);
-	    cvec_free(cvv);
-	}
-	break;
+            if ((ptn = pt_new()) == NULL)
+                goto done;
+            if ((cvv = cvec_new(0)) == NULL)
+                goto done;
+            if (pt_expand(h, co1, ptc, cvv, 1, 0, ptn) < 0)
+                goto done;
+            /* Loop sets i which is used below */
+            for (i=0; i<pt_len_get(ptn); i++){
+                if ((co = pt_vec_i_get(ptn, i)) == NULL ||
+                    co->co_type == CO_EMPTY)
+                    break; /* If we match here it is OK, unless no match */
+            }
+            if (pt_len_get(ptn)==0 ||
+                (pt_len_get(ptn) != 0 && i == pt_len_get(ptn))){
+                co1 = NULL;
+                if ((r = strdup("Incomplete command")) == NULL)
+                    goto done;
+                mr_reason_set(mr, r);
+                mr_pt_reset(mr);
+            }
+            pt_expand_cleanup(h, ptn);
+            pt_free(ptn, 0);
+            cvec_free(cvv);
+        }
+        break;
     default:
-	break;
+        break;
     } /* switch */
     *mrp = mr;
     retval = 0;
@@ -1045,52 +1045,52 @@ match_pattern(cligen_handle h,
  */
 int 
 match_pattern_exact(cligen_handle  h, 
-		    cvec          *cvt,
-		    cvec          *cvr,
-		    parse_tree    *pt, 
-		    cvec          *cvv,
-		    cg_obj       **match_obj,
-		    cg_callback  **callbacks,
-		    cligen_result *resultp,
-		    char         **reason
-		    )
+                    cvec          *cvt,
+                    cvec          *cvr,
+                    parse_tree    *pt, 
+                    cvec          *cvv,
+                    cg_obj       **match_obj,
+                    cg_callback  **callbacks,
+                    cligen_result *resultp,
+                    char         **reason
+                    )
 {
     int           retval = -1;
     match_result *mr = NULL;
     cg_obj       *co;
     
     if (resultp == NULL){
-	errno = EINVAL;
-	goto done;
+        errno = EINVAL;
+        goto done;
     }
     if ((match_pattern(h,
-		       cvt, cvr, /* token string */
-		       pt,       /* command vector */
-		       1,        /* best: Return only best option including hidden options */
-		       cvv,
-		       callbacks,
-		       &mr)) < 0){
-	goto done;
+                       cvt, cvr, /* token string */
+                       pt,       /* command vector */
+                       1,        /* best: Return only best option including hidden options */
+                       cvv,
+                       callbacks,
+                       &mr)) < 0){
+        goto done;
     }
     if (mr == NULL){ /* shouldnt happen */
-	errno = EFAULT;
-	goto done;
+        errno = EFAULT;
+        goto done;
     }
     if (reason &&
-	mr_reason_get(mr))
-	*reason = strdup(mr_reason_get(mr));
+        mr_reason_get(mr))
+        *reason = strdup(mr_reason_get(mr));
     if (mr_pt_len_get(mr) == 1 &&
-	match_obj){
-	/* Must make a copy since the mr will be freed */
-	co = mr_pt_i_get(mr, 0);
-	if (co_copy1(co, NULL, 0, 0x0, match_obj) < 0)
-	    goto done;
+        match_obj){
+        /* Must make a copy since the mr will be freed */
+        co = mr_pt_i_get(mr, 0);
+        if (co_copy1(co, NULL, 0, 0x0, match_obj) < 0)
+            goto done;
     }
     *resultp = mr2result(mr);
     retval = 0;
  done:
     if (mr)
-	mr_free(mr); 
+        mr_free(mr); 
     return retval;
 } /* match_pattern_exact */
 
@@ -1107,10 +1107,10 @@ match_pattern_exact(cligen_handle  h,
  */
 int 
 match_complete(cligen_handle h, 
-	       parse_tree   *pt, 
-	       char        **stringp, 
-	       size_t       *slenp, 
-	       cvec         *cvv)
+               parse_tree   *pt, 
+               char        **stringp, 
+               size_t       *slenp, 
+               cvec         *cvv)
 {
     int      slen = 0;
     int      equal;
@@ -1134,81 +1134,81 @@ match_complete(cligen_handle h,
     string = *stringp;
     /* Tokenize the string and transform it into two CLIgen vectors: tokens and rests */
     if (cligen_str2cvv(string, &cvt, &cvr) < 0)
-	goto done;
+        goto done;
     s = string;
     while ((strlen(s) > 0) && isblank(*s))
-	s++;
+        s++;
     if (match_pattern(h, cvt, cvr,
-		      pt,
-		      0, /* best: Return all options, not only best, exclude hidden options */
-		      cvv, 
-		      NULL,
-		      &mr) < 0)
-	goto done;
+                      pt,
+                      0, /* best: Return all options, not only best, exclude hidden options */
+                      cvv, 
+                      NULL,
+                      &mr) < 0)
+        goto done;
     if (mr == NULL || mr_pt_len_get(mr) == 0){
-	retval = 0;
-	goto done; /*  No matches */
+        retval = 0;
+        goto done; /*  No matches */
     }
     equal = 1;
     for (i=0; i<mr_pt_len_get(mr); i++){
-	co = mr_pt_i_get(mr, i);
-	if (co == NULL){
-	    retval = 0;
-	    goto done;
-	}
-	if ((cligen_tabmode(h) & CLIGEN_TABMODE_VARS) == 0){
-	    if (co->co_type != CO_COMMAND)
-		continue;
-	}
-	command = co->co_value?co->co_value:co->co_command;
-	if (co1 == NULL){
-	    slen = strlen(mr_token_get(mr));
-	    minmatch = strlen(command);
-	    co1 = co;
-	    command1 = command;
-	}
-	else{
-	    command1 = co1->co_value?co1->co_value:co1->co_command;
-	    if (!cligen_caseignore_get(h) && strcmp(command1, command)==0)
-		; /* equal */
-	    else if (cligen_caseignore_get(h) && strcasecmp(command1, command)==0)
-		; /* equal */
-	    else{
-		equal = 0;
-		len = MIN(strlen(command1), strlen(command));
-		for (j=0; j<len; j++)
-		    if (command1[j] != command[j])
-			break;
-		minmatch = MIN(minmatch, j);
-	    }
-	}
+        co = mr_pt_i_get(mr, i);
+        if (co == NULL){
+            retval = 0;
+            goto done;
+        }
+        if ((cligen_tabmode(h) & CLIGEN_TABMODE_VARS) == 0){
+            if (co->co_type != CO_COMMAND)
+                continue;
+        }
+        command = co->co_value?co->co_value:co->co_command;
+        if (co1 == NULL){
+            slen = strlen(mr_token_get(mr));
+            minmatch = strlen(command);
+            co1 = co;
+            command1 = command;
+        }
+        else{
+            command1 = co1->co_value?co1->co_value:co1->co_command;
+            if (!cligen_caseignore_get(h) && strcmp(command1, command)==0)
+                ; /* equal */
+            else if (cligen_caseignore_get(h) && strcasecmp(command1, command)==0)
+                ; /* equal */
+            else{
+                equal = 0;
+                len = MIN(strlen(command1), strlen(command));
+                for (j=0; j<len; j++)
+                    if (command1[j] != command[j])
+                        break;
+                minmatch = MIN(minmatch, j);
+            }
+        }
     }
     if (co1 == NULL){
         retval = 0;
-	goto done;
+        goto done;
     }
     while (strlen(*stringp) + minmatch - slen >= *slenp){
-	*slenp *= 2;
-	if ((*stringp = realloc(*stringp, *slenp)) == NULL)
-	    goto done;
-	string = *stringp;
+        *slenp *= 2;
+        if ((*stringp = realloc(*stringp, *slenp)) == NULL)
+            goto done;
+        string = *stringp;
     }
     strncat(string, &command1[slen], minmatch-slen);
     append = append || minmatch-slen;
     if (equal){ /* add space */
-	string[strlen(string)+1] = '\0';
-	string[strlen(string)] = cligen_delimiter(h);
-	*slenp = 0;
-	co1 = NULL;
+        string[strlen(string)+1] = '\0';
+        string[strlen(string)] = cligen_delimiter(h);
+        *slenp = 0;
+        co1 = NULL;
     }
     retval = append?1:0;
   done:
     if (cvt)
-	cvec_free(cvt);
+        cvec_free(cvt);
     if (cvr)
-	cvec_free(cvr);
+        cvec_free(cvr);
     if (mr){
-	mr_free(mr);
+        mr_free(mr);
     }
     return retval;
 }

@@ -41,7 +41,7 @@
  */
 
 #define COLUMN_MIN_WIDTH  21 /* For column formatting how many chars minimum 
-				for command/var */
+                                for command/var */
 
 /*
  * Types

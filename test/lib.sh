@@ -18,7 +18,7 @@
 if [ -f ./config.sh ]; then
     . ./config.sh
     if [ $? -ne 0 ]; then
-	return -1 # error
+        return -1 # error
     fi
 fi
 
@@ -26,7 +26,7 @@ fi
 if [ -f ./site.sh ]; then
     . ./site.sh
     if [ $? -ne 0 ]; then
-	return -1 # skip
+        return -1 # skip
     fi
 
 fi
@@ -34,8 +34,8 @@ fi
 # test skiplist.
 for f in $SKIPLIST; do
     if [ "$testfile" = "$f" ]; then
-	echo "...skipped (see site.sh and/or SKIPLIST env variable)"
-	return -1 # skip
+        echo "...skipped (see site.sh and/or SKIPLIST env variable)"
+        return -1 # skip
     fi
 done
 
@@ -108,21 +108,21 @@ function err(){
 # Test is previous test had valgrind errors if so quit
 function checkvalgrind(){
     if [ -f $valgrindfile ]; then
-	res=$(cat $valgrindfile | grep -e "Invalid" |awk '{print  $4}' | grep -v '^0$')
-	if [ -n "$res" ]; then
-	    >&2 echo "Memory error in: Test $testi($testnr) [$testname]"
-	    >&2 cat $valgrindfile
-	    sudo rm -f $valgrindfile
-	    exit -1	    
-	fi
-	res=$(cat $valgrindfile | grep -e "reachable" -e "lost:"|awk '{print  $4}' | grep -v '^0$')
-	if [ -n "$res" ]; then
-	    >&2 echo "Memory error in: Test $testi($testnr) [$testname]"
-	    >&2 cat $valgrindfile
-	    sudo rm -f $valgrindfile
-	    exit -1	    
-	fi
-	sudo rm -f $valgrindfile
+        res=$(cat $valgrindfile | grep -e "Invalid" |awk '{print  $4}' | grep -v '^0$')
+        if [ -n "$res" ]; then
+            >&2 echo "Memory error in: Test $testi($testnr) [$testname]"
+            >&2 cat $valgrindfile
+            sudo rm -f $valgrindfile
+            exit -1         
+        fi
+        res=$(cat $valgrindfile | grep -e "reachable" -e "lost:"|awk '{print  $4}' | grep -v '^0$')
+        if [ -n "$res" ]; then
+            >&2 echo "Memory error in: Test $testi($testnr) [$testname]"
+            >&2 cat $valgrindfile
+            sudo rm -f $valgrindfile
+            exit -1         
+        fi
+        sudo rm -f $valgrindfile
     fi
 }
 
@@ -130,7 +130,7 @@ function checkvalgrind(){
 function endtest()
 {
     if [ $valgrindtest -eq 1 ]; then 
-	checkvalgrind
+        checkvalgrind
     fi
 }
 
@@ -178,20 +178,20 @@ function expectpart(){
   let i=0;
   for exp in "$@"; do
       if [ "$exp" == "--not--" ]; then
-	  positive=false;
+          positive=false;
       elif [ $i -gt 1 ]; then
-#	   echo "echo \"$ret\" | grep --null -o \"$exp"\"
-	   match=$(echo "$ret" | grep --null -o "$exp") # XXX -EZo: -E cant handle {}
-	   r=$? 
-	   if $positive; then
-	       if [ $r != 0 ]; then
-		   err "$exp" "$ret"
-	       fi
-	   else
-	       if [ $r == 0 ]; then
-		   err "not $exp" "$ret"
-	       fi
-	   fi
+#          echo "echo \"$ret\" | grep --null -o \"$exp"\"
+           match=$(echo "$ret" | grep --null -o "$exp") # XXX -EZo: -E cant handle {}
+           r=$? 
+           if $positive; then
+               if [ $r != 0 ]; then
+                   err "$exp" "$ret"
+               fi
+           else
+               if [ $r == 0 ]; then
+                   err "not $exp" "$ret"
+               fi
+           fi
        fi
        let i++;
   done

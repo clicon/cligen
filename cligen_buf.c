@@ -82,7 +82,7 @@ static size_t cbuflen_threshold = CBUFLEN_THRESHOLD;
  */
 int
 cbuf_alloc_get(size_t *start,
-	       size_t *threshold)
+               size_t *threshold)
 {
     *start = cbuflen_start;
     *threshold = cbuflen_threshold;
@@ -96,7 +96,7 @@ cbuf_alloc_get(size_t *start,
  */
 int
 cbuf_alloc_set(size_t start,
-	       size_t threshold)
+               size_t threshold)
 {
     cbuflen_start = start;
     cbuflen_threshold = threshold;
@@ -117,12 +117,12 @@ cbuf_new_alloc(size_t sz)
     cbuf *cb;
 
     if ((cb = (cbuf*)malloc(sizeof(*cb))) == NULL)
-	return NULL;
+        return NULL;
     memset(cb, 0, sizeof(*cb));
     cb->cb_buflen = sz;
     if ((cb->cb_buffer = malloc(cb->cb_buflen)) == NULL){
-	free(cb);
-	return NULL;
+        free(cb);
+        return NULL;
     }
     memset(cb->cb_buffer, 0, cb->cb_buflen);
     cb->cb_strlen = 0;
@@ -149,9 +149,9 @@ void
 cbuf_free(cbuf *cb)
 {
     if (cb) {
-	if (cb->cb_buffer)
-	    free(cb->cb_buffer);
-	free(cb);
+        if (cb->cb_buffer)
+            free(cb->cb_buffer);
+        free(cb);
     }
 }
 
@@ -201,22 +201,22 @@ cbuf_reset(cbuf *cb)
  */
 static int
 cbuf_realloc(cbuf  *cb,
-	     size_t sz)
+             size_t sz)
 {
     int retval = -1;
     int diff;
     
     diff = cb->cb_buflen - (cb->cb_strlen + sz + 1);
     if (diff <= 0){
-	while (diff <= 0){
-	    if (cbuflen_threshold == 0 || cb->cb_buflen < cbuflen_threshold)
-		cb->cb_buflen *= 2; /* Double the space - exponential */
-	    else
-		cb->cb_buflen += cbuflen_threshold; /* Add - linear growth*/
-	    diff = cb->cb_buflen - (cb->cb_strlen + sz + 1);
-	}
-	if ((cb->cb_buffer = realloc(cb->cb_buffer, cb->cb_buflen)) == NULL)
-	    goto done;
+        while (diff <= 0){
+            if (cbuflen_threshold == 0 || cb->cb_buflen < cbuflen_threshold)
+                cb->cb_buflen *= 2; /* Double the space - exponential */
+            else
+                cb->cb_buflen += cbuflen_threshold; /* Add - linear growth*/
+            diff = cb->cb_buflen - (cb->cb_strlen + sz + 1);
+        }
+        if ((cb->cb_buffer = realloc(cb->cb_buffer, cb->cb_buflen)) == NULL)
+            goto done;
     }
     retval = 0;
  done:
@@ -233,7 +233,7 @@ cbuf_realloc(cbuf  *cb,
  */
 int
 cprintf(cbuf       *cb, 
-	const char *format, ...)
+        const char *format, ...)
 {
     int     retval = -1;
     va_list ap;
@@ -241,19 +241,19 @@ cprintf(cbuf       *cb,
     int     ret;
 
     if (cb == NULL)
-	goto ok;
+        goto ok;
     va_start(ap, format); /* dryrun */
     if ((len = vsnprintf(NULL, 0, format, ap)) < 0) /* dryrun, just get len */
-	goto done;
+        goto done;
     va_end(ap);
     /* Ensure buffer is large enough */
     if (cbuf_realloc(cb, len) < 0)
-    	goto done;
+        goto done;
     va_start(ap, format); /* real */
     if ((ret = vsnprintf(cb->cb_buffer+cb->cb_strlen, /* str */
-			 cb->cb_buflen-cb->cb_strlen, /* size */
-			 format, ap)) < 0)
-	goto done;
+                         cb->cb_buflen-cb->cb_strlen, /* size */
+                         format, ap)) < 0)
+        goto done;
     va_end(ap);
     cb->cb_strlen += ret;
  ok:
@@ -274,20 +274,20 @@ cprintf(cbuf       *cb,
   */
 int
 cbuf_append_str(cbuf       *cb,
-		char       *str)
+                char       *str)
 {
     size_t  len0;
     size_t  len;
 
     if (str == NULL){
-	errno = EINVAL;
-	return -1;
+        errno = EINVAL;
+        return -1;
     }
     len0 = strlen(str);
     len = cb->cb_strlen + len0;
     /* Ensure buffer is large enough */
     if (cbuf_realloc(cb, len) < 0)
-	return -1;
+        return -1;
     strncpy(cb->cb_buffer+cb->cb_strlen, str, len0+1);
     cb->cb_strlen = len;
     return 0;
@@ -323,21 +323,21 @@ cbuf_append(cbuf       *cb,
   */
 int
 cbuf_append_buf(cbuf  *cb,
-		void  *src,
-		size_t n)
+                void  *src,
+                size_t n)
 {
     size_t  len0;
     size_t  len;
 
     if (src == NULL){
-	errno = EINVAL;
-	return -1;
+        errno = EINVAL;
+        return -1;
     }
     len0 = cb->cb_strlen;
     len = cb->cb_strlen + n;
     /* Ensure buffer is large enough */
     if (cbuf_realloc(cb, len+1) < 0)
-	return -1;
+        return -1;
     memcpy(cb->cb_buffer+len0, src, n);
     cb->cb_buffer[len] = '\0'; /* Add a null byte */
     cb->cb_strlen = len;
@@ -352,11 +352,11 @@ cbuf_append_buf(cbuf  *cb,
  */
 int
 cbuf_trunc(cbuf  *cb,
-	   size_t i)
+           size_t i)
 {
     if (i > cb->cb_strlen){
-	errno = EINVAL;
-	return -1;
+        errno = EINVAL;
+        return -1;
     }
     cb->cb_strlen = i;
     cb->cb_buffer[i] = '\0'; /* Add a null byte */
