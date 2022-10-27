@@ -103,4 +103,4 @@ int cligen_parseparse(void *);
 void cligen_parseerror(void *_ya, char*);
 int cligen_parse_debug(int d);
 
-#endif	/* _CLIGEN_PARSE_H_ */
+#endif  /* _CLIGEN_PARSE_H_ */

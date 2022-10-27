@@ -20,20 +20,20 @@ memonce(){
 
     err=0
     for test in $pattern; do
-	if [ $testnr != 0 ]; then echo; fi
-	testfile=$test
-	. ./$test 
-	errcode=$?
-	if [ $errcode -ne 0 ]; then
-	    err=1
-	    echo -e "\e[31mError in $test errcode=$errcode"
-	    echo -ne "\e[0m"
-	    exit $errcode
-	fi
+        if [ $testnr != 0 ]; then echo; fi
+        testfile=$test
+        . ./$test 
+        errcode=$?
+        if [ $errcode -ne 0 ]; then
+            err=1
+            echo -e "\e[31mError in $test errcode=$errcode"
+            echo -ne "\e[0m"
+            exit $errcode
+        fi
     done
     if [ $valgrindtest -eq 1 ]; then
-	checkvalgrind
-	sudo rm -f $valgrindfile
+        checkvalgrind
+        sudo rm -f $valgrindfile
     fi
 }
 
@@ -44,8 +44,8 @@ println(){
     length=$(echo "$str" | wc -c)
     let i=1
     while [ $i -lt $length ]; do
-	echo -n "="
-	let i++
+        echo -n "="
+        let i++
     done
     echo
 }

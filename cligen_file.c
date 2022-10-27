@@ -63,8 +63,8 @@
  */
 int
 cligen_exec_cb(cligen_handle handle,
-	       cvec         *cvv,
-	       cvec         *argv)
+               cvec         *cvv,
+               cvec         *argv)
 {
     cg_var *cv = NULL;
     char    buf[64];
@@ -73,23 +73,23 @@ cligen_exec_cb(cligen_handle handle,
     int     status;
 
     if (argv == NULL)
-	return 0;
+        return 0;
     if ((pid = fork()) == 0){ /* child */
-	while ((cv = cvec_each1(cvv, cv)) != NULL) {
-	    if (cv_const_get(cv))
-		continue;
-	    cv2str(cv, buf, sizeof(buf)-1);
-	    setenv(cv_name_get(cv), buf, 1 );
-	}
-	cv2str(cvec_i(argv, 0), buf, sizeof(buf)-1);
-	ret = system(buf);
-	exit(ret);
+        while ((cv = cvec_each1(cvv, cv)) != NULL) {
+            if (cv_const_get(cv))
+                continue;
+            cv2str(cv, buf, sizeof(buf)-1);
+            setenv(cv_name_get(cv), buf, 1 );
+        }
+        cv2str(cvec_i(argv, 0), buf, sizeof(buf)-1);
+        ret = system(buf);
+        exit(ret);
     }
     /* Wait for child to finish */
     if(waitpid (pid, &status, 0) == pid)
-	ret = WEXITSTATUS(status);
+        ret = WEXITSTATUS(status);
     else
-	ret = -1;
+        ret = -1;
     return ret;
 }
 
@@ -97,8 +97,8 @@ cligen_exec_cb(cligen_handle handle,
  */
 int
 callback(cligen_handle handle,
-	 cvec         *cvv,
-	 cvec         *argv)
+         cvec         *cvv,
+         cvec         *argv)
 {
     int     i = 0;
     cg_var *cv;
@@ -108,23 +108,23 @@ callback(cligen_handle handle,
     cligen_output(stderr, "variables:\n");
     cv = NULL;
     while ((cv = cvec_each(cvv, cv)) != NULL) {
-	cv2str(cv, buf, sizeof(buf)-1);
-	cligen_output(stderr, "\t%d name:%s type:%s value:%s\n", 
-		i++, 
-		cv_name_get(cv),
-		cv_type2str(cv_type_get(cv)),
-		buf
-	    );
+        cv2str(cv, buf, sizeof(buf)-1);
+        cligen_output(stderr, "\t%d name:%s type:%s value:%s\n", 
+                i++, 
+                cv_name_get(cv),
+                cv_type2str(cv_type_get(cv)),
+                buf
+            );
     }
     if (argv){
-	    cv = NULL;
-	    i=0;
-	    while ((cv = cvec_each(argv, cv)) != NULL) {
-		cv2str(cv, buf, sizeof(buf)-1);
-		cligen_output(stdout, "arg %d:", i++);
-		cligen_output(stdout, " %s\n", buf); /* Separaration for test/test_more.sh */
-	    }
-	}
+            cv = NULL;
+            i=0;
+            while ((cv = cvec_each(argv, cv)) != NULL) {
+                cv2str(cv, buf, sizeof(buf)-1);
+                cligen_output(stdout, "arg %d:", i++);
+                cligen_output(stdout, " %s\n", buf); /* Separaration for test/test_more.sh */
+            }
+        }
     cli_output_reset();
     return 0;
 }
@@ -139,9 +139,9 @@ str2fn(char  *name,
 {
     *error = NULL;
     if (strcmp(name, "callback") == 0)
-	return callback;
+        return callback;
     if (strcmp(name, "cligen_exec_cb") == 0)
-	return cligen_exec_cb;
+        return cligen_exec_cb;
     return callback; /* allow any function (for testing) */
 }
 
@@ -154,21 +154,21 @@ str2fn(char  *name,
  */
 static int
 cli_expand_cb(cligen_handle h, 
-	      char         *fn_str, 
-	      cvec         *cvv, 
-	      cvec         *argv, 
-	      cvec         *commands,     /* vector of function strings */
-	      cvec         *helptexts)   /* vector of help-texts */
+              char         *fn_str, 
+              cvec         *cvv, 
+              cvec         *argv, 
+              cvec         *commands,     /* vector of function strings */
+              cvec         *helptexts)   /* vector of help-texts */
 {
 #if 1
     /* Special case for two partly overlapping expand sets */
     if (strcmp(fn_str,"exp")==0){
-	cvec_add_string(commands, NULL, "exp1"); cvec_add_string(helptexts, NULL, "Help exp1");
-	cvec_add_string(commands, NULL, "exp2"); cvec_add_string(helptexts, NULL, "Help exp2");
-	cvec_add_string(commands, NULL, "exp3"); cvec_add_string(helptexts, NULL, "Help exp3");
+        cvec_add_string(commands, NULL, "exp1"); cvec_add_string(helptexts, NULL, "Help exp1");
+        cvec_add_string(commands, NULL, "exp2"); cvec_add_string(helptexts, NULL, "Help exp2");
+        cvec_add_string(commands, NULL, "exp3"); cvec_add_string(helptexts, NULL, "Help exp3");
     }
     else{
-	cvec_add_string(commands, NULL, "exp2");  cvec_add_string(helptexts, NULL, "Help exp2");
+        cvec_add_string(commands, NULL, "exp2");  cvec_add_string(helptexts, NULL, "Help exp2");
     }
 #else
     cvec_add_string(commands, NULL, "auto");
@@ -181,8 +181,8 @@ cli_expand_cb(cligen_handle h,
  */
 static expandv_cb *
 str2fn_exp(char  *name,
-	   void  *arg,
-	   char **error)
+           void  *arg,
+           char **error)
 {
     return cli_expand_cb;
 }
@@ -194,21 +194,21 @@ static void
 usage(char *argv)
 {
     fprintf(stderr, "Usage:%s <option>*, where the options have the following meaning:\n"
-	    "\t-h \t\tHelp\n"
-	    "\t-f <file> \tConfig-file (or stdin)\n"
-	    "\t-1 \t\tOnce only. Do not enter interactive mode\n"
-	    "\t-p \t\tPrint syntax\n"
-	    "\t-C \t\tDont copy treeref mode\n"
-    	    "\t-d \t\tDump syntax with implementation-specific info\n"
-	    "\t-e \t\tSet automatic expansion/completion for all expand() functions\n"
-    	    "\t-E \t\tExclude keys in callback cvv. Default include keys\n"
-	    "\t-c \t\tExpand first arg of callback cvv to string matching keywords\n"
-	    "\t-P <mode> \t\tSet preference mode: 1: tiebreak terminals, 2: also non-terminals\n"
-	    "\t-t <nr> \tSet tab mode: 1:columns, 2: same pref for vars, 4: all steps\n"
-	    "\t-s <nr> \tScrolling 0: disable line scrolling, 1: enable line scrolling (default 1)\n"
-	    "\t-u \t\tEnable experimental UTF-8 mode\n"
-	    ,
-	    argv);
+            "\t-h \t\tHelp\n"
+            "\t-f <file> \tConfig-file (or stdin)\n"
+            "\t-1 \t\tOnce only. Do not enter interactive mode\n"
+            "\t-p \t\tPrint syntax\n"
+            "\t-C \t\tDont copy treeref mode\n"
+            "\t-d \t\tDump syntax with implementation-specific info\n"
+            "\t-e \t\tSet automatic expansion/completion for all expand() functions\n"
+            "\t-E \t\tExclude keys in callback cvv. Default include keys\n"
+            "\t-c \t\tExpand first arg of callback cvv to string matching keywords\n"
+            "\t-P <mode> \t\tSet preference mode: 1: tiebreak terminals, 2: also non-terminals\n"
+            "\t-t <nr> \tSet tab mode: 1:columns, 2: same pref for vars, 4: all steps\n"
+            "\t-s <nr> \tScrolling 0: disable line scrolling, 1: enable line scrolling (default 1)\n"
+            "\t-u \t\tEnable experimental UTF-8 mode\n"
+            ,
+            argv);
     exit(0);
 }
 
@@ -237,121 +237,121 @@ main(int   argc,
     int         expand_first = 0;
     
     if ((h = cligen_init()) == NULL)
-	goto done;    
+        goto done;    
     argv++;argc--;
     for (;(argc>0)&& *argv; argc--, argv++){
-	if (**argv != '-')
-	    break;
-	(*argv)++;
-	if (strlen(*argv)==0)
-	    usage(argv0);
-	switch(**argv) {
-	case 'h': /* help */
-	    usage(argv0); /* usage exits */
-	    break;
-	case '1': /* quit directly */
-	    once++;
-	    break;
-	case 'p': /* print syntax */
-	    print_syntax++;
-	    break;
-	case 'd': /* dump syntax */
-	    dump_syntax++;
-	    break;
-	case 'e': /* Set automatic completion/expand */
-	    set_expand++;
-	    break;
-	case 'E': /* Exclude keys in callback cvv */
-	    exclude_keys++;
-	    break;
-	case 'c': /* Expand first arg of callback cvv */
-	    expand_first++;
-	    break;
-	case 'P': /* Return first if several have same preference, for terminals */
-	    argc--;argv++;
-	    set_preference = atoi(*argv);
-	    break;
-	case 'f' : 
-	    argc--;argv++;
-	    filename = *argv;
-	    if ((f = fopen(filename, "r")) == NULL){
-		fprintf(stderr, "fopen(%s): %s\n", filename, strerror(errno));
-		exit(1);
-	    }
-	    break;
-	case 's': /* line scrolling mode */
-	    argc--;argv++;
-	    scrollmode = atoi(*argv);
-	    break;
-	case 't': /* tab mode */
-	    argc--;argv++;
-	    tabmode = atoi(*argv);
-	    break;
-	case 'u': /* UTF-8 experimental */
-	    cligen_utf8_set(h, 1);
-	    break;
-	default:
-	    usage(argv0);
-	    break;
-	}
+        if (**argv != '-')
+            break;
+        (*argv)++;
+        if (strlen(*argv)==0)
+            usage(argv0);
+        switch(**argv) {
+        case 'h': /* help */
+            usage(argv0); /* usage exits */
+            break;
+        case '1': /* quit directly */
+            once++;
+            break;
+        case 'p': /* print syntax */
+            print_syntax++;
+            break;
+        case 'd': /* dump syntax */
+            dump_syntax++;
+            break;
+        case 'e': /* Set automatic completion/expand */
+            set_expand++;
+            break;
+        case 'E': /* Exclude keys in callback cvv */
+            exclude_keys++;
+            break;
+        case 'c': /* Expand first arg of callback cvv */
+            expand_first++;
+            break;
+        case 'P': /* Return first if several have same preference, for terminals */
+            argc--;argv++;
+            set_preference = atoi(*argv);
+            break;
+        case 'f' : 
+            argc--;argv++;
+            filename = *argv;
+            if ((f = fopen(filename, "r")) == NULL){
+                fprintf(stderr, "fopen(%s): %s\n", filename, strerror(errno));
+                exit(1);
+            }
+            break;
+        case 's': /* line scrolling mode */
+            argc--;argv++;
+            scrollmode = atoi(*argv);
+            break;
+        case 't': /* tab mode */
+            argc--;argv++;
+            tabmode = atoi(*argv);
+            break;
+        case 'u': /* UTF-8 experimental */
+            cligen_utf8_set(h, 1);
+            break;
+        default:
+            usage(argv0);
+            break;
+        }
     }
     if (exclude_keys)
-	cligen_exclude_keys_set(h, 1);
+        cligen_exclude_keys_set(h, 1);
     if (expand_first)
-	cligen_expand_first_set(h, 1);
+        cligen_expand_first_set(h, 1);
     cligen_lexicalorder_set(h, 1);
     cligen_ignorecase_set(h, 1);
     if (set_preference)
-	cligen_preference_mode_set(h, set_preference);
+        cligen_preference_mode_set(h, set_preference);
 //    cligen_parse_debug(1);
     if ((globals = cvec_new(0)) == NULL)
-	goto done;
+        goto done;
     if (cligen_parse_file(h, f, filename?filename:"stdin", NULL, globals) < 0)
-	goto done;
+        goto done;
 
     ph = cligen_ph_i(h, 0); 
     pt = cligen_ph_parsetree_get(ph);
     
     /* map functions */
     if (pt) {
-	if (cligen_callbackv_str2fn(pt, str2fn, NULL) < 0)   /* callback */
-	    goto done;
-	if (set_expand &&
-	    cligen_expandv_str2fn(pt, str2fn_exp, NULL) < 0) /* expand */
-	    goto done;
+        if (cligen_callbackv_str2fn(pt, str2fn, NULL) < 0)   /* callback */
+            goto done;
+        if (set_expand &&
+            cligen_expandv_str2fn(pt, str2fn_exp, NULL) < 0) /* expand */
+            goto done;
     }
     if ((str = cvec_find_str(globals, "prompt")) != NULL)
-	cligen_prompt_set(h, str);
+        cligen_prompt_set(h, str);
     if (tabmode != 0)
-	cligen_tabmode_set(h, tabmode);
+        cligen_tabmode_set(h, tabmode);
     else if ((str = cvec_find_str(globals, "tabmode")) != NULL)
-	if (strcmp(str,"long") == 0)
-	    cligen_tabmode_set(h, CLIGEN_TABMODE_COLUMNS);
+        if (strcmp(str,"long") == 0)
+            cligen_tabmode_set(h, CLIGEN_TABMODE_COLUMNS);
     cligen_line_scrolling_set(h, scrollmode);
     if ((str = cvec_find_str(globals, "comment")) != NULL)
-	cligen_comment_set(h, *str);
+        cligen_comment_set(h, *str);
     if ((str = cvec_find_str(globals, "mode")) != NULL)
-	cligen_ph_active_set_byname(h, str);
+        cligen_ph_active_set_byname(h, str);
     cvec_free(globals);
 
     if (print_syntax){
-	pt_print1(stdout, pt, 0);
-	fflush(stdout);
+        pt_print1(stdout, pt, 0);
+        fflush(stdout);
     }
     if (dump_syntax){
-	uint64_t nr = 0;
-	size_t sz = 0;
-	pt_stats(pt, &nr, &sz);
-	fprintf(stdout, "nr:%" PRIu64 ", size:%zu\n", nr, sz);
-	pt_dump(stdout, pt);
-	fflush(stdout);
+        uint64_t nr = 0;
+        size_t sz = 0;
+        pt_stats(pt, &nr, &sz);
+        fprintf(stdout, "nr:%" PRIu64 ", size:%zu\n", nr, sz);
+        pt_dump(stdout, pt);
+        fflush(stdout);
     }
     if (!once && cligen_loop(h) < 0)
-	goto done;
+        goto done;
     retval = 0;
   done:
     fclose(f);
     if (h)
-	cligen_exit(h);
+        cligen_exit(h);
     return retval;
 }

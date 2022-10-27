@@ -19,10 +19,10 @@ for test in $pattern; do
     . ./$test 
     errcode=$?
     if [ $errcode -ne 0 ]; then
-	err=1
-	echo -e "\e[31mError in $test errcode=$errcode"
-	echo -ne "\e[0m"
-	exit $errcode
+        err=1
+        echo -e "\e[31mError in $test errcode=$errcode"
+        echo -ne "\e[0m"
+        exit $errcode
     fi
 done
 if [ $err -eq 0 ]; then 

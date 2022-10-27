@@ -80,8 +80,8 @@ static int pt2cbuf(cbuf *cb, parse_tree *pt, int level, int brief);
  */
 int 
 cov2cbuf(cbuf   *cb,
-	 cg_obj *co,
-	 int     brief)
+         cg_obj *co,
+         int     brief)
 {
     int     retval = -1;
     int     i;
@@ -89,57 +89,57 @@ cov2cbuf(cbuf   *cb,
     cg_var *cv2;
 
     if (co->co_choice){
-	if (strchr(co->co_choice, '|'))
-	    cprintf(cb, "(%s)", co->co_choice);
-	else
-	    cprintf(cb, "%s", co->co_choice);
+        if (strchr(co->co_choice, '|'))
+            cprintf(cb, "(%s)", co->co_choice);
+        else
+            cprintf(cb, "%s", co->co_choice);
     }
     else{
-	if (brief){
-	    cprintf(cb, "%c%s%c", VARIABLE_PRE, 
-		    co->co_show!=NULL ? co->co_show : co->co_command, 
-		    VARIABLE_POST);
-	}
-	else{
-	    cprintf(cb, "%c%s:%s", VARIABLE_PRE, co->co_command, cv_type2str(co->co_vtype));
+        if (brief){
+            cprintf(cb, "%c%s%c", VARIABLE_PRE, 
+                    co->co_show!=NULL ? co->co_show : co->co_command, 
+                    VARIABLE_POST);
+        }
+        else{
+            cprintf(cb, "%c%s:%s", VARIABLE_PRE, co->co_command, cv_type2str(co->co_vtype));
 
-	    for (i=0; i<co->co_rangelen; i++){
-		if (cv_isint(co->co_vtype))
-		    cprintf(cb, " range[");
-		else
-		    cprintf(cb, " length[");
-		cv1 = cvec_i(co->co_rangecvv_low, i);
-		cv2 = cvec_i(co->co_rangecvv_upp, i);
-		if (cv_type_get(cv1) != CGV_EMPTY){
-		    cv2cbuf(cv1, cb);
-		    cprintf(cb, ":");
-		}
-		cv2cbuf(cv2, cb);
-		cprintf(cb, "]");
-	    }
-	    
-	    if (co->co_show)
-		cprintf(cb, " show:\"%s\"", co->co_show);
-	    if (co->co_expand_fn_str){
-		cprintf(cb, " %s(\"", co->co_expand_fn_str);
-		if (co->co_expand_fn_vec){
-		    cg_var *cv = NULL;
-		    int   i = 0;
-		    while ((cv = cvec_each(co->co_expand_fn_vec, cv)) != NULL) {
-			if (i++)
-			    cprintf(cb, ",");
-			cv2cbuf(cv, cb);
-		    }
-		}
-		cprintf(cb, "\")");
-	    }
-	    cv1 = NULL;
-	    while ((cv1 = cvec_each(co->co_regex, cv1)) != NULL)
-		cprintf(cb, " regexp:\"%s\"", cv_string_get(cv1));		
-	    if (co->co_translate_fn_str)
-		cprintf(cb, " translate:%s()", co->co_translate_fn_str);
-	    cprintf(cb, "%c", VARIABLE_POST);
-	}
+            for (i=0; i<co->co_rangelen; i++){
+                if (cv_isint(co->co_vtype))
+                    cprintf(cb, " range[");
+                else
+                    cprintf(cb, " length[");
+                cv1 = cvec_i(co->co_rangecvv_low, i);
+                cv2 = cvec_i(co->co_rangecvv_upp, i);
+                if (cv_type_get(cv1) != CGV_EMPTY){
+                    cv2cbuf(cv1, cb);
+                    cprintf(cb, ":");
+                }
+                cv2cbuf(cv2, cb);
+                cprintf(cb, "]");
+            }
+            
+            if (co->co_show)
+                cprintf(cb, " show:\"%s\"", co->co_show);
+            if (co->co_expand_fn_str){
+                cprintf(cb, " %s(\"", co->co_expand_fn_str);
+                if (co->co_expand_fn_vec){
+                    cg_var *cv = NULL;
+                    int   i = 0;
+                    while ((cv = cvec_each(co->co_expand_fn_vec, cv)) != NULL) {
+                        if (i++)
+                            cprintf(cb, ",");
+                        cv2cbuf(cv, cb);
+                    }
+                }
+                cprintf(cb, "\")");
+            }
+            cv1 = NULL;
+            while ((cv1 = cvec_each(co->co_regex, cv1)) != NULL)
+                cprintf(cb, " regexp:\"%s\"", cv_string_get(cv1));              
+            if (co->co_translate_fn_str)
+                cprintf(cb, " translate:%s()", co->co_translate_fn_str);
+            cprintf(cb, "%c", VARIABLE_POST);
+        }
     }
     retval = 0;
     return retval;
@@ -149,9 +149,9 @@ cov2cbuf(cbuf   *cb,
  */
 static int 
 co2cbuf(cbuf   *cb,
-	cg_obj *co,
-	int     marginal,
-	int     brief)
+        cg_obj *co,
+        int     marginal,
+        int     brief)
 {
     int          retval = -1;
     cg_callback *cc;
@@ -161,73 +161,73 @@ co2cbuf(cbuf   *cb,
     cg_var      *cv;
 
     if (co == NULL){
-	errno = EINVAL;
-	goto done;
+        errno = EINVAL;
+        goto done;
     }
     /* Add [] if optional. Note this is neither not complete/correct since it only notes
      * that the symbol was created within a [], not the exact composition.
      * Thus, for example, both "[a b]" and "[a[b]]" will be shown as "[a][b]".
      */
     if (co_flags_get(co, CO_FLAGS_OPTION))
-	cprintf(cb, "[");
+        cprintf(cb, "[");
     switch (co->co_type){
     case CO_COMMAND:
-	if (co->co_command)
-	    cprintf(cb, "%s", co->co_command);
-	break;
+        if (co->co_command)
+            cprintf(cb, "%s", co->co_command);
+        break;
     case CO_REFERENCE:
-	if (co->co_command)
-	    cprintf(cb, "@%s", co->co_command);
-	break;
+        if (co->co_command)
+            cprintf(cb, "@%s", co->co_command);
+        break;
     case CO_VARIABLE:
-	cov2cbuf(cb, co, brief);
-	break;
+        cov2cbuf(cb, co, brief);
+        break;
     case CO_EMPTY:
-	cprintf(cb, ";");
-	break;
+        cprintf(cb, ";");
+        break;
     }
     if (co_flags_get(co, CO_FLAGS_OPTION))
-	cprintf(cb, "]");
+        cprintf(cb, "]");
     if (brief == 0){
-	if (co->co_helpstring){
-	    cbuf_append_str(cb, "(\"");
-	    cbuf_append_str(cb, co->co_helpstring);
-	    cbuf_append_str(cb, "\")");
-	}
-	if (co_flags_get(co, CO_FLAGS_HIDE))
-	    cprintf(cb, ", hide");
-	cv = NULL;
-	while ((cv = cvec_each(co->co_cvec, cv)) != NULL) 
-	    cprintf(cb, ", %s", cv_name_get(cv));
-	for (cc = co->co_callbacks; cc; cc = co_callback_next(cc)){
-	    co_callback2cbuf(cb, cc);
-	}
+        if (co->co_helpstring){
+            cbuf_append_str(cb, "(\"");
+            cbuf_append_str(cb, co->co_helpstring);
+            cbuf_append_str(cb, "\")");
+        }
+        if (co_flags_get(co, CO_FLAGS_HIDE))
+            cprintf(cb, ", hide");
+        cv = NULL;
+        while ((cv = cvec_each(co->co_cvec, cv)) != NULL) 
+            cprintf(cb, ", %s", cv_name_get(cv));
+        for (cc = co->co_callbacks; cc; cc = co_callback_next(cc)){
+            co_callback2cbuf(cb, cc);
+        }
     }
     cv = NULL;
     while ((cv = cvec_each(co->co_cvec, cv)) != NULL)
-	cprintf(cb, ", %s", cv_name_get(cv));
+        cprintf(cb, ", %s", cv_name_get(cv));
     if (co_terminal(co, &cot)){
-	cg_var *cv = NULL;
-	while ((cv = cvec_each(cot->co_cvec, cv)) != NULL)
-	    cprintf(cb, ", %s", cv_name_get(cv));
-	cprintf(cb, ";");
+        cg_var *cv = NULL;
+        while ((cv = cvec_each(cot->co_cvec, cv)) != NULL)
+            cprintf(cb, ", %s", cv_name_get(cv));
+        cprintf(cb, ";");
     }
     pt = co_pt_get(co);
     if (pt_len_get(pt) > 1){
-	if (co_sets_get(co))
-	    cprintf(cb, "@");
-	cprintf(cb, "{\n");
+        if (co_sets_get(co))
+            cprintf(cb, "@");
+        cprintf(cb, "{\n");
     }
     else
-	if (pt_len_get(pt)==1 && (co1 = pt_vec_i_get(pt, 0)) != NULL && co1->co_type != CO_EMPTY)
-	    cprintf(cb, " ");
-	else
-	    cprintf(cb, "\n");
+        if (pt_len_get(pt)==1 && (co1 = pt_vec_i_get(pt, 0)) != NULL && co1->co_type != CO_EMPTY)
+            cprintf(cb, " ");
+        else
+            cprintf(cb, "\n");
     if (pt2cbuf(cb, pt, marginal+3, brief) < 0)
-	goto done;
+        goto done;
     if (pt_len_get(pt)>1){
-	cprintf(cb, "%*s", marginal, ""); 
-	cprintf(cb, "}\n");
+        cprintf(cb, "%*s", marginal, ""); 
+        cprintf(cb, "}\n");
     }
     retval = 0;
   done:
@@ -242,27 +242,27 @@ co2cbuf(cbuf   *cb,
  */
 static int 
 pt2cbuf(cbuf       *cb,
-	parse_tree *pt,
-	int         marginal,
-	int         brief)
+        parse_tree *pt,
+        int         marginal,
+        int         brief)
 {
     int     retval = -1;
     int     i;
     cg_obj *co;
 
     if (pt == NULL){
-	errno = EINVAL;
-	goto done;
+        errno = EINVAL;
+        goto done;
     }
     for (i=0; i<pt_len_get(pt); i++){
-	if ((co = pt_vec_i_get(pt, i)) == NULL)
-	    continue;
-	if (co->co_type == CO_EMPTY)
-	    continue;
-	if (pt_len_get(pt) > 1)
-	    cprintf(cb, "%*s", marginal, "");
-	if (co2cbuf(cb, co, marginal, brief) < 0)
-	    goto done;
+        if ((co = pt_vec_i_get(pt, i)) == NULL)
+            continue;
+        if (co->co_type == CO_EMPTY)
+            continue;
+        if (pt_len_get(pt) > 1)
+            cprintf(cb, "%*s", marginal, "");
+        if (co2cbuf(cb, co, marginal, brief) < 0)
+            goto done;
     }
     retval = 0;
   done:
@@ -286,29 +286,29 @@ pt2cbuf(cbuf       *cb,
  */
 int 
 pt_print1(FILE       *f,
-	  parse_tree *pt,
-	  int         brief)
+          parse_tree *pt,
+          int         brief)
 {
     int   retval = -1;
     cbuf *cb = NULL;
 
     if ((cb = cbuf_new()) == NULL){
-	fprintf(stderr, "cbuf_new: %s\n", strerror(errno));
-	goto done;
+        fprintf(stderr, "cbuf_new: %s\n", strerror(errno));
+        goto done;
     }
     if (pt2cbuf(cb, pt, 0, brief) < 0)
-	goto done;
+        goto done;
     fprintf(f, "%s", cbuf_get(cb));
     retval = 0;
   done:
     if (cb)
-	cbuf_free(cb);
+        cbuf_free(cb);
     return retval;
 }
 
 int 
 pt_print(FILE       *f,
-	 parse_tree *pt)
+         parse_tree *pt)
 {
     return pt_print1(f, pt, 1);
 }
@@ -323,29 +323,29 @@ pt_print(FILE       *f,
  */
 int 
 co_print1(FILE    *f,
-	  cg_obj  *co,
-	  int      brief)
+          cg_obj  *co,
+          int      brief)
 {
     int   retval = -1;
     cbuf *cb = NULL;
 
     if ((cb = cbuf_new()) == NULL){
-	fprintf(stderr, "cbuf_new: %s\n", strerror(errno));
-	goto done;
+        fprintf(stderr, "cbuf_new: %s\n", strerror(errno));
+        goto done;
     }
     if (co2cbuf(cb, co, 0, brief) < 0)
-	goto done;
+        goto done;
     fprintf(f, "%s", cbuf_get(cb));
     retval = 0;
   done:
     if (cb)
-	cbuf_free(cb);
+        cbuf_free(cb);
     return retval;
 }
 
 int 
 co_print(FILE    *f,
-	 cg_obj  *co)
+         cg_obj  *co)
 {
     return co_print1(f, co, 1);
 }
@@ -354,8 +354,8 @@ static int co_dump1(FILE *f, cg_obj *co, int indent);
 
 static int 
 pt_dump1(FILE       *f,
-	 parse_tree *pt,
-	 int         indent)
+         parse_tree *pt,
+         int         indent)
 {
     int     i;
     cg_obj *co;
@@ -363,55 +363,55 @@ pt_dump1(FILE       *f,
     
     name = pt_name_get(pt);
     fprintf(f, "%*s %p pt %s [%d]",
-	    indent*3, "", pt,
-	    name?name:"",
-	    pt_len_get(pt));
+            indent*3, "", pt,
+            name?name:"",
+            pt_len_get(pt));
     fprintf(f, "\n");
     for (i=0; i<pt_len_get(pt); i++){
-	if ((co = pt_vec_i_get(pt, i)) == NULL)
-	    fprintf(f, "%*s NULL\n", (indent+1)*3, "");
-	else
-	    co_dump1(f, co, indent+1);
+        if ((co = pt_vec_i_get(pt, i)) == NULL)
+            fprintf(f, "%*s NULL\n", (indent+1)*3, "");
+        else
+            co_dump1(f, co, indent+1);
     }
     return 0;
 }
 
 static int 
 co_dump1(FILE    *f,
-	 cg_obj  *co,
-	 int      indent)
+         cg_obj  *co,
+         int      indent)
 {
     parse_tree *pt;
     cg_var *cv;
     
     switch (co->co_type){
     case CO_COMMAND:
-	fprintf(f, "%*s %p co %s", indent*3, "", co, co->co_command);
-	if (co_sets_get(co))
-	    fprintf(f, " SETS");
-	if (co->co_ref)
-	    fprintf(f, " ref:%p", co->co_ref);
-	break;
+        fprintf(f, "%*s %p co %s", indent*3, "", co, co->co_command);
+        if (co_sets_get(co))
+            fprintf(f, " SETS");
+        if (co->co_ref)
+            fprintf(f, " ref:%p", co->co_ref);
+        break;
     case CO_REFERENCE:
-	fprintf(f, "%*s %p co @%s", indent*3, "", co, co->co_command);
-	break;
+        fprintf(f, "%*s %p co @%s", indent*3, "", co, co->co_command);
+        break;
     case CO_VARIABLE:
-	fprintf(f, "%*s %p co <%s> ", indent*3, "", co, co->co_command);
-	if (co->co_ref)
-	    fprintf(f, " ref:%p", co->co_ref);
-	if (co->co_treeref_orig)
-	    fprintf(f, " treeref:%p", co->co_treeref_orig);
-	break;
+        fprintf(f, "%*s %p co <%s> ", indent*3, "", co, co->co_command);
+        if (co->co_ref)
+            fprintf(f, " ref:%p", co->co_ref);
+        if (co->co_treeref_orig)
+            fprintf(f, " treeref:%p", co->co_treeref_orig);
+        break;
     case CO_EMPTY:
-	fprintf(f, "%*s %p empty", indent*3, "", co);
-	break;
+        fprintf(f, "%*s %p empty", indent*3, "", co);
+        break;
     }
     cv = NULL;
     while ((cv = cvec_each(co->co_cvec, cv)) != NULL)
-	fprintf(f, ", label=%s", cv_name_get(cv));
+        fprintf(f, ", label=%s", cv_name_get(cv));
     fprintf(f, "\n");
     if ((pt = co_pt_get(co)) != NULL)
-	pt_dump1(f, pt, indent);
+        pt_dump1(f, pt, indent);
     return 0;
 }
 
@@ -419,7 +419,7 @@ co_dump1(FILE    *f,
  */
 int 
 co_dump(FILE    *f,
-	cg_obj  *co)
+        cg_obj  *co)
 {
     return co_dump1(f, co, 0);
 }
@@ -428,7 +428,7 @@ co_dump(FILE    *f,
  */
 int 
 pt_dump(FILE       *f,
-	parse_tree *pt)
+        parse_tree *pt)
 {
     return pt_dump1(f, pt, 0);
 }
@@ -443,8 +443,8 @@ pt_dump(FILE       *f,
  */
 int 
 cligen_print_trees(FILE         *f,
-		   cligen_handle h,
-		   int           brief)
+                   cligen_handle h,
+                   int           brief)
 {
     int          retval = -1;
     pt_head     *ph;
@@ -452,10 +452,10 @@ cligen_print_trees(FILE         *f,
 
     ph = NULL;
     while ((ph = cligen_ph_each(h, ph)) != NULL) {
-	fprintf(stderr, "%s:\n", cligen_ph_name_get(ph));
-	pt = cligen_ph_parsetree_get(ph);
-	if (!brief && pt_print1(f, pt, brief) < 0)
-	    goto done;
+        fprintf(stderr, "%s:\n", cligen_ph_name_get(ph));
+        pt = cligen_ph_parsetree_get(ph);
+        if (!brief && pt_print1(f, pt, brief) < 0)
+            goto done;
     }
     retval = 0;
   done:

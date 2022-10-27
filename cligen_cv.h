@@ -47,7 +47,7 @@
  * CLIgen flags defined are in the range 0x01 -0x0f
  * An application can use any flags above that
  */
-#define V_INVERT  0x01	/* Used by regexp code as inverted regexps */
+#define V_INVERT  0x01  /* Used by regexp code as inverted regexps */
 
 typedef unsigned char uuid_t[16];
 
@@ -88,21 +88,21 @@ enum cv_type{
 
 /* cv is one of the int-types */
 #define cv_isint(t)((t)==CGV_INT8   || (t)==CGV_INT16|| \
-		    (t)==CGV_INT32  || (t)==CGV_INT64|| \
-		    (t)==CGV_UINT8  || (t)==CGV_UINT16|| \
-		    (t)==CGV_UINT32 || (t)==CGV_UINT64)
+                    (t)==CGV_INT32  || (t)==CGV_INT64|| \
+                    (t)==CGV_UINT8  || (t)==CGV_UINT16|| \
+                    (t)==CGV_UINT32 || (t)==CGV_UINT64)
 
 /* No pointers to value */
 #define cv_inline(t)((t)==CGV_ERR      || cv_isint(t)|| \
                      (t)==CGV_DEC64    || (t)==CGV_BOOL|| \
                      (t)==CGV_IPV4ADDR || (t)==CGV_IPV4PFX|| \
                      (t)==CGV_IPV6ADDR || (t)==CGV_IPV6PFX|| \
-		     (t)==CGV_MACADDR  || (t)==CGV_UUID||    \
-		     (t)==CGV_TIME     || (t)==CGV_EMPTY)
+                     (t)==CGV_MACADDR  || (t)==CGV_UUID||    \
+                     (t)==CGV_TIME     || (t)==CGV_EMPTY)
 
 /* var_string is set to something meaningful */
 #define cv_isstring(t)((t)==CGV_STRING||(t)==CGV_REST|| \
-			(t)==CGV_INTERFACE)
+                        (t)==CGV_INTERFACE)
 
 #define cv_typemax(t) 
 

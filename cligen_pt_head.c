@@ -99,20 +99,20 @@ cligen_ph_name_get(pt_head *ph)
  */
 int
 cligen_ph_name_set(pt_head *ph,
-		   char    *name)
+                   char    *name)
 {
     if (ph == NULL){
        errno = EINVAL;
        return -1;
     }
     if (ph->ph_name)
-	free(ph->ph_name);
+        free(ph->ph_name);
     if (name){
-	if ((ph->ph_name = strdup(name)) == NULL)
-	    return -1;
+        if ((ph->ph_name = strdup(name)) == NULL)
+            return -1;
     }
     else
-	ph->ph_name = NULL;
+        ph->ph_name = NULL;
     return 0;
 }
 
@@ -139,7 +139,7 @@ cligen_ph_parsetree_get(pt_head *ph)
  */
 int
 cligen_ph_parsetree_set(pt_head    *ph,
-			parse_tree *pt)
+                        parse_tree *pt)
 {
     int     retval = -1;
     int     i;
@@ -150,13 +150,13 @@ cligen_ph_parsetree_set(pt_head    *ph,
        goto done;
     }
     for (i=0; i<pt_len_get(pt); i++){
-	if ((co = pt_vec_i_get(pt, i)) != NULL)
-	    co_up_set(co, NULL);
+        if ((co = pt_vec_i_get(pt, i)) != NULL)
+            co_up_set(co, NULL);
     }
     ph->ph_parsetree = pt; /* XXX not free if exists? */
 #if 1 /* This is still used in clixon */
     if (pt_name_set(pt, cligen_ph_name_get(ph)) < 0) /* XXX Is this even necessary ? */
-	goto done;
+        goto done;
 #endif
     retval = 0;
  done:
@@ -182,7 +182,7 @@ cligen_ph_workpoint_get(pt_head *ph)
  */
 int
 cligen_ph_workpoint_set(pt_head *ph,
-			cg_obj  *wp)
+                        cg_obj  *wp)
 {
     ph->ph_workpt = wp;
     return 0;
@@ -196,16 +196,16 @@ cligen_ph_workpoint_set(pt_head *ph,
  */
 pt_head *
 cligen_ph_find(cligen_handle h,
-	       char         *name)
+               char         *name)
 {
     pt_head *ph = NULL;
     char    *phname;
     
     for (ph = cligen_pt_head_get(h); ph; ph = ph->ph_next){
-	if ((phname = cligen_ph_name_get(ph)) == NULL)
-	    continue;
-	if (strcmp(phname, name) == 0)
-	    break;
+        if ((phname = cligen_ph_name_get(ph)) == NULL)
+            continue;
+        if (strcmp(phname, name) == 0)
+            break;
     }
     return ph;
 }
@@ -221,9 +221,9 @@ cligen_ph_free(pt_head *ph)
        return -1;
     }
     if (ph->ph_name)
-	free(ph->ph_name);
+        free(ph->ph_name);
     if (ph->ph_parsetree)
-	pt_free(ph->ph_parsetree, 1);
+        pt_free(ph->ph_parsetree, 1);
     free(ph);
     return 0;
 }
@@ -237,27 +237,27 @@ cligen_ph_free(pt_head *ph)
  */
 pt_head *
 cligen_ph_add(cligen_handle h, 
-	      char         *name)
+              char         *name)
 {
     pt_head *ph;
     pt_head *phlast;
     
     if ((ph = (pt_head *)malloc(sizeof(*ph))) == NULL)
-	goto done;
+        goto done;
     memset(ph, 0, sizeof(*ph));    
     if (cligen_ph_name_set(ph, name) < 0){
-	free(ph);
-	ph = NULL;
-	goto done;
+        free(ph);
+        ph = NULL;
+        goto done;
     }
     if ((phlast = cligen_pt_head_get(h)) == NULL){
-	ph->ph_active++;
-	cligen_pt_head_set(h, ph);
+        ph->ph_active++;
+        cligen_pt_head_set(h, ph);
     }
     else {
-	while (phlast->ph_next)
-	    phlast = phlast->ph_next;
-	phlast->ph_next = ph;
+        while (phlast->ph_next)
+            phlast = phlast->ph_next;
+        phlast->ph_next = ph;
     }
  done:
     return ph;
@@ -272,21 +272,21 @@ cligen_ph_add(cligen_handle h,
  * @code
  *    pt_head *ph = NULL;
  *    while ((ph = cligen_ph_each(h, ph)) != NULL) {
- *	     ...
+ *           ...
  *    }
  * @endcode
  * Note: you may not delete (or add) parse-tree-heads while iterating through them
  */
 pt_head *
 cligen_ph_each(cligen_handle h, 
-	       pt_head      *ph0)
+               pt_head      *ph0)
 {
     pt_head *ph = NULL;
     
     if (ph0 == NULL)
-	ph = cligen_pt_head_get(h);
+        ph = cligen_pt_head_get(h);
     else
-	ph = ph0->ph_next;
+        ph = ph0->ph_next;
     return ph;
 }
 
@@ -296,14 +296,14 @@ cligen_ph_each(cligen_handle h,
  */
 pt_head *
 cligen_ph_i(cligen_handle h, 
-	    int           i0)
+            int           i0)
 {
     pt_head *ph;
     int      i;
 
     for (ph = cligen_pt_head_get(h), i=0; ph; ph = ph->ph_next, i++)
-	if (i==i0)
-	    return ph;
+        if (i==i0)
+            return ph;
     return NULL;
 }
 
@@ -317,8 +317,8 @@ cligen_pt_active_get(cligen_handle h)
     pt_head *ph;
 
     for (ph = cligen_pt_head_get(h); ph; ph = ph->ph_next)
-	if (ph->ph_active)
-	    return ph->ph_parsetree;
+        if (ph->ph_active)
+            return ph->ph_parsetree;
     return NULL;
 }
 
@@ -331,8 +331,8 @@ cligen_ph_active_get(cligen_handle h)
     pt_head *ph;
 
     for (ph = cligen_pt_head_get(h); ph; ph = ph->ph_next)
-	if (ph->ph_active)
-	    return ph;
+        if (ph->ph_active)
+            return ph;
     return NULL;
 }
 
@@ -343,17 +343,17 @@ cligen_ph_active_get(cligen_handle h)
  */
 int
 cligen_ph_active_set_byname(cligen_handle h, 
-			    char         *name)
+                            char         *name)
 {
     pt_head *ph;
 
     for (ph = cligen_pt_head_get(h); ph; ph = ph->ph_next)
-	if (ph->ph_active)
-	    break;
+        if (ph->ph_active)
+            break;
     if (ph != NULL)
-	ph->ph_active = 0;
+        ph->ph_active = 0;
     if ((ph = cligen_ph_find(h, name)) != NULL)
-	ph->ph_active = 1;
+        ph->ph_active = 1;
     return 0;
 }
 
@@ -377,8 +377,8 @@ cligen_ph_active_set_byname(cligen_handle h,
  */
 int
 cligen_wp_set(cligen_handle h,
-	      cvec         *cvv,
-	      cvec         *argv)
+              cvec         *cvv,
+              cvec         *argv)
 {
     cg_var   *cv;
     char     *treename;
@@ -388,11 +388,11 @@ cligen_wp_set(cligen_handle h,
     cv = cvec_i(argv, 0);
     treename = cv_string_get(cv);
     if ((ph = cligen_ph_find(h, treename)) != NULL &&
-	(co = cligen_co_match(h)) != NULL){
-	if (co->co_treeref_orig != NULL)
-	    cligen_ph_workpoint_set(ph, co->co_treeref_orig);
-	else if (co->co_ref != NULL)
-	    cligen_ph_workpoint_set(ph, co->co_ref);	    
+        (co = cligen_co_match(h)) != NULL){
+        if (co->co_treeref_orig != NULL)
+            cligen_ph_workpoint_set(ph, co->co_treeref_orig);
+        else if (co->co_ref != NULL)
+            cligen_ph_workpoint_set(ph, co->co_ref);        
     }
     return 0;
 }
@@ -403,8 +403,8 @@ cligen_wp_set(cligen_handle h,
  */
 int
 cligen_wp_show(cligen_handle h,
-	       cvec         *cvv,
-	       cvec         *argv)
+               cvec         *cvv,
+               cvec         *argv)
 {
     cg_var     *cv;
     char       *name;
@@ -415,11 +415,11 @@ cligen_wp_show(cligen_handle h,
     cv = cvec_i(argv, 0);
     name = cv_string_get(cv);
     if ((ph = cligen_ph_find(h, name)) != NULL){
-	if ((cow = cligen_ph_workpoint_get(ph)) != NULL)
-	    pt = co_pt_get(cow);
-	else
-	    pt = cligen_ph_parsetree_get(ph);
-	pt_print1(stderr, pt, 1);
+        if ((cow = cligen_ph_workpoint_get(ph)) != NULL)
+            pt = co_pt_get(cow);
+        else
+            pt = cligen_ph_parsetree_get(ph);
+        pt_print1(stderr, pt, 1);
     }
     return 0;
 }
@@ -430,8 +430,8 @@ cligen_wp_show(cligen_handle h,
  */
 int
 cligen_wp_up(cligen_handle h,
-	     cvec         *cvv,
-	     cvec         *argv)
+             cvec         *cvv,
+             cvec         *argv)
 {
     cg_var  *cv;
     char    *treename;
@@ -441,8 +441,8 @@ cligen_wp_up(cligen_handle h,
     cv = cvec_i(argv, 0);
     treename = cv_string_get(cv);
     if ((ph = cligen_ph_find(h, treename)) != NULL &&
-	(co = cligen_ph_workpoint_get(ph)) != NULL)
-	cligen_ph_workpoint_set(ph, co_up(co));
+        (co = cligen_ph_workpoint_get(ph)) != NULL)
+        cligen_ph_workpoint_set(ph, co_up(co));
     return 0;
 }
 
@@ -452,8 +452,8 @@ cligen_wp_up(cligen_handle h,
  */
 int
 cligen_wp_top(cligen_handle h,
-	      cvec         *cvv,
-	      cvec         *argv)
+              cvec         *cvv,
+              cvec         *argv)
 {
     cg_var  *cv;
     char    *treename;
@@ -462,7 +462,7 @@ cligen_wp_top(cligen_handle h,
     cv = cvec_i(argv, 0);
     treename = cv_string_get(cv);
     if ((ph = cligen_ph_find(h, treename)) != NULL)
-	cligen_ph_workpoint_set(ph, NULL);
+        cligen_ph_workpoint_set(ph, NULL);
     return 0;
 }
 

@@ -70,10 +70,10 @@
  */
 int
 cligen_parse_str(cligen_handle h,
-		 char         *str,
-		 char         *name,
-		 parse_tree   *ptp,
-		 cvec         *cvv)
+                 char         *str,
+                 char         *name,
+                 parse_tree   *ptp,
+                 cvec         *cvv)
 {
     int                retval = -1;
     int                i;
@@ -85,7 +85,7 @@ cligen_parse_str(cligen_handle h,
     
     /* "Fake" top-level object that is removed on exit */
     if ((cot = co_new(NULL, NULL)) == NULL)
-	goto done;
+        goto done;
     cy.cy_handle       = h; /* cligen_handle */
     cy.cy_name         = name;
     cy.cy_treename     = strdup(name); /* Use name as default tree name */
@@ -93,58 +93,58 @@ cligen_parse_str(cligen_handle h,
     cy.cy_parse_string = str;
     cy.cy_stack        = NULL;
     if (ptp != NULL)
-	pt = ptp;
+        pt = ptp;
     else
-	if ((pt = pt_new()) == NULL)
-	    goto done;
+        if ((pt = pt_new()) == NULL)
+            goto done;
     co_pt_set(cot, pt);
     if (cvv)
-	cy.cy_globals  = cvv; 
+        cy.cy_globals  = cvv; 
     else
-	if ((cy.cy_globals = cvec_new(0)) == NULL){
-	    fprintf(stderr, "%s: malloc: %s\n", __FUNCTION__, strerror(errno)); 
-	    goto done;
-	}
+        if ((cy.cy_globals = cvec_new(0)) == NULL){
+            fprintf(stderr, "%s: malloc: %s\n", __FUNCTION__, strerror(errno)); 
+            goto done;
+        }
     if (strlen(str)){ /* Not empty */
-	if (cgl_init(&cy) < 0)
-	    goto done;
-	if (cgy_init(&cy, cot) < 0)
-	    goto done;
-	if (cligen_parseparse(&cy) != 0) { /* yacc returns 1 on error */
-	    cgy_exit(&cy);
-	    cgl_exit(&cy);
-	    goto done;
-	}
-	/* Note pt/ptp is stale after parsing due to treename that replaces cot->pt 
-	 * Add final tree */
-	pt = co_pt_get(cot);
-	if (ptp == NULL){
-	    if ((ph = cligen_ph_add(cy.cy_handle, cy.cy_treename)) == NULL)
-		goto done;
-	    if (cligen_ph_parsetree_set(ph, pt) < 0)
-		goto done;
-	}
-	if (cgy_exit(&cy) < 0)
-	    goto done;		
-	if (cgl_exit(&cy) < 0)
-	    goto done;		
+        if (cgl_init(&cy) < 0)
+            goto done;
+        if (cgy_init(&cy, cot) < 0)
+            goto done;
+        if (cligen_parseparse(&cy) != 0) { /* yacc returns 1 on error */
+            cgy_exit(&cy);
+            cgl_exit(&cy);
+            goto done;
+        }
+        /* Note pt/ptp is stale after parsing due to treename that replaces cot->pt 
+         * Add final tree */
+        pt = co_pt_get(cot);
+        if (ptp == NULL){
+            if ((ph = cligen_ph_add(cy.cy_handle, cy.cy_treename)) == NULL)
+                goto done;
+            if (cligen_ph_parsetree_set(ph, pt) < 0)
+                goto done;
+        }
+        if (cgy_exit(&cy) < 0)
+            goto done;          
+        if (cgl_exit(&cy) < 0)
+            goto done;          
     }
     if (cvv == NULL) /* Not passed to caller function */
-	cvec_free(cy.cy_globals);
+        cvec_free(cy.cy_globals);
     /*
      * Remove the fake top level object and remove references to it.
      * This does not work for (other) trees
      */
     for (i=0; i<pt_len_get(pt); i++){
-	if ((co=pt_vec_i_get(pt, i)) != NULL)
-	    co_up_set(co, NULL);
+        if ((co=pt_vec_i_get(pt, i)) != NULL)
+            co_up_set(co, NULL);
     }
     retval = 0;
   done:
     if (cot)
-	co_free(cot, 0);
+        co_free(cot, 0);
     if (cy.cy_treename)
-	free (cy.cy_treename);
+        free (cy.cy_treename);
     return retval;
 }
 
@@ -159,10 +159,10 @@ cligen_parse_str(cligen_handle h,
  */
 int
 cligen_parse_file(cligen_handle h,
-		  FILE         *f,
-		  char         *name,
-		  parse_tree   *pt,  
-		  cvec         *cvv)
+                  FILE         *f,
+                  char         *name,
+                  parse_tree   *pt,  
+                  cvec         *cvv)
 {
     char         *buf;
     int           i;
@@ -172,31 +172,31 @@ cligen_parse_file(cligen_handle h,
 
     len = 1024; /* any number is fine */
     if ((buf = malloc(len)) == NULL){
-	perror("pt_file malloc");
-	return -1;
+        perror("pt_file malloc");
+        return -1;
     }
     memset(buf, 0, len);
 
     i = 0; /* position in buf */
     while (1){ /* read the whole file */
-	if ((c = fgetc(f)) == EOF)
-	    break;
-	if (i == len-1){
-	    if ((buf = realloc(buf, 2*len)) == NULL){
-		fprintf(stderr, "%s: realloc: %s\n", __FUNCTION__, strerror(errno));
-		goto done;
-	    }	    
-	    memset(buf+len, 0, len);
-	    len *= 2;
-	}
-	buf[i++] = (char)(c&0xff);
+        if ((c = fgetc(f)) == EOF)
+            break;
+        if (i == len-1){
+            if ((buf = realloc(buf, 2*len)) == NULL){
+                fprintf(stderr, "%s: realloc: %s\n", __FUNCTION__, strerror(errno));
+                goto done;
+            }       
+            memset(buf+len, 0, len);
+            len *= 2;
+        }
+        buf[i++] = (char)(c&0xff);
     } /* read a line */
     if (cligen_parse_str(h, buf, name, pt, cvv) < 0)
-	goto done;
+        goto done;
     retval = 0;
   done:
     if (buf)
-	free(buf);
+        free(buf);
     return retval;
 }
 
@@ -228,8 +228,8 @@ cligen_parse_file(cligen_handle h,
  */
 int
 cligen_callbackv_str2fn(parse_tree   *pt, 
-			cgv_str2fn_t *str2fn, 
-			void         *arg)
+                        cgv_str2fn_t *str2fn, 
+                        void         *arg)
 {
     int          retval = -1;
     cg_obj      *co;
@@ -238,23 +238,23 @@ cligen_callbackv_str2fn(parse_tree   *pt,
     int          i;
 
     for (i=0; i<pt_len_get(pt); i++)
-	if ((co = pt_vec_i_get(pt, i)) != NULL){
-	    for (cc = co->co_callbacks; cc; cc = co_callback_next(cc)){
-		if (cc->cc_fn_str != NULL &&
-		    co_callback_fn_get(cc) == NULL){
-		    /* Note str2fn is a function pointer */
-		    co_callback_fn_set(cc, str2fn(cc->cc_fn_str, arg, &callback_err));
-		    if (callback_err != NULL){
-			fprintf(stderr, "%s: error: No such function: %s (%s)\n",
-				__FUNCTION__, cc->cc_fn_str, callback_err);
-			goto done;
-		    }
-		}
-	    }
-	    /* recursive call to next level */
-	    if (cligen_callbackv_str2fn(co_pt_get(co), str2fn, arg) < 0)
-		goto done;
-	}
+        if ((co = pt_vec_i_get(pt, i)) != NULL){
+            for (cc = co->co_callbacks; cc; cc = co_callback_next(cc)){
+                if (cc->cc_fn_str != NULL &&
+                    co_callback_fn_get(cc) == NULL){
+                    /* Note str2fn is a function pointer */
+                    co_callback_fn_set(cc, str2fn(cc->cc_fn_str, arg, &callback_err));
+                    if (callback_err != NULL){
+                        fprintf(stderr, "%s: error: No such function: %s (%s)\n",
+                                __FUNCTION__, cc->cc_fn_str, callback_err);
+                        goto done;
+                    }
+                }
+            }
+            /* recursive call to next level */
+            if (cligen_callbackv_str2fn(co_pt_get(co), str2fn, arg) < 0)
+                goto done;
+        }
     retval = 0;
   done:
     return retval;
@@ -283,8 +283,8 @@ cligen_callbackv_str2fn(parse_tree   *pt,
  */
 int
 cligen_expandv_str2fn(parse_tree       *pt, 
-		      expandv_str2fn_t *str2fn, 
-		      void             *arg)
+                      expandv_str2fn_t *str2fn, 
+                      void             *arg)
 {
     int     retval = -1;
     cg_obj *co;
@@ -292,20 +292,20 @@ cligen_expandv_str2fn(parse_tree       *pt,
     int     i;
 
     for (i=0; i<pt_len_get(pt); i++){    
-	if ((co = pt_vec_i_get(pt, i)) != NULL){
-	    if (co->co_expand_fn_str != NULL && co->co_expandv_fn == NULL){
-		/* Note str2fn is a function pointer */
-		co->co_expandv_fn = str2fn(co->co_expand_fn_str, arg, &callback_err);
-		if (callback_err != NULL){
-		    fprintf(stderr, "%s: error: No such function: %s\n",
-			    __FUNCTION__, co->co_expand_fn_str);
-		    goto done;
-		}
-	    }
-	    /* recursive call to next level */
-	    if (cligen_expandv_str2fn(co_pt_get(co), str2fn, arg) < 0)
-		goto done;
-	}
+        if ((co = pt_vec_i_get(pt, i)) != NULL){
+            if (co->co_expand_fn_str != NULL && co->co_expandv_fn == NULL){
+                /* Note str2fn is a function pointer */
+                co->co_expandv_fn = str2fn(co->co_expand_fn_str, arg, &callback_err);
+                if (callback_err != NULL){
+                    fprintf(stderr, "%s: error: No such function: %s\n",
+                            __FUNCTION__, co->co_expand_fn_str);
+                    goto done;
+                }
+            }
+            /* recursive call to next level */
+            if (cligen_expandv_str2fn(co_pt_get(co), str2fn, arg) < 0)
+                goto done;
+        }
     }
     retval = 0;
   done:
@@ -320,8 +320,8 @@ cligen_expandv_str2fn(parse_tree       *pt,
  */
 int
 cligen_translate_str2fn(parse_tree         *pt, 
-			translate_str2fn_t *str2fn, 
-			void               *arg)
+                        translate_str2fn_t *str2fn, 
+                        void               *arg)
 {
     int     retval = -1;
     cg_obj *co;
@@ -329,20 +329,20 @@ cligen_translate_str2fn(parse_tree         *pt,
     int     i;
 
     for (i=0; i<pt_len_get(pt); i++){    
-	if ((co = pt_vec_i_get(pt, i)) != NULL){
-	    if (co->co_translate_fn_str != NULL && co->co_translate_fn == NULL){
-		/* Note str2fn is a function pointer */
-		co->co_translate_fn = str2fn(co->co_translate_fn_str, arg, &callback_err);
-		if (callback_err != NULL){
-		    fprintf(stderr, "%s: error: No such function: %s\n",
-			    __FUNCTION__, co->co_translate_fn_str);
-		    goto done;
-		}
-	    }
-	    /* recursive call to next level */
-	    if (cligen_translate_str2fn(co_pt_get(co), str2fn, arg) < 0)
-		goto done;
-	}
+        if ((co = pt_vec_i_get(pt, i)) != NULL){
+            if (co->co_translate_fn_str != NULL && co->co_translate_fn == NULL){
+                /* Note str2fn is a function pointer */
+                co->co_translate_fn = str2fn(co->co_translate_fn_str, arg, &callback_err);
+                if (callback_err != NULL){
+                    fprintf(stderr, "%s: error: No such function: %s\n",
+                            __FUNCTION__, co->co_translate_fn_str);
+                    goto done;
+                }
+            }
+            /* recursive call to next level */
+            if (cligen_translate_str2fn(co_pt_get(co), str2fn, arg) < 0)
+                goto done;
+        }
     }
     retval = 0;
   done:
