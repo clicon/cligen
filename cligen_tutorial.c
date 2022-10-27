@@ -60,8 +60,8 @@ hello(cligen_handle h,
  */
 int
 callback(cligen_handle h,
-	 cvec         *cvv,
-	 cvec         *argv)
+         cvec         *cvv,
+         cvec         *argv)
 {
     int     i = 0;
     cg_var *cv;
@@ -71,22 +71,22 @@ callback(cligen_handle h,
     cligen_output(stderr, "variables:\n");
     cv = NULL;
     while ((cv = cvec_each(cvv, cv)) != NULL) {
-	cv2str(cv, buf, sizeof(buf)-1);
-	cligen_output(stderr, "\t%d name:%s type:%s value:%s\n", 
-		i++, 
-		cv_name_get(cv),
-		cv_type2str(cv_type_get(cv)),
-		buf
-	    );
+        cv2str(cv, buf, sizeof(buf)-1);
+        cligen_output(stderr, "\t%d name:%s type:%s value:%s\n", 
+                i++, 
+                cv_name_get(cv),
+                cv_type2str(cv_type_get(cv)),
+                buf
+            );
     }
     if (argv){
-	    cv = NULL;
-	    i=0;
-	    while ((cv = cvec_each(argv, cv)) != NULL) {
-		cv2str(cv, buf, sizeof(buf)-1);
-		cligen_output(stderr, "arg %d: %s\n", i++, buf);
-	    }
-	}
+            cv = NULL;
+            i=0;
+            while ((cv = cvec_each(argv, cv)) != NULL) {
+                cv2str(cv, buf, sizeof(buf)-1);
+                cligen_output(stderr, "arg %d: %s\n", i++, buf);
+            }
+        }
     return 0;
 }
 
@@ -94,8 +94,8 @@ callback(cligen_handle h,
  */
 int
 letters(cligen_handle h,
-	cvec         *cvv,
-	cvec         *argv)
+        cvec         *cvv,
+        cvec         *argv)
 {
     char   *str;
     cg_var *cv;
@@ -133,8 +133,8 @@ secret(cligen_handle h,
  */
 int
 setprompt(cligen_handle h,
-	  cvec         *cvv,
-	  cvec         *argv)
+          cvec         *cvv,
+          cvec         *argv)
 {
     char *str;
 
@@ -158,8 +158,8 @@ quit(cligen_handle h,
  */
 int
 changetree(cligen_handle h,
-	   cvec         *cvv,
-	   cvec         *argv)
+           cvec         *cvv,
+           cvec         *argv)
 {
     cg_var *cv;
     char *treename;
@@ -173,8 +173,8 @@ changetree(cligen_handle h,
  */
 int
 unknown(cligen_handle h,
-	cvec         *cvv,
-	cvec         *argv)
+        cvec         *cvv,
+        cvec         *argv)
 {
     cg_var *cv = cvec_i(cvv, 0);
 
@@ -229,11 +229,11 @@ str2fn(char  *name,
  */
 int
 cli_expand_cb(cligen_handle h, 
-	      char         *fn_str, 
-	      cvec         *cvv, 
-	      cvec         *argv, 
-	      cvec         *commands,     /* vector of function strings */
-	      cvec         *helptexts)   /* vector of help-texts */
+              char         *fn_str, 
+              cvec         *cvv, 
+              cvec         *argv, 
+              cvec         *commands,     /* vector of function strings */
+              cvec         *helptexts)   /* vector of help-texts */
 {
     cvec_add_string(commands, NULL, "eth0");
     cvec_add_string(commands, NULL, "eth1");
@@ -246,8 +246,8 @@ cli_expand_cb(cligen_handle h,
  */
 static expandv_cb *
 str2fn_exp(char  *name,
-	   void  *arg,
-	   char **error)
+           void  *arg,
+           char **error)
 {
     return cli_expand_cb;
 }
@@ -263,10 +263,10 @@ incstr(cligen_handle h,
     int i;
     
     if (cv_type_get(cv) != CGV_STRING)
-	return 0;
+        return 0;
     str = cv_string_get(cv);
     for (i=0; i<strlen(str); i++)
-	str[i]++;
+        str[i]++;
     return 0;
 }
 
@@ -276,11 +276,11 @@ incstr(cligen_handle h,
  */
 translate_cb_t *
 str2fn_trans(char  *name,
-	     void  *arg,
-	     char **error)
+             void  *arg,
+             char **error)
 {
     if (strcmp(name, "incstr") == 0)
-	return incstr;
+        return incstr;
     return NULL;
 }
 
@@ -291,12 +291,12 @@ static void
 usage(char *argv)
 {
     fprintf(stderr, "Usage:%s [-h][-f <filename>][-q], where the options have the following meaning:\n"
-	    "\t-h \t\tHelp\n"
-	    "\t-f <file> \tConfig-file (or stdin) Example use: tutorial.cli for \n"
-	    "\t-q \t\tQuiet\n"
-	    "\t-C \t\tDont copy treeref mode\n"
-	    ,
-	    argv);
+            "\t-h \t\tHelp\n"
+            "\t-f <file> \tConfig-file (or stdin) Example use: tutorial.cli for \n"
+            "\t-q \t\tQuiet\n"
+            "\t-C \t\tDont copy treeref mode\n"
+            ,
+            argv);
     exit(0);
 }
 
@@ -330,13 +330,13 @@ main(int   argc,
             usage(argv0); /* usage exits */
             break;
         case 'q': /* quiet */
-	    quiet++;
+            quiet++;
             break;
         case 'f' : 
             argc--;argv++;
             filename = *argv;
             if ((f = fopen(filename, "r")) == NULL){
-		fprintf(stderr, "fopen %s: %s\n", filename, strerror(errno));
+                fprintf(stderr, "fopen %s: %s\n", filename, strerror(errno));
                 exit(1);
             }
             break;
@@ -346,42 +346,42 @@ main(int   argc,
         }
     }
     if ((globals = cvec_new(0)) == NULL)
-	goto done;
+        goto done;
     if (cligen_parse_file(h, f, filename, NULL, globals) < 0)
         goto done;
     ph = NULL;
     while ((ph = cligen_ph_each(h, ph)) != NULL) {
-	pt = cligen_ph_parsetree_get(ph);
-	if (cligen_callbackv_str2fn(pt, str2fn, NULL) < 0) /* map functions */
-	    goto done;
-	if (cligen_expandv_str2fn(pt, str2fn_exp, NULL) < 0)
-	    goto done;
-	if (cligen_translate_str2fn(pt, str2fn_trans, NULL) < 0)     
-	    goto done;
+        pt = cligen_ph_parsetree_get(ph);
+        if (cligen_callbackv_str2fn(pt, str2fn, NULL) < 0) /* map functions */
+            goto done;
+        if (cligen_expandv_str2fn(pt, str2fn_exp, NULL) < 0)
+            goto done;
+        if (cligen_translate_str2fn(pt, str2fn_trans, NULL) < 0)     
+            goto done;
     }
     if ((str = cvec_find_str(globals, "prompt")) != NULL)
         cligen_prompt_set(h, str);
     if ((str = cvec_find_str(globals, "comment")) != NULL)
         cligen_comment_set(h, *str);
     if ((str = cvec_find_str(globals, "tabmode")) != NULL)
-	if (strcmp(str,"long") == 0)
-	    cligen_tabmode_set(h, CLIGEN_TABMODE_COLUMNS);
+        if (strcmp(str,"long") == 0)
+            cligen_tabmode_set(h, CLIGEN_TABMODE_COLUMNS);
     cvec_free(globals);
     if (!quiet){
-	ph = NULL;
-	while ((ph = cligen_ph_each(h, ph)) != NULL) {
-	    pt = cligen_ph_parsetree_get(ph);
-	    printf("Syntax:\n");
-	    pt_print1(stdout, pt, 0);
-	}
-	fflush(stdout);
+        ph = NULL;
+        while ((ph = cligen_ph_each(h, ph)) != NULL) {
+            pt = cligen_ph_parsetree_get(ph);
+            printf("Syntax:\n");
+            pt_print1(stdout, pt, 0);
+        }
+        fflush(stdout);
     }
     if (cligen_loop(h) < 0)
-	goto done;
+        goto done;
     retval = 0;
  done:
     fclose(f);
     if (h)
-	cligen_exit(h);
+        cligen_exit(h);
     return retval;
 }

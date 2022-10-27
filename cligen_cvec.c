@@ -77,7 +77,7 @@ static inline char * strdup4(char *str)
 
     len = align4(strlen(str)+1);
     if ((dup = malloc(len)) == NULL)
-	return NULL;
+        return NULL;
     strcpy(dup, str);
     return dup;
 }
@@ -98,11 +98,11 @@ cvec_new(int len)
     cvec *cvv;
 
     if ((cvv = malloc(sizeof(*cvv))) == NULL)
-	return NULL;
+        return NULL;
     memset(cvv, 0, sizeof(*cvv));
     if (cvec_init(cvv, len) < 0){
-	free(cvv);
-	return NULL;
+        free(cvv);
+        return NULL;
     }
     return cvv;
 }
@@ -138,8 +138,8 @@ int
 cvec_free(cvec *cvv)
 {
     if (cvv) {
-	cvec_reset(cvv);
-	free(cvv);
+        cvec_reset(cvv);
+        free(cvv);
     }
     return 0;
 }
@@ -154,11 +154,11 @@ cvec_free(cvec *cvv)
  */
 int
 cvec_init(cvec *cvv,
-	  int   len)
+          int   len)
 {
     cvv->vr_len = len;
     if (len && (cvv->vr_vec = calloc(cvv->vr_len, sizeof(cg_var))) == NULL)
-	return -1;
+        return -1;
     return 0;
 }
 
@@ -173,13 +173,13 @@ cvec_reset(cvec *cvv)
     cg_var *cv = NULL;
 
     if (cvv == NULL)
-	return 0;
+        return 0;
     while ((cv = cvec_each(cvv, cv)) != NULL)
-	cv_reset(cv);
+        cv_reset(cv);
     if (cvv->vr_vec)
-	free(cvv->vr_vec);
+        free(cvv->vr_vec);
     if (cvv->vr_name)
-	free(cvv->vr_name);
+        free(cvv->vr_name);
     memset(cvv, 0, sizeof(*cvv));
     return 0;
 }
@@ -193,19 +193,19 @@ cvec_reset(cvec *cvv)
  */
 cg_var *
 cvec_next(cvec   *cvv,
-	  cg_var *cv0)
+          cg_var *cv0)
 {
     cg_var *cv = NULL;
     int i;
 
     if (cvv == NULL)
-	return NULL;
+        return NULL;
     if (cv0 == NULL)
-	cv = cvv->vr_vec;
+        cv = cvv->vr_vec;
     else {
-	i = cv0 - cvv->vr_vec;
-	if (i < cvv->vr_len-1)
-	    cv = cv0 + 1;
+        i = cv0 - cvv->vr_vec;
+        if (i < cvv->vr_len-1)
+            cv = cv0 + 1;
     }
     return cv;
 }
@@ -222,19 +222,19 @@ cvec_next(cvec   *cvv,
  */
 cg_var *
 cvec_add(cvec        *cvv,
-	 enum cv_type type)
+         enum cv_type type)
 {
     int     len;
     cg_var *cv;
 
     if (cvv == NULL){
-	errno = EINVAL;
-	return NULL;
+        errno = EINVAL;
+        return NULL;
     }
     len = cvv->vr_len + 1;
 
     if ((cvv->vr_vec = realloc(cvv->vr_vec, len*sizeof(cg_var))) == NULL)
-	return NULL;
+        return NULL;
     cvv->vr_len = len;
     cv = cvec_i(cvv, len-1);
     memset(cv, 0, sizeof(*cv));
@@ -250,7 +250,7 @@ cvec_add(cvec        *cvv,
  */
 cg_var *
 cvec_append_var(cvec   *cvv,
-		cg_var *cv)
+                cg_var *cv)
 {
     cg_var *tail = NULL;
 
@@ -275,27 +275,27 @@ cvec_append_var(cvec   *cvv,
  */
 int
 cvec_del(cvec   *cvv,
-	 cg_var *del)
+         cg_var *del)
 {
     int i;
     cg_var *cv;
 
     if (cvec_len(cvv) == 0)
-	return 0;
+        return 0;
 
     i = 0;
     cv = NULL;
     while ((cv = cvec_each(cvv, cv)) != NULL) {
-	if (cv == del)
-	    break;
-	i++;
+        if (cv == del)
+            break;
+        i++;
     }
     if (i >= cvec_len(cvv)) /* Not found !?! */
-	return cvec_len(cvv);
+        return cvec_len(cvv);
 
     if (i != cvec_len(cvv)-1) /* If not last entry, move the remaining cv's */
-	memmove(&cvv->vr_vec[i], &cvv->vr_vec[i+1],
-		(cvv->vr_len-i-1) * sizeof(cvv->vr_vec[0]));
+        memmove(&cvv->vr_vec[i], &cvv->vr_vec[i+1],
+                (cvv->vr_len-i-1) * sizeof(cvv->vr_vec[0]));
 
     cvv->vr_len--;
     cvv->vr_vec = realloc(cvv->vr_vec, cvv->vr_len*sizeof(cvv->vr_vec[0])); /* Shrink should not fail? */
@@ -318,15 +318,15 @@ cvec_del(cvec   *cvv,
  */
 int
 cvec_del_i(cvec *cvv,
-	   int   i)
+           int   i)
 {
     if (cvec_len(cvv) == 0 || cvec_len(cvv) < i){
-	errno = EINVAL;
-	return -1;
+        errno = EINVAL;
+        return -1;
     }
     if (i != cvec_len(cvv)-1) /* If not last entry, move the remaining cv's */
-	memmove(&cvv->vr_vec[i], &cvv->vr_vec[i+1],
-		(cvv->vr_len-i-1) * sizeof(cvv->vr_vec[0]));
+        memmove(&cvv->vr_vec[i], &cvv->vr_vec[i+1],
+                (cvv->vr_len-i-1) * sizeof(cvv->vr_vec[0]));
 
     cvv->vr_len--;
 
@@ -340,7 +340,7 @@ int
 cvec_len(cvec *cvv)
 {
     if (cvv == NULL)
-	return 0;
+        return 0;
     return cvv->vr_len;
 }
 
@@ -352,11 +352,11 @@ cg_var *
 cvec_i(cvec *cvv,
        int   i)
 {
-	if (!cvv) {
-		return NULL;
-	}
+        if (!cvv) {
+                return NULL;
+        }
     if (i < cvv->vr_len)
-	return &cvv->vr_vec[i];
+        return &cvv->vr_vec[i];
     return NULL;
 }
 
@@ -368,39 +368,39 @@ cvec_i(cvec *cvv,
  */
 char *
 cvec_i_str(cvec *cvv,
-	   int   i)
+           int   i)
 {
     cg_var *cv;
     
     if ((cv = cvec_i(cvv, i)) == NULL)
-	return NULL;
+        return NULL;
     return cv_string_get(cv);
 }
 
 /*! Iterate through all cligen variables in a cvec list
  *
  * @param[in] cvv       Cligen variable vector
- * @param[in] prev	Last cgv (or NULL)
+ * @param[in] prev      Last cgv (or NULL)
  * @retval cv           Next variable structure.
  * @retval NULL         When end of list reached.
  * @code
  *    cg_var *cv = NULL;
  *    while ((cv = cvec_each(cvv, cv)) != NULL)
- *	     ...
+ *           ...
  * @endcode
  * @see cvec_each1 Skip first
  */
 cg_var *
 cvec_each(cvec   *cvv,
-	  cg_var *prev)
+          cg_var *prev)
 {
     if (cvv == NULL)
-	return NULL;
+        return NULL;
     if (prev == NULL){   /* Initialization */
-	if (cvv->vr_len > 0)
-	    return &cvv->vr_vec[0];
-	else
-	    return NULL;
+        if (cvv->vr_len > 0)
+            return &cvv->vr_vec[0];
+        else
+            return NULL;
     }
     return cvec_next(cvv, prev);
 }
@@ -417,15 +417,15 @@ cvec_each(cvec   *cvv,
  */
 cg_var *
 cvec_each1(cvec   *cvv,
-	   cg_var *prev)
+           cg_var *prev)
 {
     if (cvv == NULL)
-	return NULL;
+        return NULL;
     if (prev == NULL){   /* Initialization */
-	if (cvv->vr_len > 1)
-	    return &cvv->vr_vec[1];
-	else
-	    return NULL;
+        if (cvv->vr_len > 1)
+            return &cvv->vr_vec[1];
+        else
+            return NULL;
     }
     return cvec_next(cvv, prev);
 }
@@ -447,18 +447,18 @@ cvec_dup(cvec *old)
     int     i;
 
     if (old == NULL)
-	return NULL;
+        return NULL;
     if ((new = cvec_new(old->vr_len)) == NULL)
-	return NULL;
+        return NULL;
     if (old->vr_name &&
-	(new->vr_name = strdup4(old->vr_name)) == NULL){
-	free(new);
-	return NULL;
+        (new->vr_name = strdup4(old->vr_name)) == NULL){
+        free(new);
+        return NULL;
     }
     i = 0;
     while ((cv0 = cvec_each(old, cv0)) != NULL) {
-	cv1 = cvec_i(new, i++);
-	cv_cp(cv1, cv0);
+        cv1 = cvec_i(new, i++);
+        cv_cp(cv1, cv0);
     }
     return new;
 }
@@ -477,7 +477,7 @@ cvec_start(char *cmd)
     cg_var    *cv;
 
     if ((cvec = cvec_new(1)) == NULL)
-	return NULL;
+        return NULL;
     cv = cvec_i(cvec, 0);
     cv->var_type = CGV_REST;
     cv_name_set(cv, "cmd"); /* the whole command string */
@@ -492,22 +492,22 @@ cvec_start(char *cmd)
  */
 int
 cvec_print(FILE *f,
-	   cvec *cvv)
+           cvec *cvv)
 {
     cg_var *cv = NULL;
     char   *name;
     int     i = 0;
 
     if ((name = cvec_name_get(cvv)) != NULL)
-	fprintf(f, "%s:\n", name);
+        fprintf(f, "%s:\n", name);
     while ((cv = cvec_each(cvv, cv)) != NULL) {
-	name = cv_name_get(cv);
-	if (name)
-	    fprintf(f, "%d : %s = ", i++, name);
-	else
-	    fprintf(f, "%d : ", i++);
-	cv_print(f, cv);
-	fprintf(f, "\n");
+        name = cv_name_get(cv);
+        if (name)
+            fprintf(f, "%d : %s = ", i++, name);
+        else
+            fprintf(f, "%d : ", i++);
+        cv_print(f, cv);
+        fprintf(f, "\n");
     }
     return 0;
 }
@@ -519,17 +519,17 @@ cvec_print(FILE *f,
  */
 int
 cvec2cbuf(cbuf *cb,
-	  cvec *cvv)
+          cvec *cvv)
 {
     cg_var *cv = NULL;
     int     i = 0;
     char   *s;
 
     while ((cv = cvec_each(cvv, cv)) != NULL) {
-	if ((s = cv2str_dup(cv)) == NULL)
-	    return -1;
-	cprintf(cb, "%d : %s = %s\n", i++, cv_name_get(cv), s);
-	free(s);
+        if ((s = cv2str_dup(cv)) == NULL)
+            return -1;
+        cprintf(cb, "%d : %s = %s\n", i++, cv_name_get(cv), s);
+        free(s);
     }
     return 0;
 }
@@ -546,17 +546,17 @@ cvec2cbuf(cbuf *cb,
  */
 cg_var *
 cvec_find(cvec *cvv,
-	  char *name)
+          char *name)
 {
     cg_var *cv = NULL;
 
     while ((cv = cvec_each(cvv, cv)) != NULL){
-	if (cv->var_name){
-	    if (name != NULL && strcmp(cv->var_name, name) == 0)
-		return cv;
-	}
-	else if (name == NULL)
-	    return cv;
+        if (cv->var_name){
+            if (name != NULL && strcmp(cv->var_name, name) == 0)
+                return cv;
+        }
+        else if (name == NULL)
+            return cv;
     }
     return NULL;
 }
@@ -570,13 +570,13 @@ cvec_find(cvec *cvv,
  */
 cg_var *
 cvec_find_keyword(cvec *cvv,
-		  char *name)
+                  char *name)
 {
     cg_var *cv = NULL;
 
     while ((cv = cvec_each(cvv, cv)) != NULL)
-	if (cv->var_name && strcmp(cv->var_name, name) == 0 && cv->var_const)
-	    return cv;
+        if (cv->var_name && strcmp(cv->var_name, name) == 0 && cv->var_const)
+            return cv;
     return NULL;
 }
 
@@ -589,13 +589,13 @@ cvec_find_keyword(cvec *cvv,
  */
 cg_var *
 cvec_find_var(cvec *cvv,
-	      char *name)
+              char *name)
 {
     cg_var *cv = NULL;
 
     while ((cv = cvec_each(cvv, cv)) != NULL)
-	if (cv->var_name && strcmp(cv->var_name, name) == 0 && !cv->var_const)
-	    return cv;
+        if (cv->var_name && strcmp(cv->var_name, name) == 0 && !cv->var_const)
+            return cv;
     return NULL;
 }
 
@@ -613,12 +613,12 @@ cvec_find_var(cvec *cvv,
  */
 char *
 cvec_find_str(cvec *cvv,
-	      char *name)
+              char *name)
 {
     cg_var *cv;
 
     if ((cv = cvec_find(cvv, name)) != NULL && cv_isstring(cv->var_type))
-	return cv_string_get(cv);
+        return cv_string_get(cv);
     return NULL;
 }
 
@@ -641,17 +641,17 @@ cvec_name_get(cvec *cvv)
  */
 char *
 cvec_name_set(cvec *cvv,
-	      char *name)
+              char *name)
 {
     char *s1 = NULL;
 
     /* Duplicate name. Must be done before a free, in case name is part of the original */
     if (name){
-	if ((s1 = strdup4(name)) == NULL)
-	    return NULL; /* error in errno */
+        if ((s1 = strdup4(name)) == NULL)
+            return NULL; /* error in errno */
     }
     if (cvv->vr_name != NULL)
-	free(cvv->vr_name);
+        free(cvv->vr_name);
     cvv->vr_name = s1;
     return s1;
 }
@@ -667,16 +667,16 @@ cvec_size(cvec *cvv)
 
     sz += sizeof(struct cvec);
     if (cvv->vr_name)
-	sz += strlen(cvv->vr_name)+1;
+        sz += strlen(cvv->vr_name)+1;
     cv = NULL;
     while ((cv = cvec_each(cvv, cv)) != NULL)
-	sz += cv_size(cv);
+        sz += cv_size(cv);
     return sz;
 }
 
 int
 cligen_txt2cvv(char  *str,
-	       cvec **cvp)
+               cvec **cvp)
 {
     int     retval = -1;
     int     i;
@@ -688,42 +688,42 @@ cligen_txt2cvv(char  *str,
     size_t  len;
     
     if ((cvv = cvec_new(0)) == NULL)
-	goto done;
+        goto done;
     len = strlen(str);
     i0 = 0;
     for (i=0; i<len; i++){
-	c = str[i];
-	if (whitespace && isblank(c))
-	    i0 = i+1; /* skip */
-	else if (c == '\n'){
-	    if ((cv = cvec_add(cvv, CGV_STRING)) == NULL)
-		goto done;
-	    if (cv_strncpy(cv, &str[i0], i-i0) == NULL)
-		goto done;
-	    i0 = i+1;
-	    whitespace = 1;
-	}
-	else{
-	    whitespace = 0;
-	}
+        c = str[i];
+        if (whitespace && isblank(c))
+            i0 = i+1; /* skip */
+        else if (c == '\n'){
+            if ((cv = cvec_add(cvv, CGV_STRING)) == NULL)
+                goto done;
+            if (cv_strncpy(cv, &str[i0], i-i0) == NULL)
+                goto done;
+            i0 = i+1;
+            whitespace = 1;
+        }
+        else{
+            whitespace = 0;
+        }
     }
     /* There may be a case here where last char is \n */
     if (i != i0){
-	if ((cv = cvec_add(cvv, CGV_STRING)) == NULL)
-	    goto done;
-	if (cv_strncpy(cv, &str[i0], i-i0) == NULL)
-	    goto done;
+        if ((cv = cvec_add(cvv, CGV_STRING)) == NULL)
+            goto done;
+        if (cv_strncpy(cv, &str[i0], i-i0) == NULL)
+            goto done;
     }
     if (cvp){
-	if (*cvp != NULL)
-	    cvec_free(*cvp);
-	*cvp = cvv;
-	cvv = NULL;
+        if (*cvp != NULL)
+            cvec_free(*cvp);
+        *cvp = cvv;
+        cvv = NULL;
     }
     retval = 0;
  done:
     if (cvv)
-	cvec_free(cvv);
+        cvec_free(cvv);
     return retval;
 }
 
@@ -745,9 +745,9 @@ cligen_txt2cvv(char  *str,
  */
 static int
 next_token(char **s0, 
-	   char **token0,
-	   char **rest0, 
-	   int   *leading0)
+           char **token0,
+           char **rest0, 
+           int   *leading0)
 {
     char  *s;
     char  *st;
@@ -759,61 +759,61 @@ next_token(char **s0,
 
     s = *s0;
     if (s==NULL){
-	fprintf(stderr, "%s: null string\n", __FUNCTION__);
-	return -1;
+        fprintf(stderr, "%s: null string\n", __FUNCTION__);
+        return -1;
     }
     for (s=*s0; *s; s++){ /* First iterate through delimiters */
-	if (index(CLIGEN_DELIMITERS, *s) == NULL)
-	    break;
-	leading++;
+        if (index(CLIGEN_DELIMITERS, *s) == NULL)
+            break;
+        leading++;
     }
     if (rest0)
-	*rest0 = s;
+        *rest0 = s;
     if (*s && index(CLIGEN_QUOTES, *s) != NULL){
-	quote++;
-	s++;
+        quote++;
+        s++;
     }
     st=s; /* token starts */
     escape = 0;
     for (; *s; s++){ /* Then find token */
-	if (quote){
-	    if (index(CLIGEN_QUOTES, *s) != NULL)
-		break;
-	}
-	else{ /* backspace tokens for escaping delimiters */
-	    if (escape)
-		escape = 0;
-	    else{
-		if (*s == '\\')
-		    escape++;
-		else
-		    if (index(CLIGEN_DELIMITERS, *s) != NULL)
-			break;
-	    }
-	}
+        if (quote){
+            if (index(CLIGEN_QUOTES, *s) != NULL)
+                break;
+        }
+        else{ /* backspace tokens for escaping delimiters */
+            if (escape)
+                escape = 0;
+            else{
+                if (*s == '\\')
+                    escape++;
+                else
+                    if (index(CLIGEN_DELIMITERS, *s) != NULL)
+                        break;
+            }
+        }
     }
     if (quote && *s){
-	s++;
-	// fprintf(stderr, "s=\"%s\" %d %s\n", s, *s, index(CLIGEN_DELIMITERS, *s));
-	if (*s && index(CLIGEN_DELIMITERS, *s) == NULL){
-	    ;//	cligen_reason("Quote token error");
-	}
-	len = (s-st)-1;
+        s++;
+        // fprintf(stderr, "s=\"%s\" %d %s\n", s, *s, index(CLIGEN_DELIMITERS, *s));
+        if (*s && index(CLIGEN_DELIMITERS, *s) == NULL){
+            ;// cligen_reason("Quote token error");
+        }
+        len = (s-st)-1;
     }
     else{
-	if (quote){ /* Here we signalled error before but it is removed */
-	    st--;
-	}
-	len = (s-st);
-	if (!len){
-	    token = NULL;
-	    *s0 = NULL;
-	    goto done;
-	}
+        if (quote){ /* Here we signalled error before but it is removed */
+            st--;
+        }
+        len = (s-st);
+        if (!len){
+            token = NULL;
+            *s0 = NULL;
+            goto done;
+        }
     }
     if ((token=malloc(len+1)) == NULL){
-	fprintf(stderr, "%s: malloc: %s\n", __FUNCTION__, strerror(errno));
-	return -1;
+        fprintf(stderr, "%s: malloc: %s\n", __FUNCTION__, strerror(errno));
+        return -1;
     }
     memcpy(token, st, len);
     token[len] = '\0';
@@ -847,8 +847,8 @@ next_token(char **s0,
  */
 int
 cligen_str2cvv(char  *string, 
-	       cvec **cvtp,
-    	       cvec **cvrp)
+               cvec **cvtp,
+               cvec **cvrp)
 {
     int     retval = -1;
     char   *s;
@@ -862,55 +862,55 @@ cligen_str2cvv(char  *string,
     int     i;
 
     if ((s0 = strdup(string)) == NULL)
-	goto done;
+        goto done;
     s = s0;
     if ((cvt = cvec_start(string)) ==NULL)
-	goto done;
+        goto done;
     if ((cvr = cvec_start(string)) ==NULL)
-	goto done;
+        goto done;
     i = 0;
     while (s != NULL) {
-	t = NULL;
-	if (next_token(&s, &t, &sr, &trail) < 0)
-	    goto done;
-	/* If there is no token, stop, 
-	 * unless it is the intial token (empty string) OR there are trailing whitespace
-	 * In these cases insert an empty "" token.
-	 */
-	if (t == NULL && !trail && i > 0)
-	    break;
-	if ((cv = cvec_add(cvr, CGV_STRING)) == NULL)
-	    goto done;
-	if (cv_string_set(cv, sr?sr:"") == NULL) /* XXX memleak */
-	    goto done;
-	if ((cv = cvec_add(cvt, CGV_STRING)) == NULL)
-	    goto done;
-	if (cv_string_set(cv, t?t:"") == NULL) /* XXX memleak */
-	    goto done;
-	if (t){
-	    free(t);
-	    t = NULL;
-	}
-	i++;
+        t = NULL;
+        if (next_token(&s, &t, &sr, &trail) < 0)
+            goto done;
+        /* If there is no token, stop, 
+         * unless it is the intial token (empty string) OR there are trailing whitespace
+         * In these cases insert an empty "" token.
+         */
+        if (t == NULL && !trail && i > 0)
+            break;
+        if ((cv = cvec_add(cvr, CGV_STRING)) == NULL)
+            goto done;
+        if (cv_string_set(cv, sr?sr:"") == NULL) /* XXX memleak */
+            goto done;
+        if ((cv = cvec_add(cvt, CGV_STRING)) == NULL)
+            goto done;
+        if (cv_string_set(cv, t?t:"") == NULL) /* XXX memleak */
+            goto done;
+        if (t){
+            free(t);
+            t = NULL;
+        }
+        i++;
     }
     retval = 0;
     if (cvtp){
-	*cvtp = cvt;
-	cvt = NULL;
+        *cvtp = cvt;
+        cvt = NULL;
     }
     if (cvrp){
-	*cvrp = cvr;
-	cvr = NULL;
+        *cvrp = cvr;
+        cvr = NULL;
     }
  done:
     if (t)
-	free(t);
+        free(t);
     if (s0)
-	free(s0);
+        free(s0);
     if (cvt)
-	cvec_free(cvt);
+        cvec_free(cvt);
     if (cvr)
-	cvec_free(cvr);
+        cvec_free(cvr);
     return retval;
 }
 
@@ -930,20 +930,20 @@ cvec_expand_first(cvec *cvv)
     int     i;
     
     if ((cb = cbuf_new()) == NULL)
-	goto done;
+        goto done;
     for (i=1; i<cvec_len(cvv); i++){
-	if (i>1)
-	    cprintf(cb, " ");
-	if ((cv = cvec_i(cvv, i)) == NULL)
-	    goto done;
-	cv2cbuf(cv, cb);
+        if (i>1)
+            cprintf(cb, " ");
+        if ((cv = cvec_i(cvv, i)) == NULL)
+            goto done;
+        cv2cbuf(cv, cb);
     }
     cv = cvec_i(cvv,0);
     cv_string_set(cv, cbuf_get(cb));
     retval = 0;
  done:
     if (cb)
-	cbuf_free(cb);
+        cbuf_free(cb);
     return retval;
 }
 
@@ -959,13 +959,13 @@ cvec_exclude_keys(cvec *cvv)
     int     i;
 
     for (i=1; i<cvec_len(cvv);){
-	if ((cv = cvec_i(cvv, i)) != NULL &&
-	    cv_const_get(cv)){
-	    cv_reset(cv);
-	    cvec_del_i(cvv, i);		
-	    continue;
-	}
-	i++;
+        if ((cv = cvec_i(cvv, i)) != NULL &&
+            cv_const_get(cv)){
+            cv_reset(cv);
+            cvec_del_i(cvv, i);         
+            continue;
+        }
+        i++;
     }
     return 0;
 }

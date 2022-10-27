@@ -31,7 +31,7 @@
 
 #
 # To rebuild the `configure' script from this, execute the command
-# 	autoconf
+#       autoconf
 # in the directory containing this script.
 
 AC_INIT(cligen.h)
@@ -45,18 +45,18 @@ AC_CONFIG_AUX_DIR(config-aux)
 
 # Debug flag
 AC_ARG_ENABLE(debug, AS_HELP_STRING([--enable-debug],[Build with debug symbols, default: no]),[
-	  if test "$enableval" = no; then
-	      ac_enable_debug=no
-	  else	      
-	      ac_enable_debug=yes
+          if test "$enableval" = no; then
+              ac_enable_debug=no
+          else        
+              ac_enable_debug=yes
           fi
         ],
-	[ ac_enable_debug=no])
+        [ ac_enable_debug=no])
 
-AC_MSG_RESULT(debug is $ac_enable_debug)	
+AC_MSG_RESULT(debug is $ac_enable_debug)        
 if test "$ac_enable_debug" = "yes"; then
    : ${CFLAGS="-g -Wall"}
-   INSTALLFLAGS=""	
+   INSTALLFLAGS=""      
 else
    : ${CFLAGS="-O2 -Wall"}
 fi
@@ -69,10 +69,10 @@ AC_SUBST(CLIGEN_VERSION_MAJOR)
 AC_SUBST(CLIGEN_VERSION_MINOR)
 AC_SUBST(CLIGEN_VERSION_PATCH)
 
-CLIGEN_VERSION_MAJOR="5"
-CLIGEN_VERSION_MINOR="8"
+CLIGEN_VERSION_MAJOR="6"
+CLIGEN_VERSION_MINOR="0"
 CLIGEN_VERSION_PATCH="0"
-CLIGEN_VERSION="${CLIGEN_VERSION_MAJOR}.${CLIGEN_VERSION_MINOR}.${CLIGEN_VERSION_PATCH}"
+CLIGEN_VERSION="${CLIGEN_VERSION_MAJOR}.${CLIGEN_VERSION_MINOR}.${CLIGEN_VERSION_PATCH}.PRE"
 
 AC_MSG_RESULT(CLIGEN version is $CLIGEN_VERSION)
 
@@ -110,7 +110,7 @@ if test "$YACC" != "bison -y"; then
    # byacc leaks, may need byacc -P?
 fi
 
-AC_MSG_RESULT(Compiler is $CC)	
+AC_MSG_RESULT(Compiler is $CC)  
 
 #
 # Set options for each compiler. Suffix is for WIN32
@@ -164,8 +164,8 @@ AC_ARG_ENABLE(nls)
 AH_BOTTOM([#include <cligen_custom.h>])
 
 AC_OUTPUT([
-	Makefile
-	extras/rpm/Makefile
+        Makefile
+        extras/rpm/Makefile
         test/config.sh
 ])
 

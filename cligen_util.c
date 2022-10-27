@@ -71,16 +71,16 @@
  */
 int
 cvec_add_string(cvec *cvv, 
-		char *name, 
-		char *val)
+                char *name, 
+                char *val)
 {
     cg_var *cv;
     int     retval = -1;
 
     if ((cv = cvec_add(cvv, CGV_STRING)) == NULL)
-	goto done;
+        goto done;
     if (name)
-	cv_name_set(cv, name);
+        cv_name_set(cv, name);
     cv_string_set(cv, val);
     retval = 0;
  done:
@@ -104,34 +104,34 @@ cligen_loop(cligen_handle h)
     
     /* Run the CLI command interpreter */
     while (!cligen_exiting(h)){
-	if (cliread_eval(h, &line, &callback_ret, &result, &reason) < 0)
-	    goto done;
-	switch (result){
-	case CG_EOF: /* eof */
-	    cligen_exiting_set(h, 1);
-	    break;
-	case CG_ERROR: /* cligen match errors */
-	    printf("CLI read error\n");
-	    goto done;
-	case CG_NOMATCH: /* no match */
-	    printf("CLI syntax error in: \"%s\": %s\n", line, reason);
-	    break;
-	case CG_MATCH: /* unique match */
-	    if (callback_ret < 0)
-		printf("CLI callback error\n");
-	    break;
-	default: /* multiple matches */
-	    printf("Ambiguous command\n");
-	    break;
-	}
-	if (reason){
-	    free(reason);
-	    reason = NULL;
-	}
+        if (cliread_eval(h, &line, &callback_ret, &result, &reason) < 0)
+            goto done;
+        switch (result){
+        case CG_EOF: /* eof */
+            cligen_exiting_set(h, 1);
+            break;
+        case CG_ERROR: /* cligen match errors */
+            printf("CLI read error\n");
+            goto done;
+        case CG_NOMATCH: /* no match */
+            printf("CLI syntax error in: \"%s\": %s\n", line, reason);
+            break;
+        case CG_MATCH: /* unique match */
+            if (callback_ret < 0)
+                printf("CLI callback error\n");
+            break;
+        default: /* multiple matches */
+            printf("Ambiguous command\n");
+            break;
+        }
+        if (reason){
+            free(reason);
+            reason = NULL;
+        }
     }
     retval = 0;
  done:
     if (reason)
-	free(reason);
+        free(reason);
     return retval;
 }

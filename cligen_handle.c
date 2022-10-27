@@ -120,8 +120,8 @@ cligen_gwinsz(cligen_handle h)
     struct winsize ws;
 
     if (ioctl(0, TIOCGWINSZ, &ws) == -1){
-	perror("ioctl(STDIN_FILENO,TIOCGWINSZ)");
-	return -1;
+        perror("ioctl(STDIN_FILENO,TIOCGWINSZ)");
+        return -1;
     }
     terminal_rows_set1(ws.ws_row); /* note special treatment of 0 in sub function */
     cligen_terminal_width_set(h, ws.ws_col);
@@ -148,8 +148,8 @@ cligen_init(void)
     struct sigaction      sigh;
 
     if ((ch = malloc(sizeof(*ch))) == NULL){
-	fprintf(stderr, "%s: malloc: %s\n", __FUNCTION__, strerror(errno));
-	goto done;
+        fprintf(stderr, "%s: malloc: %s\n", __FUNCTION__, strerror(errno));
+        goto done;
     }
     memset(ch, 0, sizeof(*ch));
     ch->ch_magic = CLIGEN_MAGIC;
@@ -159,20 +159,20 @@ cligen_init(void)
     cligen_prompt_set(h, CLIGEN_PROMPT_DEFAULT);
     /* Only if stdin and stdout refers to a terminal make win size check */
     if (isatty(0) && isatty(1)){
-	if (cligen_gwinsz(h) < 0){
-	    free(ch);
-	    return NULL;
-	}
-	cligen_interrupt_hook(h, cligen_gwinsz);
-	memset(&sigh, 0, sizeof(sigh));
-	sigh.sa_handler = sigwinch_handler;
-	if (sigaction(SIGWINCH, &sigh, NULL) < 0){
-	    perror("sigaction");
-	    return NULL;
-	}
+        if (cligen_gwinsz(h) < 0){
+            free(ch);
+            return NULL;
+        }
+        cligen_interrupt_hook(h, cligen_gwinsz);
+        memset(&sigh, 0, sizeof(sigh));
+        sigh.sa_handler = sigwinch_handler;
+        if (sigaction(SIGWINCH, &sigh, NULL) < 0){
+            perror("sigaction");
+            return NULL;
+        }
     }
     else
-	terminal_rows_set1(0); 
+        terminal_rows_set1(0); 
     cliread_init(h);
     cligen_buf_init(h);
     /* getline cant function without some history */
@@ -193,16 +193,16 @@ cligen_exit(cligen_handle h)
     hist_exit(h);
     cligen_buf_cleanup(h);
     if (ch->ch_prompt)
-	free(ch->ch_prompt);
+        free(ch->ch_prompt);
     if (ch->ch_nomatch)
-	free(ch->ch_nomatch);  
+        free(ch->ch_nomatch);  
     if (ch->ch_treename_keyword)
-	free(ch->ch_treename_keyword);
+        free(ch->ch_treename_keyword);
     if (ch->ch_fn_str)
-	free(ch->ch_fn_str);
+        free(ch->ch_fn_str);
     while ((ph = ch->ch_pt_head) != NULL){
-	ch->ch_pt_head = ph->ph_next;
-	cligen_ph_free(ph);
+        ch->ch_pt_head = ph->ph_next;
+        cligen_ph_free(ph);
     }
     free(ch);
     return 0;
@@ -237,7 +237,7 @@ cligen_exiting(cligen_handle h)
  */
 int 
 cligen_exiting_set(cligen_handle h, 
-		   int           status)
+                   int           status)
 {
     struct cligen_handle *ch = handle(h);
 
@@ -261,7 +261,7 @@ cligen_comment(cligen_handle h)
  */
 int
 cligen_comment_set(cligen_handle h, 
-		   char          c)
+                   char          c)
 {
     struct cligen_handle *ch = handle(h);
 
@@ -286,19 +286,19 @@ cligen_prompt(cligen_handle h)
  */
 int
 cligen_prompt_set(cligen_handle h, 
-		  char         *prompt)
+                  char         *prompt)
 {
     struct cligen_handle *ch = handle(h);
 
     if (ch->ch_prompt){
-	if (strcmp(prompt, ch->ch_prompt) == 0)
-	    return 0;
-	free(ch->ch_prompt);
-	ch->ch_prompt = NULL;
+        if (strcmp(prompt, ch->ch_prompt) == 0)
+            return 0;
+        free(ch->ch_prompt);
+        ch->ch_prompt = NULL;
     }
     if (prompt){
-	if ((ch->ch_prompt = strdup(prompt)) == NULL)
-	    return -1;
+        if ((ch->ch_prompt = strdup(prompt)) == NULL)
+            return -1;
     }
     return 0;
 }
@@ -317,7 +317,7 @@ cligen_pt_head_get(cligen_handle h)
  */
 int
 cligen_pt_head_set(cligen_handle h,
-		   pt_head      *ph)
+                   pt_head      *ph)
 {
     struct cligen_handle *ch = handle(h);
 
@@ -345,17 +345,17 @@ cligen_treename_keyword(cligen_handle h)
  */
 int
 cligen_treename_keyword_set(cligen_handle h, 
-			    char         *treename)
+                            char         *treename)
 {
     struct cligen_handle *ch = handle(h);
 
     if (ch->ch_treename_keyword){
-	free(ch->ch_treename_keyword);
-	ch->ch_treename_keyword = NULL;
+        free(ch->ch_treename_keyword);
+        ch->ch_treename_keyword = NULL;
     }
     if (treename)
-	if ((ch->ch_treename_keyword = strdup(treename)) == NULL)
-	    return -1;
+        if ((ch->ch_treename_keyword = strdup(treename)) == NULL)
+            return -1;
     return 0;
 }
 
@@ -377,7 +377,7 @@ cligen_co_match(cligen_handle h)
  */
 int
 cligen_co_match_set(cligen_handle h, 
-		    cg_obj       *co)
+                    cg_obj       *co)
 {
     struct cligen_handle *ch = handle(h);
 
@@ -412,17 +412,17 @@ cligen_fn_str_get(cligen_handle h)
  */
 int
 cligen_fn_str_set(cligen_handle h, 
-		  char         *fn_str)
+                  char         *fn_str)
 {
     struct cligen_handle *ch = handle(h);
 
     if (ch->ch_fn_str){
-	free(ch->ch_fn_str);
-	ch->ch_fn_str = NULL;
+        free(ch->ch_fn_str);
+        ch->ch_fn_str = NULL;
     }
     if (fn_str){
-	if ((ch->ch_fn_str = strdup(fn_str)) == NULL)
-	    return -1;
+        if ((ch->ch_fn_str = strdup(fn_str)) == NULL)
+            return -1;
     }
     return 0;
 }
@@ -455,7 +455,7 @@ terminal_rows_set1(int rows)
  */
 int 
 cligen_terminal_rows_set(cligen_handle h, 
-			int           rows)
+                        int           rows)
 {
     int            retval = -1;
     struct winsize ws;
@@ -465,13 +465,13 @@ cligen_terminal_rows_set(cligen_handle h,
      * (2) cannot determine window size
      */
     if (!isatty(0) || !isatty(1))
-	goto ok;
+        goto ok;
     if (ioctl(0, TIOCGWINSZ, &ws) == -1){
-	perror("ioctl(STDIN_FILENO,TIOCGWINSZ)");
-	goto done;
+        perror("ioctl(STDIN_FILENO,TIOCGWINSZ)");
+        goto done;
     }
     if (ws.ws_row !=0 )
-	goto ok;
+        goto ok;
     terminal_rows_set1(rows);
  ok:
     retval = 0;
@@ -500,7 +500,7 @@ cligen_terminal_width(cligen_handle h)
  */
 int 
 cligen_terminal_width_set(cligen_handle h, 
-			  int           width)
+                          int           width)
 {
     //    struct cligen_handle *ch = handle(h);
     int retval = -1;
@@ -511,12 +511,12 @@ cligen_terminal_width_set(cligen_handle h,
      * - But return 80 width see cligen_terminal_width
      */
     if (width == 0)
-	width = 0xffff;
+        width = 0xffff;
     /* if width < 21 set it to 21, which is getline's limit. */
     else if (width < TERM_MIN_SCREEN_WIDTH)
-	width = TERM_MIN_SCREEN_WIDTH;
+        width = TERM_MIN_SCREEN_WIDTH;
     if (gl_setwidth(width) < 0)
-	goto done; /* shouldnt happen */
+        goto done; /* shouldnt happen */
     retval = 0;
  done:
     return retval;
@@ -542,7 +542,7 @@ cligen_utf8_get(cligen_handle h)
  */
 int 
 cligen_utf8_set(cligen_handle h,
-		int           mode)
+                int           mode)
 {
     return gl_utf8_set(mode);
 }
@@ -567,7 +567,7 @@ cligen_line_scrolling(cligen_handle h)
  */
 int 
 cligen_line_scrolling_set(cligen_handle h,
-			  int           mode)
+                          int           mode)
 {
     int prev = gl_getscrolling();
 
@@ -603,7 +603,7 @@ cligen_helpstring_truncate(cligen_handle h)
  */
 int 
 cligen_helpstring_truncate_set(cligen_handle h,
-			       int           mode)
+                               int           mode)
 {
     _helpstr_truncate = mode;
     return 0;
@@ -633,7 +633,7 @@ cligen_helpstring_lines(cligen_handle h)
  */
 int 
 cligen_helpstring_lines_set(cligen_handle h,
-			       int        lines)
+                               int        lines)
 {
     _helpstr_lines = lines;
     return 0;
@@ -696,7 +696,7 @@ cligen_tabmode(cligen_handle h)
  */
 int 
 cligen_tabmode_set(cligen_handle h, 
-		   int           mode)
+                   int           mode)
 {
     struct cligen_handle *ch = handle(h);
 
@@ -728,7 +728,7 @@ cligen_lexicalorder(cligen_handle h)
  */
 int
 cligen_lexicalorder_set(cligen_handle h, 
-			int           n)
+                        int           n)
 {
 //    struct cligen_handle *ch = handle(h);
 
@@ -756,7 +756,7 @@ cligen_ignorecase(cligen_handle h)
  */
 int
 cligen_ignorecase_set(cligen_handle h, 
-		      int           n)
+                      int           n)
 {
 //    struct cligen_handle *ch = handle(h);
 
@@ -779,7 +779,7 @@ int cligen_logsyntax(cligen_handle h)
  * @param[in] h       CLIgen handle
  */
 int cligen_logsyntax_set(cligen_handle h, 
-			 int           n)
+                         int           n)
 {
     struct cligen_handle *ch = handle(h);
 
@@ -806,7 +806,7 @@ cligen_userhandle(cligen_handle h)
  */
 int
 cligen_userhandle_set(cligen_handle h, 
-		      void         *userhandle)
+                      void         *userhandle)
 {
     struct cligen_handle *ch = handle(h);
 
@@ -830,7 +830,7 @@ cligen_userdata(cligen_handle h)
  */
 int
 cligen_userdata_set(cligen_handle h, 
-		      void         *userdata)
+                      void         *userdata)
 {
     struct cligen_handle *ch = handle(h);
 
@@ -858,7 +858,7 @@ cligen_regex_xsd(cligen_handle h)
  */
 int
 cligen_regex_xsd_set(cligen_handle h, 
-		     int           mode)
+                     int           mode)
 {
     struct cligen_handle *ch = handle(h);
 
@@ -920,13 +920,13 @@ cligen_buf_init(cligen_handle h)
     struct cligen_handle *ch = handle(h);
 
     if ((ch->ch_buf = malloc(_getline_bufsize)) == NULL){
-	fprintf(stderr, "%s malloc: %s\n", __FUNCTION__, strerror(errno));
-	return -1;
+        fprintf(stderr, "%s malloc: %s\n", __FUNCTION__, strerror(errno));
+        return -1;
     }
     memset(ch->ch_buf, 0, _getline_bufsize);
     if ((ch->ch_killbuf = malloc(_getline_killbufsize)) == NULL){
-	fprintf(stderr, "%s malloc: %s\n", __FUNCTION__, strerror(errno));
-	return -1;
+        fprintf(stderr, "%s malloc: %s\n", __FUNCTION__, strerror(errno));
+        return -1;
     }
     memset(ch->ch_killbuf, 0, _getline_killbufsize);
     return 0;
@@ -942,7 +942,7 @@ cligen_buf_init(cligen_handle h)
  */
 int       
 cligen_buf_increase(cligen_handle h,
-		    size_t        len1)
+                    size_t        len1)
 {
     struct cligen_handle *ch = handle(h);
     size_t                len0 = _getline_bufsize; /* orig length */
@@ -952,8 +952,8 @@ cligen_buf_increase(cligen_handle h,
     while (_getline_bufsize < len1 + 1)
       _getline_bufsize *= 2;      
     if ((ch->ch_buf = realloc(ch->ch_buf, _getline_bufsize)) == NULL){
-	fprintf(stderr, "%s realloc: %s\n", __FUNCTION__, strerror(errno));
-	return -1;
+        fprintf(stderr, "%s realloc: %s\n", __FUNCTION__, strerror(errno));
+        return -1;
     }
     memset(ch->ch_buf+len0, 0, _getline_bufsize-len0);
     return 0;
@@ -965,7 +965,7 @@ cligen_buf_increase(cligen_handle h,
  */
 int       
 cligen_killbuf_increase(cligen_handle h,
-			size_t        len1)
+                        size_t        len1)
 {
     struct cligen_handle *ch = handle(h);
     int                   len0 = _getline_killbufsize;
@@ -975,8 +975,8 @@ cligen_killbuf_increase(cligen_handle h,
     while (_getline_killbufsize < len1 + 1)
       _getline_killbufsize *= 2;      
     if ((ch->ch_killbuf = realloc(ch->ch_killbuf, _getline_killbufsize)) == NULL){
-	fprintf(stderr, "%s realloc: %s\n", __FUNCTION__, strerror(errno));
-	return -1;
+        fprintf(stderr, "%s realloc: %s\n", __FUNCTION__, strerror(errno));
+        return -1;
     }
     memset(ch->ch_killbuf+len0, 0, _getline_killbufsize-len0);
     return 0;
@@ -991,12 +991,12 @@ cligen_buf_cleanup(cligen_handle h)
     struct cligen_handle *ch = handle(h);
 
     if (ch->ch_buf){
-	free(ch->ch_buf);
-	ch->ch_buf = NULL;
+        free(ch->ch_buf);
+        ch->ch_buf = NULL;
     }
     if (ch->ch_killbuf){
-	free(ch->ch_killbuf);
-	ch->ch_killbuf = NULL;
+        free(ch->ch_killbuf);
+        ch->ch_killbuf = NULL;
     }
     return 0;
 }
@@ -1010,7 +1010,7 @@ cligen_delimiter(cligen_handle h)
 
 int
 cligen_delimiter_set(cligen_handle h,
-		     char          delimiter)
+                     char          delimiter)
 {
     struct cligen_handle *ch = handle(h);
 
@@ -1066,7 +1066,7 @@ cligen_preference_mode(cligen_handle h)
  */
 int 
 cligen_preference_mode_set(cligen_handle h,
-			   int           flag)
+                           int           flag)
 {
     struct cligen_handle *ch = handle(h);
 
@@ -1096,7 +1096,7 @@ cligen_caseignore_get(cligen_handle h)
  */
 int
 cligen_caseignore_set(cligen_handle h,
-		      int           ignorecase)
+                      int           ignorecase)
 {
     struct cligen_handle *ch = handle(h);
     
@@ -1135,7 +1135,7 @@ cligen_expand_first_get(cligen_handle h)
  */
 int
 cligen_expand_first_set(cligen_handle h,
-			int           expand_first)
+                        int           expand_first)
 {
     struct cligen_handle *ch = handle(h);
     
@@ -1149,7 +1149,7 @@ cligen_expand_first_set(cligen_handle h,
  */
 int
 cligen_exclude_keys_set(cligen_handle h,
-			int           status)
+                        int           status)
 {
     struct cligen_handle *ch = handle(h);
     
@@ -1205,8 +1205,8 @@ cv_exclude_keys_get(void)
  */
 int
 cligen_eval_wrap_fn_set(cligen_handle        h, 
-			cligen_eval_wrap_fn *fn,
-			void                *arg)
+                        cligen_eval_wrap_fn *fn,
+                        void                *arg)
 {
     struct cligen_handle *ch = handle(h);
 
@@ -1223,14 +1223,14 @@ cligen_eval_wrap_fn_set(cligen_handle        h,
  */
 int
 cligen_eval_wrap_fn_get(cligen_handle         h,
-			cligen_eval_wrap_fn **fn,
-    			void                **arg)
+                        cligen_eval_wrap_fn **fn,
+                        void                **arg)
 {
     struct cligen_handle *ch = handle(h);
 
     if (fn)
-	*fn = ch->ch_eval_wrap_fn;
+        *fn = ch->ch_eval_wrap_fn;
     if (arg)
-	*arg = ch->ch_eval_wrap_arg;
+        *arg = ch->ch_eval_wrap_arg;
     return 0;
 }

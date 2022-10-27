@@ -52,7 +52,7 @@ co_callback_fn_get(cg_callback *cc)
 
 int
 co_callback_fn_set(cg_callback   *cc,
-		   cgv_fnstype_t *fn)
+                   cgv_fnstype_t *fn)
 {
     cc->cc_fn_vec = fn;
     return 0;
@@ -77,7 +77,7 @@ co_callback_next(cg_callback *cc)
  */
 int
 co_callback_copy(cg_callback  *cc0, 
-		 cg_callback **ccn)
+                 cg_callback **ccn)
 {
     int                  retval = -1;
     struct cg_callback  *cc;
@@ -86,23 +86,23 @@ co_callback_copy(cg_callback  *cc0,
 
     ccp = ccn;
     for (cc = cc0; cc; cc=cc->cc_next){
-	if ((cc1 = malloc(sizeof(*cc1))) == NULL)
-	    goto done;
-	memset(cc1, 0, sizeof(*cc1));
-	cc1->cc_fn_vec = cc->cc_fn_vec;
-	if (cc->cc_fn_str)
-	    if ((cc1->cc_fn_str = strdup(cc->cc_fn_str)) == NULL)
-		goto done;
-	if (cc->cc_cvec && ((cc1->cc_cvec = cvec_dup(cc->cc_cvec)) == NULL))
-	    goto done;
-	*ccp = cc1;
-	ccp = &cc1->cc_next;
-	cc1 = NULL;
+        if ((cc1 = malloc(sizeof(*cc1))) == NULL)
+            goto done;
+        memset(cc1, 0, sizeof(*cc1));
+        cc1->cc_fn_vec = cc->cc_fn_vec;
+        if (cc->cc_fn_str)
+            if ((cc1->cc_fn_str = strdup(cc->cc_fn_str)) == NULL)
+                goto done;
+        if (cc->cc_cvec && ((cc1->cc_cvec = cvec_dup(cc->cc_cvec)) == NULL))
+            goto done;
+        *ccp = cc1;
+        ccp = &cc1->cc_next;
+        cc1 = NULL;
     }
     retval = 0;
  done:
     if (cc1)
-	free(cc1);
+        free(cc1);
     return retval;
 }
 
@@ -113,10 +113,10 @@ co_callback_copy(cg_callback  *cc0,
 static int
 co_callback_one_free(cg_callback *cc)
 {
-    if (cc->cc_cvec)	
-	cvec_free(cc->cc_cvec);
-    if (cc->cc_fn_str)	
-	free(cc->cc_fn_str);
+    if (cc->cc_cvec)    
+        cvec_free(cc->cc_cvec);
+    if (cc->cc_fn_str)  
+        free(cc->cc_fn_str);
     free(cc);
     return 0;
 }
@@ -131,8 +131,8 @@ co_callbacks_free(cg_callback **ccp)
    cg_callback *cc;
    
    while ((cc = *ccp) != NULL){
-	*ccp = co_callback_next(cc);
-	co_callback_one_free(cc);
+        *ccp = co_callback_next(cc);
+        co_callback_one_free(cc);
    }
     return 0;
 }
@@ -142,25 +142,25 @@ co_callbacks_free(cg_callback **ccp)
  */
 int
 co_callback2cbuf(cbuf        *cb,
-		 cg_callback *cc)
+                 cg_callback *cc)
 {
     int     i;
     cg_var *cv;
     
     if (cc->cc_fn_str){
-	cprintf(cb, ", %s(", cc->cc_fn_str);
-	if (cc->cc_cvec){
-	    cv = NULL;
-	    i = 0;
-	    while ((cv = cvec_each(cc->cc_cvec, cv)) != NULL) {
-		if (i++)
-		    cprintf(cb, ",");
-		cprintf(cb, "\"");
-		cv2cbuf(cv, cb);
-		cprintf(cb, "\"");
-	    }
-	}
-	cprintf(cb, ")");
+        cprintf(cb, ", %s(", cc->cc_fn_str);
+        if (cc->cc_cvec){
+            cv = NULL;
+            i = 0;
+            while ((cv = cvec_each(cc->cc_cvec, cv)) != NULL) {
+                if (i++)
+                    cprintf(cb, ",");
+                cprintf(cb, "\"");
+                cv2cbuf(cv, cb);
+                cprintf(cb, "\"");
+            }
+        }
+        cprintf(cb, ")");
     }
     return 0;
 }
@@ -172,8 +172,8 @@ co_callback_size(cg_callback *cc)
 
     sz = sizeof(struct cg_callback);
     if (cc->cc_fn_str)
-	sz += strlen(cc->cc_fn_str) + 1;
+        sz += strlen(cc->cc_fn_str) + 1;
     if (cc->cc_cvec)
-	sz += cvec_size(cc->cc_cvec);
+        sz += cvec_size(cc->cc_cvec);
     return sz;
 }

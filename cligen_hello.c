@@ -76,26 +76,26 @@ main(int argc, char *argv[])
     cligen_handle   h;
 
     if ((h = cligen_init()) == NULL)
-	goto done;
+        goto done;
     if (cligen_parse_str(h, hello_syntax, "hello world", NULL, NULL) < 0)
-	goto done;
+        goto done;
     /* find global assignments: prompt and comment sign */
     cligen_prompt_set(h, "hello> ");
     cligen_comment_set(h, '#');
     /* Get the default (first) parse-tree */
     if ((ph = cligen_ph_i(h, 0)) == NULL)
-	goto done;
+        goto done;
     pt = cligen_ph_parsetree_get(ph);
     /* Bind callback (hello_cb) to all commands */
     if (cligen_callbackv_str2fn(pt, str2fn, NULL) < 0)     
-	goto done;
+        goto done;
     /* Run the CLI command interpreter */
     if (cligen_loop(h) < 0)
-	goto done;
+        goto done;
     retval = 0;
   done:
     if (h)
-	cligen_exit(h);
+        cligen_exit(h);
     return retval;
 }
 

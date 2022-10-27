@@ -87,9 +87,9 @@ struct cligen_handle{
     int         ch_lexicalorder; /* strcmp (0) or strverscmp (1) syntax order.
                                     Also, this is global for now */
     int         ch_ignorecase; /* dont care about aA (0), care about aA (1) 
-				     does not work if lexicalorder is set.
-				     Also this is global for now
-				  */
+                                     does not work if lexicalorder is set.
+                                     Also this is global for now
+                                  */
 
     char       *ch_buf;          /* getline input buffer */
     char       *ch_killbuf;      /* getline killed text */

@@ -90,13 +90,13 @@ hist_save(char *p)
 
     if (nl) {
         if ((s = malloc(len)) == NULL)
-	    goto done;
-	strcpy(s, p);
-	s[len-1] = 0;
+            goto done;
+        strcpy(s, p);
+        s[len-1] = 0;
     }
     else {
-	if ((s = strdup(p)) == NULL)
-	    goto done;
+        if ((s = strdup(p)) == NULL)
+            goto done;
     }
  done:
     return s;
@@ -110,7 +110,7 @@ hist_save(char *p)
  */
 int
 hist_add(cligen_handle h,
-	 char         *buf)
+         char         *buf)
 {
     struct cligen_handle *ch = handle(h);
     int   retval = -1;
@@ -118,25 +118,25 @@ hist_add(cligen_handle h,
     int   len;
 
     if (strlen(buf) >= cligen_buf_size(h))
-	if (cligen_buf_increase(h, strlen(buf)) < 0)
-	    goto done;
+        if (cligen_buf_increase(h, strlen(buf)) < 0)
+            goto done;
     while (*p == ' ' || *p == '\t' || *p == '\n') 
-	p++;
+        p++;
     if (*p) {
-	len = strlen(buf);
-	if (strchr(p, '\n')) 	/* previously line already has NL stripped */
-	    len--;
-	if (ch->ch_hist_pre == 0 || strlen(ch->ch_hist_pre) != len || 
-			    strncmp(ch->ch_hist_pre, buf, len) != 0) {
+        len = strlen(buf);
+        if (strchr(p, '\n'))    /* previously line already has NL stripped */
+            len--;
+        if (ch->ch_hist_pre == 0 || strlen(ch->ch_hist_pre) != len || 
+                            strncmp(ch->ch_hist_pre, buf, len) != 0) {
             if ((ch->ch_hist_buf[ch->ch_hist_last] = hist_save(buf)) == NULL)
-		goto done;
-	    ch->ch_hist_pre = ch->ch_hist_buf[ch->ch_hist_last];
+                goto done;
+            ch->ch_hist_pre = ch->ch_hist_buf[ch->ch_hist_last];
             ch->ch_hist_last = (ch->ch_hist_last + 1) % ch->ch_hist_size;
             if (ch->ch_hist_buf[ch->ch_hist_last] && *ch->ch_hist_buf[ch->ch_hist_last]) {
-	        free(ch->ch_hist_buf[ch->ch_hist_last]);
+                free(ch->ch_hist_buf[ch->ch_hist_last]);
             }
-	    ch->ch_hist_buf[ch->ch_hist_last] = ""; /* NB not-malloced, check in hist_free */
-	}
+            ch->ch_hist_buf[ch->ch_hist_last] = ""; /* NB not-malloced, check in hist_free */
+        }
     }
     ch->ch_hist_cur = ch->ch_hist_last;
     retval = 0;
@@ -155,10 +155,10 @@ hist_exit(cligen_handle h)
     int                   i;
 
     for (i=0; i < ch->ch_hist_size; i++)
-	if (ch->ch_hist_buf[i] && strlen(ch->ch_hist_buf[i])){
-	    free(ch->ch_hist_buf[i]);
-	    ch->ch_hist_buf[i] = NULL;
-	}
+        if (ch->ch_hist_buf[i] && strlen(ch->ch_hist_buf[i])){
+            free(ch->ch_hist_buf[i]);
+            ch->ch_hist_buf[i] = NULL;
+        }
     free(ch->ch_hist_buf);
     ch->ch_hist_buf = NULL;
     // done:
@@ -180,8 +180,8 @@ hist_prev(cligen_handle h)
         p = ch->ch_hist_buf[ch->ch_hist_cur];
     } 
     if (p == 0) {
-	p = "";
-	gl_putc('\007');
+        p = "";
+        gl_putc('\007');
     }
     return p;
 }
@@ -197,11 +197,11 @@ hist_next(cligen_handle h)
 
     if (ch->ch_hist_cur != ch->ch_hist_last) {
         ch->ch_hist_cur = (ch->ch_hist_cur+1) % ch->ch_hist_size;
-	p = ch->ch_hist_buf[ch->ch_hist_cur];
+        p = ch->ch_hist_buf[ch->ch_hist_cur];
     } 
     if (p == 0) {
-	p = "";
-	gl_putc('\007');
+        p = "";
+        gl_putc('\007');
     }
     return p;
 }
@@ -211,7 +211,7 @@ hist_next(cligen_handle h)
  */
 int
 hist_pos_set(cligen_handle h,
-	     int           pos)
+             int           pos)
 {
     struct cligen_handle *ch = handle(h);
     
@@ -248,7 +248,7 @@ hist_last_get(cligen_handle h)
  */
 int
 hist_copy(cligen_handle h,
-	  char         *ptr)
+          char         *ptr)
 {
     strncpy(cligen_buf(h), ptr, cligen_buf_size(h));
     return 0;
@@ -303,7 +303,7 @@ hist_copy_next(cligen_handle h)
  */
 int
 cligen_hist_init(cligen_handle h,
-		 int           lines)
+                 int           lines)
 {
     struct cligen_handle *ch = handle(h);
     int                   retval = -1;
@@ -311,25 +311,25 @@ cligen_hist_init(cligen_handle h,
     int                   old_size;
 
     if (lines < 1){
-	errno = EINVAL;
-	goto done;
+        errno = EINVAL;
+        goto done;
     }
     old_size = ch->ch_hist_size;
     ch->ch_hist_size = lines+1; /* circular buffer needs an extra element */
     for (i=0; i < old_size; i++)
-	if (ch->ch_hist_buf[i]){
-	    if (strlen(ch->ch_hist_buf[i]))
-		free(ch->ch_hist_buf[i]);
-	    ch->ch_hist_buf[i] = NULL;
-	}
+        if (ch->ch_hist_buf[i]){
+            if (strlen(ch->ch_hist_buf[i]))
+                free(ch->ch_hist_buf[i]);
+            ch->ch_hist_buf[i] = NULL;
+        }
     if ((ch->ch_hist_buf = (char**)realloc(ch->ch_hist_buf, ch->ch_hist_size*sizeof(char*))) == NULL)
-	goto done;
+        goto done;
     ch->ch_hist_cur = 0;
     ch->ch_hist_last = 0;
     ch->ch_hist_pre = 0;
     ch->ch_hist_buf[0] = ""; /* NB not-malloced, check in hist_free */
     for (i=1; i < ch->ch_hist_size; i++) /* reset all entries */
-	ch->ch_hist_buf[i] = (char *)0;
+        ch->ch_hist_buf[i] = (char *)0;
     retval = 0;
  done:
     return retval;
@@ -344,8 +344,8 @@ cligen_hist_init(cligen_handle h,
  */
 int
 cligen_hist_file_load(cligen_handle h,
-		      FILE         *f)
-	    
+                      FILE         *f)
+            
 {
     int           retval = -1;
     int           ret;
@@ -353,25 +353,25 @@ cligen_hist_file_load(cligen_handle h,
     cbuf         *cb = NULL;
 
     if ((cb = cbuf_new()) == NULL)
-	goto done;
+        goto done;
     while (1){
-	ret = fgetc(f);
-	if (ret == EOF)
-	    break; /* eof or error */
-	ch = (unsigned char)ret;
-	if (ch == '\n'){
-	    if (hist_add(h, cbuf_get(cb)) < 0)
-		goto done;
-	    cbuf_reset(cb);
-	}
-	else
-	    if (cbuf_append(cb, ch) < 0)
-		goto done;
+        ret = fgetc(f);
+        if (ret == EOF)
+            break; /* eof or error */
+        ch = (unsigned char)ret;
+        if (ch == '\n'){
+            if (hist_add(h, cbuf_get(cb)) < 0)
+                goto done;
+            cbuf_reset(cb);
+        }
+        else
+            if (cbuf_append(cb, ch) < 0)
+                goto done;
     }
     retval = 0;
  done:
     if (cb)
-	cbuf_free(cb);
+        cbuf_free(cb);
     return retval;
 }
 
@@ -382,7 +382,7 @@ cligen_hist_file_load(cligen_handle h,
  */
 int
 cligen_hist_file_save(cligen_handle h,
-		      FILE         *f)
+                      FILE         *f)
 {
     int                   retval = -1;
     struct cligen_handle *ch = handle(h);    
@@ -393,13 +393,13 @@ cligen_hist_file_save(cligen_handle h,
     /* rewind to last */
     i = (ch->ch_hist_last+1)%ch->ch_hist_size;
     while(ch->ch_hist_buf[i] == NULL)
-	i = (i+1)%ch->ch_hist_size;
+        i = (i+1)%ch->ch_hist_size;
     i1 = ch->ch_hist_last;
     while(i != i1){
-	if ((line = ch->ch_hist_buf[i]) == NULL) /* shouldnt happen */
-	    break;
-	fprintf(f, "%s\n", line);
-	i = (i+1)%ch->ch_hist_size;
+        if ((line = ch->ch_hist_buf[i]) == NULL) /* shouldnt happen */
+            break;
+        fprintf(f, "%s\n", line);
+        i = (i+1)%ch->ch_hist_size;
     }
     retval = 0;
     return retval;
