@@ -732,6 +732,10 @@ gl_getline(cligen_handle h,
                         break;
                     case 'D': gl_fixup(h, gl_prompt, -1, gl_pos-1); /* left */
                         break;
+                    case 'H': gl_fixup(h, gl_prompt, -1, 0); /* home */
+                        break;
+                    case 'F': gl_fixup(h, gl_prompt, -1, cligen_buf_size(h)); /* end */
+                        break;
                     case '3': /* del */
                         if (gl_getc(h) != '~')
                             break;
