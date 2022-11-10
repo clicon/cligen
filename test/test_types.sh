@@ -24,7 +24,7 @@ cat > $fspec <<EOF
   i2  <v:int32 range[-1000000:1000000]>, callback();
   i3  <v:int64 range[-10000000000:10000000000]>, callback();
   ui0 <v:uint8>, callback();
-  ui1 <v:uint16>, callback();
+  ui1 <v:uint16 range[0:255]>, callback();
   ui2 <v:uint32>, callback();
   ui3 <v:uint64>, callback();
   d0  <v:decimal64 fraction-digits:4 range[0.1:10]>, callback();
@@ -83,6 +83,13 @@ for x in 0 1 2 3; do
     newtest "uint ui$x fail"
     expectpart "$(echo "ui$x -77" | $cligen_file -f $fspec 2> /dev/null)" 0 "cli> ui$x -77" "CLI syntax error"
 done
+
+# Special case, see https://github.com/clicon/clixon/issues/319
+newtest "uint ui1 2222"
+expectpart "$(echo "ui1 2222" | $cligen_file -f $fspec 2> /dev/null)" 0 "cli> ui1 2222" "CLI syntax error" "out of range: 0 - 255" --not-- "out of range: 0 - 65535"
+
+newtest "uint ui1 22222222"
+expectpart "$(echo "ui1 22222222" | $cligen_file -f $fspec 2> /dev/null)" 0 "cli> ui1 22222222" "CLI syntax error" "out of range: 0 - 255" --not-- "out of range: 0 - 65535"
 
 newtest "bool b0"
 expectpart "$(echo "b0 true" | $cligen_file -f $fspec 2> /dev/null)" 0 "cli> b0 true" --not-- "CLI syntax error"

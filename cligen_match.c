@@ -86,6 +86,7 @@
  * @retval     1       Match
  * Who prints errors?
  * @see cvec_match where actual allocation of variables is made not only sanity
+ * For ints a double parse for most specific error, see https://github.com/clicon/clixon/issues/319
  */
 static int
 match_variable(cligen_handle h,
@@ -96,11 +97,19 @@ match_variable(cligen_handle h,
     int         retval = -1;
     cg_var     *cv; /* Just a temporary cv for validation */
     cg_varspec *cs;
-
+    enum cv_type t;
+    
     cs = &co->u.cou_var;
-    if ((cv = cv_new(co->co_vtype)) == NULL)
+    t = co->co_vtype;
+
+    /* First parse as least specific type */
+    if (t==CGV_INT8 || t==CGV_INT16|| t==CGV_INT32)
+        t = CGV_INT64;
+    else if (t==CGV_UINT8 || t==CGV_UINT16|| t==CGV_UINT32)
+        t = CGV_UINT64;
+    if ((cv = cv_new(t)) == NULL)
         goto done;
-    if (co->co_vtype == CGV_DEC64) /* XXX: Seems misplaced? / too specific */
+    if (t == CGV_DEC64) /* XXX: Seems misplaced? / too specific */
         cv_dec64_n_set(cv, cs->cgs_dec64_n);
     if ((retval = cv_parse1(str, cv, reason)) <= 0) 
         goto done;
@@ -108,6 +117,12 @@ match_variable(cligen_handle h,
     /* Validate value */
     if ((retval = cv_validate(h, cv, cs, co->co_command, reason)) <= 0)
         goto done;
+    if (t != co->co_vtype){         /* Second parse as specific type */
+        cv_reset(cv);
+        cv_type_set(cv, co->co_vtype);
+        if ((retval = cv_parse1(str, cv, reason)) <= 0) 
+            goto done;
+    }
     /* here retval should be 1 */
   done:
     if (cv)
