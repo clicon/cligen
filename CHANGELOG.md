@@ -8,6 +8,9 @@ Expected: End of 2022
 * [Code formatting: Change indentation style to space](https://github.com/clicon/clixon/issues/379)
   * Applies to all c/h/y/l/sh files and .editorconfig
 
+### Corrected Bugs
+
+* Fixed: [More specific error shall be provided when there is a type def on top of default types](https://github.com/clicon/clixon/issues/319)
 
 ## 5.8.0
 28 July 2022
