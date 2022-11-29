@@ -1,7 +1,7 @@
 # Cligen Changelog
         
 ## 6.0.0
-Expected: End of 2022
+29 November 2022
 
 ### Minor features
 
