@@ -522,7 +522,6 @@ pt_expand_fnv(cligen_handle h,
     if (cvv1)
         cvec_free(cvv1);
     return retval;
-
 }
 
 /*! Expand a choice rule with actual commands
