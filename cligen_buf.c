@@ -270,7 +270,6 @@ cprintf(cbuf       *cb,
   * @retval 0    OK
   * @retval -1   Error
   * @see cprintf for the generic function
-
   */
 int
 cbuf_append_str(cbuf       *cb,

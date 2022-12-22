@@ -3403,9 +3403,10 @@ cv_cmp(cg_var *cv1,
     int n;
 
     /* Same type? */
-    if(cv1->var_type != cv2->var_type)
+    if(cv1->var_type != cv2->var_type &&
+       (!cv_isstring(cv1->var_type) || !cv_isstring(cv2->var_type))){
         return cv1->var_type - cv2->var_type;
-
+    }
     switch (cv1->var_type) {
     case CGV_ERR:
         return 0;
@@ -3473,7 +3474,6 @@ cv_cmp(cg_var *cv1,
     case CGV_EMPTY: /* Always equal */
         return 0;
     }
-
     return -1;
 }
 
