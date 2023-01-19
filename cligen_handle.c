@@ -1036,7 +1036,7 @@ cligen_preference_mode(cligen_handle h)
  * Often, multiple matches will resolve by preference, but not if several matches have same.
  * This applies to complete (terminal matches), assume length of a is <=4:
  * @code
- * key (<a:string length[4]> | <a:string length[40]>);
+ *   key (<a:string length[4]> | <a:string length[40]>);
  * @endcode
  * Assume the user types the following command which matches both variables:
  *   key foo
@@ -1045,20 +1045,20 @@ cligen_preference_mode(cligen_handle h)
  *
  * For non-terminals, example:
  * @code
- * key (<a:string length[4]> | <a:string length[40]>){
+ *   key (<a:string length[4]> | <a:string length[40]>){
  *     port <nr:int32>;
- * }
+ *   }
  * @endcode
  * If set to 2 or 3 will select first variable.
  *
  * Do NOT use this if the two variables leads to different choices, eg:
  * @code
- * key <a:string length[4]>{
+ *   key <a:string length[4]>{
  *     port <nr:int32>;
- * }
- * key <a:string length[40]>){
+ *   }
+ *   key <a:string length[40]>){
  *     description <text:string>;
- * }
+ *   }
  * @endcode
  * @param[in] h      CLIgen handle
  * @param[in] flag   0: ambiguous error, 1: terminal first, 2: non-terminal first match, 3: non-terminal+terminal
