@@ -2186,7 +2186,7 @@ cv_len(cg_var *cv)
         len = sizeof(cv->var_time);
         break;
     case CGV_VOID:
-        len = sizeof(void*); /* N/A */
+        len = sizeof(void*);
         break;
     case CGV_EMPTY:
         len = 0;
@@ -2349,7 +2349,9 @@ cv2cbuf(cg_var *cv,
         time2str(cv->var_time, timestr, sizeof(timestr));
         cprintf(cb, "%s", timestr);
         break;
-    case CGV_VOID: /* N/A */
+    case CGV_VOID: 
+        cprintf(cb, "%p", cv->var_void);
+        break;
     case CGV_EMPTY: 
         break;
     default:
@@ -2483,7 +2485,9 @@ cv2str(cg_var *cv,
         time2str(cv->var_time, timestr, sizeof(timestr));
         len = snprintf(str, size, "%s", timestr);
         break;
-    case CGV_VOID: /* N/A */
+    case CGV_VOID:
+        len = snprintf(str, size, "%p", cv->var_void);
+        break;
     case CGV_EMPTY:
         break;
     default:
@@ -2627,7 +2631,9 @@ cv_print(FILE   *f,
         time2str(cv->var_time, timestr, sizeof(timestr));
         fprintf(f, "%s", timestr);
         break;
-    case CGV_VOID: /* N/A */
+    case CGV_VOID:
+        fprintf(f, "%p", cv->var_void);
+        break;
     case CGV_EMPTY: /* N/A */
         break;
     default:

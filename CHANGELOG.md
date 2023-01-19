@@ -1,5 +1,12 @@
 # Cligen Changelog
         
+## 6.1.0
+Expected: Jan 2023
+
+### Minor features
+
+* Added print functions for VOID type using printf %p
+
 ## 6.0.0
 29 November 2022
 
