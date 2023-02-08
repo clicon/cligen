@@ -102,7 +102,7 @@ cv_name_get(cg_var *cv)
  */
 char *
 cv_name_set(cg_var *cv, 
-            char   *s0)
+            const char   *s0)
 {
     char *s1 = NULL;
 
@@ -483,7 +483,7 @@ cv_string_get(cg_var *cv)
  */
 char *
 cv_string_set(cg_var *cv, 
-              char   *s0)
+              const char   *s0)
 {
     char *s1 = NULL;
 
@@ -742,7 +742,7 @@ cv_urlproto_get(cg_var *cv)
  */
 char *
 cv_urlproto_set(cg_var *cv, 
-                char   *s0)
+                const char   *s0)
 {
     char *s1 = NULL;
 
@@ -782,7 +782,7 @@ cv_urladdr_get(cg_var *cv)
  */
 char *
 cv_urladdr_set(cg_var *cv, 
-               char   *s0)
+               const char   *s0)
 {
     char *s1 = NULL;
 
@@ -822,7 +822,7 @@ cv_urlpath_get(cg_var *cv)
  */
 char *
 cv_urlpath_set(cg_var *cv, 
-               char   *s0)
+               const char   *s0)
 {
     char *s1 = NULL;
 
@@ -862,7 +862,7 @@ cv_urluser_get(cg_var *cv)
  */
 char *
 cv_urluser_set(cg_var *cv, 
-               char   *s0)
+               const char   *s0)
 {
     char *s1 = NULL;
 
@@ -902,7 +902,7 @@ cv_urlpasswd_get(cg_var *cv)
  */
 char *
 cv_urlpasswd_set(cg_var *cv, 
-                 char   *s0)
+                 const char   *s0)
 {
     char *s1 = NULL;
 
@@ -1605,7 +1605,7 @@ parse_url(char   *url,
  * @param[in]  str  
  */
 int
-str2urlproto(char *str)
+str2urlproto(const char *str)
 {
     int proto;
 
@@ -1662,7 +1662,7 @@ toint(char c)
  * @retval    -1     Error
  */
 int
-str2uuid(char  *in, 
+str2uuid(const char  *in, 
          uuid_t u)
 {
     int i = 0, j = 0, k;
@@ -1737,7 +1737,7 @@ todig(char c)
  */
 int
 cligen_tonum(int   n, 
-             char *s)
+             const char *s)
 {
     int      i;
     int      a;
@@ -1777,7 +1777,7 @@ cligen_tonum(int   n,
  * @see time2str
  */
 int
-str2time(char           *in, 
+str2time(const char           *in, 
          struct timeval *tv)
 {
     int        retval = -1;
@@ -1964,7 +1964,7 @@ done:
  * @retval    type   CLIgen variable type
  */
 enum cv_type
-cv_str2type(char *str)
+cv_str2type(const char *str)
 {
     if (strcmp(str, "int8") == 0)
         return CGV_INT8;
@@ -2020,7 +2020,7 @@ cv_str2type(char *str)
  * @retval    NULL   Error
  * @retval    str    Static string containing name of type as ASCII string
  */
-char *
+const char *
 cv_type2str(enum cv_type type)
 {
     char *str = NULL;
@@ -2833,7 +2833,7 @@ cv_min_set(cg_var *cv)
  * @endcode
  */
 int
-cv_parse1(char   *str0,
+cv_parse1(const char   *str0,
           cg_var *cv, 
           char  **reason)
 {
@@ -3041,7 +3041,7 @@ cv_parse1(char   *str0,
  * @endcode
  */
 int
-cv_parse(char   *str, 
+cv_parse(const char   *str, 
          cg_var *cv)
 {
     int retval;

@@ -125,7 +125,7 @@ struct cg_varspec; /* forward declaration. Original in cligen_object.h */
  * Prototypes
  */
 char *cv_name_get(cg_var *cv);
-char *cv_name_set(cg_var *cv, char *s0);
+char *cv_name_set(cg_var *cv, const char *s0);
 enum cv_type cv_type_get(cg_var *cv);
 enum cv_type cv_type_set(cg_var *cv, enum cv_type x);
 char cv_const_get(cg_var *cv);
@@ -161,7 +161,7 @@ int64_t cv_dec64_i_get(cg_var *cv);
 int64_t cv_dec64_i_set(cg_var *cv, int64_t x);
 
 char   *cv_string_get(cg_var *cv);
-char   *cv_string_set(cg_var *cv, char *s0);
+char   *cv_string_set(cg_var *cv, const char *s0);
 int     cv_string_set_direct(cg_var *cv, char *s);
 char   *cv_strncpy(cg_var *cv, char *s0, size_t n);
 struct in_addr *cv_ipv4addr_get(cg_var *cv);
@@ -178,15 +178,15 @@ struct timeval cv_time_set(cg_var *cv, struct timeval t);
 void *cv_void_get(cg_var *cv);
 int   cv_void_set(cg_var *cv, void *p);
 char *cv_urlproto_get(cg_var *cv);
-char *cv_urlproto_set(cg_var *cv, char *s0);
+char *cv_urlproto_set(cg_var *cv, const char *s0);
 char *cv_urladdr_get(cg_var *cv);
-char *cv_urladdr_set(cg_var *cv, char *s0);
+char *cv_urladdr_set(cg_var *cv, const char *s0);
 char *cv_urlpath_get(cg_var *cv);
-char *cv_urlpath_set(cg_var *cv, char *s0);
+char *cv_urlpath_set(cg_var *cv, const char *s0);
 char *cv_urluser_get(cg_var *cv);
-char *cv_urluser_set(cg_var *cv, char *s0);
+char *cv_urluser_set(cg_var *cv, const char *s0);
 char *cv_urlpasswd_get(cg_var *cv);
-char *cv_urlpasswd_set(cg_var *cv, char *s0);
+char *cv_urlpasswd_set(cg_var *cv, const char *s0);
 
 int parse_int8(char *str, int8_t *val, char **reason);
 int parse_int16(char *str, int16_t *val, char **reason);
@@ -199,15 +199,15 @@ int parse_uint64(char *str, uint64_t *val, char **reason);
 int parse_dec64(char *str, uint8_t n, int64_t *dec64_i, char **reason);
 int parse_bool(char *str, uint8_t *val, char **reason);
 
-int str2urlproto(char *str);
-int str2uuid(char *in, uuid_t u);
+int str2urlproto(const char *str);
+int str2uuid(const char *in, uuid_t u);
 int uuid2str(uuid_t u, char *in, int len);
-int cligen_tonum(int n, char *s);
-int str2time(char *in, struct timeval *tv);
+int cligen_tonum(int n, const char *s);
+int str2time(const char *in, struct timeval *tv);
 int time2str(struct timeval tv, char *fmt, int len);
 
-enum cv_type cv_str2type(char *str);
-char   *cv_type2str(enum cv_type type);
+enum cv_type cv_str2type(const char *str);
+const char   *cv_type2str(enum cv_type type);
 size_t  cv_len(cg_var *cgv);
 int     cv2cbuf(cg_var *cv, cbuf *cb);
 int     cv2str(cg_var *cv, char *str, size_t size);
@@ -223,8 +223,8 @@ int     cv_min_set(cg_var *cv);
 int     cv_cmp(cg_var *cgv1, cg_var *cgv2);
 int     cv_cp(cg_var *n, cg_var *old);
 cg_var *cv_dup(cg_var *old);
-int     cv_parse(char *str, cg_var *cgv); 
-int     cv_parse1(char *str, cg_var *cgv, char **reason); /* better err-handling */
+int     cv_parse(const char *str, cg_var *cgv); 
+int     cv_parse1(const char *str, cg_var *cgv, char **reason); /* better err-handling */
 
 int     cv_validate(cligen_handle h, cg_var *cv, struct cg_varspec *cs, char *cmd, char **reason);
 int     cv_reset(cg_var *cgv); /* not free cgv itself */ /* XXX: free_only */
