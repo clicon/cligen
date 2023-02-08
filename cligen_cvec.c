@@ -70,7 +70,7 @@
 #define align4(s) (((s)/4)*4 + 4)
 
 /*! A strdup version that aligns on 4 bytes. To avoid warning from valgrind */
-static inline char * strdup4(char *str)
+static inline char * strdup4(const char *str)
 {
     char *dup;
     int len;
@@ -546,7 +546,7 @@ cvec2cbuf(cbuf *cb,
  */
 cg_var *
 cvec_find(cvec *cvv,
-          char *name)
+          const char *name)
 {
     cg_var *cv = NULL;
 
@@ -570,7 +570,7 @@ cvec_find(cvec *cvv,
  */
 cg_var *
 cvec_find_keyword(cvec *cvv,
-                  char *name)
+                  const char *name)
 {
     cg_var *cv = NULL;
 
@@ -589,7 +589,7 @@ cvec_find_keyword(cvec *cvv,
  */
 cg_var *
 cvec_find_var(cvec *cvv,
-              char *name)
+              const char *name)
 {
     cg_var *cv = NULL;
 
@@ -613,7 +613,7 @@ cvec_find_var(cvec *cvv,
  */
 char *
 cvec_find_str(cvec *cvv,
-              char *name)
+              const char *name)
 {
     cg_var *cv;
 
@@ -641,7 +641,7 @@ cvec_name_get(cvec *cvv)
  */
 char *
 cvec_name_set(cvec *cvv,
-              char *name)
+              const char *name)
 {
     char *s1 = NULL;
 
