@@ -195,18 +195,16 @@ cligen_ph_workpoint_set(pt_head *ph,
  * @retval    NULL    Not found
  */
 pt_head *
-cligen_ph_find(cligen_handle h,
-               char         *name)
+cligen_ph_find(cligen_handle h, char *name)
 {
+    char *phname;
+
     pt_head *ph = NULL;
-    char    *phname;
+    while (ph = cligen_ph_each(h, ph))
+        if (phname = cligen_ph_name_get(ph))
+            if (strcmp(phname, name) == 0)
+                break;
     
-    for (ph = cligen_pt_head_get(h); ph; ph = ph->ph_next){
-        if ((phname = cligen_ph_name_get(ph)) == NULL)
-            continue;
-        if (strcmp(phname, name) == 0)
-            break;
-    }
     return ph;
 }
 
@@ -236,29 +234,33 @@ cligen_ph_free(pt_head *ph)
  * Note, if this is the first tree, it is activated by default
  */
 pt_head *
-cligen_ph_add(cligen_handle h, 
-              char         *name)
+cligen_ph_add(cligen_handle h, char *name)
 {
-    pt_head *ph;
-    pt_head *phlast;
+    pt_head *ph, *phlast;
     
     if ((ph = (pt_head *)malloc(sizeof(*ph))) == NULL)
         goto done;
-    memset(ph, 0, sizeof(*ph));    
+
+    memset(ph, 0, sizeof(*ph));
+
     if (cligen_ph_name_set(ph, name) < 0){
         free(ph);
         ph = NULL;
         goto done;
     }
-    if ((phlast = cligen_pt_head_get(h)) == NULL){
-        ph->ph_active++;
+
+    /* first tree is set and activeted by default */
+    if ((phlast = cligen_pt_head_get(h)) == NULL) {
+        cligen_pt_head_active_set(h, ph);
         cligen_pt_head_set(h, ph);
-    }
-    else {
-        while (phlast->ph_next)
-            phlast = phlast->ph_next;
-        phlast->ph_next = ph;
-    }
+        goto done;
+	}
+
+	/* append new parsetree header to the end */
+    while (phlast->ph_next)
+        phlast = phlast->ph_next;
+    phlast->ph_next = ph;
+
  done:
     return ph;
 }
@@ -314,12 +316,9 @@ cligen_ph_i(cligen_handle h,
 parse_tree *
 cligen_pt_active_get(cligen_handle h)
 {
-    pt_head *ph;
+    pt_head *ph = cligen_pt_head_active_get(h);
 
-    for (ph = cligen_pt_head_get(h); ph; ph = ph->ph_next)
-        if (ph->ph_active)
-            return ph->ph_parsetree;
-    return NULL;
+    return ph->ph_parsetree;
 }
 
 /*! Get currently active parsetree head.
@@ -328,12 +327,7 @@ cligen_pt_active_get(cligen_handle h)
 pt_head *
 cligen_ph_active_get(cligen_handle h)
 {
-    pt_head *ph;
-
-    for (ph = cligen_pt_head_get(h); ph; ph = ph->ph_next)
-        if (ph->ph_active)
-            return ph;
-    return NULL;
+    return (cligen_pt_head_active_get(h));
 }
 
 /*! Set currently active parsetree by name
@@ -342,19 +336,13 @@ cligen_ph_active_get(cligen_handle h)
  * If parse-tree not found all are inactivated.
  */
 int
-cligen_ph_active_set_byname(cligen_handle h, 
-                            char         *name)
+cligen_ph_active_set_byname(cligen_handle h, char *name)
 {
-    pt_head *ph;
+    pt_head *ph = cligen_ph_find(h, name);
 
-    for (ph = cligen_pt_head_get(h); ph; ph = ph->ph_next)
-        if (ph->ph_active)
-            break;
-    if (ph != NULL)
-        ph->ph_active = 0;
-    if ((ph = cligen_ph_find(h, name)) != NULL)
-        ph->ph_active = 1;
-    return 0;
+	cligen_pt_head_active_set(h, ph);
+
+	return 0;
 }
 
 /*
