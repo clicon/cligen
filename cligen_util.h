@@ -42,7 +42,7 @@
 /*
  * Prototypes
  */
-int cvec_add_string(cvec *cvv, char *name, char *val);
+int cvec_add_string(cvec *cvv, const char *name, const char *val);
 
 int cligen_loop(cligen_handle h);
 
