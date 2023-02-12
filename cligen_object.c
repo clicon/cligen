@@ -343,6 +343,16 @@ co_prefix_set(cg_obj *co,
     return 0;
 }
 
+/*! Add new filter from cvv, copy
+ */
+cvec *
+co_filter_set(cg_obj *co,
+              cvec   *cvv)
+{
+    co->co_filter = cvec_dup(cvv);
+    return co->co_filter;
+}
+
 /*! Assign a preference to a cligen variable object
  * Prefer more specific commands/variables  if you have to choose from several. 
  * @param[in] co   Cligen obe
@@ -643,7 +653,7 @@ co_copy(cg_obj  *co,
     if (co->co_cvec)
         con->co_cvec = cvec_dup(co->co_cvec);
     if (co->co_filter)
-        con->co_filter = cvec_dup(co->co_filter);
+        co_filter_set(con, co->co_filter);
     if ((pt = co_pt_get(co)) != NULL){
         if ((ptn = pt_dup(pt, con, flags)) == NULL) /* sets a new pt under con */
             goto done;
@@ -743,7 +753,7 @@ co_copy1(cg_obj  *co,
     if (co->co_cvec)
         con->co_cvec = cvec_dup(co->co_cvec);
     if (co->co_filter)
-        con->co_filter = cvec_dup(co->co_filter);
+        co_filter_set(con, co->co_filter);
     if ((pt = co_pt_get(co)) != NULL){
         /* Here this function differs from co_copy */
         if (recursive){
