@@ -7,6 +7,10 @@ Expected: Jan 2023
 
 * Added print functions for VOID type using printf %p
 
+### Corrected Bugs
+
+* Fixed: [datamodel tree generated form basemodel tree is not proper when a list has more than one key and key is of enum type](https://github.com/clicon/clixon/issues/417)
+
 ## 6.0.0
 29 November 2022
 

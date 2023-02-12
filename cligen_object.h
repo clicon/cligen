@@ -216,6 +216,7 @@ int         co_sets_get(cg_obj *co);
 void        co_sets_set(cg_obj *co, int sets);
 char       *co_prefix_get(cg_obj *co);
 int         co_prefix_set(cg_obj *co, char *prefix);
+cvec       *co_filter_set(cg_obj *co, cvec *cvv);
 cg_obj     *co_new_only(void);
 cg_obj     *co_new(char *cmd, cg_obj *prev);
 cg_obj     *cov_new(enum cv_type cvtype, cg_obj *prev);

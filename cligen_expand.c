@@ -115,7 +115,7 @@ co_expand_sub(cg_obj  *co0,
     if (co0->co_cvec)
         con->co_cvec = cvec_dup(co0->co_cvec);
     if (co0->co_filter)
-        con->co_filter = cvec_dup(co0->co_filter);
+        co_filter_set(con, co0->co_filter);
     if (co_callback_copy(co0->co_callbacks, &con->co_callbacks) < 0)
         goto done;
     if (co0->co_helpstring)
@@ -354,7 +354,7 @@ co_expand_treeref_copy_shallow(cligen_handle h,
             co_flags_set(con, CO_FLAGS_TREEREF); /* Mark expanded refd tree */
             con->co_treeref_orig = cot;
             if (cvec_len(cvv_filter) &&
-                (con->co_filter = cvec_dup(cvv_filter)) == NULL)
+                co_filter_set(con, cvv_filter) == NULL)
                 goto done;
             if (co_insert(ptnew, con) == NULL) 
                 goto done;
@@ -428,7 +428,6 @@ cligen_escape(const char* s)
  * @param[in]  co      CLIgen object
  * @param[in]  coparent      CLIgen object parent
  * @param[in]  transient  co may be "transient" if so use co->co_ref as new co_ref,...
-
  * @param[out] cvv     Cligen variable vector containing vars/values pair for completion
  * @param[out] ptn     New parse-tree initially an empty pointer, its value is returned.
  * @retval     0       OK
@@ -493,7 +492,7 @@ pt_expand_fnv(cligen_handle h,
         if (pt_vec_append(ptn, con) < 0)
             goto done;
         if (cvv_filter && cvec_len(cvv_filter))
-            if ((con->co_filter = cvec_dup(cvv_filter)) == NULL)
+            if (co_filter_set(con, cvv_filter) == NULL)
                 goto done;
         value = cv_string_get(cv);
         if ((cmd = cligen_escape(value)) == NULL)
@@ -526,12 +525,14 @@ pt_expand_fnv(cligen_handle h,
 
 /*! Expand a choice rule with actual commands
  * @param[in]  co        Original cligen object (to expand into ptn)
+ * @param[in]  cvv_filter Add these to expanded nodes co_filter, eg remove them
  * @param[out] ptn       New parse-tree initially an empty pointer, its value is returned.
  * @retval     0         OK
  * @retval    -1         Error
  */
 static int
 pt_expand_choice(cg_obj       *co,     
+                 cvec         *cvv_filter,
                  parse_tree   *ptn)
 {
     int     retval = -1;
@@ -549,9 +550,12 @@ pt_expand_choice(cg_obj       *co,
                 goto done;
             if (transform_var_to_cmd(con, strdup(c), NULL) < 0) 
                 goto done;
+            if (cvv_filter && co_filter_set(con, cvv_filter) == NULL)
+                goto done;
             /* con may be deleted in the call and need to be replaced */
             if ((con = co_insert1(ptn, con, 0)) == NULL) 
                 goto done;
+
         }
     }
     retval = 0;
@@ -621,7 +625,7 @@ pt_expand1_co(cligen_handle h,
      * of the variable
      */
     if (co->co_type == CO_VARIABLE && co->co_choice != NULL){
-        if (pt_expand_choice(co, ptn) < 0)
+        if (pt_expand_choice(co, cvv_filter, ptn) < 0) // XXX filter
             goto done;
     }
     /* Expand variable - call expand callback and insert expanded
@@ -673,7 +677,7 @@ pt_expand1_co(cligen_handle h,
             con->co_ref = co->co_ref;
         }
         if (cvv_filter && cvec_len(cvv_filter))
-            if ((con->co_filter = cvec_dup(cvv_filter)) == NULL)
+            if (co_filter_set(con, cvv_filter) == NULL)
                 goto done;
     }
  ok:
@@ -722,7 +726,7 @@ pt_expand(cligen_handle h,
     cg_obj     *co;
     int         i;
     int         j;      
-    cvec       *cvv_filter = co0?co0->co_filter:NULL;
+    cvec       *cvv_filter = NULL;
     cg_obj     *cot;
     parse_tree *ptref = NULL;   /* tree referenced by pt0 orig */
     parse_tree *pttmp = NULL;
@@ -732,6 +736,7 @@ pt_expand(cligen_handle h,
         errno = EINVAL;
         goto done;      
     }
+    cvv_filter = co0?co0->co_filter:NULL;
     pt_sets_set(ptn, pt_sets_get(pt));
     if (pt_len_get(pt) == 0)
         goto ok;
@@ -796,7 +801,7 @@ pt_expand(cligen_handle h,
 /*! Go through tree and clean & delete all extra memory from pt_expand and pt_expand_treeref
  *
  * More specifically, delete all co_values and co_pt_exp and expanded subtrees co_ref
- * @param[in] h     CLIgen handle
+ * @param[in] h    CLIgen handle
  * @param[in] pt   Parsetree
  * @retval    0    OK
  * @retval   -1    Error
