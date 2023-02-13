@@ -200,8 +200,8 @@ cligen_ph_find(cligen_handle h, char *name)
     char *phname;
 
     pt_head *ph = NULL;
-    while (ph = cligen_ph_each(h, ph))
-        if (phname = cligen_ph_name_get(ph))
+    while ((ph = cligen_ph_each(h, ph)))
+        if ((phname = cligen_ph_name_get(ph)))
             if (strcmp(phname, name) == 0)
                 break;
     
