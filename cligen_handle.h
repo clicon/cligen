@@ -97,6 +97,9 @@ int cligen_prompt_set(cligen_handle h, char *prompt);
 pt_head *cligen_pt_head_get(cligen_handle h);
 int cligen_pt_head_set(cligen_handle h, pt_head *ph);
 
+pt_head *cligen_pt_head_active_get(cligen_handle h);
+int cligen_pt_head_active_set(cligen_handle h, pt_head *ph);
+
 char *cligen_treename_keyword(cligen_handle h);
 int cligen_treename_keyword_set(cligen_handle h, char *name);
 
