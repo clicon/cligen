@@ -65,7 +65,6 @@ typedef struct pt_head  { /* Linked list of cligen parse-trees */
     struct pt_head  *ph_next;
     char            *ph_name;
     parse_tree      *ph_parsetree; /* should be free:d */
-    int              ph_active;    /* Which parse-tree is used at top of tree (top-level "mode") */
     cg_obj          *ph_workpt;    /* Shortcut to "working point" cligen object, or more 
                                     * specifically its parse-tree sub vector. */
 } pt_head;
@@ -77,6 +76,7 @@ struct cligen_handle{
     char        ch_comment;      /* comment sign - everything behind it is ignored */
     char       *ch_prompt;       /* current prompt used */
     pt_head    *ch_pt_head;      /* Linked list of parsetrees */
+    pt_head    *ch_pt_head_active; /* Pointer to the currently acrive parsetree */
     char       *ch_treename_keyword; /* Name of treename parsing keyword */
     cg_obj     *ch_co_match;     /* Matching object in latest evaluation */
     char       *ch_fn_str;       /* Name of active callback function */
