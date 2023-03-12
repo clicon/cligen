@@ -1216,7 +1216,6 @@ cv_exclude_keys_get(void)
 }
 #endif
 
-
 /*! Set CLIgen eval wrap function to check state before and after a callback function 
  *
  * @param[in] h     CLIgen handle
@@ -1252,5 +1251,43 @@ cligen_eval_wrap_fn_get(cligen_handle         h,
         *fn = ch->ch_eval_wrap_fn;
     if (arg)
         *arg = ch->ch_eval_wrap_arg;
+    return 0;
+}
+
+/*! Set CLIgen treeref wrap function
+ *
+ * @param[in] h     CLIgen handle
+ * @param[in] fn    Register function to call when looking for a tree ref
+ * @param[in] arg   Call function with this argument
+ */
+int
+cligen_tree_resolve_wrapper_set(cligen_handle          h, 
+                                cligen_tree_resolve_wrapper_fn *fn,
+                                void                   *arg)
+{
+    struct cligen_handle *ch = handle(h);
+
+    ch->ch_tree_resolve_wrapper_fn = fn;
+    ch->ch_tree_resolve_wrapper_arg = arg;
+    return 0;
+}
+
+/*! Get CLIgen treeref wrap function
+ *
+ * @param[in]  h     CLIgen handle
+ * @param[out] fn    Register function to call when looking for a tree ref
+ * @param[out] arg   Call function with this argument
+ */
+int
+cligen_tree_resolve_wrapper_get(cligen_handle            h,
+                                cligen_tree_resolve_wrapper_fn **fn,
+                                void                   **arg)
+{
+    struct cligen_handle *ch = handle(h);
+
+    if (fn)
+        *fn = ch->ch_tree_resolve_wrapper_fn;
+    if (arg)
+        *arg = ch->ch_tree_resolve_wrapper_arg;
     return 0;
 }

@@ -195,7 +195,8 @@ cligen_ph_workpoint_set(pt_head *ph,
  * @retval    NULL    Not found
  */
 pt_head *
-cligen_ph_find(cligen_handle h, char *name)
+cligen_ph_find(cligen_handle h,
+               char         *name)
 {
     char *phname;
 
@@ -234,7 +235,8 @@ cligen_ph_free(pt_head *ph)
  * Note, if this is the first tree, it is activated by default
  */
 pt_head *
-cligen_ph_add(cligen_handle h, char *name)
+cligen_ph_add(cligen_handle h,
+              char         *name)
 {
     pt_head *ph, *phlast;
     
@@ -336,13 +338,13 @@ cligen_ph_active_get(cligen_handle h)
  * If parse-tree not found all are inactivated.
  */
 int
-cligen_ph_active_set_byname(cligen_handle h, char *name)
+cligen_ph_active_set_byname(cligen_handle h,
+                            char         *name)
 {
     pt_head *ph = cligen_ph_find(h, name);
 
-	cligen_pt_head_active_set(h, ph);
-
-	return 0;
+    cligen_pt_head_active_set(h, ph);
+    return 0;
 }
 
 /*

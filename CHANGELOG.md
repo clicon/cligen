@@ -1,5 +1,12 @@
 # Cligen Changelog
         
+## 6.2.0
+Expected: April 2023
+
+### Minor features
+
+* Added wrapper callback for accessing treerefs, in an effort to make them dynamical/programmable
+
 ## 6.1.0
 19 february 2023
 
