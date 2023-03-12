@@ -5,7 +5,9 @@
 
 ### Minor features
 
-* Added print functions for VOID type using printf %p
+* Make cligen_* functions const by @dima1308 in https://github.com/clicon/cligen/pull/83
+* Eliminate linear search for active parse tree by @rcmcdonald91 in https://github.com/clicon/cligen/pull/84
+* Added print functions for VOID type using printf `%p`
 
 ### Corrected Bugs
 
