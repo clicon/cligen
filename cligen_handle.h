@@ -66,9 +66,9 @@
  * @param[in]  wh    Wrap handle. If NULL: init, othewise compare present state with wh
  * @param[in]  name  A name for logging
  * @param[in]  fn    A function name for loggin
- * @retval     -1    Error
- * @retval      0    Fail (for info only, cligen_eval does not handle fails)
  * @retval      1    OK
+ * @retval      0    Fail (for info only, cligen_eval does not handle fails)
+ * @retval     -1    Error
  * @code
  *  void *wh = NULL;
  *  cligen_eval_wrap_cb(h, &wh, "myfn", __FUNCTION__);
@@ -77,6 +77,19 @@
  * See cligen_eval
  */
 typedef int (cligen_eval_wrap_fn)(void *arg, void **wh, const char *name, const char *fn);
+
+/*! CLIgen wrap function for making treeref lookup
+ *
+ * This adds an indirection based on name and context
+ * @param[in]  h     CLIgen handle
+ * @param[in]  name  Base tree name
+ * @param[in]  cvt     Tokenized string: vector of tokens
+ * @param[in]  arg   Argument given when registering wrap function (maybe not needed?)
+ * @param[out] namep New (malloced) name
+ * @retval     0     OK
+ * @retval    -1     Error
+ */
+typedef int (cligen_tree_resolve_wrapper_fn)(cligen_handle h, char *name, cvec *cvt, void *arg, char **namep);
 
 /*
  * Prototypes
@@ -179,5 +192,8 @@ int   cv_exclude_keys_get(void);
 
 int   cligen_eval_wrap_fn_set(cligen_handle h, cligen_eval_wrap_fn *fn, void *arg);
 int   cligen_eval_wrap_fn_get(cligen_handle h, cligen_eval_wrap_fn **fn, void **arg);
+
+int   cligen_tree_resolve_wrapper_set(cligen_handle h, cligen_tree_resolve_wrapper_fn *fn, void *arg);
+int   cligen_tree_resolve_wrapper_get(cligen_handle h, cligen_tree_resolve_wrapper_fn **fn, void **arg);
 
 #endif /* _CLIGEN_HANDLE_H_ */

@@ -709,12 +709,12 @@ pt_eq(cligen_handle h,
         return -1;
     if ((pt1n = pt_new()) == NULL)
         return -1;
-    if (pt_expand(h, co0p, pt0, NULL,
+    if (pt_expand(h, co0p, pt0, NULL, NULL,
                   1, /* Include hidden commands */
                   0, /* VARS are not expanded, eg ? <tab> */
                   pt0n) < 0)      /* expansion */
         return -1;
-    if (pt_expand(h, co1p, pt1, NULL,
+    if (pt_expand(h, co1p, pt1, NULL, NULL,
                   1, /* Include hidden commands */
                   0, /* VARS are not expanded, eg ? <tab> */
                   pt1n) < 0)      /* expansion */

@@ -110,7 +110,9 @@ struct cligen_handle{
     int         ch_expand_first; /* Set if expand arg 1 of callback cvv */
     int         ch_exclude_keys; /* Set if exclude keywords from callback cvv */
     cligen_eval_wrap_fn *ch_eval_wrap_fn;  /* Wrap function check state around cligen_eval */
-    void               *ch_eval_wrap_arg; /* Argument to wrap function */
+    void        *ch_eval_wrap_arg; /* Argument to eval wrap function */
+    cligen_tree_resolve_wrapper_fn *ch_tree_resolve_wrapper_fn;  /* Wrap function for treeref lookup */
+    void        *ch_tree_resolve_wrapper_arg; /* Argument to treeref wrap function */
 };
 
 #endif /* _CLIGEN_HANDLE_INTERNAL_H_ */

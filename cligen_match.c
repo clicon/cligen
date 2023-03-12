@@ -752,9 +752,10 @@ match_pattern_sets(cligen_handle h,
     if ((ptn = pt_new()) == NULL)
         goto done;
     if (pt_expand(h,
-                   co_match,
-                   co_pt_get(co_match),
-                   cvv,
+                  co_match,
+                  co_pt_get(co_match),
+                  cvt,
+                  cvv,
                   !best,  /* If best is set, include hidden commands, otherwise do not */
                   1,      /* VARS are expanded, eg ? <tab> */
                   ptn) < 0) /* expand/choice variables */
@@ -1013,7 +1014,7 @@ match_pattern(cligen_handle h,
                 goto done;
             if ((cvv = cvec_new(0)) == NULL)
                 goto done;
-            if (pt_expand(h, co1, ptc, cvv, 1, 0, ptn) < 0)
+            if (pt_expand(h, co1, ptc, cvt, cvv, 1, 0, ptn) < 0)
                 goto done;
             /* Loop sets i which is used below */
             for (i=0; i<pt_len_get(ptn); i++){
