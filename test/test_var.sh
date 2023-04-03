@@ -34,6 +34,9 @@ newtest "$cligen_file -f $fspec"
 newtest "aa 42"
 expectpart "$(echo "aa 42" | $cligen_file -f $fspec 2>&1)" 0 "0 name:cmd type:rest value:aa 42" "1 name:aaa type:string value:aaa" "2 name:int32 type:int32 value:42"
 
+newtest "aa \"\""
+expectpart "$(echo "aa \"\"" | $cligen_file -f $fspec 2>&1)" 0 "CLI syntax error" "'' is not a number"
+
 # No string param
 newtest "aa 42 exclude keys"
 expectpart "$(echo "aa 42" | $cligen_file -E -f $fspec 2>&1)" 0 "0 name:cmd type:rest value:aa 42" "1 name:int32 type:int32 value:42" --not-- "name:aaa type:string value:aaa"
