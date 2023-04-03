@@ -7,6 +7,10 @@ Expected: April 2023
 
 * Added wrapper callback for accessing treerefs, in an effort to make them dynamical/programmable
 
+### Corrected Bugs
+
+* Fixed: [Giving empty string as value for integer variable exists the CLI shell](https://github.com/clicon/cligen/issues/85)
+
 ## 6.1.0
 19 february 2023
 

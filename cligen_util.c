@@ -70,7 +70,7 @@
  * @retval -1  Error
  */
 int
-cvec_add_string(cvec *cvv, 
+cvec_add_string(cvec       *cvv, 
                 const char *name, 
                 const char *val)
 {

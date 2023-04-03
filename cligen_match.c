@@ -153,8 +153,9 @@ match_object(cligen_handle h,
              int          *exact,
              char        **reason)
 {
-  int    match = 0;
-  size_t len = 0;
+  int          match = 0;
+  size_t       len = 0;
+  enum cv_type t;
 
   if (str)
       len = strlen(str);
@@ -190,8 +191,15 @@ match_object(cligen_handle h,
       }
     break;
   case CO_VARIABLE:
-      if (str == NULL || len==0)
-          match++;
+      t = co->co_vtype;
+      if (str == NULL || len==0){
+          if (best && cv_isint(t)){
+              if ((match = match_variable(h, co, str, reason)) < 0)
+                  return -1;
+          }
+          else
+              match++;
+      }
       else
           if ((match = match_variable(h, co, str, reason)) < 0)
               return -1;
