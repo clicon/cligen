@@ -34,7 +34,8 @@
 #       autoconf
 # in the directory containing this script.
 
-AC_INIT(cligen.h)
+AC_INIT
+AC_CONFIG_SRCDIR([cligen.h])
 
 # Default CFLAGS unless set by environment.
 : ${INSTALLFLAGS="-s"}
@@ -61,7 +62,7 @@ else
    : ${CFLAGS="-O2 -Wall"}
 fi
 
-AC_CONFIG_HEADER(cligen_config.h)
+AC_CONFIG_HEADERS([cligen_config.h])
 
 # cligen versions spread to Makefile's (.so files)
 AC_SUBST(CLIGEN_VERSION)
@@ -80,7 +81,7 @@ AC_CANONICAL_HOST
 AC_PROG_CC()
 AC_PROG_CPP
 AC_PROG_YACC
-AC_PROG_LEX
+AC_PROG_LEX(noyywrap)
 AC_PROG_INSTALL
 
 AC_PROG_LN_S
@@ -163,9 +164,10 @@ AC_ARG_ENABLE(nls)
 
 AH_BOTTOM([#include <cligen_custom.h>])
 
-AC_OUTPUT([
+AC_CONFIG_FILES([
         Makefile
         extras/rpm/Makefile
         test/config.sh
 ])
+AC_OUTPUT
 

@@ -83,7 +83,7 @@ typedef int (cligen_eval_wrap_fn)(void *arg, void **wh, const char *name, const 
  * This adds an indirection based on name and context
  * @param[in]  h     CLIgen handle
  * @param[in]  name  Base tree name
- * @param[in]  cvt     Tokenized string: vector of tokens
+ * @param[in]  cvt   Tokenized string: vector of tokens providing some context
  * @param[in]  arg   Argument given when registering wrap function (maybe not needed?)
  * @param[out] namep New (malloced) name
  * @retval     0     OK

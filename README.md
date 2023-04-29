@@ -8,9 +8,8 @@ Well, actually it is not really a generator, since it does
 not _generate_ code for CLI:s. Instead, it builds and interprets
 datastructures (a parse-tree) which a library (libcligen) interprets
 in runtime.  It is fast and efficient and helps you develop CLI:s
-easier. You enter a CLI syntax either in a text file, you
-write callback functions where you call the right library
-routines. The callback functions add the semantics, that is, what the
+easier. You enter a CLI syntax in a text file, and 
+write callback functions in C. The callback functions add the semantics, that is, what the
 commands in the CLI are supposed to do. 
 
 The main documentation is the [cligen tutorial](cligen_tutorial.pdf)
@@ -21,11 +20,11 @@ Some background material can be found on the [CLIgen project page](https://www.c
 
 CLIgen is _not_ a system in itself, you need to build your own
 'backend'.  There is another co-project: 'clixon' which is
-actually a whole system where you load dynamic frontend and backend
-modules [CLIXON project page](https://www.clicon.org) and [CLIXON
+a whole system where you load dynamic frontend and backend
+modules. See [CLIXON project page](https://www.clicon.org) and [CLIXON
 github](https://github.com/clicon/clixon). Clixon provides a
-system, with embedded database, commit semantics, YANG and NETCONF
-interface, etc. CLIgen is a part of clixon.
+system with embedded database, commit semantics, YANG and NETCONF
+interface, etc. CLIgen is a part of clixon but can be used by itself.
 
 The source code here is built and installed using:
 ```
