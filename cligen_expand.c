@@ -238,13 +238,13 @@ tree_resolve(cligen_handle h,
              cvec         *cvt,
              parse_tree  **ptrefp)
 {
-    int      retval = -1;
-    char    *treename;
-    char    *treename2 = NULL;
-    pt_head *ph;
-    cg_obj  *cow;
+    int                             retval = -1;
+    char                           *treename;
+    char                           *treename2 = NULL;
+    pt_head                        *ph;
+    cg_obj                         *cow;
     cligen_tree_resolve_wrapper_fn *fn = NULL;
-    void                   *arg = NULL;
+    void                           *arg = NULL;
     
     treename = co->co_command;
     cligen_tree_resolve_wrapper_get(h, &fn, &arg);
