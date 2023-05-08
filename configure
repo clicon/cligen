@@ -4126,7 +4126,6 @@ printf "%s\n" "Compiler is $CC" >&6; }
 #
 # Set options for each compiler. Suffix is for WIN32
 LIBS="${LIBS} -L." #
-LDFLAGS=""
 CPPFLAGS="-DHAVE_CONFIG_H ${CPPFLAGS}"
 
 # Postfix for shared libs
