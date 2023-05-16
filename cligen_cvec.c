@@ -86,7 +86,6 @@ static inline char * strdup4(const char *str)
  *
  * Each individual cv initialized with CGV_ERR and no value.
  * Returned cvec needs to be freed with cvec_free().
- *
  * @param[in] len    Number of cv elements. Can be zero and elements added incrementally.
  * @retval    NULL   errno set
  * @retval    cvv    allocated cligen var vector
@@ -109,8 +108,8 @@ cvec_new(int len)
 
 /*! Create a new vector, initialize the first element to the contents of 'var'
  *
- * @param[in] var      cg_var to clone and add to vector
- * @retval    cvec     allocated cvec
+ * @param[in] var   cg_var to clone and add to vector
+ * @retval    cvec  Allocated cvec
  */
 cvec *
 cvec_from_var(cg_var *cv)
@@ -147,7 +146,6 @@ cvec_free(cvec *cvv)
 /*! Initialize a cligen variable vector (cvec) with 'len' numbers of variables.
  *
  * Each individual cv initialized with CGV_ERR and no value.
- *
  * @param[in] cvv  Cligen variable vector
  * @param[in] len  Number of cv elements. Can be zero and elements added incrementally.
  * @see cvec_new
@@ -184,11 +182,10 @@ cvec_reset(cvec *cvv)
     return 0;
 }
 
-/*! Given a cv in a cligen variable vector (cvec) return the next cv.
+/*! Given an element (cv0) in a cligen variable vector (cvec) return the next element.
  *
  * @param[in]  cvv    The cligen variable vector
  * @param[in]  cv0    Return element after this, or first element if this is NULL
- * Given an element (cv0) in a cligen variable vector (cvec) return the next element.
  * @retval cv  Next element
  */
 cg_var *
@@ -243,10 +240,11 @@ cvec_add(cvec        *cvv,
 }
 
 /*! Append a new var that is a clone of data in 'cv' to the vector, return it
+ *
  * @param[in] cvv  Cligen variable vector
  * @param[in] cv   Append this cligen variable to vector. Note that it is copied.
- * @retval    NULL Error
  * @retval    tail Return the new last tail variable (copy of cv)
+ * @retval    NULL Error
  */
 cg_var *
 cvec_append_var(cvec   *cvv,
@@ -334,6 +332,7 @@ cvec_del_i(cvec *cvv,
 }
 
 /*! Return allocated length of a cvec.
+ *
  * @param[in]  cvv   Cligen variable vector
  */
 int
@@ -345,6 +344,7 @@ cvec_len(cvec *cvv)
 }
 
 /*! Return i:th element of cligen variable vector cvec.
+ *
  * @param[in]  cvv   Cligen variable vector
  * @param[in]  i     Order of element to get
  */
@@ -361,6 +361,7 @@ cvec_i(cvec *cvv,
 }
 
 /*! Return string value of i:th element of cligen variable vector. Helper function.
+ *
  * @param[in]  cvv   Cligen variable vector
  * @param[in]  i     Order of element to get
  * @retval     str   String value of i:th element
@@ -381,8 +382,8 @@ cvec_i_str(cvec *cvv,
  *
  * @param[in] cvv       Cligen variable vector
  * @param[in] prev      Last cgv (or NULL)
- * @retval cv           Next variable structure.
- * @retval NULL         When end of list reached.
+ * @retval    cv        Next variable structure.
+ * @retval    NULL      When end of list reached.
  * @code
  *    cg_var *cv = NULL;
  *    while ((cv = cvec_each(cvv, cv)) != NULL)
@@ -409,8 +410,8 @@ cvec_each(cvec   *cvv,
  *
  * @param[in] cvv   Cligen variable vector
  * @param[in] prev  Last cgv (or NULL)
- * @retval cv       Next variable structure.
- * @retval NULL     When end of list reached.
+ * @retval    cv    Next variable structure.
+ * @retval    NULL  When end of list reached.
  * Common in many cvecs where [0] is the command-line and all
  * others are arguments.
  * @see cvec_each  For all elements, dont skip first
@@ -466,8 +467,8 @@ cvec_dup(cvec *old)
 /*! Create a cv list with a single string element.
  *
  * @param[in]  cmd  Text string
- * @retval     NULL Error
  * @retval     cvv  Cligen variable list
+ * @retval     NULL Error
  * Help function when creating cvec to cligen callbacks.
  */
 cvec *
@@ -486,6 +487,7 @@ cvec_start(char *cmd)
 }
 
 /*! Pretty print cligen variable list to a file
+ *
  * @param[in]  f    File to print to
  * @param[in]  cvv  Cligen variable vector to print
  * @see cvec2cbuf
@@ -513,6 +515,7 @@ cvec_print(FILE *f,
 }
 
 /*! Pretty print cligen variable list to a cligen buffer
+ *
  * @param[out] cb   Cligen buffer (should already be initialized w cbuf_new)
  * @param[in]  cvv  Cligen variable vector to print
  * @see cvec_print
@@ -545,7 +548,7 @@ cvec2cbuf(cbuf *cb,
  * @see cvec_find_keyword
  */
 cg_var *
-cvec_find(cvec *cvv,
+cvec_find(cvec       *cvv,
           const char *name)
 {
     cg_var *cv = NULL;
@@ -562,6 +565,7 @@ cvec_find(cvec *cvv,
 }
 
 /*! Return first keyword cv in a cvec matching a name
+ *
  * @param[in]  cvv   Cligen variable vector
  * @param[in]  name  Name to match
  * @retval     cv    Element matching name. NULL
@@ -581,6 +585,7 @@ cvec_find_keyword(cvec *cvv,
 }
 
 /*! Return first non-keyword cv in a cvec matching a name
+ *
  * @param[in]  cvv   Cligen variable vector
  * @param[in]  name  Name to match
  * @retval     cv    Element matching name. NULL
@@ -601,7 +606,6 @@ cvec_find_var(cvec *cvv,
 
 /*! Typed version of cvec_find that returns the string value.
  *
-
  * @param[in]  cvv   Cligen variable vector
  * @param[in]  name  Name to match
  * @retval     cv    Element matching name. NULL
@@ -612,7 +616,7 @@ cvec_find_var(cvec *cvv,
  * @see cvec_find
  */
 char *
-cvec_find_str(cvec *cvv,
+cvec_find_str(cvec       *cvv,
               const char *name)
 {
     cg_var *cv;
@@ -623,9 +627,10 @@ cvec_find_str(cvec *cvv,
 }
 
 /*! Get name of cligen variable vector
+ *
  * @param[in]  cvv  Cligen variable vector
- * @retval str  The name of the cvec as a string, can be NULL, no copy
- * @retval      name Name of variable vector
+ * @retval     str  The name of the cvec as a string, can be NULL, no copy
+ * @retval     name Name of variable vector
  */
 char *
 cvec_name_get(cvec *cvv)
@@ -634,6 +639,7 @@ cvec_name_get(cvec *cvv)
 }
 
 /*! Allocate and set name of cligen variable vector, including NULL
+ *
  * @param[in]  cvv    A cligen variable vector
  * @param[in]  name   A string that is copied and used as a cvec name, or NULL
  * @retval     str    The name of the cvec.
@@ -728,6 +734,7 @@ cligen_txt2cvv(char  *str,
 }
 
 /*! Given a string (s0), return the next token. 
+ *
  * The string is modified to return
  * the remainder of the string after the identified token.
  * A token is found either as characters delimited by one or many delimiters.
@@ -918,7 +925,7 @@ cligen_str2cvv(char  *string,
  *
  * @param[in,out]  cvv  Change first element
  * @retval         0    OK
- * @retval         -1   Error
+ * @retval        -1    Error
  * @see https://github.com/clicon/cligen/issues/65
  */
 int
