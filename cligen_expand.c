@@ -231,6 +231,9 @@ transform_var_to_cmd(cg_obj *co,
  * @param[in]  co      Cligen treeref object 
  * @param[in]  cvt     Tokenized string: vector of tokens
  * @param[out] ptrefp  Treeref Parse-tree result
+ * @retval     1       OK
+ * @retval     0       No such tree
+ * @retval    -1       Error
  */
 static int
 tree_resolve(cligen_handle h,
@@ -245,19 +248,27 @@ tree_resolve(cligen_handle h,
     cg_obj                         *cow;
     cligen_tree_resolve_wrapper_fn *fn = NULL;
     void                           *arg = NULL;
+    int                             ret;
     
     treename = co->co_command;
     cligen_tree_resolve_wrapper_get(h, &fn, &arg);
     if (fn){
-        if (fn(h, treename, cvt, arg, &treename2) < 0)
+        if ((ret = fn(h, treename, cvt, arg, &treename2)) < 0)
             goto done;
-        if (treename2)
+        if (ret == 0) /* No wrapper use existing */
+            ;
+        else          /* New malloced name */
             treename = treename2;
     }
     /* Get parse tree header */
     if ((ph = cligen_ph_find(h, treename)) == NULL){
-        fprintf(stderr, "CLIgen tree '%s' not found\n", treename);
-        goto done;
+        if (fn && treename2==NULL){
+            goto ok;
+        }
+        else{
+            fprintf(stderr, "CLIgen tree '%s' not found\n", treename);
+            goto done;
+        }
     }
     /* Get working point of tree, if any,
      * and thereby the original tree (ptref)
@@ -266,6 +277,7 @@ tree_resolve(cligen_handle h,
         *ptrefp = co_pt_get(cow);
     else
         *ptrefp = cligen_ph_parsetree_get(ph);      
+ ok:
     retval = 0;
  done:
     if (treename2)
@@ -688,6 +700,49 @@ pt_expand1_co(cligen_handle h,
     return retval;
 }
 
+/*! Given a terminal and output-pipe, add output pipe tree reference after the current object
+ *
+ * @param[in]  h            CLIgen handle
+ * @param[in]  co0          Terminal original object
+ * @param[in]  cop          Parent object
+ * @param[in]  pipetreename Name of output pipe tree
+ * @param[in]  callbacks    Use these callbacks in the new object
+ * @retval     0            OK
+ * @retval    -1            Error 
+ */
+static int
+pt_expand_pipe(cligen_handle h,
+               cg_obj       *co0,
+               cg_obj       *cop,
+               char         *pipetreename,
+               cg_callback  *callbacks)
+{
+    int      retval = -1;
+    cg_obj  *co = NULL;
+    cg_obj  *cot;
+
+    /* Create new reference node */
+    if ((co = co_new(pipetreename, cop)) == NULL)
+        goto done;
+    co->co_type = CO_REFERENCE;
+    /* This relies on references being appended LAST, which means the reference will be
+     * processed after co0 */
+    if ((co = co_insert1(co_pt_get(cop), co, 1)) == NULL)  /* cot may be deleted */
+        goto done;
+    if (callbacks){
+        if (co_callback_copy(callbacks, &co->co_callbacks) < 0)
+            goto done;
+    }
+    /* Add terminal */
+    if ((cot = co_new(NULL, co)) == NULL)
+        goto done;
+    cot->co_type = CO_EMPTY;
+    co_insert1(co_pt_get(co), cot, 1);
+    retval = 0;
+ done:
+    return retval;
+}
+
 /*! Expand all tree references and <variables> from an original to a new parsetree
  *
  * The parsetree is expanded by examining the objects they point to: 
@@ -706,8 +761,7 @@ pt_expand1_co(cligen_handle h,
  * @param[in]  pt      Original parse-tree consisting of a vector of cligen objects
  * @param[in]  cvt     Tokenized string: vector of tokens
  * @param[in]  cvv_var Cligen variable vector containing vars/values pair for completion
- * @param[in]  hide    If not set, include hidden commands. If set, do not include hidden 
- *                     commands. 
+ * @param[in]  hide    If 0, include hidden commands. If 1, do not include hidden commands. 
  * @param[in]  expandvar Set if VARS should be expanded, eg ? <tab>
  * @param[out] ptn     New parse-tree initially an empty pointer, its value is returned.
  * @retval     0       OK
@@ -733,6 +787,9 @@ pt_expand(cligen_handle h,
     parse_tree *ptref = NULL;   /* tree referenced by pt0 orig */
     parse_tree *pttmp = NULL;
     cvec       *cvv2 = NULL;
+    cg_obj     *cop;
+    pt_head    *ph;
+    char       *pipename;
 
     if (pt_len_get(ptn) != 0){
         errno = EINVAL;
@@ -778,9 +835,35 @@ pt_expand(cligen_handle h,
                     pttmp = NULL;
                 }
             }
-            else
+            else{
                 if (pt_expand1_co(h, co, hide, expandvar, cvv_filter, cvv_var, 0, ptn) < 0)
                     goto done;
+                /* Given a terminal and output-pipe, add output pipe tree reference 
+                 * Note 1: cligen_pt_head_active_get() is top-level
+                 * See also match_pattern_sets where "callbacks" is set
+                 */
+                if (co->co_type == CO_EMPTY &&
+                    (cop = co->co_prev) != NULL &&
+                    cop->co_callbacks &&
+                    (ph = cligen_pt_head_active_get(h)) != NULL &&
+                    (pipename = cligen_ph_pipe_get(ph)) != NULL){
+                    /* Forward look in pt to detect already such reference?
+                     * If so skip, and let explicit entry override implicit
+                     */
+                    int     j;
+                    cg_obj *coj;
+
+                    for (j=i+1; j<pt_len_get(pt); j++){
+                        coj = pt_vec_i_get(pt, j);
+                        if (coj && coj->co_type == CO_REFERENCE &&
+                            strcmp(coj->co_command, pipename) == 0)
+                            break;
+                    }
+                    if (j==pt_len_get(pt))
+                        if (pt_expand_pipe(h, co, cop, pipename, co0->co_callbacks) < 0)
+                            goto done;
+                }
+            }
         } /* for */
     } /* for */
     /* Sorting (Alt: ensure all elements are inserted properly)

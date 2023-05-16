@@ -58,9 +58,11 @@ typedef int (cligen_fd_cb_t)(int, void*);
 /*
  * Prototypes
  */
+int  cli_pipe_output_socket_set(int s);
 int  cli_output_reset(void);
 int  cli_output_status(void);
 int  cligen_output(FILE *f, const char *templ, ... ) __attribute__ ((format (printf, 2, 3)));
+int  cligen_output_basic(FILE *f, char *inbuf, size_t inbuflen);
 int  cligen_regfd(int fd, cligen_fd_cb_t *cb, void *arg);
 int  cligen_unregfd(int fd);
 void cligen_redraw(cligen_handle h);

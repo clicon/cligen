@@ -83,6 +83,28 @@
 static int D_LINES=0; /* XXX: global */
 static int D_COLUMNS=0; /* XXX: global */
 
+static int PIPE_OUTPUT_SOCKET = -1;
+
+/*! Get output pipe socket
+ */
+static int
+cli_pipe_output_socket_get(int *s)
+{
+    if (s){
+        *s = PIPE_OUTPUT_SOCKET;
+    }
+    return 0;
+}
+
+/*! Set output pipe socket
+ */
+int
+cli_pipe_output_socket_set(int s)
+{
+    PIPE_OUTPUT_SOCKET = s;
+    return 0;
+}
+
 /*! Reset cligen_output to initial state
  * For new output or when 'q' is pressed that sets d_line to -1
  */
@@ -109,8 +131,6 @@ cli_output_status(void)
  * @param[in] term_rows   Height of terminal window
  * @see cligen_output
  */
-#include <assert.h> // XXX
-
 static int
 cligen_output_scroll(FILE   *f,
                      char   *ibuf,
@@ -161,14 +181,12 @@ cligen_output_scroll(FILE   *f,
         }
         else{
             remain -= ibend-ib1;
-            assert(remain<=linelen && remain>=0);
             ib1 = ibend;             /* 2b */
         }
         if (ib0 == ib1)
             break;
         memcpy(linebuf, ib0, (ib1-ib0));
         linebuf[(ib1-ib0)] = '\0';
-        assert(*ib0 != '\0');
         fprintf(f, "%s", linebuf);
         ib0 = ib1;
         if (D_LINES >= (term_rows -1)){
@@ -245,6 +263,7 @@ cligen_output(FILE       *f,
     int     term_rows;
     int     term_width;
     ssize_t inbuflen;
+    int     s = -1;
     
     /* Get terminal width and height, note discussion regarding NULL handle */
     term_rows = cligen_terminal_rows(NULL);
@@ -265,7 +284,57 @@ cligen_output(FILE       *f,
         linelen = term_width;
     else
         linelen = inbuflen;
+    if (cli_pipe_output_socket_get(&s) < 0)
+        goto done;
+    if (s != -1){
+        if (write(s, inbuf, inbuflen) < 0){
+            perror("cligen_output write");
+            goto done;
+        }
+    }
+    else{
+        /* if writing to stdout, format output
+         */
+        if (term_rows && (f == stdout)){
+            if (cligen_output_scroll(f, inbuf, linelen, term_rows) < 0)
+                goto done;
+        }
+        else{
+            fprintf(f, "%s", inbuf);
+        }  
+        fflush(f);
+    }
+    retval = 0;
+ done:
+    if (inbuf)
+        free(inbuf);
+    return retval;
+}
 
+/*! Same as cligen_output, but no stdarg and no pipe-output
+ *
+ * @param[in] f           Open stdio FILE pointer
+ * @param[in] template... See man printf(3)
+ * @see cligen_output
+ */
+int
+cligen_output_basic(FILE  *f,
+                    char  *inbuf,
+                    size_t inbuflen)
+{
+    int     retval = -1;
+    ssize_t linelen;
+    int     term_rows;
+    int     term_width;
+    
+    /* Get terminal width and height, note discussion regarding NULL handle */
+    term_rows = cligen_terminal_rows(NULL);
+    term_width = cligen_terminal_width(NULL);
+
+    if (term_width > 0)
+        linelen = term_width;
+    else
+        linelen = inbuflen;
     /* if writing to stdout, format output
      */
     if (term_rows && (f == stdout)){
@@ -278,8 +347,6 @@ cligen_output(FILE       *f,
     fflush(f);
     retval = 0;
  done:
-    if (inbuf)
-        free(inbuf);
     return retval;
 }
 

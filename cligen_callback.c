@@ -71,7 +71,6 @@ co_callback_next(cg_callback *cc)
  *
  * @param[in]  cc0  The object to copy from
  * @param[out] ccn  Pointer to the object to copy to (is allocated)
- * @param[in]  cgv  if given, is a string that overrides the arg in cc.
  * @retval     0      OK
  * @retval     -1     Error
  */
@@ -95,6 +94,7 @@ co_callback_copy(cg_callback  *cc0,
                 goto done;
         if (cc->cc_cvec && ((cc1->cc_cvec = cvec_dup(cc->cc_cvec)) == NULL))
             goto done;
+        cc1->cc_flags = cc->cc_flags;
         *ccp = cc1;
         ccp = &cc1->cc_next;
         cc1 = NULL;
@@ -136,7 +136,6 @@ co_callbacks_free(cg_callback **ccp)
    }
     return 0;
 }
-
 
 /*! Print a CLIgen object callback to a CLIgen buffer
  */

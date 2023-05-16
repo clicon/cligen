@@ -3,6 +3,12 @@
 ## 6.3.0
 Expected: July 2023
 
+### New features
+* Output pipes
+  * See [Best way to implement output pipes?](https://github.com/clicon/cligen/issues/19)
+  * Callbacks with name starting with `|` is a pipe tree containing pipe output function
+  * Use 'pipetree="|<pipe-tree>"` to reference a default pipe-tree.
+
 ### Minor features
 * Removed  extras/ build-root/ and rpm build code since they are not properly maintained
 

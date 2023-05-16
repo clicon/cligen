@@ -41,6 +41,13 @@
  */
 typedef struct pt_head pt_head;  /* defined in cligen_handle_internal.h */
 
+/*
+ * Macros
+ */
+/* An output-pipe tree name begins with '|', it causes all callbacks in that tree
+ * to be flagged with CC_FLAGS_PIPE_FUNCTION
+ */
+#define IS_PIPE_TREE(name) (name && strlen(name) && name[0] == '|')
 
 /*
  * Prototypes
@@ -49,11 +56,12 @@ char       *cligen_ph_name_get(pt_head *ph);
 int         cligen_ph_name_set(pt_head *ph, char *name);
 parse_tree *cligen_ph_parsetree_get(pt_head *ph);
 int         cligen_ph_parsetree_set(pt_head *ph, parse_tree *pt);
-
 cg_obj     *cligen_ph_workpoint_get(pt_head *ph);
 int         cligen_ph_workpoint_set(pt_head *ph, cg_obj *cow);
 char       *cligen_ph_prompt_get(pt_head *ph);
 int         cligen_ph_prompt_set(pt_head *ph, char *prompt);
+char       *cligen_ph_pipe_get(pt_head *ph);
+int         cligen_ph_pipe_set(pt_head *ph, char *pipe);
 pt_head    *cligen_ph_find(cligen_handle h, char *name);
 int         cligen_ph_free(pt_head *ph);
 #ifdef NOTUSED

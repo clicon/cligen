@@ -39,4 +39,3 @@ typedef struct {int a;} *cligen_handle;
 #else
 typedef void *cligen_handle; /* API */
 #endif
-

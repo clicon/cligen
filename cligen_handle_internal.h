@@ -68,6 +68,7 @@ typedef struct pt_head  { /* Linked list of cligen parse-trees */
     char            *ph_prompt;    /* Tree-specific prompt */ 
     cg_obj          *ph_workpt;    /* Shortcut to "working point" cligen object, or more 
                                     * specifically its parse-tree sub vector. */
+    char           *ph_output_pipe; /* Name of output-pipe tree associated w this tree */
 } pt_head;
 
 /* CLIgen handle. Its members should be hidden and only the typedef visible */

@@ -219,6 +219,38 @@ cligen_ph_prompt_set(pt_head *ph,
     return 0;
 }
 
+/*! Get pipe output tree
+ *
+ * @param[in]   ph    Parse-tree header
+ * @retval      name  Name of output pipe tree
+ */
+char *
+cligen_ph_pipe_get(pt_head *ph)
+{
+    return ph->ph_output_pipe;
+}
+
+/*! Set pipe output tree
+ *
+ * @param[in]  ph    Parse-tree header
+ * @param[in]  name  Name of output pipe tree, is copied
+ */
+int
+cligen_ph_pipe_set(pt_head *ph,
+                   char    *pipe)
+{
+    if (ph->ph_output_pipe){
+        free(ph->ph_output_pipe);
+        ph->ph_output_pipe = NULL;
+    }
+    if (pipe){
+        if ((ph->ph_output_pipe = strdup(pipe)) == NULL)
+
+            return -1;
+    }
+    return 0;
+}
+
 /*! Find a parsetree head by its name,
  * @param[in] h       CLIgen handle
  * @param[in] name    Name of tree
@@ -256,6 +288,8 @@ cligen_ph_free(pt_head *ph)
         pt_free(ph->ph_parsetree, 1);
     if (ph->ph_prompt)
         free(ph->ph_prompt);
+    if (ph->ph_output_pipe)
+        free(ph->ph_output_pipe);
     free(ph);
     return 0;
 }

@@ -129,7 +129,108 @@ callback(cligen_handle handle,
     return 0;
 }
 
+/*! cli callback calls cligen_output with output lines as given by function arguments
+ *
+ * This is to generate output to eg cligen_output scrolling
+ * Example:
+ * a, printlines_fn("line1 abc", "line2 def");
+ */
+int
+output_fn(cligen_handle handle,
+          cvec         *cvv,
+          cvec         *argv)
+{
+    cg_var *cv;
+    
+    cv = NULL;
+    while ((cv = cvec_each(argv, cv)) != NULL){
+        cligen_output(stdout, "%s\n", cv_string_get(cv));
+    }
+    return 0;
+}
+
+/*! Output pipe function
+ *
+ * First argv is a shell command, 
+ * the following argv:s are names of variables in cvv whose values are appended to the shell
+ * @param[in]  h     CLIgen handle / user handle
+ * @param[in]  cvv   Vector of variables: function parameters
+ * @param[in]  argv  Vector of variables from command-line
+ * @code
+ *   abc grep <arg:string>, pipe_shell_fn("grep -e", "arg");
+ * @endcode
+ * @note WARNING: USE ONLY FOR TEST. You could exec any unix command
+ */
+int
+pipe_shell_fn(cligen_handle h,
+              cvec         *cvv,
+              cvec         *argv)
+{
+    int     retval = -1;
+    cbuf   *cb = NULL;
+    cg_var *av;
+    cg_var *cv;
+    char   *name;
+
+    if ((cb = cbuf_new()) == NULL){
+        perror("cbuf_new");
+        goto done;
+    }
+    if (argv && (av = cvec_i(argv, 0)) != NULL){
+        /* First arg is command */
+        cprintf(cb, "%s", cv_string_get(av));
+        /* Rest are names of parameters from cvv */
+        av = NULL;
+        while ((av = cvec_each1(argv, av)) != NULL){
+            name = cv_string_get(av);
+            if ((cv = cvec_find_var(cvv, name)) != NULL)
+                cprintf(cb, " %s", cv_string_get(cv));
+        }
+        retval = execl("/bin/sh", "sh", "-c", cbuf_get(cb), (char *) NULL);
+    }
+ done:
+    if (cb)
+        cbuf_free(cb);
+    return retval;
+}
+
+#if 0
+int
+grep_fn(cligen_handle h,
+        cvec         *cvv,
+        cvec         *argv)
+{
+    int     retval = -1;
+    cbuf   *cb = NULL;
+    cg_var *av;
+    cg_var *cv;
+    char   *name;
+
+    if ((cb = cbuf_new()) == NULL){
+        perror("cbuf_new");
+        goto done;
+    }
+    if (argv && (av = cvec_i(argv, 0)) != NULL){
+        /* First arg is command */
+        //        cprintf(cb, "%s", cv_string_get(av));
+        /* Rest are names of parameters from cvv */
+        av = NULL;
+        while ((av = cvec_each1(argv, av)) != NULL){
+            name = cv_string_get(av);
+            if ((cv = cvec_find_var(cvv, name)) != NULL)
+                cprintf(cb, "%s", cv_string_get(cv));
+        }
+        retval = execl("/usr/bin/grep", "grep", "-e", cbuf_get(cb), (char *) NULL);
+    }
+ done:
+    if (cb)
+        cbuf_free(cb);
+    return retval;
+}
+#endif
+
 /*! Example of static string to function mapper
+ *
  * Note, the syntax need to something like: "a{help}, callback(42)"
  */
 cgv_fnstype_t *
@@ -140,9 +241,13 @@ str2fn(char  *name,
     *error = NULL;
     if (strcmp(name, "callback") == 0)
         return callback;
-    if (strcmp(name, "cligen_exec_cb") == 0)
+    else if (strcmp(name, "pipe_shell_fn") == 0)
+        return pipe_shell_fn;
+    else if (strcmp(name, "output_fn") == 0)
+        return output_fn;
+    else if (strcmp(name, "cligen_exec_cb") == 0)
         return cligen_exec_cb;
-    return callback; /* allow any function (for testing) */
+    else return callback; /* allow any function (for testing) */
 }
 
 /*! Example of expansion(completion) function. 
@@ -167,7 +272,7 @@ cli_expand_cb(cligen_handle h,
         cvec_add_string(commands, NULL, "exp2"); cvec_add_string(helptexts, NULL, "Help exp2");
         cvec_add_string(commands, NULL, "exp3"); cvec_add_string(helptexts, NULL, "Help exp3");
     }
-    else{
+    else {
         cvec_add_string(commands, NULL, "exp2");  cvec_add_string(helptexts, NULL, "Help exp2");
     }
 #else
@@ -203,7 +308,7 @@ usage(char *argv)
             "\t-e \t\tSet automatic expansion/completion for all expand() functions\n"
             "\t-E \t\tExclude keys in callback cvv. Default include keys\n"
             "\t-c \t\tExpand first arg of callback cvv to string matching keywords\n"
-            "\t-P <mode> \t\tSet preference mode: 1: tiebreak terminals, 2: also non-terminals\n"
+            "\t-P <mode> \tSet preference mode: 1: tiebreak terminals, 2: also non-terminals\n"
             "\t-t <nr> \tSet tab mode: 1:columns, 2: same pref for vars, 4: all steps\n"
             "\t-s <nr> \tScrolling 0: disable line scrolling, 1: enable line scrolling (default 1)\n"
             "\t-u \t\tEnable experimental UTF-8 mode\n"
@@ -309,16 +414,15 @@ main(int   argc,
     if (clispec_parse_file(h, f, filename?filename:"stdin", NULL, NULL, globals) < 0)
         goto done;
 
-    ph = cligen_ph_i(h, 0); 
-    pt = cligen_ph_parsetree_get(ph);
-    
-    /* map functions */
-    if (pt) {
-        if (cligen_callbackv_str2fn(pt, str2fn, NULL) < 0)   /* callback */
-            goto done;
-        if (set_expand &&
-            cligen_expandv_str2fn(pt, str2fn_exp, NULL) < 0) /* expand */
-            goto done;
+    ph = NULL; 
+    while ((ph = cligen_ph_each(h, ph)) != NULL){
+        if ((pt = cligen_ph_parsetree_get(ph)) != NULL){     /* map functions */
+            if (cligen_callbackv_str2fn(pt, str2fn, NULL) < 0)   /* callback */
+                goto done;
+            if (set_expand &&
+                cligen_expandv_str2fn(pt, str2fn_exp, NULL) < 0) /* expand */
+                goto done;
+        }
     }
     if ((str = cvec_find_str(globals, "prompt")) != NULL)
         cligen_prompt_set(h, str);
@@ -333,7 +437,6 @@ main(int   argc,
     if ((str = cvec_find_str(globals, "mode")) != NULL)
         cligen_ph_active_set_byname(h, str);
     cvec_free(globals);
-
     if (print_syntax){
         pt_print1(stdout, pt, 0);
         fflush(stdout);

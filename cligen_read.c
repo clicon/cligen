@@ -55,6 +55,7 @@
 #endif /* WIN32 */
 #define __USE_GNU /* isblank() */
 #include <ctype.h>
+#include <sys/wait.h>
 
 #ifndef isblank
 #define isblank(c) (c==' ')
@@ -769,7 +770,7 @@ cliread_eval(cligen_handle  h,
     if (cliread(h, line) < 0)
         goto done;
     if (*line == NULL){ /* EOF */
-        *result = CG_EOF; 
+        *result = CG_EOF;
         goto ok;
     }
     if ((pt = cligen_pt_active_get(h)) == NULL){
@@ -786,19 +787,144 @@ cliread_eval(cligen_handle  h,
     if (matchobj)
         co_free(matchobj, 0);
     if (cvv)
-        cvec_free(cvv); 
+        cvec_free(cvv);
     return retval;
 }
                
-/*! Evaluate a matched CV and a cv variable list
+static int
+cligen_eval_poll(int s)
+{
+    fd_set         fdset;
+    struct timeval tnull = {0,};
+
+    FD_ZERO(&fdset);
+    FD_SET(s, &fdset);
+    return select(FD_SETSIZE, &fdset, NULL, NULL, &tnull);
+}
+
+/*! Fork pipe function and return socker and pid, redirect to pipe_output_socket
+ *
+ * @param[in]  h    CLIgen handle
+ * @param[in]  fn   Output modifier callback
+ * @param[in]  cvv  A vector of cligen variables present in the string.
+ * @param[out] sp   Socket
+ * @param[out] pidp Pid of child
+ * @see cligen_eval_pipe_post
+ */
+static int
+cligen_eval_pipe_pre(cligen_handle  h,
+                     cg_callback   *cc,
+                     cvec          *cvv,
+                     int           *sp,
+                     pid_t         *pidp)
+{
+    int            retval = -1;
+    int            spair[2] = {-1, -1};
+    cgv_fnstype_t *fn;
+
+    if (socketpair(AF_UNIX, SOCK_STREAM, 0, spair) < 0)
+        goto done;
+    if ((*pidp = fork()) < 0) 
+        goto done;
+    if (*pidp == 0) {   /* Child */
+        close(spair[0]);
+        close(0);
+        if (dup2(spair[1], STDIN_FILENO) < 0){
+            goto done;
+        }
+        close(1);
+        if (dup2(spair[1], STDOUT_FILENO) < 0){
+            goto done;
+        }
+        close(spair[1]);
+        fn = co_callback_fn_get(cc);
+        retval = (*fn)(cligen_userhandle(h)?cligen_userhandle(h):h, cvv, cc->cc_cvec);
+        exit(retval);
+    }
+    /* parent */
+    close(spair[1]);
+    /* for cligen_output */
+    if (cli_pipe_output_socket_set(spair[0]) < 0)
+        goto done;
+    if (sp)
+        *sp = spair[0];
+    retval = 0;
+ done:
+    return retval;
+}
+
+/*! Poll for write socket, redirect to cligen-output basic and then close pipe
+ *
+ * @param[in]  h        CLIgen handle
+ * @param[in]  s        Socket
+ * @param[in]  childpid Pid of child
+ */
+static int
+cligen_eval_pipe_post(cligen_handle h,
+                     int            s,
+                     pid_t          childpid)
+{
+    int     retval = -1;
+    int     ret;
+    int     status;
+    char    buf[4096];
+    ssize_t len = 4096;
+
+    /* Close write side of socket */
+    if (shutdown(s, SHUT_WR) < 0){
+        perror("shutdown");
+        goto done;
+    }
+    if ((ret = cligen_eval_poll(s)) < 0){
+        perror("cligen_eval_poll");
+        goto done;
+    }
+    if (ret == 0){
+        usleep(10000);
+        if ((ret = cligen_eval_poll(s)) < 0){
+            perror("cligen_eval_poll");
+            goto done;
+        }
+        while (ret) {
+            if ((len = read(s, buf, 4096)) < 0){
+                perror("cli_pipe_exec_cb, read");
+                goto done;
+            }
+            if (len == 0)
+                break;
+            buf[len] = '\0';
+            cligen_output_basic(stdout, buf, len);
+            if ((ret = cligen_eval_poll(s)) < 0){
+                perror("cligen_eval_poll");
+                goto done;
+            }
+        }
+    }
+    if (cli_pipe_output_socket_set(-1) < 0)
+        goto done;
+    kill(childpid, SIGTERM);
+    if(waitpid(childpid, &status, 0) == childpid)
+        ret = WEXITSTATUS(status);
+    else
+        ret = -1;
+    retval = 0;
+ done:
+    return retval;
+}
+
+/*! Evaluate a matched cligen-object with an associated variable list
  *
  * @param[in]  h           CLIgen handle
  * @param[in]  co          Matched CLIgen object.
  * @param[in]  cvv         A vector of cligen variables present in the string.
  * @retval     int         If there is a callback, the return value of the callback is returned,
  * @retval     0           otherwise
- *
  * This is the only place where cligen callbacks are invoked
+ * To understand callbacks0. Assume clispec:
+ *   @fn, foo();
+ * fn:
+ *    a, bar();
+ * callbacks0 is foo()
  * @see pt_expand_fnv where expand callbacks are invoked
  */
 int
@@ -814,6 +940,8 @@ cligen_eval(cligen_handle h,
     cligen_eval_wrap_fn *wrapfn = NULL;
     void          *wraparg = NULL;
     void          *wh = NULL; /* eval wrap handle */
+    int            s = -1;
+    pid_t          childpid = 0;
     
     /* Save matched object for plugin use */
     if (h)
@@ -833,8 +961,17 @@ cligen_eval(cligen_handle h,
         cvec_exclude_keys(cvv1) < 0)
         goto done;
     cligen_eval_wrap_fn_get(h, &wrapfn, &wraparg);
-    /* Traverse callbacks */
+    /* First round: Start sub-processes for output pipe functions and redirect stdio */
     for (cc = co->co_callbacks; cc; cc=co_callback_next(cc)){
+        if ((cc->cc_flags & CC_FLAGS_PIPE_FUNCTION) == 0x0)
+            continue;
+        if (cligen_eval_pipe_pre(h, cc, cvv1, &s, &childpid) < 0)
+            goto done;
+    }
+    /* Second round, call regular callbacks */
+    for (cc = co->co_callbacks; cc; cc=co_callback_next(cc)){
+        if (cc->cc_flags & CC_FLAGS_PIPE_FUNCTION)
+            continue;
         /* Vector cvec argument to callback */
         if ((fn = co_callback_fn_get(cc)) != NULL){
             argv = cc->cc_cvec ? cvec_dup(cc->cc_cvec) : NULL;
@@ -857,12 +994,14 @@ cligen_eval(cligen_handle h,
             cligen_fn_str_set(h, NULL);
         }
     }
+    if (childpid){
+        if (cligen_eval_pipe_post(h, s, childpid) < 0)
+            goto done;
+    }
     retval = 0;
  done:
-#if 1
     if (wh)
         free(wh);
-#endif
     if (cvv1)
         cvec_free(cvv1);
     return retval;
