@@ -46,9 +46,6 @@
  * (We may be stretching the power of C here,...)
  */
 
-/* Map function names as strings to cligen function callback */
-typedef cg_fnstype_t *(cg_str2fn_t)(char *str, void *arg, char **err); /* XXX obsolete? */
-
 /* Map function names as strings to cligen vector function callback */
 typedef cgv_fnstype_t *(cgv_str2fn_t)(char *str, void *arg, char **err);
 

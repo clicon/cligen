@@ -235,6 +235,7 @@ co2cbuf(cbuf   *cb,
 }
 
 /*! Print a CLIgen parse-tree to a cbuf
+ *
  * @param[in,out] cb     CLIgen buffer
  * @param[in]     pt     Cligen parse-tree consisting of cg objects and variables
  * @param[in]     marginal How many columns to print 
@@ -381,8 +382,9 @@ co_dump1(FILE    *f,
          cg_obj  *co,
          int      indent)
 {
-    parse_tree *pt;
-    cg_var *cv;
+    parse_tree  *pt;
+    cg_var      *cv;
+    cg_callback *cc;
     
     switch (co->co_type){
     case CO_COMMAND:
@@ -409,7 +411,14 @@ co_dump1(FILE    *f,
     cv = NULL;
     while ((cv = cvec_each(co->co_cvec, cv)) != NULL)
         fprintf(f, ", label=%s", cv_name_get(cv));
+    if (co->co_callbacks){
+        fprintf(f, " callbacks:");
+        for (cc = co->co_callbacks; cc; cc = co_callback_next(cc)){
+            fprintf(f, " %s", cc->cc_fn_str);
+        }
+    }
     fprintf(f, "\n");
+
     if ((pt = co_pt_get(co)) != NULL)
         pt_dump1(f, pt, indent);
     return 0;

@@ -66,6 +66,7 @@
 #include "cligen_getline.h"
 
 #include "cligen_cv_internal.h"
+
 /*
  * URL protocol strings
  */
@@ -82,6 +83,7 @@ static char *cg_urlprotostr[] = {
 };
 
 /*! Get name of cligen variable cv
+ *
  * @param[in] cv     CLIgen variable
  * @retval    name   Name of cv
  */
@@ -94,6 +96,7 @@ cv_name_get(cg_var *cv)
 }
 
 /*! Set new CLIgen varable name. 
+ *
  * Free previous string if existing.
  * @param[in] cv     CLIgen variable
  * @param[in] s0     New name
@@ -121,6 +124,7 @@ cv_name_set(cg_var *cv,
 }
 
 /*! Get cv type
+ *
  * @param[in] cv     CLIgen variable
  * @retval    type   Type of cv
  */
@@ -133,6 +137,7 @@ cv_type_get(cg_var *cv)
 }
 
 /*! Set new CLIgen type. 
+ *
  * @param[in] cv     CLIgen variable
  * @param[in] t      New type
  * @retval    t      New type
@@ -147,6 +152,7 @@ cv_type_set(cg_var      *cv,
 }
 
 /*! Get cv const flag
+ *
  * @param[in] cv     CLIgen variable
  * @retval    type   Type of cv
  */
@@ -159,6 +165,7 @@ cv_const_get(cg_var *cv)
 }
 
 /*! Set CLIgen const flag. 
+ *
  * @param[in] cv     CLIgen variable
  * @param[in] t      New type
  * @retval    t      New type
@@ -173,6 +180,7 @@ cv_const_set(cg_var *cv,
 }
 
 /*! Get application-specific cv flag
+ *
  * @param[in] cv     CLIgen variable
  * @see cv_flag_set
  */
@@ -186,6 +194,7 @@ cv_flag(cg_var *cv,
 }
 
 /*! Clear application-specific cv flag 
+ *
  * @param[in] cv     CLIgen variable
  */
 char
@@ -198,6 +207,7 @@ cv_flag_clr(cg_var *cv,
 }
 
 /*! Set application-specific cv flag 
+ *
  * @param[in] cv     CLIgen variable
  * @see cv_flag
  */
@@ -211,6 +221,7 @@ cv_flag_set(cg_var *cv,
 }
 
 /*! Get boolean value of cv
+ *
  * @param[in] cv     CLIgen variable
  */
 char
@@ -222,6 +233,7 @@ cv_bool_get(cg_var *cv)
 }
 
 /*! Set boolean value of cv
+ *
  * @param[in] cv     CLIgen variable
  */
 char
@@ -234,6 +246,7 @@ cv_bool_set(cg_var *cv,
 }
 
 /*! Get 8-bit integer value of cv
+ *
  * @param[in] cv     CLIgen variable
  */
 int8_t
@@ -245,6 +258,7 @@ cv_int8_get(cg_var *cv)
 }
 
 /*! Set 8-bit integer value of cv
+ *
  * @param[in] cv     CLIgen variable
  */
 int8_t
@@ -257,6 +271,7 @@ cv_int8_set(cg_var *cv,
 }
 
 /*! Get 16-bit integer value of cv
+ *
  * @param[in] cv     CLIgen variable
  */
 int16_t
@@ -268,6 +283,7 @@ cv_int16_get(cg_var *cv)
 }
 
 /*! Set 16-bit integer value of cv
+ *
  * @param[in] cv     CLIgen variable
  */
 int16_t
@@ -280,6 +296,7 @@ cv_int16_set(cg_var *cv,
 }
 
 /*! Get 32-bit integer value of cv
+ *
  * @param[in] cv     CLIgen variable
  */
 int32_t
@@ -291,6 +308,7 @@ cv_int32_get(cg_var *cv)
 }
 
 /*! Set 32-bit integer value of cv
+ *
  * @param[in] cv     CLIgen variable
  */
 int32_t
@@ -303,6 +321,7 @@ cv_int32_set(cg_var *cv,
 }
 
 /*! Get 64-bit integer value of cv
+ *
  * @param[in] cv     CLIgen variable
  */
 int64_t
@@ -314,6 +333,7 @@ cv_int64_get(cg_var *cv)
 }
 
 /*! Set 64-bit integer value of cv
+ *
  * @param[in] cv     CLIgen variable
  */
 int64_t
@@ -326,6 +346,7 @@ cv_int64_set(cg_var *cv,
 }
 
 /*! Get 8-bit unsigned integer value of cv
+ *
  * @param[in] cv     CLIgen variable
  */
 uint8_t
@@ -337,6 +358,7 @@ cv_uint8_get(cg_var *cv)
 }
 
 /*! Set 8-bit unsigned integer value of cv
+ *
  * @param[in] cv     CLIgen variable
  */
 uint8_t
@@ -349,6 +371,7 @@ cv_uint8_set(cg_var *cv,
 }
 
 /*! Get 16-bit unsigned integer value of cv
+ *
  * @param[in] cv     CLIgen variable
  */
 uint16_t
@@ -360,6 +383,7 @@ cv_uint16_get(cg_var *cv)
 }
 
 /*! Set 16-bit unsigned integer value of cv
+ *
  * @param[in] cv     CLIgen variable
  */
 uint16_t
@@ -370,6 +394,7 @@ cv_uint16_set(cg_var  *cv,
 }
 
 /*! Get 32-bit unsigned integer value of cv
+ *
  * @param[in] cv     CLIgen variable
  */
 uint32_t
@@ -381,6 +406,7 @@ cv_uint32_get(cg_var *cv)
 }
 
 /*! Set 32-bit unsigned integer value of cv
+ *
  * @param[in] cv     CLIgen variable
  */
 uint32_t
@@ -393,6 +419,7 @@ cv_uint32_set(cg_var  *cv,
 }
 
 /*! Get 64-bit unsigned integer value of cv
+ *
  * @param[in] cv     CLIgen variable
  */
 uint64_t
@@ -404,6 +431,7 @@ cv_uint64_get(cg_var *cv)
 }
 
 /*! Set 64-bit unsigned integer value of cv
+ *
  * @param[in] cv     CLIgen variable
  */
 uint64_t
@@ -416,6 +444,7 @@ cv_uint64_set(cg_var  *cv,
 }
 
 /*! Get n-value of decimal-64 of cv (eg exponent)
+ *
  * @param[in] cv     CLIgen variable
  */
 uint8_t 
@@ -427,6 +456,7 @@ cv_dec64_n_get(cg_var *cv)
 }
 
 /*! Set n-value of decimal-64 of cv (eg exponent)
+ *
  * @param[in] cv     CLIgen variable
  * XXX range check? 1..18 
  */
@@ -440,6 +470,7 @@ cv_dec64_n_set(cg_var *cv,
 }
 
 /*! Get i-value of decimal-64 of cv (eg base)
+ *
  * @param[in] cv     CLIgen variable
  */
 int64_t 
@@ -451,6 +482,7 @@ cv_dec64_i_get(cg_var *cv)
 }
 
 /*! Set i-value of decimal-64 of cv (eg base)
+ *
  * @param[in] cv     CLIgen variable
  */
 int64_t 
@@ -476,10 +508,11 @@ cv_string_get(cg_var *cv)
 }
 
 /*! Allocate new string from original NULL-terminated string. Malloc new string and free previous 
+ *
  * @param[in] cv     CLIgen variable
  * @param[in] s0     String to copy from
- * @retval    NULL   Error
  * @retval    str    the new (malloced) string
+ * @retval    NULL   Error
  */
 char *
 cv_string_set(cg_var *cv, 
@@ -495,7 +528,6 @@ cv_string_set(cg_var *cv,
         errno = EINVAL;
         return NULL;
     }
-
     /* Duplicate s0. Must be done before a free, in case s0 is part of the original */
     if ((s1 = strdup(s0)) == NULL)
         return NULL; /* error in errno */
@@ -506,10 +538,11 @@ cv_string_set(cg_var *cv,
 }
 
 /*! Set new string without malloc 
- * @param[in] cv     CLIgen variable
- * @param[in] s      String to directly assign (must have been alloced)
- * @retval    0      OK
- * @retval    -1     Error
+ *
+ * @param[in] cv  CLIgen variable
+ * @param[in] s   String to directly assign (must have been alloced)
+ * @retval    0   OK
+ * @retval   -1   Error
  */
 int
 cv_string_set_direct(cg_var *cv, 
@@ -530,11 +563,12 @@ cv_string_set_direct(cg_var *cv,
 }
 
 /*! Allocate new string from original by copying using strncpy
+ *
  * @param[in] cv     CLIgen variable
  * @param[in] s0     String to copy
  * @param[in] n      Number of characters to copy (excluding NULL).
- * @retval    NULL   Error
  * @retval    str    the new (malloced) string
+ * @retval    NULL   Error
  */
 char *
 cv_strncpy(cg_var *cv, 
@@ -563,6 +597,7 @@ cv_strncpy(cg_var *cv,
 }
 
 /*! Get ipv4addr, pointer returned, can be used to set value.
+ *
  * @param[in] cv     CLIgen variable
  */
 struct in_addr *
@@ -574,6 +609,7 @@ cv_ipv4addr_get(cg_var *cv)
 }
 
 /*! Set ipv4addr, pointer returned
+ *
  * @param[in] cv     CLIgen variable
  * @param[in] addr   storage space for address
  */
@@ -587,6 +623,7 @@ cv_ipv4addr_set(cg_var *cv,
 }
 
 /*! Get ipv4addr length of cv
+ *
  * @param[in] cv     CLIgen variable
  */
 uint8_t
@@ -598,6 +635,7 @@ cv_ipv4masklen_get(cg_var *cv)
 }
 
 /*! Set ipv4addr length of cv
+ *
  * @param[in] cv     CLIgen variable
  * @param[in] masklen storage spave for masklen
  */
@@ -611,6 +649,7 @@ cv_ipv4masklen_set(cg_var *cv, uint8_t masklen)
 }
 
 /*! Get ipv6addr, pointer returned, can be used to set value.
+ *
  * @param[in] cv     CLIgen variable
  */
 struct in6_addr *
@@ -622,6 +661,7 @@ cv_ipv6addr_get(cg_var *cv)
 }
 
 /*! Get ipv6addr length of cv
+ *
  * @param[in] cv     CLIgen variable
  */
 uint8_t
@@ -659,6 +699,7 @@ cv_uuid_get(cg_var *cv)
 }
 
 /*! Set uuid value
+ *
  * @param[in] cv     CLIgen variable
  */
 unsigned char *
@@ -672,6 +713,7 @@ cv_uuid_set(cg_var        *cv,
 }
 
 /*! Returns a struct timeval by value.
+ *
  * @param[in] cv     CLIgen variable
  */
 struct timeval
@@ -685,6 +727,7 @@ cv_time_get(cg_var *cv)
 }
 
 /*! Set timeval struct
+ *
  * @param[in] cv     CLIgen variable
  * Returns a struct timeval by value.
  */
@@ -701,6 +744,7 @@ cv_time_set(cg_var        *cv,
 }
 
 /*! Returns a void pointer
+ *
  * @param[in] cv     CLIgen variable
  */
 void *
@@ -712,6 +756,7 @@ cv_void_get(cg_var *cv)
 }
 
 /*! Set void pointer
+ *
  * @param[in] cv     CLIgen variable
  */
 int
@@ -737,6 +782,7 @@ cv_urlproto_get(cg_var *cv)
 }
 
 /*! Set URL protocol
+ *
  * malloc new string from original. Free previous string if existing.
  * @param[in] cv     CLIgen variable
  */
@@ -749,7 +795,6 @@ cv_urlproto_set(cg_var *cv,
     if (!cv) {
         return 0;
     }
-
     /* Duplicate s0. Must be done before a free, in case s0 is part of the original */
     if (s0){
         if ((s1 = strdup(s0)) == NULL)
@@ -777,6 +822,7 @@ cv_urladdr_get(cg_var *cv)
 }
 
 /*! Set URL address
+ *
  * @param[in] cv     CLIgen variable
  * malloc new string from original. Free previous string if existing.
  */
@@ -817,6 +863,7 @@ cv_urlpath_get(cg_var *cv)
 }
 
 /*! Set URL path
+ *
  * @param[in] cv     CLIgen variable
  * malloc new string from original. Free previous string if existing.
  */
@@ -829,7 +876,6 @@ cv_urlpath_set(cg_var *cv,
     if (!cv) {
         return 0;
     }
-
     /* Duplicate s0. Must be done before a free, in case s0 is part of the original */
     if (s0){
         if ((s1 = strdup(s0)) == NULL)
@@ -857,8 +903,9 @@ cv_urluser_get(cg_var *cv)
 }
 
 /*! Set URL user
- * @param[in] cv     CLIgen variable
+ *
  * malloc new string from original. Free previous string if existing.
+ * @param[in] cv     CLIgen variable
  */
 char *
 cv_urluser_set(cg_var *cv, 
@@ -869,7 +916,6 @@ cv_urluser_set(cg_var *cv,
     if (!cv) {
         return 0;
     }
-
     /* Duplicate s0. Must be done before a free, in case s0 is part of the original */
     if (s0){
         if ((s1 = strdup(s0)) == NULL)
@@ -897,6 +943,7 @@ cv_urlpasswd_get(cg_var *cv)
 }
 
 /*! Set URL password
+ *
  * @param[in] cv     CLIgen variable
  * malloc new string from original. Free previous string if existing.
  */
@@ -909,7 +956,6 @@ cv_urlpasswd_set(cg_var *cv,
     if (!cv) {
         return 0;
     }
-
     /* Duplicate s0. Must be done before a free, in case s0 is part of the original */
     if (s0){
         if ((s1 = strdup(s0)) == NULL)
@@ -922,8 +968,9 @@ cv_urlpasswd_set(cg_var *cv,
 }
 
 /*! Parse an int64 number with explicit base and check for errors
+ *
  * @param[in]  str     String containing number to parse
- * @parame[in] base    If base is 0 or 16, the string may include a "0x" prefix,
+ * @param[in]  base    If base is 0 or 16, the string may include a "0x" prefix,
  *                     the number will be read in base 16; otherwise, a zero base
  *                     is taken  as 10 (decimal) unless the next character is '0',
  *                     in which case it is taken as 8 (octal).
@@ -931,9 +978,9 @@ cv_urlpasswd_set(cg_var *cv,
  * @param[in]  imax    Max range (set INT64_MAX for default)
  * @param[out] val     Value on success
  * @param[out] reason  Error string on failure
- * @retval -1 : Error (fatal), with errno set to indicate error
- * @retval  0 : Validation not OK, malloced reason is returned
- * @retval  1 : Validation OK, value returned in val parameter
+ * @retval     1       Validation OK, value returned in val parameter
+ * @retval     0       Validation not OK, malloced reason is returned
+ * @retval    -1       Error (fatal), with errno set to indicate error
  */
 static int
 parse_int64_base(char    *str, 
@@ -994,12 +1041,13 @@ parse_int64_base(char    *str,
 }
 
 /*! Parse an int8 number and check for errors
+ *
  * @param[in]  str     String containing number to parse
  * @param[out] val     Value on success
  * @param[out] reason  Error string on failure
- * @retval -1 : Error (fatal), with errno set to indicate error
- * @retval  0 : Validation not OK, malloced reason is returned
- * @retval  1 : Validation OK, value returned in val parameter
+ * @retval     1       Validation OK, value returned in val parameter
+ * @retval     0       Validation not OK, malloced reason is returned
+ * @retval    -1       Error (fatal), with errno set to indicate error
  */
 int
 parse_int8(char   *str, 
@@ -1017,12 +1065,13 @@ parse_int8(char   *str,
 }
 
 /*! Parse an int16 number and check for errors
- * @param[in]  str     String containing number to parse
- * @param[out] val     Value on success
- * @param[out] reason  Error string on failure
- * @retval -1 : Error (fatal), with errno set to indicate error
- * @retval  0 : Validation not OK, malloced reason is returned
- * @retval  1 : Validation OK, value returned in val parameter
+ *
+ * @param[in]  str    String containing number to parse
+ * @param[out] val    Value on success
+ * @param[out] reason Error string on failure
+ * @retval     1      Validation OK, value returned in val parameter
+ * @retval     0      Validation not OK, malloced reason is returned
+ * @retval    -1      Error (fatal), with errno set to indicate error
  */
 int
 parse_int16(char    *str, 
@@ -1040,12 +1089,13 @@ parse_int16(char    *str,
 }
 
 /*! Parse an int32 number and check for errors
+ *
  * @param[in]  str     String containing number to parse
  * @param[out] val     Value on success
  * @param[out] reason  Error string on failure
- * @retval -1 : Error (fatal), with errno set to indicate error
- * @retval  0 : Validation not OK, malloced reason is returned
- * @retval  1 : Validation OK, value returned in val parameter
+ * @retval     1       Validation OK, value returned in val parameter
+ * @retval     0       Validation not OK, malloced reason is returned
+ * @retval    -1       Error (fatal), with errno set to indicate error
  */
 int
 parse_int32(char    *str, 
@@ -1063,12 +1113,13 @@ parse_int32(char    *str,
 }
 
 /*! Parse an int64 number and check for errors
+ *
  * @param[in]  str     String containing number to parse
  * @param[out] val     Value on success
  * @param[out] reason  Error string on failure
- * @retval -1 : Error (fatal), with errno set to indicate error
- * @retval  0 : Validation not OK, malloced reason is returned
- * @retval  1 : Validation OK, value returned in val parameter
+ * @retval     1       Validation OK, value returned in val parameter
+ * @retval     0       Validation not OK, malloced reason is returned
+ * @retval    -1       Error (fatal), with errno set to indicate error
  */
 int
 parse_int64(char    *str, 
@@ -1079,6 +1130,7 @@ parse_int64(char    *str,
 }
 
 /*! Parse an uint64 number and check for errors
+ *
  * @param[in]  str     String containing number to parse
  * @parame[in] base    If base is 0 or 16, the string may include a "0x" prefix,
  *                     the number will be read in base 16; otherwise, a zero base
@@ -1088,9 +1140,9 @@ parse_int64(char    *str,
  * @param[in]  umax    Max range (set UINT64_MAX for default)
  * @param[out] val     Value on success
  * @param[out] reason  Error string on failure (if given)
- * @retval -1 : Error (fatal), with errno set to indicate error
- * @retval  0 : Validation not OK, malloced reason is returned
- * @retval  1 : Validation OK, value returned in val parameter
+ * @retval     1       Validation OK, value returned in val parameter
+ * @retval     0       Validation not OK, malloced reason is returned
+ * @retval    -1       Error (fatal), with errno set to indicate error
  * @note: we have to detect a minus sign ourselves,....
  */
 static int
@@ -1161,12 +1213,13 @@ parse_uint64_base(char     *str,
 }
 
 /*! Parse an uint8 number and check for errors
+ *
  * @param[in]  str     String containing number to parse
  * @param[out] val     Value on success
  * @param[out] reason  Error string on failure
- * @retval -1 : Error (fatal), with errno set to indicate error
- * @retval  0 : Validation not OK, malloced reason is returned
- * @retval  1 : Validation OK, value returned in val parameter
+ * @retval     1       Validation OK, value returned in val parameter
+ * @retval     0       Validation not OK, malloced reason is returned
+ * @retval    -1       Error (fatal), with errno set to indicate error
  */
 int
 parse_uint8(char    *str, 
@@ -1184,12 +1237,13 @@ parse_uint8(char    *str,
 }
 
 /*! Parse an uint16 number and check for errors
+ *
  * @param[in]  str     String containing number to parse
  * @param[out] val     Value on success
  * @param[out] reason  Error string on failure
- * @retval -1 : Error (fatal), with errno set to indicate error
- * @retval  0 : Validation not OK, malloced reason is returned
- * @retval  1 : Validation OK, value returned in val parameter
+ * @retval     1       Validation OK, value returned in val parameter
+ * @retval     0       Validation not OK, malloced reason is returned
+ * @retval    -1       Error (fatal), with errno set to indicate error
  */
 int
 parse_uint16(char     *str, 
@@ -1207,12 +1261,13 @@ parse_uint16(char     *str,
 }
 
 /*! Parse an uint32 number and check for errors
+ *
  * @param[in]  str     String containing number to parse
  * @param[out] val     Value on success
  * @param[out] reason  Error string on failure
- * @retval -1 : Error (fatal), with errno set to indicate error
- * @retval  0 : Validation not OK, malloced reason is returned
- * @retval  1 : Validation OK, value returned in val parameter
+ * @retval     1       Validation OK, value returned in val parameter
+ * @retval     0       Validation not OK, malloced reason is returned
+ * @retval    -1       Error (fatal), with errno set to indicate error
  */
 int
 parse_uint32(char     *str, 
@@ -1230,12 +1285,13 @@ parse_uint32(char     *str,
 }
 
 /*! Parse an uint64 number and check for errors
+ *
  * @param[in]  str     String containing number to parse
  * @param[out] val     Value on success
  * @param[out] reason  Error string on failure (if given)
- * @retval -1 : Error (fatal), with errno set to indicate error
- * @retval  0 : Validation not OK, malloced reason is returned
- * @retval  1 : Validation OK, value returned in val parameter
+ * @retval     1       Validation OK, value returned in val parameter
+ * @retval     0       Validation not OK, malloced reason is returned
+ * @retval    -1       Error (fatal), with errno set to indicate error
  * @note: we have to detect a minus sign ourselves,....
  */
 int
@@ -1247,13 +1303,14 @@ parse_uint64(char     *str,
 }
 
 /*! Parse a decimal64 value
+ *
  * @param[in]  str        String to parse
  * @param[in]  n          number of decimals
  * @param[out] dec64_i    64-bit number
  * @param[out] reason     if given, malloced err string (retval=0), needs freeing
- * @retval -1             fatal error
- * @retval 0              parse error, reason in reason
- * @retval 1              OK
+ * @retval     1          OK
+ * @retval     0          parse error, reason in reason
+ * @retval    -1          fatal error
  */
 int
 parse_dec64(char    *str, 
@@ -1336,12 +1393,13 @@ parse_dec64(char    *str,
 }
 
 /*! Parse boolean values, eg true or false, on or off
- * @param[in]  str        String to parse
- * @param[in]  val        integer 0 or 1
- * @param[out] reason     if given, malloced err string (retval=0), needs freeing
- * @retval -1             fatal error
- * @retval 0              parse error, reason in reason
- * @retval 1              OK
+ *
+ * @param[in]  str      String to parse
+ * @param[in]  val      integer 0 or 1
+ * @param[out] reason   if given, malloced err string (retval=0), needs freeing
+ * @retval     1        OK
+ * @retval     0        parse error, reason in reason
+ * @retval    -1        fatal error
  * @code
  *    int     ret;
  *    char   *reason = NULL;
@@ -1396,12 +1454,13 @@ parse_bool(char    *str,
 }
 
 /*! Parse an IPv4 address struct
+ *
  * @param[in]  str        String to parse
- * @param[out]  val        IPv4 binary address
+ * @param[out] val        IPv4 binary address
  * @param[out] reason     if given, malloced err string (retval=0), needs freeing
- * @retval -1             fatal error
- * @retval 0              parse error, reason in reason
- * @retval 1              OK
+ * @retval     1          OK
+ * @retval     0          parse error, reason in reason
+ * @retval    -1          fatal error
  */
 int
 parse_ipv4addr(char           *str, 
@@ -1420,12 +1479,13 @@ parse_ipv4addr(char           *str,
 }
 
 /*! Parse an IPv6 address struct
+ *
  * @param[in]  str        String to parse
  * @param[in]  val        IPv6 binary address
  * @param[out] reason     if given, malloced err string (retval=0), needs freeing
- * @retval -1             fatal error
- * @retval 0              parse error, reason in reason
- * @retval 1              OK
+ * @retval     1          OK
+ * @retval     0          parse error, reason in reason
+ * @retval    -1          fatal error
  */
 int
 parse_ipv6addr(char            *str, 
@@ -1445,6 +1505,7 @@ parse_ipv6addr(char            *str,
 
 
 /*! Own version of ether_aton(): 
+ *
  * parse string in colon hex notation and return a vector of chars.
  * @param[out] reason     if given, malloced err string (retval=0), needs freeing
  */
@@ -1534,6 +1595,7 @@ parse_macaddr(char  *str,
 }
 
 /*! Parse URL
+ *
  * @param[in]  url    Syntax:  <proto>://[<user>[:<passwd>]@]<addr>[/<path>]. May 
  *                    be changed destructively
  * @param[in]  cv     CLIgen variable
@@ -1602,6 +1664,7 @@ parse_url(char   *url,
 }
 
 /*! Translate url protocol string to enum
+ *
  * @param[in]  str  
  */
 int
@@ -1619,11 +1682,12 @@ str2urlproto(const char *str)
 }
 
 /*! Translate uuid binary data structure to uuid ascii string
- * @param[in]  u     UUID as binary data structure
- * @param[out] fmt   Format string. 
- * @param[in]  len   Length of fmt needs to be at 37.
- * @retval    0  OK
- * @retval   -1  Error
+ *
+ * @param[in]  u    UUID as binary data structure
+ * @param[out] fmt  Format string. 
+ * @param[in]  len  Length of fmt needs to be at 37.
+ * @retval     0    OK
+ * @retval    -1    Error
  */
 int
 uuid2str(uuid_t u, 
@@ -1655,6 +1719,7 @@ toint(char c)
 }
 
 /*! Translate uuid ascii string to uuid binary data structure.
+ *
  * uuid string on form f47ac10b-58cc-4372-a567-0e02b2c3d479 to uuid data structure.
  * @param[in]  in    in-string is 36 bytes + null termination (37 bytes in total).
  * @param[out] u     uuid is a 16 byte unsigned character array.
@@ -1728,6 +1793,7 @@ todig(char c)
 }
 
 /*! Given a string with digits, return a number
+ *
  * @param[in] n  Number of digits to read from s.
  * @param[in] s  String containing digits
  * @retval    0  OK
@@ -1756,6 +1822,7 @@ cligen_tonum(int   n,
 }
 
 /*! Translate (ascii) ISO 8601 time string to (binary) timeval
+ *
  * Translate ISO 8601 date+time on the form 2008-09-21T18:57:21.003456Z to a timeval structure.
  * @param[in]  in   Input ISO 8601 string
  * @param[out] tv   Timeval
@@ -1925,6 +1992,7 @@ done:
 }
 
 /*! Translate (binary) timeval to (ascii) ISO 8601 time string
+ *
  * from timeval to  ISO 8601 date+time on the form 2008-09-21T18:57:21.003456Z
  * @param[in]  tv   Timeval
  * @param[out] fmt  Format string. 
@@ -1960,6 +2028,7 @@ done:
 }
 
 /*! Translate (parse) a string to a CV type.
+ *
  * @param[in] str    Name of type
  * @retval    type   CLIgen variable type
  */
@@ -2016,6 +2085,7 @@ cv_str2type(const char *str)
 }
 
 /*! Translate (print) a cv type to a static string.
+ *
  * @param[in] tpe    CLIgen variable type
  * @retval    NULL   Error
  * @retval    str    Static string containing name of type as ASCII string
@@ -2203,7 +2273,7 @@ cv_len(cg_var *cv)
  * @param[out]    s0   A string that will hold the dec64
  * @param[inout]  len  A string that holds available free space in s0
  * @retval        0    OK
- * @retval        -1   Error with error msg on stderr. 
+ * @retval       -1    Error with error msg on stderr. 
  */
 static int
 cv_dec64_print(cg_var *cv, 
@@ -2241,6 +2311,7 @@ cv_dec64_print(cg_var *cv,
 }
 
 /*! Print value of CLIgen variable to CLIgen buf using printf style formats.
+ *
  * @param[in]   cv   CLIgen variable
  * @param[out]  cb   Value printed 
  * The params shuld be switched cb<->cv
@@ -2372,7 +2443,7 @@ cv2cbuf(cg_var *cv,
  * @param[in]   cv   CLIgen variable
  * @param[out]  str  Value printed in this string
  * @param[in]   size Length of 'str'
- * @retval len  How many bytes printed
+ * @retval      len  How many bytes printed
  * @see  cv2cbuf   which also prints a CV but to cbuf
  * @see  cv_print  which also prints a CV but to a file
  */
@@ -2643,10 +2714,11 @@ cv_print(FILE   *f,
 }
 
 /*! Print max value of a CLIgen variable type as string
- * @param[in]   type  CLIgen variable type
- * @param[out]  str   Max value printed in this string
- * @param[in]   size  Length of 'str'
- * @retval len  How many bytes printed
+ *
+ * @param[in]  type  CLIgen variable type
+ * @param[out] str   Max value printed in this string
+ * @param[in]  size  Length of 'str'
+ * @retval     len   How many bytes printed
  * @see cvtype_max2str_dup
  * You can use str=NULL to get the expected length.
  * The number of (potentially if str=NULL) written bytes is returned.
@@ -2815,14 +2887,15 @@ cv_min_set(cg_var *cv)
  * See also cv_parse() which has simpler error handling.
  * and cv_validate() where the cv is validated against a cligen object specification.
  *
- * @param[in]  str0    Input string. Example, number variable, str can be "7834" or "0x7634"
- * @param[in]  cv      cligen variable, as prepared by cv_reset()/cv_new()
- * @param[out] reason  If given, and if return value is 0, contains a malloced string
- *                 describing the reason why the validation failed. If given must be NULL.
- *
- * @retval -1  Error (fatal), with errno set to indicate error
- * @retval 0   Validation not OK, malloced reason is returned
- * @retval 1   Validation OK
+ * @param[in]  str0   Input string. Example, number variable, str can be "7834" or "0x7634"
+ * @param[in]  cv     cligen variable, as prepared by cv_reset()/cv_new()
+ * @param[out] reason If given, and if return value is 0, contains a malloced string
+ *                    describing the reason why the validation failed. If given must be NULL.
+ * @retval     1      Validation OK
+ * @retval     0      Validation not OK, malloced reason is returned
+ * @retval    -1      Error (fatal), with errno set to indicate error
+
+
  *
  * @code
  *  cg_var *cv = cv_new(CGV_STRING);
@@ -3031,8 +3104,8 @@ cv_parse1(const char   *str0,
  * Arguments:
  * @param[in]  str  Input string. Example, number variable, str can be "7834" or "0x7634"
  * @param[in]  cv   cligen variable, as prepared by cv_reset()/cv_new()
- * @retval -1 Error (fatal), or parsing error, printf error in stderr.
- * @retval  0 Parse OK
+ * @retval     0    Parse OK
+ * @retval    -1    Error (fatal), or parsing error, printf error in stderr.
  *
  * @code
  *  cg_var *cv = cv_new(CGV_STRING);
@@ -3141,15 +3214,15 @@ outoflength(uint64_t    u64,
 
 /*! Validate cligen variable cv using the spec in cs.
  *
- * @param[in]  h       CLIgen handle
- * @param[in]  cv      A cligen variable to validate. This is a correctly parsed cv.
- * @param[in]  cs      A cligen variable specification object that defines the cv.
- * @param[in]  cmd     Command for help and debug
- * @param[out] reason  If given, and if return value is 0, contains a malloced string
- *                      describing the reason why the validation failed.
- * @retval -1  Error (fatal), with errno set to indicate error
- * @retval 0   Validation not OK, malloced reason is returned. returned reason must be freed
- * @retval 1   Validation OK
+ * @param[in]  h      CLIgen handle
+ * @param[in]  cv     A cligen variable to validate. This is a correctly parsed cv.
+ * @param[in]  cs     A cligen variable specification object that defines the cv.
+ * @param[in]  cmd    Command for help and debug
+ * @param[out] reason If given, and if return value is 0, contains a malloced string
+ *                    describing the reason why the validation failed.
+ * @retval     1      Validation OK
+ * @retval     0      Validation not OK, malloced reason is returned. returned reason must be freed
+ * @retval    -1      Error (fatal), with errno set to indicate error
  */
 int
 cv_validate(cligen_handle h,
@@ -3395,6 +3468,7 @@ cv_validate(cligen_handle h,
 }
 
 /*! Compare two CLIgen variables as strcmp(3)
+ *
  * @param[in]  cv1   CLIgen variable #1
  * @param[in]  cv2   CLIgen variable #2
  * @retval     0     equal
@@ -3488,8 +3562,7 @@ cv_cmp(cg_var *cv1,
  * The new cv should have been be initialized, such as after cv_new() or
  * after cv_reset().
  * The new cv may involve duplicating strings, etc.
-
- * @retval 0   0n success, 
+ * @retval  0  0n success, 
  * @retval -1  On error with errno set (strdup errors)
  */
 int

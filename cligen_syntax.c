@@ -237,7 +237,7 @@ cligen_callbackv_str2fn(parse_tree   *pt,
     cg_callback *cc;
     int          i;
 
-    for (i=0; i<pt_len_get(pt); i++)
+    for (i=0; i<pt_len_get(pt); i++){
         if ((co = pt_vec_i_get(pt, i)) != NULL){
             for (cc = co->co_callbacks; cc; cc = co_callback_next(cc)){
                 if (cc->cc_fn_str != NULL &&
@@ -255,6 +255,7 @@ cligen_callbackv_str2fn(parse_tree   *pt,
             if (cligen_callbackv_str2fn(co_pt_get(co), str2fn, arg) < 0)
                 goto done;
         }
+    }
     retval = 0;
   done:
     return retval;

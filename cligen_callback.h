@@ -41,13 +41,11 @@
 
 /*
  * Callback function type. Is called after a specific syntax node has been identified.,
- *   arg is an optionalargument
- *   argc is number of variables (1...)
- *   argv[] is a vector of variables. The first is always the whole syntax string as entered.
+ * @param[in]  h     CLIgen handle / user handle
+ * @param[in]  cvv   Vector of variables: function parameters
+ * @param[in]  argv  Vector of variables from command-line, The first is always the whole syntax string as entered.
  */
-typedef int (cgv_fnstype_t)(cligen_handle h, cvec *vars, cvec *argv);
-
-typedef int (cg_fnstype_t)(cligen_handle h, cvec *vars, cg_var *arg); /* XXX obsolete? */
+typedef int (cgv_fnstype_t)(cligen_handle h, cvec *cvv, cvec *argv);
 
 typedef struct cg_callback cg_callback; /* struct defined in cligen_callback.c.c */
 
