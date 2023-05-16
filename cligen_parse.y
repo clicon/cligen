@@ -223,6 +223,7 @@ cgy_treename(cligen_yacc *cy,
     int              i;
     parse_tree      *pt;
     pt_head         *ph;
+    cg_var          *cv;
 
     /* Get the first object */
     for (cl=cy->cy_list; cl; cl = cl->cl_next){
@@ -248,8 +249,13 @@ cgy_treename(cligen_yacc *cy,
             goto done;
         co_pt_clear(cot);
         co_pt_set(cot, pt);
+        if ((cv = cvec_find(cy->cy_globals, "pipetree")) != NULL){
+            char *str;
+            if ((str = cv_string_get(cv)) != NULL && strlen(str))
+                if (cligen_ph_pipe_set(ph, str) < 0)
+                    goto done;
+        }
     }
-
     /* 4. Set the new name */
     if (cy->cy_treename)
         free(cy->cy_treename);
@@ -305,11 +311,13 @@ cgy_assignment(cligen_yacc *cy,
                 goto done;
         }
         else {
-            if ((cv = cvec_add(cy->cy_globals, CGV_STRING)) == NULL){
-                fprintf(stderr, "%s: realloc:%s\n", __FUNCTION__, strerror(errno));
-                goto done;
+            if ((cv = cvec_find(cy->cy_globals, var)) == NULL){
+                if ((cv = cvec_add(cy->cy_globals, CGV_STRING)) == NULL){
+                    fprintf(stderr, "%s: realloc:%s\n", __FUNCTION__, strerror(errno));
+                    goto done;
+                }
+                cv_name_set(cv, var);
             }
-            cv_name_set(cv, var);
             if (cv_parse(val, cv) < 0)  /* May be wrong type */
                 goto done;
         }
@@ -343,6 +351,9 @@ cgy_callback(cligen_yacc *cy,
     }
     memset(cc, 0, sizeof(*cc));
     cc->cc_fn_str = cb_str;
+    if (IS_PIPE_TREE(cy->cy_treename)){ /* Only for cligen, clixon has other mechanisms */
+        cc->cc_flags |= CC_FLAGS_PIPE_FUNCTION;
+    }
     *ccp = cc;
     return 0;
 }
@@ -609,36 +620,38 @@ cgy_cmd(cligen_yacc *cy,
 }
 
 /*! Create a REFERENCE node that references another tree.
+ *
  * This is evaluated in runtime by pt_expand().
- * @param[in]  cy  CLIgen yacc parse struct
+ * @param[in]  cy   CLIgen yacc parse struct
+ * @param[in]  name Name of tree reference
+ * @param[in]  pipetree  If 1 references a "pipe" tree, ie prepend a "|" to name
  * @see also db2tree() in clicon/apps/cli_main.c on how to create such a tree
  * @see pt_expand_treeref()/pt_callback_reference() how it is expanded
  */
 static int
 cgy_reference(cligen_yacc *cy, 
               char        *name,
-              cvec        *cvv)
+              int          pipetree)
 {
     int              retval = -1;
     struct cgy_list *cl; 
     cg_obj          *cop;   /* parent */
     cg_obj          *cot;   /* tree */
-
+    cbuf            *cb = NULL;
+    
+    if ((cb = cbuf_new()) == NULL)
+        goto done;
+    if (pipetree)
+        cprintf(cb, "|");
+    cprintf(cb, "%s", name);
     for (cl=cy->cy_list; cl; cl = cl->cl_next){
         /* Add a treeref 'stub' which is expanded in pt_expand to a sub-tree */
         cop = cl->cl_obj;
-        if ((cot = co_new(name, cop)) == NULL) { 
+        if ((cot = co_new(cbuf_get(cb), cop)) == NULL) { 
             cligen_parseerror1(cy, "Allocating cligen object"); 
             goto done;
         }
         cot->co_type = CO_REFERENCE;
-        
-        if (cvv){
-            if (cot->co_cvec)
-                cvec_free(cot->co_cvec);
-            if ((cot->co_cvec = cvec_dup(cvv)) == NULL)
-                goto done;
-        }
         if ((cot = co_insert(co_pt_get(cop), cot)) == NULL)  /* cot may be deleted */
             goto done;
         /* Replace parent in cgy_list: not allowed after ref?
@@ -651,6 +664,8 @@ cgy_reference(cligen_yacc *cy,
     }
     retval = 0;
  done:
+    if (cb)
+        cbuf_free(cb);
     return retval;
 }
 
@@ -807,6 +822,7 @@ cgy_terminal(cligen_yacc *cy)
 
 /*! Take the whole cgy_list and push it to the stack 
  * @param[in]  cy  CLIgen yacc parse struct
+ * @see ctx_pop
  */
 static int
 ctx_push(cligen_yacc *cy,
@@ -957,6 +973,7 @@ ctx_pop_add(cligen_yacc *cy)
 /*! Pop context from stack and discard it.
  * Typically done after a grouping, eg "cmd (opt1|opt2)"
  * @param[in]  cy  CLIgen yacc parse struct
+ * @see ctx_push
  */
 static int
 ctx_pop(cligen_yacc *cy)
@@ -1278,6 +1295,9 @@ option      : callback           { _PARSE_DEBUG("option->callback");}
 assignment  : NAME '=' DQ charseq DQ
                                  {_PARSE_DEBUG("assignment->\" charseq \"");
                                   cgy_assignment(_cy, $1,$4);free($1); free($4);}
+            | NAME '=' DQ DQ
+                                 { _PARSE_DEBUG("assignment->\" \"");
+                                  cgy_assignment(_cy, $1,NULL);free($1);}
             ; 
 
 flag        : NAME               { _PARSE_DEBUG("flag->NAME");
@@ -1367,7 +1387,9 @@ helpstring1 : helpstring1 HELPSTR
 cmd         : NAME           { _PARSE_DEBUG("cmd->NAME");
                                if (cgy_cmd(_cy, $1) < 0) _YYERROR("cmd"); free($1); } 
             | '@' NAME       { _PARSE_DEBUG("cmd->@NAME");
-                               if (cgy_reference(_cy, $2, NULL) < 0) _YYERROR("cmd"); free($2); } 
+                               if (cgy_reference(_cy, $2, 0) < 0) _YYERROR("cmd"); free($2); } 
+            | '@' '|' NAME   { _PARSE_DEBUG("cmd->@|NAME");
+                               if (cgy_reference(_cy, $3, 1) < 0) _YYERROR("cmd"); free($3); } 
             | '<'            { if ((_CY->cy_var = cgy_var_create(_CY)) == NULL) _YYERROR("cmd"); }
                variable '>'  { if (cgy_var_post(_cy) < 0) _YYERROR("cmd"); }
             ;

@@ -84,6 +84,7 @@ clispec_parse_str(cligen_handle h,
     cg_obj            *cot = NULL;
     parse_tree        *pt = NULL; 
     pt_head           *ph;
+    cg_var            *cv;
     
     /* "Fake" top-level object that is removed on exit */
     if ((cot = co_new(NULL, NULL)) == NULL)
@@ -131,6 +132,12 @@ clispec_parse_str(cligen_handle h,
                 goto done;
             if (cligen_ph_parsetree_set(ph, pt) < 0)
                 goto done;
+            if ((cv = cvec_find(cy.cy_globals, "pipetree")) != NULL){
+                char *str;
+                if ((str = cv_string_get(cv)) != NULL && strlen(str))
+                    if (cligen_ph_pipe_set(ph, str) < 0)
+                        goto done;
+            }
         }
         if (cgy_exit(&cy) < 0)
             goto done;          
@@ -195,7 +202,7 @@ clispec_parse_file(cligen_handle h,
             if ((buf = realloc(buf, 2*len)) == NULL){
                 fprintf(stderr, "%s: realloc: %s\n", __FUNCTION__, strerror(errno));
                 goto done;
-            }       
+            }
             memset(buf+len, 0, len);
             len *= 2;
         }

@@ -512,6 +512,51 @@ It is now possible to traverse the tree using the ``T'' tree as the following ex
      cli:/> 
 \end{verbatim}
 
+\subsection{Output pipes}
+\label{sec:pipes}
+
+Output pipes resemble UNIX shell pipes and are useful to filter or modify CLI output. Example:
+\begin{verbatim}
+  cli> print all | grep parameter
+    <parameter>5</parameter>
+    <parameter>x</parameter>
+  cli>
+\end{verbatim}
+
+Output pipe functions are declared using a special variant of a tree
+with a name starting with vertical bar. Example:
+\begin{verbatim}
+  treename="|mypipe";
+  \| { 
+     grep <arg:rest>, grep_fn("grep -e", "arg");
+     tail, tail_fn();
+  }
+\end{verbatim}
+where {\tt grep\_fn} and {\tt tail\_fn} are special callbacks that use stdio to modify output.
+
+Such a pipe tree can be referenced with either an explicit reference, or an implicit rule.
+
+An explicit reference looks something like this:
+\begin{verbatim}
+   print {     
+      all, @|mypipe, print_cb("all");
+      detail, @|mypipe, print_cb("detail");
+   }
+\end{verbatim}
+where a pipe tree is added as a tree reference, appending pipe functions to the regular {\tt print\_cb} callback.
+
+An example of an implicit rule is as follows:
+\begin{verbatim}
+  pipetree="|mypipe";
+  print {
+    all, print_cb("all");
+    detail, print_cb("detail);
+  }
+\end{verbatim}
+where the pipe tree is added implicitly to all commands.
+
+Pipe trees also work for sub-trees, ie a subtree referenced by the top-level tree may also use output pipes.
+
 \subsection{Sets}
 \label{sec:sets}
 By default, listing several commands within {\tt \{\}} gives a choice of commands, but if instead commands are within the set operator {\tt @\{\}}, the commands can be given on any order, and at least once. For example:
@@ -541,8 +586,6 @@ gives exactly the following allowed CLI commands, and no others:
   x c b
   x c b a
 \end{verbatim}
-
-Note that the sets implementation is EXPERIMENTAL in the current release.
 
 \section{Variables}
 \label{sec:variables}

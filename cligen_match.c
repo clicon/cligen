@@ -679,19 +679,19 @@ match_pattern_sets_local(cligen_handle  h,
 /* Merge callbacks of local co and treeref reference 
  *
  * @param[in]  co   CLIgen parse-tree object
- * @param[in]  arg  Argument, cast to application-specific info
+ * @param[in]  cc_ref Callbacks of origin tree-reference object
  * @retval     1    OK and return (abort iteration)
  * @retval     0    OK and continue
  * @retval    -1    Error: break and return
  * @note does not support multiple ccref or co callbacks
  */
 static int
-treeref_merge_co(cg_obj *co,
-                 void   *arg)
+treeref_merge_co(cg_obj      *co,
+                 cg_callback *cc_ref)
 {
     int          retval = -1;
-    cg_callback *cc_ref = (cg_callback *)arg;
     cg_callback *cc;
+    cg_callback *cclast;
     cg_obj      *ce;
     cg_var      *cv;
     parse_tree  *pt;
@@ -709,7 +709,7 @@ treeref_merge_co(cg_obj *co,
         if (co_callback_copy(cc_ref, &co->co_callbacks) < 0)
             goto done;
     }
-    else {
+    else if ((cc->cc_flags & CC_FLAGS_PIPE_FUNCTION) == 0){ /* Merge if regular functions */
         cc->cc_fn_vec = cc_ref->cc_fn_vec;
         if (cc_ref->cc_fn_str){
             if (cc->cc_fn_str)
@@ -722,6 +722,13 @@ treeref_merge_co(cg_obj *co,
             while ((cv = cvec_each(cc_ref->cc_cvec, cv)) != NULL)
                 cvec_append_var(cc->cc_cvec, cv);
         }
+    }
+    else { /* local is PIPE function, append regular function last */
+        cclast = NULL;
+        for (; cc; cc = co_callback_next(cc))
+            cclast = cc;
+        if (co_callback_copy(cc_ref, &cclast->cc_next) < 0)
+            goto done;
     }
  ok:
     retval = 0;
@@ -767,6 +774,7 @@ match_pattern_sets(cligen_handle  h,
     match_result *mrcprev = NULL; /* previous succesful result */
     char         *token;
     cg_callback  *callbacks = NULL;
+    cg_obj       *coref = NULL;
 
     token = cvec_i_str(cvt, level+1); /* for debugging */
 #ifdef _DEBUG_SETS
@@ -794,7 +802,7 @@ match_pattern_sets(cligen_handle  h,
      * see also pt_expand
      */
     if (co_flags_get(co_match, CO_FLAGS_TOPOFTREE)){
-        cg_obj *coref = co_match;
+        coref = co_match;
         while (coref->co_ref){
             coref = coref->co_ref;
         }
@@ -1051,8 +1059,8 @@ match_pattern(cligen_handle h,
                 goto done;
     }
     /* Final check:
-     * 1) If no match ensure there is an error message
-     * 2) If single match, ensure there is a NULL child (eg ";" in cligen syntax)
+     * 0) If no match ensure there is an error message
+     * 1) If single match, ensure there is a NULL child (eg ";" in cligen syntax)
      *    - if not set to no match
      */
     switch (mr_pt_len_get(mr)){

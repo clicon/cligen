@@ -1199,7 +1199,7 @@ co_value_set(cg_obj *co,
  * @retval     1    Yes, is a terminal command, cot may be returned if exists
  */
 int
-co_terminal(cg_obj *co,
+co_terminal(cg_obj  *co,
             cg_obj **cot)
 {
     parse_tree *pt;

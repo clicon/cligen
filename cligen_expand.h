@@ -37,7 +37,6 @@
 #ifndef _CLIGEN_EXPAND_H_
 #define _CLIGEN_EXPAND_H_
 
-
 /*
  * Constants
  */

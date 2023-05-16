@@ -157,7 +157,7 @@ co2cbuf(cbuf   *cb,
     cg_callback *cc;
     parse_tree  *pt;
     cg_obj      *co1;
-    cg_obj      *cot;
+    cg_obj      *cot = NULL;
     cg_var      *cv;
 
     if (co == NULL){
@@ -206,7 +206,8 @@ co2cbuf(cbuf   *cb,
     cv = NULL;
     while ((cv = cvec_each(co->co_cvec, cv)) != NULL)
         cprintf(cb, ", %s", cv_name_get(cv));
-    if (co_terminal(co, &cot)){
+    if (co_terminal(co, &cot) &&
+        cot != NULL){
         cg_var *cv = NULL;
         while ((cv = cvec_each(cot->co_cvec, cv)) != NULL)
             cprintf(cb, ", %s", cv_name_get(cv));
@@ -363,10 +364,10 @@ pt_dump1(FILE       *f,
     char   *name;
     
     name = pt_name_get(pt);
-    fprintf(f, "%*s %p pt %s [%d]",
-            indent*3, "", pt,
-            name?name:"",
-            pt_len_get(pt));
+    fprintf(f, "%*s %p pt", indent*3, "", pt);
+    if (name)
+        fprintf(f, " %s", name);
+    fprintf(f, " [%d]", pt_len_get(pt));
     fprintf(f, "\n");
     for (i=0; i<pt_len_get(pt); i++){
         if ((co = pt_vec_i_get(pt, i)) == NULL)
@@ -377,6 +378,22 @@ pt_dump1(FILE       *f,
     return 0;
 }
 
+/*! Utility function for dumping cligen-object callback chains
+ */
+int
+callbacks_dump(FILE        *f,
+               cg_callback *cc0)
+{
+    cg_callback *cc;
+
+    for (cc = cc0; cc; cc = co_callback_next(cc)){
+        fprintf(f, "%s(\n", cc->cc_fn_str);
+        cvec_print(f, cc->cc_cvec);
+        fprintf(f, ")\n");
+    }
+    return 0;
+}
+    
 static int 
 co_dump1(FILE    *f,
          cg_obj  *co,
@@ -420,7 +437,6 @@ co_dump1(FILE    *f,
         }
     }
     fprintf(f, "\n");
-
     if ((pt = co_pt_get(co)) != NULL)
         pt_dump1(f, pt, indent);
     return 0;

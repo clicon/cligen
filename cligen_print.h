@@ -43,6 +43,7 @@ int pt_print(FILE *f, parse_tree *pt);
 int co_print1(FILE *f, cg_obj *co, int brief);
 int co_print(FILE *f, cg_obj *co);
 int cligen_print_trees(FILE *f, cligen_handle h, int brief);
+int callbacks_dump(FILE *f, cg_callback *cc0);
 int co_dump(FILE *f, cg_obj *co);
 int pt_dump(FILE *f, parse_tree *pt);
 
