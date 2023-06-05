@@ -484,8 +484,10 @@ cligen_terminal_rows_set(cligen_handle h,
      * (1) only set new value if it runs in a tty
      * (2) cannot determine window size
      */
-    if (!isatty(0) || !isatty(1))
+    if (!isatty(0) || !isatty(1) || !rows){
+        terminal_rows_set1(0);
         goto ok;
+    }
     if (ioctl(0, TIOCGWINSZ, &ws) == -1){
         perror("ioctl(STDIN_FILENO,TIOCGWINSZ)");
         goto done;
