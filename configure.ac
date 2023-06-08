@@ -116,7 +116,7 @@ AC_MSG_RESULT(Compiler is $CC)
 #
 # Set options for each compiler. Suffix is for WIN32
 LIBS="${LIBS} -L." # 
-LDFLAGS=""
+LDFLAGS="${LDFLAGS}"
 CPPFLAGS="-DHAVE_CONFIG_H ${CPPFLAGS}"
 
 # Postfix for shared libs 
