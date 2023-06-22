@@ -3,6 +3,9 @@
 ## 6.3.0
 Expected: July 2023
 
+### Minor features
+* Removed  extras/ build-root/ and rpm build code since they are not properly maintained
+
 ## 6.2.0
 30 April 2023
 
