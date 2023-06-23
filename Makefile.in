@@ -221,9 +221,9 @@ cligen_tutorial :$(srcdir)/cligen_tutorial.c cligen $(MYLIB)
 
 $(MYLIBDYNAMIC) : $(OBJS) $(YACCOBJS)
 ifeq ($(HOST_VENDOR),apple)
-	$(CC) -shared -o $@ $(OBJS) $(YACCOBJS) -undefined dynamic_lookup -o $(MYLIB) $(LIBS)
+	$(CC) -shared -o $@ $(OBJS) $(YACCOBJS) $(LDFLAGS) -undefined dynamic_lookup -o $(MYLIB) $(LIBS)
 else
-	$(CC) -shared -o $@ $(OBJS) $(YACCOBJS) -Wl,-soname=$(MYLIB) $(LIBS)
+	$(CC) -shared -o $@ $(OBJS) $(YACCOBJS) $(LDFLAGS) -Wl,-soname=$(MYLIB) $(LIBS)
 endif
 
 # link-name is needed for application linking
