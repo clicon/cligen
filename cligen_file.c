@@ -306,7 +306,7 @@ main(int   argc,
 //    cligen_parse_debug(1);
     if ((globals = cvec_new(0)) == NULL)
         goto done;
-    if (cligen_parse_file(h, f, filename?filename:"stdin", NULL, globals) < 0)
+    if (clispec_parse_file(h, f, filename?filename:"stdin", NULL, NULL, globals) < 0)
         goto done;
 
     ph = cligen_ph_i(h, 0); 

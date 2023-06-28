@@ -347,7 +347,7 @@ main(int   argc,
     }
     if ((globals = cvec_new(0)) == NULL)
         goto done;
-    if (cligen_parse_file(h, f, filename, NULL, globals) < 0)
+    if (clispec_parse_file(h, f, filename, NULL, NULL, globals) < 0)
         goto done;
     ph = NULL;
     while ((ph = cligen_ph_each(h, ph)) != NULL) {

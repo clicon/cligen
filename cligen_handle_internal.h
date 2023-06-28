@@ -63,8 +63,9 @@
 /*! List of cligen parse-trees, can be searched, and activated */
 typedef struct pt_head  { /* Linked list of cligen parse-trees */
     struct pt_head  *ph_next;
-    char            *ph_name;
-    parse_tree      *ph_parsetree; /* should be free:d */
+    char            *ph_name;      /* Parse-tree head */
+    parse_tree      *ph_parsetree; /* Should be free:d */
+    char            *ph_prompt;    /* Tree-specific prompt */ 
     cg_obj          *ph_workpt;    /* Shortcut to "working point" cligen object, or more 
                                     * specifically its parse-tree sub vector. */
 } pt_head;

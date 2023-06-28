@@ -77,7 +77,7 @@ main(int argc, char *argv[])
 
     if ((h = cligen_init()) == NULL)
         goto done;
-    if (cligen_parse_str(h, hello_syntax, "hello world", NULL, NULL) < 0)
+    if (clispec_parse_str(h, hello_syntax, "hello world", NULL, NULL, NULL) < 0)
         goto done;
     /* find global assignments: prompt and comment sign */
     cligen_prompt_set(h, "hello> ");
