@@ -6,6 +6,13 @@ Expected: July 2023
 ### Minor features
 * Removed  extras/ build-root/ and rpm build code since they are not properly maintained
 
+### C/CLI-API changes on existing features
+Developers may need to change their code
+
+* Renamed `cligen_parse` functions and added treename parameter:
+  * Renamed `cligen_parse_str` to `clispec_parse_str` and `cligen_parse_file` to `clispec_parse_file`
+  * Added `treename` parameter, default `NULL`
+
 ## 6.2.0
 30 April 2023
 

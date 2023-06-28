@@ -62,6 +62,7 @@
  * @param[in]     h    CLIgen handle
  * @param[in]     str  String to parse containing CLIgen specification statements
  * @param[in]     name Debug string identifying the spec, typically a filename
+ * @param[in]     treename Initial treename, overriden by treename= in the clispec (or NULL)
  * @param[in,out] pt   Parse-tree, if set, add commands to this. Can be NULL
  * @param[out]    cvv  Global variables
  * @see cligen_parse_file
@@ -69,11 +70,12 @@
  * in pt is only the "latest" one.
  */
 int
-cligen_parse_str(cligen_handle h,
-                 char         *str,
-                 char         *name,
-                 parse_tree   *ptp,
-                 cvec         *cvv)
+clispec_parse_str(cligen_handle h,
+                  char         *str,
+                  char         *name,
+                  char         *treename,
+                  parse_tree   *ptp,
+                  cvec         *cvv)
 {
     int                retval = -1;
     int                i;
@@ -88,7 +90,13 @@ cligen_parse_str(cligen_handle h,
         goto done;
     cy.cy_handle       = h; /* cligen_handle */
     cy.cy_name         = name;
-    cy.cy_treename     = strdup(name); /* Use name as default tree name */
+    if (treename){
+        if ((cy.cy_treename = strdup(treename)) == NULL)
+            goto done;
+    }
+    /* If no explicit treename, use name as initial treename */
+    else if ((cy.cy_treename = strdup(name)) == NULL)
+        goto done;
     cy.cy_linenum      = 1;
     cy.cy_parse_string = str;
     cy.cy_stack        = NULL;
@@ -150,19 +158,21 @@ cligen_parse_str(cligen_handle h,
 
 /*! Parse a file containing a CLIgen spec into a parse-tree
  *
- * @param[in]     h    CLIgen handle
- * @param[in]     f    Open stdio file handle
- * @param[in]     name Debug string identifying the spec, typically a filename
- * @param[in,out] pt   Parse-tree, if set, add commands to this
- * @param[out]    cvv  Global variables
- * @see cligen_parse_str
+ * @param[in]     h        CLIgen handle
+ * @param[in]     f        Open stdio file handle
+ * @param[in]     name     Debug string identifying the spec, typically a filename
+ * @param[in]     treename Initial treename, overriden by treename= in the clispec
+ * @param[in,out] pt       Parse-tree, if set, add commands to this
+ * @param[out]    cvv      Global variables
+ * @see clispec_parse_str
  */
 int
-cligen_parse_file(cligen_handle h,
-                  FILE         *f,
-                  char         *name,
-                  parse_tree   *pt,  
-                  cvec         *cvv)
+clispec_parse_file(cligen_handle h,
+                   FILE         *f,
+                   char         *name,
+                   char         *treename,
+                   parse_tree   *pt,  
+                   cvec         *cvv)
 {
     char         *buf;
     int           i;
@@ -191,7 +201,7 @@ cligen_parse_file(cligen_handle h,
         }
         buf[i++] = (char)(c&0xff);
     } /* read a line */
-    if (cligen_parse_str(h, buf, name, pt, cvv) < 0)
+    if (clispec_parse_str(h, buf, name, treename, pt, cvv) < 0)
         goto done;
     retval = 0;
   done:

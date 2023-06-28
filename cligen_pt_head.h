@@ -52,7 +52,8 @@ int         cligen_ph_parsetree_set(pt_head *ph, parse_tree *pt);
 
 cg_obj     *cligen_ph_workpoint_get(pt_head *ph);
 int         cligen_ph_workpoint_set(pt_head *ph, cg_obj *cow);
-
+char       *cligen_ph_prompt_get(pt_head *ph);
+int         cligen_ph_prompt_set(pt_head *ph, char *prompt);
 pt_head    *cligen_ph_find(cligen_handle h, char *name);
 int         cligen_ph_free(pt_head *ph);
 #ifdef NOTUSED

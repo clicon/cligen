@@ -75,6 +75,7 @@
 #include "cligen_getline.h"
 
 /* Private definition of parsetree. Public is defined in cligen_parsetree.h 
+ *
  * @see parse_tree_list which is the upper level of a parse-tree
  */
 struct parse_tree{
@@ -130,6 +131,7 @@ pt_stats(parse_tree *pt,
 }
 
 /*! Access function to get the i:th CLIgen object child of a parse-tree
+ *
  * @param[in]  pt  Parse tree
  * @param[in]  i   Which object to return
  */
@@ -151,6 +153,7 @@ pt_vec_i_get(parse_tree *pt,
 }
 
 /*! Clear the i:th CLIgen object child of a parse-tree (without freeing existing)
+ *
  * @param[in]  pt  Parse tree
  * @param[in]  i   Which object to return
  */
@@ -175,6 +178,7 @@ pt_vec_i_clear(parse_tree *pt,
 }
 
 /*! Insert the i:th CLIgen object child of a parse-tree
+ *
  * @param[in]  pt  Parse tree
  * @param[in]  i   Which position to insert
  * @param[in]  co  Object to insert (can be NULL)
@@ -251,8 +255,8 @@ pt_vec_i_delete(parse_tree *pt,
 }
 
 /*! Access function to get a CLIgen objects child tree vector
+ *
  * @param[in]  co  CLIgen parse object
- * @see
  */
 int
 pt_len_get(parse_tree *pt)
@@ -317,6 +321,7 @@ pt_sets_set(parse_tree *pt,
 }
 
 /*! Allocate a new parsetree
+ *
  * @see pt_free
  */
 parse_tree *
@@ -361,7 +366,6 @@ pt_realloc(parse_tree *pt)
 /*! Recursively copy a parse-tree.
  *
  * No common pointers between the two structures
- *
  * @param[in]  pt     Original parse-tree
  * @param[in]  parent The parent of the new parsetree. Need not be same as parent of the orignal
  * @param[in]  flags  Copy flags
@@ -444,11 +448,12 @@ pt_dup(parse_tree *pt,
 }
 
 /*! Recursively merge two parse-trees: pt1 into pt0
+ *
  * @param[in,out] pt0     parse-tree 0. On exit contains pt1 too
  * @param[in]     parent  Parent of pt0
  * @param[in]     pt1     parse-tree 1. Merge this into pt0
  * @retval        0       OK
- * @retval        -1      Error
+ * @retval       -1       Error
  */
 int
 cligen_parsetree_merge(parse_tree *pt0, 
@@ -511,11 +516,12 @@ cligen_parsetree_merge(parse_tree *pt0,
 }
 
 /*! Help function to qsort for sorting entries in pattern file.
+ *
  * @param[in]  arg1
  * @param[in]  arg2
- * @retval  0  If equal
- * @retval <0  if arg1 is less than arg2
- * @retval >0  if arg1 is greater than arg2
+ * @retval     0    If equal
+ * @retval    <0    If arg1 is less than arg2
+ * @retval    >0    If arg1 is greater than arg2
  */
 static int
 co_cmp(const void* arg1, 
@@ -537,6 +543,7 @@ co_cmp(const void* arg1,
 }
 
 /*! Sort CLIgen parse-tree, optionally recursive
+ *
  * @param[in]  The CLIgen parse-tree
  * @param[in]  recursive. If set sort recursive calls
  * @retval     void
@@ -565,6 +572,7 @@ cligen_parsetree_sort(parse_tree *pt,
 }
 
 /*! Free all parse-tree nodes of the parse-tree, 
+ *
  * @param[in]  pt         CLIgen parse-tree
  * @param[in]  recursive  If 0 free pt and objects only, if 1 free recursive
  * @retval     0          OK
@@ -646,7 +654,7 @@ pt_trunc(parse_tree *pt,
  * @param[in]  depth  0: only this level, n : n levels
  * @param[in]  arg    Argument to function
  * @retval     0      OK (all applied function calls return 0)
- * @retval     -1     Error (one applied function call return -1)
+ * @retval    -1      Error (one applied function call return -1)
  * @code
  *    parse_tree   *pt;
  *    if (pt_apply(pt, fn, INT32_MAX, (void*)42) < 0)

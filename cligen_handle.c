@@ -338,13 +338,15 @@ cligen_pt_head_active_get(cligen_handle h)
 /*! Set active parse tree header
  */
 int
-cligen_pt_head_active_set(cligen_handle h, pt_head *ph)
+cligen_pt_head_active_set(cligen_handle h,
+                          pt_head      *ph)
 {
     struct cligen_handle *ch = handle(h);
 
     ch->ch_pt_head_active = ph;
     return 0;
 }
+
 /*! Get name of treename keyword used in parsing
  * @param[in] h       CLIgen handle
  * Example in CLIgen file where 'treename' is treename_keyword:
@@ -475,7 +477,7 @@ terminal_rows_set1(int rows)
  */
 int 
 cligen_terminal_rows_set(cligen_handle h, 
-                        int           rows)
+                         int           rows)
 {
     int            retval = -1;
     struct winsize ws;

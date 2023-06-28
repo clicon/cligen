@@ -188,6 +188,37 @@ cligen_ph_workpoint_set(pt_head *ph,
     return 0;
 }
 
+/*! Get tree-specific prompt
+ *
+ * @param[in]  ph    Parse-tree header
+ * @retval     str   Prompt string
+ */
+char *
+cligen_ph_prompt_get(pt_head *ph)
+{
+    return ph->ph_prompt;
+}
+
+/*! Set tree-specific prompt
+ *
+ * @param[in]  ph    Parse-tree header
+ * @param[in]  str   Prompt string (copied/malloced)
+ */
+int
+cligen_ph_prompt_set(pt_head *ph,
+                     char    *prompt)
+{
+    if (ph->ph_prompt){
+        free(ph->ph_prompt);
+        ph->ph_prompt = NULL;
+    }
+    if (prompt){
+        if ((ph->ph_prompt = strdup(prompt)) == NULL)
+            return -1;
+    }
+    return 0;
+}
+
 /*! Find a parsetree head by its name,
  * @param[in] h       CLIgen handle
  * @param[in] name    Name of tree
@@ -223,6 +254,8 @@ cligen_ph_free(pt_head *ph)
         free(ph->ph_name);
     if (ph->ph_parsetree)
         pt_free(ph->ph_parsetree, 1);
+    if (ph->ph_prompt)
+        free(ph->ph_prompt);
     free(ph);
     return 0;
 }
@@ -455,4 +488,3 @@ cligen_wp_top(cligen_handle h,
         cligen_ph_workpoint_set(ph, NULL);
     return 0;
 }
-
