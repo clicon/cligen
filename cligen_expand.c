@@ -373,7 +373,7 @@ co_expand_treeref_copy_shallow(cligen_handle h,
              * This actually seems to be to the treehead?
              */
             con->co_ref = co0;
-            co_flags_set(con, CO_FLAGS_TREEREF); /* Mark expanded refd tree */
+            co_flags_set(con, CO_FLAGS_TOPOFTREE); /* Mark expanded refd tree */
             con->co_treeref_orig = cot;
             if (cvec_len(cvv_filter) &&
                 co_filter_set(con, cvv_filter) == NULL)
@@ -609,7 +609,8 @@ co_isfilter(cvec *cvv_filter,
 }
                         
 /*!
- * @param[in]  transient  co may be "transient" if so use co->co_ref as new co_ref,...
+ * @param[in]     transient  co may be "transient" if so use co->co_ref as new co_ref,...
+ * @param[in,out] ptn        Updated new parse-tree
  */
 static int
 pt_expand1_co(cligen_handle h, 
@@ -624,8 +625,6 @@ pt_expand1_co(cligen_handle h,
     int     retval = -1;
     cg_var *cv;
     cg_obj *con = NULL;
-    cg_obj *coref = NULL;
-    cg_callback *callbacks = NULL;
 
     if (co_value_set(co, NULL) < 0)
         goto done;
@@ -673,28 +672,9 @@ pt_expand1_co(cligen_handle h,
         con = NULL;
         if (co_expand_sub(co, NULL, &con) < 0)
             goto done;
-        /* If instantiated tree reference copy the callbacks 
-         * See also callbacks code in match_pattern_sets()
-         * This code may need refactoring
-         */
-        if ((con->co_flags & CO_FLAGS_TREEREF) != 0){
-            coref = con;
-            while (coref->co_ref){
-                coref = coref->co_ref;
-            }
-            if (coref->co_type ==  CO_REFERENCE &&
-                coref->co_callbacks)
-                if (co_callback_copy(coref->co_callbacks, &callbacks) < 0)
-                    goto done;      
-        }
         /* con may be deleted in the call and need to be replaced */
         if ((con = co_insert1(ptn, con, 0)) == NULL) 
             goto done;
-        if (callbacks && (con->co_flags & CO_FLAGS_TREEREF)==0){
-            co_flags_set(con, CO_FLAGS_TREEREF);
-            con->co_callbacks = callbacks;
-            callbacks = NULL;
-        }
         if (transient && con->co_ref){
             con->co_ref = co->co_ref;
         }
@@ -705,8 +685,6 @@ pt_expand1_co(cligen_handle h,
  ok:
     retval = 0;
  done:
-    if (callbacks)
-        co_callbacks_free(&callbacks);
     return retval;
 }
 
@@ -790,6 +768,7 @@ pt_expand(cligen_handle h,
                     if (pt_expand1_co(h, cot, hide, expandvar, cvv_filter, cvv_var, 1, ptn) < 0)
                         goto done;
                 }
+
                 if (cvv2){
                     cvec_free(cvv2);
                     cvv2 = NULL;
@@ -872,7 +851,7 @@ reference_path_match(cg_obj     *co1,
 
     if (co1 == NULL)
         return -1;
-    if (co_flags_get(co1, CO_FLAGS_TREEREF)){ /* at top */
+    if (co_flags_get(co1, CO_FLAGS_TOPOFTREE)){ /* at top */
         if ((co0 = co_find_one(pt0, co1->co_command)) == NULL)
             return -1;
         *co0p = co0;

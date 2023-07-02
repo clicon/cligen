@@ -9,6 +9,11 @@ Expected: July 2023
 ### C/CLI-API changes on existing features
 Developers may need to change their code
 
+* Refactoring of tree expansion code,
+  * Most of these API changes are internal and should not affect external API (but may):
+  * `cligen_eval()`: Removed `callback` parameter
+  * `cliread_parse()`: Removed `callback` parameter
+  * Renamed co flag: `CO_FLAGS_TREEREF` to `CO_FLAGS_TOPOFTREE`
 * Renamed `cligen_parse` functions and added treename parameter:
   * Renamed `cligen_parse_str` to `clispec_parse_str` and `cligen_parse_file` to `clispec_parse_file`
   * Added `treename` parameter, default `NULL`

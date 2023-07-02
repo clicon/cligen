@@ -118,7 +118,7 @@ typedef struct cg_varspec cg_varspec;
  */
 #define CO_FLAGS_HIDE      0x01  /* Don't show in help/completion */
 #define CO_FLAGS_MARK      0x02  /* Only used internally (for recursion avoidance) */
-#define CO_FLAGS_TREEREF   0x04  /* This node is top of expanded sub-tree */
+#define CO_FLAGS_TOPOFTREE   0x04  /* This node is top of expanded sub-tree */
 #define CO_FLAGS_OPTION    0x08  /* Generated from optional [] */
 #define CO_FLAGS_MATCH     0x10  /* For sets: avoid selecting same more than once */
 

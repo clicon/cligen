@@ -303,7 +303,6 @@ show_help_columns(cligen_handle h,
                       pt,
                       0, /* best: Return all options, not only best, exclude hidden */
                       cvv, 
-                      NULL,
                       &mr) < 0)
         goto done;
     if ((level = cligen_cvv_levels(cvt)) < 0)
@@ -434,7 +433,6 @@ show_help_line(cligen_handle h,
                       pt,       /* command vector */
                       0,        /* best: Return all options, not only best, exclude hidden */
                       cvv, 
-                      NULL,
                       &mr) < 0)
         goto done;
     if ((level =  cligen_cvv_levels(cvt)) < 0)
@@ -466,7 +464,6 @@ show_help_line(cligen_handle h,
 
         if (match_pattern_exact(h, cvt, cvr, pt,
                                 cvv,
-                                NULL, 
                                 NULL,
                                 &result,
                                 NULL) < 0)
@@ -621,7 +618,6 @@ cli_trim(char **line,
  * @param[in]  pt        Parse-tree
  * @param[out] co_orig   Object that matches (if retval == 1). Free with co_free(co, 0)
  * @param[out] cvvp      Vector of cligen variables present in the input string. (if retval == 1).
- * @param[out] callbacks Callback structure of expanded treeref
  * @param[out] result    Result, < 0: errors, >=0 number of matches
  * @param[out] reason    Error reason if result is nomatch. Need to be free:d 
  * @retval     0         OK
@@ -640,7 +636,6 @@ cliread_parse(cligen_handle  h,
               parse_tree    *pt,     /* Orig */
               cg_obj       **co_orig,
               cvec         **cvvp,
-              cg_callback  **callbacks,
               cligen_result *result,
               char         **reason)
 {
@@ -682,7 +677,6 @@ cliread_parse(cligen_handle  h,
                             ptn,
                             cvv,
                             &match_obj,
-                            callbacks,
                             result, reason) < 0)
         goto done;
     /* Map from ghost object match_obj to real object */
@@ -767,7 +761,6 @@ cliread_eval(cligen_handle  h,
     cg_obj      *matchobj = NULL;    /* matching syntax node */
     cvec        *cvv = NULL;
     parse_tree  *pt = NULL;     /* Orig */
-    cg_callback *callbacks = NULL;
 
     if (h == NULL){
         fprintf(stderr, "Illegal cligen handle\n");
@@ -783,15 +776,13 @@ cliread_eval(cligen_handle  h,
         fprintf(stderr, "No active parse-tree found\n");
         goto done;;
     }
-    if (cliread_parse(h, *line, pt, &matchobj, &cvv, &callbacks, result, reason) < 0)
+    if (cliread_parse(h, *line, pt, &matchobj, &cvv, result, reason) < 0)
         goto done;
     if (*result == CG_MATCH)
-        *cb_retval = cligen_eval(h, matchobj, cvv, callbacks);
+        *cb_retval = cligen_eval(h, matchobj, cvv);
  ok:
     retval = 0;
  done:
-    if (callbacks)
-        co_callbacks_free(&callbacks);
     if (matchobj)
         co_free(matchobj, 0);
     if (cvv)
@@ -804,7 +795,6 @@ cliread_eval(cligen_handle  h,
  * @param[in]  h           CLIgen handle
  * @param[in]  co          Matched CLIgen object.
  * @param[in]  cvv         A vector of cligen variables present in the string.
- * @param[out] callbacks0  Callback structure of expanded treeref
  * @retval     int         If there is a callback, the return value of the callback is returned,
  * @retval     0           otherwise
  *
@@ -814,15 +804,13 @@ cliread_eval(cligen_handle  h,
 int
 cligen_eval(cligen_handle h, 
             cg_obj       *co, 
-            cvec         *cvv,
-            cg_callback  *callbacks0)
+            cvec         *cvv)
 {
     int            retval = -1;
     cg_callback   *cc;
     cvec          *argv;
     cvec          *cvv1 = NULL; /* Modified */
     cgv_fnstype_t *fn;
-    cg_callback   *callbacks;
     cligen_eval_wrap_fn *wrapfn = NULL;
     void          *wraparg = NULL;
     void          *wh = NULL; /* eval wrap handle */
@@ -845,26 +833,8 @@ cligen_eval(cligen_handle h,
         cvec_exclude_keys(cvv1) < 0)
         goto done;
     cligen_eval_wrap_fn_get(h, &wrapfn, &wraparg);
-    if ((callbacks = co->co_callbacks) == NULL)
-        callbacks = callbacks0;
-    else if (callbacks0){
-        callbacks->cc_fn_vec = callbacks0->cc_fn_vec;
-        /* Append original parameters to end of call 
-         * For example, 
-         * Before call:
-         * 0 : "/example:x"
-         * After call:
-         * 0 : "/example:x"
-         * 1 : "candidate" # cc0:s parameter copied and appended to cc
-         */
-        if (callbacks0->cc_cvec){
-            cg_var *cv = NULL;
-            while ((cv = cvec_each(callbacks0->cc_cvec, cv)) != NULL)
-                cvec_append_var(callbacks->cc_cvec, cv);
-        }
-    }
     /* Traverse callbacks */
-    for (cc = callbacks; cc; cc=co_callback_next(cc)){
+    for (cc = co->co_callbacks; cc; cc=co_callback_next(cc)){
         /* Vector cvec argument to callback */
         if ((fn = co_callback_fn_get(cc)) != NULL){
             argv = cc->cc_cvec ? cvec_dup(cc->cc_cvec) : NULL;

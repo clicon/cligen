@@ -7,7 +7,7 @@
 %
 % Title
 %
-\title {CLIgen Manual\\ {\small CLIgen version 6.1}}
+\title {CLIgen Manual\\ {\small CLIgen version 6.3}}
 
 \author{Olof Hagsand}
 %
@@ -366,34 +366,43 @@ The following examples shows a main tree and a sub-tree.
 
 \begin{verbatim}
   treename="main";
-  add @sub, add();
-  del @sub, del();
+  add @sub, addfn();
+  del @sub, delfn();
   treename="sub";
   x{
-    y, fn("a");
+    y, fn("a1");
   }
 \end{verbatim}
 
 The main tree references the subtree twice. In the first reference,
-{\tt add("a")} is called when invoking the command {\tt add x y}. In the
-second instance {\tt del("a")} is invoked when invoking the command {\tt del x y}.
-
-Note that the parameter list {\tt ("a")} is not substituted, the original is
-used. In the example this means that {\tt add("a")} is called
-regardless of any parameters to {\tt add()} in the {\tt @sub}
-invocation. An exception to this rule if there is no callback given in
-the original tree (e.g. as in {\tt x \{ y; \}}, then the callback and argument
-list from the tree reference is used (eg add() including aventual
-parameter list)\footnote{Yes, this semantics is somewhat complex and
-  needs revision}.
+{\tt addfn("a1")} is called when invoking the command {\tt add x y}. In the
+second instance {\tt delfn("a")} is invoked when invoking the command {\tt del x y}.
 
 It may be useful with functional substitution as shown above when the
 subtree represents a large common data-modeling sub-tree, where the
 data (x y) is the same but the operation(add/del) is different.
 
-In the example, the 'treename' variable is used to define a new CLIgen
-tree. It is possible using the C-API to change this keyword to
-something else by using the API function {\tt cligen\_treename\_keyword}.
+\subsubsection{Tree reference callback parameters}
+
+In the example above, the tree reference have no parameters ({\tt add();} and the local parameter. If instead the reference
+does have some parameters a special parameter appending mechanism is used.
+
+Assume the following tree spec:
+
+\begin{verbatim}
+  treename="main";
+  add @sub, addfn("x1","x2");
+  treename="sub";
+  x{
+    y, fn("a1","a2");
+  }
+\end{verbatim}
+
+The {\tt addfn()} callback is the called with the local parameters first, then the ones in the reference.
+
+In other words, if the user types {\tt add x y}, then the following function call is made: {\tt addfn("a1", "a2", "x1", "x2")}. You need to ensure that {\tt addfn()} can handle these arguments. 
+
+The reason for this mechanism is the autocli in Clixon, where it is used to generate a CLI from a YANG specification.
 
 \subsubsection{Filtering trees}
 
@@ -1114,13 +1123,8 @@ Variables are grouped into vectors whose using {\tt cvec}. Global variables or v
 passed to callback functions are always grouped into {\tt cvec}
 structures.
 
-
-
-
 \subsubsection{Finding variables in a vector}
 \label{sec:find}
-
-
 
 Suppose for example that you have the following command syntax:
 \begin{verbatim}
