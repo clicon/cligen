@@ -408,11 +408,13 @@ co_dump1(FILE    *f,
         fprintf(f, "%*s %p empty", indent*3, "", co);
         break;
     }
+    if (co->co_flags & CO_FLAGS_TOPOFTREE)
+        fprintf(f, ", top-of-tree");
     cv = NULL;
     while ((cv = cvec_each(co->co_cvec, cv)) != NULL)
         fprintf(f, ", label=%s", cv_name_get(cv));
     if (co->co_callbacks){
-        fprintf(f, " callbacks:");
+        fprintf(f, ", callbacks:");
         for (cc = co->co_callbacks; cc; cc = co_callback_next(cc)){
             fprintf(f, " %s", cc->cc_fn_str);
         }

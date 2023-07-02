@@ -100,6 +100,8 @@ mr_pt_trunc(match_result *mr,
     return pt_trunc(mr->mr_pt, len);
 }
 
+/*! Copy co and append it to result parse-tree
+ */
 int
 mr_pt_append(match_result *mr,
              cg_obj       *co,

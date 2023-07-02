@@ -392,7 +392,7 @@ pt_copy(parse_tree *pt,
     pt_sets_set(ptn, pt_sets_get(pt));
     /* subtract tree-references, which are instances of other trees */
     for (i=0; i<pt_len_get(pt); i++){
-        if ((co = pt_vec_i_get(pt,i)) && co_flags_get(co, CO_FLAGS_TREEREF))
+        if ((co = pt_vec_i_get(pt,i)) && co_flags_get(co, CO_FLAGS_TOPOFTREE))
             ;
         else
             ptn->pt_len++;
@@ -405,7 +405,7 @@ pt_copy(parse_tree *pt,
     j=0;
     for (i=0; i<pt_len_get(pt); i++){
         if ((co = pt_vec_i_get(pt, i)) != NULL){
-            if (!co_flags_get(co, CO_FLAGS_TREEREF))
+            if (!co_flags_get(co, CO_FLAGS_TOPOFTREE))
                 if (co_copy(co, co_parent, flags, &ptn->pt_vec[j++]) < 0)
                     goto done;
         }

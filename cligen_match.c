@@ -443,9 +443,11 @@ match_vec(cligen_handle h,
                         cop->co_type == CO_VARIABLE && 
                         co->co_type == CO_VARIABLE) /* Skip same pref if preference mode */
                         ;
-                    else
+                    else{
+                        /* Copy co and append it to mr parse-tree */
                         if (mr_pt_append(mr, co, ISREST(co)?resttokens:token) < 0)
                             goto done;
+                    }
                 }
                 else if (p > pref_upper){ /* Start again at this level */
                     pref_upper = p;
@@ -541,21 +543,21 @@ co_clearflag(cg_obj *co,
  * @retval        -1        Error
  */
 static int 
-match_pattern_sets_local(cligen_handle h, 
-                         cvec         *cvt,
-                         cvec         *cvr,
-                         parse_tree   *pt,
-                         int           level,
-                         int           best,
-                         cvec         *cvv,
+match_pattern_sets_local(cligen_handle  h, 
+                         cvec          *cvt,
+                         cvec          *cvr,
+                         parse_tree    *pt,
+                         int            level,
+                         int            best,
+                         cvec          *cvv,
                          match_result **mrp)
 {
-    int         retval = -1;
-    cg_obj     *co_match = NULL;
-    cg_obj     *co_orig = NULL;
-    int         lasttoken = 0;
-    char       *token;
-    char       *resttokens;
+    int           retval = -1;
+    cg_obj       *co_match = NULL;
+    cg_obj       *co_orig = NULL;
+    int           lasttoken = 0;
+    char         *token;
+    char         *resttokens;
     match_result *mr0 = NULL;
 
     if ((mr0 = mr_new()) == NULL)
@@ -674,6 +676,59 @@ match_pattern_sets_local(cligen_handle h,
     return retval;
 } /* match_pattern_sets_local */
 
+/* Merge callbacks of local co and treeref reference 
+ *
+ * @param[in]  co   CLIgen parse-tree object
+ * @param[in]  arg  Argument, cast to application-specific info
+ * @retval     1    OK and return (abort iteration)
+ * @retval     0    OK and continue
+ * @retval    -1    Error: break and return
+ * @note does not support multiple ccref or co callbacks
+ */
+static int
+treeref_merge_co(cg_obj *co,
+                 void   *arg)
+{
+    int          retval = -1;
+    cg_callback *cc_ref = (cg_callback *)arg;
+    cg_callback *cc;
+    cg_obj      *ce;
+    cg_var      *cv;
+    parse_tree  *pt;
+
+    if (cc_ref == NULL){
+        errno = EINVAL;
+        goto done;
+    }
+    /* check if empty */
+    if ((pt = co_pt_get(co)) == NULL ||
+        (ce = pt_vec_i_get(pt, 0)) == NULL ||
+        ce->co_type != CO_EMPTY)
+        goto ok;
+    if ((cc = co->co_callbacks) == NULL){
+        if (co_callback_copy(cc_ref, &co->co_callbacks) < 0)
+            goto done;
+    }
+    else {
+        cc->cc_fn_vec = cc_ref->cc_fn_vec;
+        if (cc_ref->cc_fn_str){
+            if (cc->cc_fn_str)
+                free(cc->cc_fn_str);
+            if ((cc->cc_fn_str = strdup(cc_ref->cc_fn_str)) == NULL)
+                goto done;
+        }
+        if (cc_ref->cc_cvec){
+            cv = NULL;
+            while ((cv = cvec_each(cc_ref->cc_cvec, cv)) != NULL)
+                cvec_append_var(cc->cc_cvec, cv);
+        }
+    }
+ ok:
+    retval = 0;
+ done:
+    return retval;
+}
+
 /*! Matchpattern sets
  *
  * @param[in]     h         CLIgen handle
@@ -686,21 +741,21 @@ match_pattern_sets_local(cligen_handle h,
  *                          all possible options. Match also hidden options.
  *                          If not set, return all possible matches, do not return hidden options 
  * @param[in,out] cvv       cligen variable vector containing vars/values pair for completion
- * @param[out]    callbacks Callback structure of expanded treeref
+ * @param[in]    callbacks0 Callback structure of expanded treeref
  * @param[out]    mrp       Match result including how many matches, level, reason for nomatc, etc
  * @retval        0         OK. result returned in mrp
  * @retval        -1        Error
  * Note: parameter "best" is only set in call from match_pattern_exact().
  */
 static int 
-match_pattern_sets(cligen_handle h, 
-                   cvec         *cvt,
-                   cvec         *cvr,
-                   parse_tree   *pt,
-                   int           level,
-                   int           best,
-                   cvec         *cvv,
-                   cg_callback **callbacks,
+match_pattern_sets(cligen_handle  h, 
+                   cvec          *cvt,
+                   cvec          *cvr,
+                   parse_tree    *pt,
+                   int            level,
+                   int            best,
+                   cvec          *cvv,
+                   cg_callback  *callbacks0,
                    match_result **mrp)
 {
     int           retval = -1;
@@ -711,6 +766,7 @@ match_pattern_sets(cligen_handle h,
     match_result *mrc = NULL; /* child result */
     match_result *mrcprev = NULL; /* previous succesful result */
     char         *token;
+    cg_callback  *callbacks = NULL;
 
     token = cvec_i_str(cvt, level+1); /* for debugging */
 #ifdef _DEBUG_SETS
@@ -733,20 +789,25 @@ match_pattern_sets(cligen_handle h,
     /* Unique match */
     co_match = mr_pt_i_get(mr0, 0);
 
-    /* If instantiated tree reference copy the callbacks 
-     * See also callbacks code in pt_expand1_co
-     * This code may need refactoring
+    /* If co_match is a new top-of-tree, the save the callbacks and send them
+     * on stack to sub-calls, so they can be merged with local callbacks.
+     * see also pt_expand
      */
-    if (callbacks &&
-        co_flags_get(co_match, CO_FLAGS_TREEREF)){
+    if (co_flags_get(co_match, CO_FLAGS_TOPOFTREE)){
         cg_obj *coref = co_match;
         while (coref->co_ref){
             coref = coref->co_ref;
         }
         if (coref->co_type ==  CO_REFERENCE &&
             coref->co_callbacks)
-            if (co_callback_copy(coref->co_callbacks, callbacks) < 0)
-                goto done;
+            callbacks = coref->co_callbacks;
+    }
+    else if (callbacks0){
+        callbacks = callbacks0;
+    }
+    if (callbacks){
+        if (treeref_merge_co(co_match, callbacks) < 0)
+            goto done;
     }
 #ifdef _DEBUG_SETS
     fprintf(stderr, "%s %*s match co:%s\n", __FUNCTION__, level*3,"", co_match->co_command);
@@ -883,7 +944,6 @@ match_pattern_sets(cligen_handle h,
  *                       all possible options. Match also hidden options. Only from match_pattern_exact
  *                       If not set, return all possible matches, do not return hidden options 
  * @param[out] cvv       cligen variable vector containing vars/values pair for completion
- * @param[out] callbacks Callback structure of expanded treeref
  * @param[out] mrp       CLIgen match result struct encapsulating several return parameters
  * @retval    -1         Error
  * @retval     0         OK
@@ -898,7 +958,6 @@ match_pattern(cligen_handle h,
               parse_tree   *pt, 
               int           best,
               cvec         *cvv,
-              cg_callback **callbacks,
               match_result **mrp)
 {
     int           retval = -1;
@@ -919,7 +978,7 @@ match_pattern(cligen_handle h,
                            0,
                            best, 
                            cvv, 
-                           callbacks,
+                           NULL,
                            &mr) < 0)
         goto done;
     if (mr == NULL){  /* shouldnt happen */
@@ -1060,7 +1119,6 @@ match_pattern(cligen_handle h,
  * @param[in]  pt        CLIgen parse tree, vector of cligen objects.
  * @param[out] cvv       CLIgen variable vector containing vars for matching path
  * @param[out] match_obj Exact object to return, must be freed by caller
- * @param[out] callbacks Callback structure of expanded treeref
  * @param[out] resultp   Result, < 0: errors, >=0 number of matches (only if retval == 0)
  * @param[out] reason    If retval is 0 and matchlen != 1, contains reason 
  *                       for not matching variables, if given. Need to be free:d
@@ -1074,7 +1132,6 @@ match_pattern_exact(cligen_handle  h,
                     parse_tree    *pt, 
                     cvec          *cvv,
                     cg_obj       **match_obj,
-                    cg_callback  **callbacks,
                     cligen_result *resultp,
                     char         **reason
                     )
@@ -1092,7 +1149,6 @@ match_pattern_exact(cligen_handle  h,
                        pt,       /* command vector */
                        1,        /* best: Return only best option including hidden options */
                        cvv,
-                       callbacks,
                        &mr)) < 0){
         goto done;
     }
@@ -1166,7 +1222,6 @@ match_complete(cligen_handle h,
                       pt,
                       0, /* best: Return all options, not only best, exclude hidden options */
                       cvv, 
-                      NULL,
                       &mr) < 0)
         goto done;
     if (mr == NULL || mr_pt_len_get(mr) == 0){

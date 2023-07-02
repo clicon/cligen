@@ -17,17 +17,17 @@ cat > $fspec <<EOF
   values (<int64> | @subtree), callback();
 
   # Parametrized reference 
-  parameter @subtree, @remove:local, callback();
+  parameter @subtree, @remove:local, callback("x1","x2");
 #  parameter @subtree, callback();
 
   treename="subtree";           
   xx{
     yy;
   }
-  zz1, local, callback();
+  zz1, local, template(); 
   zz2{
-    zz3, local, callback(); # filter sub-tree
-    zz4, callback();
+    zz3, local, template(); # filter sub-tree
+    zz4, template("a1", "a2"); # overwritten by @subtree above
   }
 EOF
 
@@ -60,8 +60,8 @@ function runtest()
     newtest "parameter reference zz2 zz3"
     expectpart "$(echo "parameter zz2 zz3" | $cligen_file -f $fspec 2>&1)" 0 "CLI syntax error in:" --not-- "1 name:parameter type:string value:parameter" "2 name:zz2 type:string value:zz2" "3 name:zz3 type:string value:zz3"
 
-    newtest "parameter reference zz2 zz4"
-    expectpart "$(echo "parameter zz2 zz4" | $cligen_file -f $fspec 2>&1)" 0 "1 name:parameter type:string value:parameter" "2 name:zz2 type:string value:zz2" "3 name:zz4 type:string value:zz4"
+    newtest "parameter reference zz2 zz4 and args"
+    expectpart "$(echo "parameter zz2 zz4" | $cligen_file -f $fspec 2>&1)" 0 "1 name:parameter type:string value:parameter" "2 name:zz2 type:string value:zz2" "3 name:zz4 type:string value:zz4" "arg 0: a1" "arg 1: a2" "arg 2: x1" "arg 3: x2"
 }
 
 newtest "$cligen_file -f $fspec"
