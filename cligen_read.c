@@ -791,31 +791,45 @@ cliread_eval(cligen_handle  h,
     return retval;
 }
                
+/*! Poll socket for read 
+ *
+ * Select is called with timeout set so that the call returns immediately
+ * @param[in] s  Read socket
+ * @param[in] usec Timeout (0 is "poll")
+ * @retval    1  Input is available on s
+ * @retval    0  No input
+ * @retval   -1  Error
+ */
 static int
-cligen_eval_poll(int s)
+cligen_eval_poll(int          s,
+                 unsigned int usec)
 {
     fd_set         fdset;
-    struct timeval tnull = {0,};
+    struct timeval tv = {0,};
+    int            ret;
 
     FD_ZERO(&fdset);
     FD_SET(s, &fdset);
-    return select(FD_SETSIZE, &fdset, NULL, NULL, &tnull);
+    tv.tv_usec = usec;
+    if ((ret = select(FD_SETSIZE, &fdset, NULL, NULL, &tv)) < 0)
+        perror("cligen_eval_poll");
+    return ret;
 }
 
 /*! Fork pipe function and return socker and pid, redirect to pipe_output_socket
  *
- * @param[in]  h    CLIgen handle
- * @param[in]  fn   Output modifier callback
- * @param[in]  cvv  A vector of cligen variables present in the string.
- * @param[out] sp   Socket
- * @param[out] pidp Pid of child
+ * @param[in]  h     CLIgen handle
+ * @param[in]  fn    Output modifier callback
+ * @param[in]  cvv   A vector of cligen variables present in the string.
+ * @param[out] spipe Socket
+ * @param[out] pidp  Pid of child
  * @see cligen_eval_pipe_post
  */
 static int
 cligen_eval_pipe_pre(cligen_handle  h,
                      cg_callback   *cc,
                      cvec          *cvv,
-                     int           *sp,
+                     int           *spipe,
                      pid_t         *pidp)
 {
     int            retval = -1;
@@ -846,8 +860,8 @@ cligen_eval_pipe_pre(cligen_handle  h,
     /* for cligen_output */
     if (cli_pipe_output_socket_set(spair[0]) < 0)
         goto done;
-    if (sp)
-        *sp = spair[0];
+    if (spipe)
+        *spipe = spair[0];
     retval = 0;
  done:
     return retval;
@@ -855,6 +869,8 @@ cligen_eval_pipe_pre(cligen_handle  h,
 
 /*! Poll for write socket, redirect to cligen-output basic and then close pipe
  *
+ * Given socket to pipe function, close write side, poll/read and redirect to 
+ * basic output function, then wait for child completion
  * @param[in]  h        CLIgen handle
  * @param[in]  s        Socket
  * @param[in]  childpid Pid of child
@@ -875,30 +891,23 @@ cligen_eval_pipe_post(cligen_handle h,
         perror("shutdown");
         goto done;
     }
-    if ((ret = cligen_eval_poll(s)) < 0){
-        perror("cligen_eval_poll");
+    /* Block for 10 ms until input is available */
+    if ((ret = cligen_eval_poll(s, 10000)) < 0)
         goto done;
-    }
-    if (ret == 0){
-        usleep(10000);
-        if ((ret = cligen_eval_poll(s)) < 0){
-            perror("cligen_eval_poll");
+    while (ret != 0) {
+        if ((len = read(s, buf, 4096)) < 0){
+            perror("cli_pipe_exec_cb, read");
             goto done;
         }
-        while (ret) {
-            if ((len = read(s, buf, 4096)) < 0){
-                perror("cli_pipe_exec_cb, read");
-                goto done;
-            }
-            if (len == 0)
-                break;
-            buf[len] = '\0';
-            cligen_output_basic(stdout, buf, len);
-            if ((ret = cligen_eval_poll(s)) < 0){
-                perror("cligen_eval_poll");
-                goto done;
-            }
-        }
+        if (len == 0)
+            break;
+        buf[len] = '\0';
+        cligen_output_basic(stdout, buf, len);
+        /* Immediate poll: possibility if writer is slow that input is dropped due
+         * to starving of child in (maybe) single process systems
+         */
+        if ((ret = cligen_eval_poll(s, 10000)) < 0)
+            goto done;
     }
     if (cli_pipe_output_socket_set(-1) < 0)
         goto done;
@@ -940,7 +949,7 @@ cligen_eval(cligen_handle h,
     cligen_eval_wrap_fn *wrapfn = NULL;
     void          *wraparg = NULL;
     void          *wh = NULL; /* eval wrap handle */
-    int            s = -1;
+    int            spipe = -1;
     pid_t          childpid = 0;
     
     /* Save matched object for plugin use */
@@ -965,7 +974,7 @@ cligen_eval(cligen_handle h,
     for (cc = co->co_callbacks; cc; cc=co_callback_next(cc)){
         if ((cc->cc_flags & CC_FLAGS_PIPE_FUNCTION) == 0x0)
             continue;
-        if (cligen_eval_pipe_pre(h, cc, cvv1, &s, &childpid) < 0)
+        if (cligen_eval_pipe_pre(h, cc, cvv1, &spipe, &childpid) < 0)
             goto done;
     }
     /* Second round, call regular callbacks */
@@ -995,7 +1004,7 @@ cligen_eval(cligen_handle h,
         }
     }
     if (childpid){
-        if (cligen_eval_pipe_post(h, s, childpid) < 0)
+        if (cligen_eval_pipe_post(h, spipe, childpid) < 0)
             goto done;
     }
     retval = 0;

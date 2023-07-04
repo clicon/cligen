@@ -143,9 +143,8 @@ output_fn(cligen_handle handle,
     cg_var *cv;
     
     cv = NULL;
-    while ((cv = cvec_each(argv, cv)) != NULL){
+    while ((cv = cvec_each(argv, cv)) != NULL)
         cligen_output(stdout, "%s\n", cv_string_get(cv));
-    }
     return 0;
 }
 
@@ -193,41 +192,6 @@ pipe_shell_fn(cligen_handle h,
         cbuf_free(cb);
     return retval;
 }
-
-#if 0
-int
-grep_fn(cligen_handle h,
-        cvec         *cvv,
-        cvec         *argv)
-{
-    int     retval = -1;
-    cbuf   *cb = NULL;
-    cg_var *av;
-    cg_var *cv;
-    char   *name;
-
-    if ((cb = cbuf_new()) == NULL){
-        perror("cbuf_new");
-        goto done;
-    }
-    if (argv && (av = cvec_i(argv, 0)) != NULL){
-        /* First arg is command */
-        //        cprintf(cb, "%s", cv_string_get(av));
-        /* Rest are names of parameters from cvv */
-        av = NULL;
-        while ((av = cvec_each1(argv, av)) != NULL){
-            name = cv_string_get(av);
-            if ((cv = cvec_find_var(cvv, name)) != NULL)
-                cprintf(cb, "%s", cv_string_get(cv));
-        }
-        retval = execl("/usr/bin/grep", "grep", "-e", cbuf_get(cb), (char *) NULL);
-    }
- done:
-    if (cb)
-        cbuf_free(cb);
-    return retval;
-}
-#endif
 
 /*! Example of static string to function mapper
  *
