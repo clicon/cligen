@@ -58,6 +58,7 @@ typedef int (cligen_fd_cb_t)(int, void*);
 /*
  * Prototypes
  */
+int  cli_pipe_output_socket_get(int *s);
 int  cli_pipe_output_socket_set(int s);
 int  cli_output_reset(void);
 int  cli_output_status(void);
