@@ -87,7 +87,7 @@ static int PIPE_OUTPUT_SOCKET = -1;
 
 /*! Get output pipe socket
  */
-static int
+int
 cli_pipe_output_socket_get(int *s)
 {
     if (s){
@@ -288,7 +288,9 @@ cligen_output(FILE       *f,
         goto done;
     if (s != -1){
         if (write(s, inbuf, inbuflen) < 0){
-            perror("cligen_output write");
+            perror("cligen_output write on pipe socket");
+            close(s);
+            cli_pipe_output_socket_set(-1);
             goto done;
         }
     }

@@ -826,11 +826,11 @@ cligen_eval_poll(int          s,
  * @see cligen_eval_pipe_post
  */
 static int
-cligen_eval_pipe_pre(cligen_handle  h,
-                     cg_callback   *cc,
-                     cvec          *cvv,
-                     int           *spipe,
-                     pid_t         *pidp)
+cligen_eval_pipe_pre(cligen_handle h,
+                     cg_callback  *cc,
+                     cvec         *cvv,
+                     int          *spipe,
+                     pid_t        *pidp)
 {
     int            retval = -1;
     int            spair[2] = {-1, -1};
@@ -852,7 +852,8 @@ cligen_eval_pipe_pre(cligen_handle  h,
         }
         close(spair[1]);
         fn = co_callback_fn_get(cc);
-        retval = (*fn)(cligen_userhandle(h)?cligen_userhandle(h):h, cvv, cc->cc_cvec);
+        if ((retval = (*fn)(cligen_userhandle(h)?cligen_userhandle(h):h, cvv, cc->cc_cvec)) != 0)
+            fprintf(stderr, "%s child retval:%d\n", __FUNCTION__, retval);
         exit(retval);
     }
     /* parent */
@@ -877,7 +878,7 @@ cligen_eval_pipe_pre(cligen_handle  h,
  */
 static int
 cligen_eval_pipe_post(cligen_handle h,
-                     int            s,
+                     int            s0,
                      pid_t          childpid)
 {
     int     retval = -1;
@@ -885,38 +886,49 @@ cligen_eval_pipe_post(cligen_handle h,
     int     status;
     char    buf[4096];
     ssize_t len = 4096;
+    int     s;
 
-    /* Close write side of socket */
-    if (shutdown(s, SHUT_WR) < 0){
-        perror("shutdown");
-        goto done;
-    }
-    /* Block for 10 ms until input is available */
-    if ((ret = cligen_eval_poll(s, 10000)) < 0)
-        goto done;
-    while (ret != 0) {
-        if ((len = read(s, buf, 4096)) < 0){
-            perror("cli_pipe_exec_cb, read");
+    cli_pipe_output_socket_get(&s);
+    if (s != -1) {
+        /* Close write side of socket */
+        if (shutdown(s, SHUT_WR) < 0){
+            perror("shutdown");
             goto done;
         }
-        if (len == 0)
-            break;
-        buf[len] = '\0';
-        cligen_output_basic(stdout, buf, len);
-        /* Immediate poll: possibility if writer is slow that input is dropped due
-         * to starving of child in (maybe) single process systems
-         */
-        if ((ret = cligen_eval_poll(s, 10000)) < 0)
+        /* Block for 10 ms until input is available */
+        if ((ret = cligen_eval_poll(s, 10000)) < 0){
+            goto done;
+        }
+        while (ret != 0) {
+            if ((len = read(s, buf, 4096)) < 0){
+                perror("cli_pipe_exec_cb, read");
+                goto done;
+            }
+            if (len == 0)
+                break;
+            buf[len] = '\0';
+            cligen_output_basic(stdout, buf, len);
+            /* Immediate poll: possibility if writer is slow that input is dropped due
+             * to starving of child in (maybe) single process systems
+             */
+            if ((ret = cligen_eval_poll(s, 10000)) < 0)
+                goto done;
+        }
+        if (cli_pipe_output_socket_set(-1) < 0)
             goto done;
     }
-    if (cli_pipe_output_socket_set(-1) < 0)
-        goto done;
     kill(childpid, SIGTERM);
-    if(waitpid(childpid, &status, 0) == childpid)
-        ret = WEXITSTATUS(status);
-    else
-        ret = -1;
+    /* On success, returns the process ID of the terminated child */
+    if(waitpid(childpid, &status, 0) != childpid){
+        perror("waitpid");
+        goto done;
+    }
     retval = 0;
+    if (WIFEXITED(status)){
+        ret = WEXITSTATUS(status);
+        if (ret != 0)
+            retval = -1;
+    }
  done:
     return retval;
 }
@@ -988,9 +1000,9 @@ cligen_eval(cligen_handle h,
             /* Eval wrapper function so upper layers can make checks before and after callback */
             if (wrapfn)
                 (*wrapfn)(wraparg, &wh, cc->cc_fn_str, __FUNCTION__);
-            if ((retval = (*fn)(cligen_userhandle(h)?cligen_userhandle(h):h, 
+            if ((*fn)(cligen_userhandle(h)?cligen_userhandle(h):h, 
                                 cvv1, 
-                                argv)) < 0){
+                                argv) < 0){
                 if (argv != NULL)
                     cvec_free(argv);
                 cligen_fn_str_set(h, NULL);
@@ -1004,8 +1016,9 @@ cligen_eval(cligen_handle h,
         }
     }
     if (childpid){
-        if (cligen_eval_pipe_post(h, spipe, childpid) < 0)
+        if (cligen_eval_pipe_post(h, spipe, childpid) < 0){
             goto done;
+        }
     }
     retval = 0;
  done:
