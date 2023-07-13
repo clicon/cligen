@@ -806,9 +806,12 @@ match_pattern_sets(cligen_handle  h,
         while (coref->co_ref){
             coref = coref->co_ref;
         }
-        if (coref->co_type ==  CO_REFERENCE &&
-            coref->co_callbacks)
-            callbacks = coref->co_callbacks;
+        if (coref->co_type ==  CO_REFERENCE){
+            if (coref->co_callbacks)
+                callbacks = coref->co_callbacks;
+            else
+                callbacks = callbacks0;
+        }
     }
     else if (callbacks0){
         callbacks = callbacks0;
