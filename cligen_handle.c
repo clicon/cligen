@@ -407,6 +407,33 @@ cligen_co_match_set(cligen_handle h,
     return 0;
 }
 
+/*! Get expand prepend path
+ *
+ * @param[in] h       CLIgen handle
+ */
+cbuf *
+cligen_expand_prepend_get(cligen_handle h)
+{
+    struct cligen_handle *ch = handle(h);
+
+    return ch->ch_expand_prepend;
+}
+
+/*! Set expand prepend path
+ *
+ * @param[in] h   CLIgen handle
+ * @param[in] cb  Prepend cbuf
+ */
+int
+cligen_expand_prepend_set(cligen_handle h, 
+                          cbuf         *cb)
+{
+    struct cligen_handle *ch = handle(h);
+
+    ch->ch_expand_prepend = cb;
+    return 0;
+}
+
 /*! Get callback function name string
  *
  * @code

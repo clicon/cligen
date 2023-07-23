@@ -114,6 +114,7 @@ cli_show_help_commands(cligen_handle h,
                   cvv,
                   1, /* Include hidden commands */
                   0, /* VARS are not expanded, eg ? <tab> */
+                  NULL,
                   ptn) < 0)      /* expansion */
         goto done;
     if (show_help_line(h, stdout, string, ptn, cvv) < 0)
@@ -178,6 +179,7 @@ cli_tab_hook(cligen_handle h,
                   cvv,
                   1,   /* Include hidden commands */
                   0,   /* VARS are not expanded, eg ? <tab> */
+                  NULL,
                   ptn) < 0)      /* expansion */
         goto done;
     /* Note, can change cligen buf pointer (append and increase) */
@@ -672,6 +674,7 @@ cliread_parse(cligen_handle  h,
     if (pt_expand(h, NULL, pt, cvt, cvv,
                   0,  /* Do not include hidden commands */
                   0,  /* VARS are not expanded, eg ? <tab> */
+                  NULL,
                   ptn) < 0) /* sub-tree expansion, ie choice, expand function */
         goto done;
     if (match_pattern_exact(h, cvt, cvr,

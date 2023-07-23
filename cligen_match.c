@@ -736,6 +736,85 @@ treeref_merge_co(cg_obj      *co,
     return retval;
 }
 
+/*! Merge callbacks helper function to match_pattern_sets
+ */
+static int
+callbacks_merge(cg_obj       *coref,
+                cg_callback  *callbacks0,
+                cg_callback **callbacksp)
+{
+    int     retval = -1;
+    cg_var *cv;
+
+    if (coref){
+        /* prepend_me is added in clixon cli generate code 
+         * Add the argument (eg api-path-fmt) in front of existing parameter.
+         * If not exist, create new callback cvec
+         */
+        if (callbacks0 &&
+            strcmp(coref->co_callbacks->cc_fn_str, "prepend_me") == 0){
+            cvec   *cvv;
+            /* Assume only single coref parameter */
+            if ((cv = cvec_i(coref->co_callbacks->cc_cvec, 0)) == NULL){
+                fprintf(stderr, "%s no first element in coref cvec\n", __FUNCTION__);
+                goto done;
+            }
+            cvv = cvec_from_var(cv);
+            cv = NULL;
+            while ((cv = cvec_each(callbacks0->cc_cvec, cv)) != NULL){
+                if (cvec_append_var(cvv, cv) == NULL)
+                    goto done;
+            }
+            if (callbacks0->cc_cvec)
+                cvec_free(callbacks0->cc_cvec);
+            callbacks0->cc_cvec = cvv; // XXX destructively change
+            *callbacksp = callbacks0;
+        }
+        else{
+            if (co_callback_copy(coref->co_callbacks, callbacksp) < 0)
+                goto done;
+            /* callbacks0 != callbacks indicate new cvec */
+        }
+    }
+    else 
+        *callbacksp = callbacks0;
+    retval = 0;
+ done:
+    return retval;
+}
+
+/*! Merge expand prepend helper function to match_pattern_sets
+ *
+ * prepend_me is added in clixon cli generate code as a way to use treerefs for uses/grouping
+ * instead of expanding grouping code. But for that one needs to keep track of which path the
+ * grouping has follows from the top.
+ */
+static int
+expand_prepend_merge(cg_obj  *coref,
+                     cbuf    *prepend0,
+                     cbuf   **prependp)
+{
+    int     retval = -1;
+    cg_var *cv;
+
+    if (coref && strcmp(coref->co_callbacks->cc_fn_str, "prepend_me") == 0){
+        if (prepend0 == NULL){
+            if ((*prependp = cbuf_new()) == NULL)
+                goto done;
+        }
+        else{
+            *prependp = prepend0;
+        }
+        cv = cvec_i(coref->co_callbacks->cc_cvec, 0);
+        cprintf(*prependp, "%s", cv_string_get(cv));
+    }
+    else if (prepend0 && *prependp == NULL)
+        *prependp = prepend0;
+    retval = 0;
+ done:
+    return retval;
+}
+
 /*! Matchpattern sets
  *
  * @param[in]     h         CLIgen handle
@@ -748,10 +827,11 @@ treeref_merge_co(cg_obj      *co,
  *                          all possible options. Match also hidden options.
  *                          If not set, return all possible matches, do not return hidden options 
  * @param[in,out] cvv       cligen variable vector containing vars/values pair for completion
- * @param[in]    callbacks0 Callback structure of expanded treeref
+ * @param[in]     callbacks0 Callback structure of expanded treeref
+ * @param[in]     prepend0  Expand api-path-fmt for treeref indirection
  * @param[out]    mrp       Match result including how many matches, level, reason for nomatc, etc
  * @retval        0         OK. result returned in mrp
- * @retval        -1        Error
+ * @retval       -1         Error
  * Note: parameter "best" is only set in call from match_pattern_exact().
  */
 static int 
@@ -762,7 +842,8 @@ match_pattern_sets(cligen_handle  h,
                    int            level,
                    int            best,
                    cvec          *cvv,
-                   cg_callback  *callbacks0,
+                   cg_callback   *callbacks0,
+                   cbuf          *prepend0,
                    match_result **mrp)
 {
     int           retval = -1;
@@ -775,6 +856,7 @@ match_pattern_sets(cligen_handle  h,
     char         *token;
     cg_callback  *callbacks = NULL;
     cg_obj       *coref = NULL;
+    cbuf         *prepend = NULL;
 
     token = cvec_i_str(cvt, level+1); /* for debugging */
 #ifdef _DEBUG_SETS
@@ -797,29 +879,32 @@ match_pattern_sets(cligen_handle  h,
     /* Unique match */
     co_match = mr_pt_i_get(mr0, 0);
 
-    /* If co_match is a new top-of-tree, the save the callbacks and send them
-     * on stack to sub-calls, so they can be merged with local callbacks.
-     * see also pt_expand
+    /* Get original coref if top-of-tree / reference and has callbacks
      */
     if (co_flags_get(co_match, CO_FLAGS_TOPOFTREE)){
         coref = co_match;
         while (coref->co_ref){
             coref = coref->co_ref;
         }
-        if (coref->co_type ==  CO_REFERENCE){
-            if (coref->co_callbacks)
-                callbacks = coref->co_callbacks;
-            else
-                callbacks = callbacks0;
-        }
+        if (coref->co_type != CO_REFERENCE || coref->co_callbacks == NULL)
+            coref = NULL;
     }
-    else if (callbacks0){
-        callbacks = callbacks0;
-    }
+    /* If co_match is a new top-of-tree, save the callbacks and send them
+     * on stack to sub-calls, so they can be merged with local callbacks.
+     */
+    if (callbacks_merge(coref, callbacks0, &callbacks) < 0)
+        goto done;
     if (callbacks){
+        /* Merge callbacks of local co and treeref reference */
         if (treeref_merge_co(co_match, callbacks) < 0)
             goto done;
     }
+
+    /* expand prepend merge code 
+     */
+    if (expand_prepend_merge(coref, prepend0, &prepend) < 0)
+        goto done;
+    
 #ifdef _DEBUG_SETS
     fprintf(stderr, "%s %*s match co:%s\n", __FUNCTION__, level*3,"", co_match->co_command);
 #endif
@@ -838,6 +923,7 @@ match_pattern_sets(cligen_handle  h,
                   cvv,
                   !best,  /* If best is set, include hidden commands, otherwise do not */
                   1,      /* VARS are expanded, eg ? <tab> */
+                  prepend,
                   ptn) < 0) /* expand/choice variables */
         goto done;
     /* Check termination criteria */
@@ -866,6 +952,7 @@ match_pattern_sets(cligen_handle  h,
                                    best, 
                                    cvv,
                                    callbacks,
+                                   prepend,
                                    &mrc) < 0)
                 goto done;              
 #ifdef _DEBUG_SETS
@@ -901,6 +988,7 @@ match_pattern_sets(cligen_handle  h,
                                     best, 
                                     cvv,
                                     callbacks,
+                                    prepend,
                                     &mrc) < 0)
             goto done;
     }
@@ -934,6 +1022,10 @@ match_pattern_sets(cligen_handle  h,
  ok:
     retval = 0;
  done:
+    if (callbacks0 != callbacks)
+        co_callbacks_free(&callbacks);
+    if (prepend0 == NULL && prepend != NULL)
+        cbuf_free(prepend);
     if (mrcprev && mrcprev != mrc){
         mr_free(mrcprev);
     }
@@ -989,6 +1081,7 @@ match_pattern(cligen_handle h,
                            0,
                            best, 
                            cvv, 
+                           NULL,
                            NULL,
                            &mr) < 0)
         goto done;
@@ -1092,7 +1185,7 @@ match_pattern(cligen_handle h,
                 goto done;
             if ((cvv = cvec_new(0)) == NULL)
                 goto done;
-            if (pt_expand(h, co1, ptc, cvt, cvv, 1, 0, ptn) < 0)
+            if (pt_expand(h, co1, ptc, cvt, cvv, 1, 0, NULL, ptn) < 0)
                 goto done;
             /* Loop sets i which is used below */
             for (i=0; i<pt_len_get(ptn); i++){

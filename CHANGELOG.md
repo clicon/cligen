@@ -11,6 +11,7 @@ Expected: July 2023
 
 ### Minor features
 * Removed  extras/ build-root/ and rpm build code since they are not properly maintained
+* Added an expand-prepend variable for keeping track of api-paths for recursive expands
 
 ### C/CLI-API changes on existing features
 Developers may need to change their code
