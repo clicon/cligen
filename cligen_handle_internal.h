@@ -81,6 +81,7 @@ struct cligen_handle{
     pt_head    *ch_pt_head_active; /* Pointer to the currently acrive parsetree */
     char       *ch_treename_keyword; /* Name of treename parsing keyword */
     cg_obj     *ch_co_match;     /* Matching object in latest evaluation */
+    cbuf       *ch_expand_prepend; /* At expand, optional parameter to append paths */
     char       *ch_fn_str;       /* Name of active callback function */
     int         ch_completion;   /* completion mode */    
     char       *ch_nomatch;      /* Why did a string not match an evaluation? */
@@ -92,7 +93,6 @@ struct cligen_handle{
                                      does not work if lexicalorder is set.
                                      Also this is global for now
                                   */
-
     char       *ch_buf;          /* getline input buffer */
     char       *ch_killbuf;      /* getline killed text */
 
