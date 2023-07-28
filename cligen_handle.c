@@ -407,30 +407,30 @@ cligen_co_match_set(cligen_handle h,
     return 0;
 }
 
-/*! Get expand prepend path
+/*! Get callback arguments
  *
  * @param[in] h       CLIgen handle
  */
-cbuf *
-cligen_expand_prepend_get(cligen_handle h)
+cvec *
+cligen_callback_arguments_get(cligen_handle h)
 {
     struct cligen_handle *ch = handle(h);
 
-    return ch->ch_expand_prepend;
+    return ch->ch_callback_arguments;
 }
 
-/*! Set expand prepend path
+/*! Set callback arguments
  *
- * @param[in] h   CLIgen handle
- * @param[in] cb  Prepend cbuf
+ * @param[in] h    CLIgen handle
+ * @param[in] args Callback arguments
  */
 int
-cligen_expand_prepend_set(cligen_handle h, 
-                          cbuf         *cb)
+cligen_callback_arguments_set(cligen_handle h, 
+                              cvec         *args)
 {
     struct cligen_handle *ch = handle(h);
 
-    ch->ch_expand_prepend = cb;
+    ch->ch_callback_arguments = args;
     return 0;
 }
 

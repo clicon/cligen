@@ -783,38 +783,6 @@ callbacks_merge(cg_obj       *coref,
     return retval;
 }
 
-/*! Merge expand prepend helper function to match_pattern_sets
- *
- * prepend_me is added in clixon cli generate code as a way to use treerefs for uses/grouping
- * instead of expanding grouping code. But for that one needs to keep track of which path the
- * grouping has follows from the top.
- */
-static int
-expand_prepend_merge(cg_obj  *coref,
-                     cbuf    *prepend0,
-                     cbuf   **prependp)
-{
-    int     retval = -1;
-    cg_var *cv;
-
-    if (coref && strcmp(coref->co_callbacks->cc_fn_str, "prepend_me") == 0){
-        if (prepend0 == NULL){
-            if ((*prependp = cbuf_new()) == NULL)
-                goto done;
-        }
-        else{
-            *prependp = prepend0;
-        }
-        cv = cvec_i(coref->co_callbacks->cc_cvec, 0);
-        cprintf(*prependp, "%s", cv_string_get(cv));
-    }
-    else if (prepend0 && *prependp == NULL)
-        *prependp = prepend0;
-    retval = 0;
- done:
-    return retval;
-}
-
 /*! Matchpattern sets
  *
  * @param[in]     h         CLIgen handle
@@ -828,7 +796,6 @@ expand_prepend_merge(cg_obj  *coref,
  *                          If not set, return all possible matches, do not return hidden options 
  * @param[in,out] cvv       cligen variable vector containing vars/values pair for completion
  * @param[in]     callbacks0 Callback structure of expanded treeref
- * @param[in]     prepend0  Expand api-path-fmt for treeref indirection
  * @param[out]    mrp       Match result including how many matches, level, reason for nomatc, etc
  * @retval        0         OK. result returned in mrp
  * @retval       -1         Error
@@ -843,7 +810,6 @@ match_pattern_sets(cligen_handle  h,
                    int            best,
                    cvec          *cvv,
                    cg_callback   *callbacks0,
-                   cbuf          *prepend0,
                    match_result **mrp)
 {
     int           retval = -1;
@@ -856,7 +822,6 @@ match_pattern_sets(cligen_handle  h,
     char         *token;
     cg_callback  *callbacks = NULL;
     cg_obj       *coref = NULL;
-    cbuf         *prepend = NULL;
 
     token = cvec_i_str(cvt, level+1); /* for debugging */
 #ifdef _DEBUG_SETS
@@ -900,11 +865,6 @@ match_pattern_sets(cligen_handle  h,
             goto done;
     }
 
-    /* expand prepend merge code 
-     */
-    if (expand_prepend_merge(coref, prepend0, &prepend) < 0)
-        goto done;
-    
 #ifdef _DEBUG_SETS
     fprintf(stderr, "%s %*s match co:%s\n", __FUNCTION__, level*3,"", co_match->co_command);
 #endif
@@ -923,7 +883,7 @@ match_pattern_sets(cligen_handle  h,
                   cvv,
                   !best,  /* If best is set, include hidden commands, otherwise do not */
                   1,      /* VARS are expanded, eg ? <tab> */
-                  prepend,
+                  callbacks,
                   ptn) < 0) /* expand/choice variables */
         goto done;
     /* Check termination criteria */
@@ -952,7 +912,6 @@ match_pattern_sets(cligen_handle  h,
                                    best, 
                                    cvv,
                                    callbacks,
-                                   prepend,
                                    &mrc) < 0)
                 goto done;              
 #ifdef _DEBUG_SETS
@@ -988,7 +947,6 @@ match_pattern_sets(cligen_handle  h,
                                     best, 
                                     cvv,
                                     callbacks,
-                                    prepend,
                                     &mrc) < 0)
             goto done;
     }
@@ -1024,8 +982,6 @@ match_pattern_sets(cligen_handle  h,
  done:
     if (callbacks0 != callbacks)
         co_callbacks_free(&callbacks);
-    if (prepend0 == NULL && prepend != NULL)
-        cbuf_free(prepend);
     if (mrcprev && mrcprev != mrc){
         mr_free(mrcprev);
     }
@@ -1081,7 +1037,6 @@ match_pattern(cligen_handle h,
                            0,
                            best, 
                            cvv, 
-                           NULL,
                            NULL,
                            &mr) < 0)
         goto done;

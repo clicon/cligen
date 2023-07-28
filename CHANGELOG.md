@@ -10,8 +10,9 @@ Expected: July 2023
   * Use 'pipetree="|<pipe-tree>"` to reference a default pipe-tree.
 
 ### Minor features
+* Added callback_argument access functions for keeping track of api-paths for recursive expands
+  * This is to enable memory footprint optimization in higher layers (clixon)
 * Removed  extras/ build-root/ and rpm build code since they are not properly maintained
-* Added an expand-prepend variable for keeping track of api-paths for recursive expands
 
 ### C/CLI-API changes on existing features
 Developers may need to change their code
