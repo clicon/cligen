@@ -255,20 +255,23 @@ cligen_ph_pipe_set(pt_head *ph,
  * @param[in] h       CLIgen handle
  * @param[in] name    Name of tree
  * @retval    ph      Parse-tree header
- * @retval    NULL    Not found
+ * @retval    NULL    Not found / error
  */
 pt_head *
 cligen_ph_find(cligen_handle h,
                char         *name)
 {
-    char *phname;
-
+    char    *phname;
     pt_head *ph = NULL;
+
+    if (name == NULL){
+       errno = EINVAL;
+       return NULL;
+    }
     while ((ph = cligen_ph_each(h, ph)))
         if ((phname = cligen_ph_name_get(ph)))
             if (strcmp(phname, name) == 0)
                 break;
-    
     return ph;
 }
 
@@ -311,7 +314,6 @@ cligen_ph_add(cligen_handle h,
         goto done;
 
     memset(ph, 0, sizeof(*ph));
-
     if (cligen_ph_name_set(ph, name) < 0){
         free(ph);
         ph = NULL;
