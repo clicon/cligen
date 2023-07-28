@@ -120,8 +120,8 @@ int cligen_treename_keyword_set(cligen_handle h, char *name);
 cg_obj *cligen_co_match(cligen_handle h);
 int cligen_co_match_set(cligen_handle h, cg_obj *co);
 
-cbuf *cligen_expand_prepend_get(cligen_handle h);
-int cligen_expand_prepend_set(cligen_handle h, cbuf *cb);
+cvec *cligen_callback_arguments_get(cligen_handle h);
+int cligen_callback_arguments_set(cligen_handle h, cvec *args);
 
 char *cligen_fn_str_get(cligen_handle h);
 int cligen_fn_str_set(cligen_handle h, char *fn_str);

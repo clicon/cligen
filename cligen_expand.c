@@ -463,7 +463,6 @@ cligen_escape(const char* s)
  * @param[in]  co        CLIgen object
  * @param[in]  coparent  CLIgen object parent
  * @param[in]  transient co may be "transient" if so use co->co_ref as new co_ref,...
- * @param[in]  prepend   Expand api-path-fmt for treeref indirection
  * @param[out] cvv_var   Cligen variable vector containing vars/values pair for completion
  * @param[out] ptn       New parse-tree initially an empty pointer, its value is returned.
  * @retval     0         OK
@@ -477,7 +476,7 @@ pt_expand_fnv(cligen_handle h,
               cg_obj       *co_parent,
               int           transient,        
               cvec         *cvv_filter,
-              cbuf         *prepend,
+              cg_callback  *callbacks,
               cvec         *cvv_var,
               parse_tree   *ptn)
 {
@@ -506,9 +505,8 @@ pt_expand_fnv(cligen_handle h,
     /* Make modifications to cvv */
     if (cvec_exclude_keys(cvv1) < 0)
         goto done;
-    if (prepend){
-        /* Expand path for prepending */
-        cligen_expand_prepend_set(h, prepend);
+    if (callbacks && callbacks->cc_cvec){
+        cligen_callback_arguments_set(h, callbacks->cc_cvec);
     }
     if ((*co->co_expandv_fn)(cligen_userhandle(h)?cligen_userhandle(h):h, 
                              co->co_expand_fn_str, 
@@ -559,8 +557,9 @@ pt_expand_fnv(cligen_handle h,
         cvec_free(helptexts);
     retval = 0;
  done:
-    if (prepend)
-        cligen_expand_prepend_set(h, NULL);
+    if (callbacks && callbacks->cc_cvec){
+        cligen_callback_arguments_set(h, NULL);
+    }
     if (cvv1)
         cvec_free(cvv1);
     return retval;
@@ -638,7 +637,7 @@ co_isfilter(cvec *cvv_filter,
  * @param[in]     cvv_filter
  * @param[in]     cvv_var    Cligen variable vector containing vars/values pair for completion
  * @param[in]     transient  co may be "transient" if so use co->co_ref as new co_ref,...
- * @param[in]     prepend    Expand api-path-fmt for treeref indirection
+ * @param[in]     callbacks Callback structure of expanded treeref
  * @param[in,out] ptn        New expanded parse-tree
  * @retval        0          OK
  * @retval       -1          Error
@@ -651,7 +650,7 @@ pt_expand1_co(cligen_handle h,
               cvec         *cvv_filter,
               cvec         *cvv_var,
               int           transient,
-              cbuf         *prepend,
+              cg_callback  *callbacks,
               parse_tree   *ptn)
 {
     int     retval = -1;
@@ -697,7 +696,7 @@ pt_expand1_co(cligen_handle h,
          * this iteration and if not add it?
          */
         if (expandvar){
-            if (pt_expand_fnv(h, co, NULL, transient, cvv_filter, prepend, cvv_var, ptn) < 0)
+            if (pt_expand_fnv(h, co, NULL, transient, cvv_filter, callbacks, cvv_var, ptn) < 0)
                 goto done;
         }
     }
@@ -785,7 +784,7 @@ pt_expand_pipe(cligen_handle h,
  * @param[in]  cvv_var Cligen variable vector containing vars/values pair for completion
  * @param[in]  hide    If 0, include hidden commands. If 1, do not include hidden commands. 
  * @param[in]  expandvar Set if VARS should be expanded, eg ? <tab>
- * @param[in]  prepend Expand api-path-fmt for treeref indirection
+ * @param[in]  callbacks Callback structure of expanded treeref
  * @param[in,out] ptn  New expanded parse-tree
  * @retval     0       OK
  * @retval    -1       Error
@@ -799,7 +798,7 @@ pt_expand(cligen_handle h,
           cvec         *cvv_var,
           int           hide,
           int           expandvar,
-          cbuf         *prepend,
+          cg_callback  *callbacks,
           parse_tree   *ptn)
 {
     int         retval = -1;
@@ -846,7 +845,7 @@ pt_expand(cligen_handle h,
                  */
                 for (j=0; j<pt_len_get(pttmp); j++){
                     cot = pt_vec_i_get(pttmp, j);
-                    if (pt_expand1_co(h, cot, hide, expandvar, cvv_filter, cvv_var, 1, prepend, ptn) < 0)
+                    if (pt_expand1_co(h, cot, hide, expandvar, cvv_filter, cvv_var, 1, callbacks, ptn) < 0)
                         goto done;
                 }
                 if (cvv2){
@@ -859,7 +858,7 @@ pt_expand(cligen_handle h,
                 }
             }
             else{
-                if (pt_expand1_co(h, co, hide, expandvar, cvv_filter, cvv_var, 0, prepend, ptn) < 0)
+                if (pt_expand1_co(h, co, hide, expandvar, cvv_filter, cvv_var, 0, callbacks, ptn) < 0)
                     goto done;
                 /* Given a terminal and output-pipe, add output pipe tree reference 
                  * Note 1: cligen_pt_head_active_get() is top-level
