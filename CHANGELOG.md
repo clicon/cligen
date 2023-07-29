@@ -1,13 +1,15 @@
 # Cligen Changelog
         
 ## 6.3.0
-Expected: July 2023
+28 July 2023
 
 ### New features
 * Output pipes
-  * See [Best way to implement output pipes?](https://github.com/clicon/cligen/issues/19)
   * Callbacks with name starting with `|` is a pipe tree containing pipe output function
   * Use 'pipetree="|<pipe-tree>"` to reference a default pipe-tree.
+  * For more info:
+    * CLIgen tutorial Section 2.8
+    * [Best way to implement output pipes?](https://github.com/clicon/cligen/issues/19)
 
 ### Minor features
 * Added callback_argument access functions for keeping track of api-paths for recursive expands
