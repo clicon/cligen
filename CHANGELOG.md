@@ -1,7 +1,7 @@
 # Cligen Changelog
         
 ## 6.3.0
-28 July 2023
+29 July 2023
 
 ### New features
 * Output pipes
