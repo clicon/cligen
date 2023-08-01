@@ -2506,9 +2506,9 @@ ac_config_headers="$ac_config_headers cligen_config.h"
 
 
 CLIGEN_VERSION_MAJOR="6"
-CLIGEN_VERSION_MINOR="3"
+CLIGEN_VERSION_MINOR="4"
 CLIGEN_VERSION_PATCH="0"
-CLIGEN_VERSION="${CLIGEN_VERSION_MAJOR}.${CLIGEN_VERSION_MINOR}.${CLIGEN_VERSION_PATCH}"
+CLIGEN_VERSION="${CLIGEN_VERSION_MAJOR}.${CLIGEN_VERSION_MINOR}.${CLIGEN_VERSION_PATCH}.PRE"
 
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: CLIGEN version is $CLIGEN_VERSION" >&5
 printf "%s\n" "CLIGEN version is $CLIGEN_VERSION" >&6; }
@@ -4133,7 +4133,6 @@ CPPFLAGS="-DHAVE_CONFIG_H ${CPPFLAGS}"
 SH_SUFFIX=".so"
 # Postfix for static libs
 LIBSTATIC_SUFFIX=".a"
-
 
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: CPPFLAGS is $CPPFLAGS" >&5
 printf "%s\n" "CPPFLAGS is $CPPFLAGS" >&6; }
