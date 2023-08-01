@@ -106,7 +106,7 @@ pt_stats_one(parse_tree *pt,
  *
  * @param[in]   pt   Parsetree object
  * @param[out]  nrp  Number of CLIgen objects recursively
- * @param[out]  szp  Size of this pt + onjects recursively
+ * @param[out]  szp  Size of this pt + objects recursively
  * @retval      0    OK
  * @retval     -1    Error
  */
@@ -267,37 +267,6 @@ pt_len_get(parse_tree *pt)
     }
     return pt->pt_len;
 }
-
-#if 1 /* Would be nice to remove, but some functions use them */
-char*
-pt_name_get(parse_tree *pt)
-{
-    if (pt == NULL){
-       errno = EINVAL;
-       return NULL;
-    }
-    return pt->pt_name;
-}
-
-int
-pt_name_set(parse_tree *pt,
-            char       *name)
-{
-    if (pt == NULL){
-       errno = EINVAL;
-       return -1;
-    }
-    if (pt->pt_name)
-        free(pt->pt_name);
-    if (name){
-        if ((pt->pt_name = strdup(name)) == NULL)
-            return -1;
-    }
-    else
-        pt->pt_name = NULL;
-    return 0;
-}
-#endif
 
 int
 pt_sets_get(parse_tree *pt)

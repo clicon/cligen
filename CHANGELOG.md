@@ -3,6 +3,11 @@
 ## 6.4.0
 Expected: October 2023
 
+### C/CLI-API changes on existing features
+Developers may need to change their code
+
+* Removed obsolete functions `pt_name_get()` / `pt_name_set()`
+
 ## 6.3.0
 29 July 2023
 

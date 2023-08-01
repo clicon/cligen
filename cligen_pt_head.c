@@ -154,10 +154,6 @@ cligen_ph_parsetree_set(pt_head    *ph,
             co_up_set(co, NULL);
     }
     ph->ph_parsetree = pt; /* XXX not free if exists? */
-#if 1 /* This is still used in clixon */
-    if (pt_name_set(pt, cligen_ph_name_get(ph)) < 0) /* XXX Is this even necessary ? */
-        goto done;
-#endif
     retval = 0;
  done:
     return retval;

@@ -361,12 +361,8 @@ pt_dump1(FILE       *f,
 {
     int     i;
     cg_obj *co;
-    char   *name;
-    
-    name = pt_name_get(pt);
+
     fprintf(f, "%*s %p pt", indent*3, "", pt);
-    if (name)
-        fprintf(f, " %s", name);
     fprintf(f, " [%d]", pt_len_get(pt));
     fprintf(f, "\n");
     for (i=0; i<pt_len_get(pt); i++){
