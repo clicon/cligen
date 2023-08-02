@@ -520,20 +520,43 @@ co_pref(cg_obj *co,
     return pref;
 }
 
-/*! Just malloc a CLIgen object. No other allocations allowed */
+
+/*! Return size of cligen object
+ */
+size_t
+co_size(enum cg_objtype type)
+{
+    size_t  size;
+
+    if (type == CO_VARIABLE) // reference since it may be replaced
+        size = sizeof(cg_obj);
+    else
+        size = sizeof(struct cg_obj_common);
+    return size;
+}
+
+/*! Malloc a CLIgen object. 
+ *
+ * @param[in] type  Type of cligen object
+ * @retval co       OK
+ * @retval NULL     Error
+ */
 cg_obj *
-co_new_only()
+co_new_only(enum cg_objtype type)
 {
     cg_obj *co;
-
-    if ((co = malloc(sizeof(cg_obj))) == NULL)
+    size_t  size;
+ 
+    size = co_size(type);
+    if ((co = malloc(size)) == NULL)
         return NULL;
-    memset(co, 0, sizeof(cg_obj));
+    memset(co, 0, size);
+    co->co_type = type;
     _co_count++;
     _co_created++;
     return co;
 }
-
+    
 /*! Create new cligen parse-tree command object
  *
  * That is, a cligen parse-tree object with type == CO_COMMAND (not variable)
@@ -551,9 +574,8 @@ co_new(char   *cmd,
     cg_obj     *co;
     parse_tree *pt;
 
-    if ((co = co_new_only()) == NULL)
+    if ((co = co_new_only(CO_COMMAND)) == NULL)
         return NULL;
-    co->co_type    = CO_COMMAND;
     if (cmd)
         co->co_command = strdup(cmd);
     co_up_set(co, parent);
@@ -587,9 +609,8 @@ cov_new(enum cv_type cvtype,
     cg_obj     *co;
     parse_tree *pt;
 
-    if ((co = co_new_only()) == NULL)
+    if ((co = co_new_only(CO_VARIABLE)) == NULL)
         return NULL;
-    co->co_type    = CO_VARIABLE;
     co->co_vtype   = cvtype;
     if (parent)
         co_up_set(co, parent);
@@ -628,10 +649,12 @@ co_copy(cg_obj  *co,
     cg_obj     *con = NULL;
     parse_tree *pt;
     parse_tree *ptn;
+    size_t      size;
 
-    if ((con = co_new_only()) == NULL)
+    if ((con = co_new_only(co->co_type)) == NULL)
         goto done;
-    memcpy(con, co, sizeof(cg_obj));
+    size = co_size(con->co_type);
+    memcpy(con, co, size);
     con->co_ptvec = NULL;
     con->co_pt_len = 0;
     con->co_ref = NULL;
@@ -728,10 +751,12 @@ co_copy1(cg_obj  *co,
     cg_obj     *con = NULL;
     parse_tree *pt;
     parse_tree *ptn;
+    size_t      size;
 
-    if ((con = co_new_only()) == NULL)
+    if ((con = co_new_only(co->co_type)) == NULL)
         goto done;
-    memcpy(con, co, sizeof(cg_obj));
+    size = co_size(con->co_type);
+    memcpy(con, co, size);
     con->co_ptvec = NULL;
     con->co_pt_len = 0;
 
@@ -986,7 +1011,7 @@ co_free(cg_obj *co,
 {
     parse_tree  *pt;
 
-    if (co->co_helpstring) 
+    if (co->co_helpstring)
         free(co->co_helpstring);
     if (co->co_command)
         free(co->co_command);

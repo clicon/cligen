@@ -29,7 +29,7 @@ expectpart "$(echo "ex ?" | $cligen_tutorial -q -f $fspec)" 0 'A number'
 newtest "hello"
 expectpart "$(echo "hello world" | $cligen_tutorial -q -f $fspec)" 0 'Hello World!'
 
-newtest "increment"
+newtest "translate: increment"
 expectpart "$(echo "increment 23" | $cligen_tutorial -q -f $fspec 2>&1)" 0 'value:34'
 
 newtest "interface"
