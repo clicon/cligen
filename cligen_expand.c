@@ -91,10 +91,12 @@ co_expand_sub(cg_obj  *co0,
 {
     int     retval = -1;
     cg_obj *con;
+    size_t  size;
 
-    if ((con = co_new_only()) == NULL)
+    if ((con = co_new_only(co0->co_type)) == NULL)
         goto done;
-    memcpy(con, co0, sizeof(cg_obj));
+    size = co_size(con->co_type);
+    memcpy(con, co0, size);
     /* Point to same underlying pt */
     con->co_ptvec = NULL;
     con->co_pt_len = 0;
@@ -165,11 +167,12 @@ co_expand_sub(cg_obj  *co0,
 }
 
 /*! Transform string variables to commands
+ *
  * Expansion of choice or expand takes a variable (<expand> <choice>)
  * and transform them to a set of commands: <string>...<string>
  * @param[in]  co        The variable to transform to a command
  * @param[in]  cmd       Command name (must be malloced, consumed here)
- * @param[out] helptext  Helptext of command, can be NULL, is copied
+ * @param[in]  helptext  Helptext of command, can be NULL already malloced is consumed
  */
 static int
 transform_var_to_cmd(cg_obj *co, 
@@ -184,8 +187,7 @@ transform_var_to_cmd(cg_obj *co,
             free(co->co_helpstring);
             co->co_helpstring = NULL;
         }
-        if (helptext)
-            co->co_helpstring = strdup(helptext); /* XXX: can change to consume helpstring */
+        co->co_helpstring = helptext;
     }
     if (co->co_expandv_fn)
         co->co_expandv_fn = NULL;
@@ -540,16 +542,12 @@ pt_expand_fnv(cligen_handle h,
             if ((cmd = strdup(cmd)) == NULL)
                 goto done;
         }
-        /* 'cmd' always points to mutable string */
+        /* 'cmd' always points to mutable string, helpstr is consumed */
         if (transform_var_to_cmd(con, (char*)cmd, helpstr) < 0)
             goto done;
         /* Save the unescaped string */
         if (cmd != value)
             co_value_set(con, (char*)value);
-        if (helpstr){
-            free(helpstr);
-            helpstr = NULL;
-        }
     }
     if (commands)
         cvec_free(commands);

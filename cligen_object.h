@@ -118,7 +118,7 @@ typedef struct cg_varspec cg_varspec;
  */
 #define CO_FLAGS_HIDE      0x01  /* Don't show in help/completion */
 #define CO_FLAGS_MARK      0x02  /* Only used internally (for recursion avoidance) */
-#define CO_FLAGS_TOPOFTREE   0x04  /* This node is top of expanded sub-tree */
+#define CO_FLAGS_TOPOFTREE 0x04  /* This node is top of expanded sub-tree */
 #define CO_FLAGS_OPTION    0x08  /* Generated from optional [] */
 #define CO_FLAGS_MATCH     0x10  /* For sets: avoid selecting same more than once */
 
@@ -126,7 +126,43 @@ typedef struct cg_varspec cg_varspec;
  */
 #define CO_COPY_FLAGS_TREEREF 0x01 /* If called from pt_expand_treeref: the copy point to the original */
 
-/*! cligen gen object is a parse-tree node. A cg_obj is either a command or a variable
+/*! Adjusted (smaller) cg-obj for commands used for CO_COMMAND and CO_REFERENCE
+ *
+ * other cg-obj types (CO_VARIABLE) uses cg_obj
+ * @see cg_obj
+ */
+struct cg_obj_common{
+    parse_tree        **coc_ptvec;     /* Child parse-tree (see co_next macro below) */
+    int                 coc_pt_len;    /* Length of parse-tree vector */
+    struct cg_obj      *coc_prev;      /* Parent */
+    enum cg_objtype     coc_type;      /* Type of object: command, variable or tree
+                                         reference */
+    uint16_t            coc_preference; /* Overrides default variable preference if != 0*/
+    char               *coc_command;   /* malloc:ed matching string / name or type */
+    char               *coc_prefix;    /* Prefix. Can be used in cases where co_command is not unique */
+    cg_callback        *coc_callbacks; /* linked list of callbacks and arguments */
+    cvec               *coc_cvec;      /* List of cligen local variables, such as "hide" 
+                                       * Special labels on @treerefs are: 
+                                       *     @add:<label> and @remove:<label>
+                                       * which control tree ref macro expansion
+                                       */
+    cvec               *coc_filter;    /* List of labels that are filtered (should be removed)
+                                       * In this node and all its descendant
+                                       * Alt: re-use co_cvec for this.
+                                       * See also reftree_filter for global filters
+                                       */ 
+    char               *coc_helpstring; /* String of CLIgen helptexts */
+    uint32_t            coc_flags;     /* General purpose flags, see CO_FLAGS_HIDE and others above */
+    struct cg_obj      *coc_ref;       /* Ref to original (if this is expanded) 
+                                       * Typical from expanded command to original variable
+                                       */
+    struct cg_obj      *coc_treeref_orig; /* Ref to original (if this is a tree reference) 
+                                          * Only set in co_copy 
+                                          */
+    char               *coc_value;     /* Expanded value can be a string with a constant. */
+};
+
+/*! cligen gen object is a parse-tree node. A cg_obj is either a command, a variable or a tree reference
  * A cg_obj:
  *      o <--- cg_obj
  *      ^
@@ -139,46 +175,38 @@ typedef struct cg_varspec cg_varspec;
  *
  */
 struct cg_obj{
-    parse_tree        **co_ptvec;     /* Child parse-tree (see co_next macro below) */
-    int                 co_pt_len;    /* Length of parse-tree vector */
-    struct cg_obj      *co_prev;      /* Parent */
-    enum cg_objtype     co_type;      /* Type of object: command, variable or tree
-                                         reference */
-    uint16_t            co_preference; /* Overrides default variable preference if != 0*/
-    char               *co_command;   /* malloc:ed matching string / name or type */
-    char               *co_prefix;    /* Prefix. Can be used in cases where co_command is not unique */
-    cg_callback        *co_callbacks; /* linked list of callbacks and arguments */
-    cvec               *co_cvec;      /* List of cligen local variables, such as "hide" 
-                                       * Special labels on @treerefs are: 
-                                       *     @add:<label> and @remove:<label>
-                                       * which control tree ref macro expansion
-                                       */
-    cvec               *co_filter;    /* List of labels that are filtered (should be removed)
-                                       * In this node and all its descendant
-                                       * Alt: re-use co_cvec for this.
-                                       * See also reftree_filter for global filters
-                                       */ 
-    char               *co_helpstring; /* String of CLIgen helptexts */
-    uint32_t            co_flags;     /* General purpose flags, see CO_FLAGS_HIDE and others above */
-    struct cg_obj      *co_ref;       /* Ref to original (if this is expanded) 
-                                       * Typical from expanded command to original variable
-                                       */
-    struct cg_obj      *co_treeref_orig; /* Ref to original (if this is a tree reference) 
-                                          * Only set in co_copy 
-                                          */
-    char               *co_value;     /* Expanded value can be a string with a constant. 
-                                         Store the constant in the original variable. */
+    struct cg_obj_common co_common;   /* Inline of common fields accessed by macros below */
+    /*--- Up to here common with cg_obj_cmd */
     union {                           /* depends on co_type: */
         struct {        } cou_cmd;    /* CO_COMMAND */
         struct cg_varspec cou_var;    /* CO_VARIABLE */
-        //      struct cg_varspec cou_tree;   /* CO_REFERENCE */
+        //                            /* CO_REFERENCE */
     } u;
+
 };
 
 typedef struct cg_obj cg_obj; 
 
 /* Access macro to cligen object variable specification */
 #define co2varspec(co)  &(co)->u.cou_var
+
+/* Access fields for common fields */
+#define co_ptvec         co_common.coc_ptvec
+#define co_pt_len        co_common.coc_pt_len
+#define co_prev          co_common.coc_prev
+#define co_type          co_common.coc_type
+#define co_preference    co_common.coc_preference
+#define co_command       co_common.coc_command
+#define co_prefix        co_common.coc_prefix
+#define co_callbacks     co_common.coc_callbacks
+#define co_cvec          co_common.coc_cvec
+#define co_filter        co_common.coc_filter
+#define co_helpstring    co_common.coc_helpstring
+#define co_flags         co_common.coc_flags
+#define co_ref           co_common.coc_ref
+#define co_treeref_orig  co_common.coc_treeref_orig
+#define co_value         co_common.coc_value
+
 
 /* Access fields for code traversing parse tree */
 #define co_vtype         u.cou_var.cgs_vtype
@@ -217,7 +245,8 @@ void        co_sets_set(cg_obj *co, int sets);
 char       *co_prefix_get(cg_obj *co);
 int         co_prefix_set(cg_obj *co, char *prefix);
 cvec       *co_filter_set(cg_obj *co, cvec *cvv);
-cg_obj     *co_new_only(void);
+size_t      co_size(enum cg_objtype type);
+cg_obj     *co_new_only(enum cg_objtype type);
 cg_obj     *co_new(char *cmd, cg_obj *prev);
 cg_obj     *cov_new(enum cv_type cvtype, cg_obj *prev);
 int         co_pref(cg_obj *co, int exact);

@@ -507,7 +507,7 @@ match_bindvars(cligen_handle h,
             goto done;
     }
     else{
-        if ((cv = cvec_add(cvv, co->co_vtype)) == NULL)
+        if ((cv = cvec_add(cvv, CGV_STRING)) == NULL)
             goto done;
         cv_name_set(cv, co->co_command);
         cv_type_set(cv, CGV_STRING);

@@ -311,7 +311,8 @@ cligen_expandv_str2fn(parse_tree       *pt,
 
     for (i=0; i<pt_len_get(pt); i++){    
         if ((co = pt_vec_i_get(pt, i)) != NULL){
-            if (co->co_expand_fn_str != NULL && co->co_expandv_fn == NULL){
+            if (co->co_type == CO_VARIABLE &&
+                co->co_expand_fn_str != NULL && co->co_expandv_fn == NULL){
                 /* Note str2fn is a function pointer */
                 co->co_expandv_fn = str2fn(co->co_expand_fn_str, arg, &callback_err);
                 if (callback_err != NULL){
@@ -348,7 +349,8 @@ cligen_translate_str2fn(parse_tree         *pt,
 
     for (i=0; i<pt_len_get(pt); i++){    
         if ((co = pt_vec_i_get(pt, i)) != NULL){
-            if (co->co_translate_fn_str != NULL && co->co_translate_fn == NULL){
+            if (co->co_type == CO_VARIABLE &&
+                co->co_translate_fn_str != NULL && co->co_translate_fn == NULL){
                 /* Note str2fn is a function pointer */
                 co->co_translate_fn = str2fn(co->co_translate_fn_str, arg, &callback_err);
                 if (callback_err != NULL){
