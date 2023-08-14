@@ -204,7 +204,7 @@ int str2uuid(const char *in, uuid_t u);
 int uuid2str(uuid_t u, char *in, int len);
 int cligen_tonum(int n, const char *s);
 int str2time(const char *in, struct timeval *tv);
-int time2str(struct timeval tv, char *fmt, int len);
+int time2str(const struct timeval *tv, char *fmt, unsigned len);
 
 enum cv_type cv_str2type(const char *str);
 const char   *cv_type2str(enum cv_type type);
