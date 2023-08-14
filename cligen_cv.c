@@ -2003,24 +2003,24 @@ done:
  *   char timestr[28];
  *   struct timeval tv;
  *   gettimeofday(&tv);
- *   if (time2str(tv, timestr, sizeof(timestr)) < 0)
+ *   if (time2str(&tv, timestr, sizeof(timestr)) < 0)
  *     err;
  *   printf("%s", timestr);
  * @endcode
  * @see str2time
  */
 int
-time2str(struct timeval tv, 
+time2str(const struct timeval *tv,
          char          *fmt,
-         int            len)
+         unsigned       len)
 {
     int        retval = -1;
     struct tm *tm;
 
-    tm = gmtime((time_t*)&tv.tv_sec);
+    tm = gmtime(&tv->tv_sec);
     if (snprintf(fmt, len, "%04d-%02d-%02dT%02d:%02d:%02d.%06ldZ",
-             tm->tm_year+1900, tm->tm_mon+1, tm->tm_mday, tm->tm_hour, 
-                 tm->tm_min, tm->tm_sec, tv.tv_usec) < 0)
+             tm->tm_year+1900, tm->tm_mon+1, tm->tm_mday, tm->tm_hour,
+                 tm->tm_min, tm->tm_sec, tv->tv_usec) < 0)
         goto done;
     retval = 0;
 done:
@@ -2417,7 +2417,7 @@ cv2cbuf(cg_var *cv,
         cprintf(cb, "%s", uuidstr);
         break;
     case CGV_TIME:
-        time2str(cv->var_time, timestr, sizeof(timestr));
+        time2str(&cv->var_time, timestr, sizeof(timestr));
         cprintf(cb, "%s", timestr);
         break;
     case CGV_VOID: 
@@ -2553,7 +2553,7 @@ cv2str(cg_var *cv,
         len = snprintf(str, size, "%s", uuidstr);
         break;
     case CGV_TIME:
-        time2str(cv->var_time, timestr, sizeof(timestr));
+        time2str(&cv->var_time, timestr, sizeof(timestr));
         len = snprintf(str, size, "%s", timestr);
         break;
     case CGV_VOID:
@@ -2699,7 +2699,7 @@ cv_print(FILE   *f,
         fprintf(f, "%s", uuidstr);
         break;
     case CGV_TIME:
-        time2str(cv->var_time, timestr, sizeof(timestr));
+        time2str(&cv->var_time, timestr, sizeof(timestr));
         fprintf(f, "%s", timestr);
         break;
     case CGV_VOID:
