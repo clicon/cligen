@@ -8,6 +8,10 @@ Developers may need to change their code
 
 * Removed obsolete functions `pt_name_get()` / `pt_name_set()`
 
+### Corrected Bugs
+
+* Fixed: [Escaping with backslash(\) in variable strings cannot be done for backslash itself](https://github.com/clicon/cligen/issues/96)
+
 ## 6.3.0
 29 July 2023
 

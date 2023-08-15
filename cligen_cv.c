@@ -2644,7 +2644,8 @@ cv_print(FILE   *f,
             fprintf(f, "false");
         break;
     case CGV_REST:
-        fprintf(f, "%s", cv->var_rest);
+        if (cv->var_rest)
+            fprintf(f, "%s", cv->var_rest);
         break;
     case CGV_STRING: 
         if (cv->var_string)
@@ -2876,6 +2877,37 @@ cv_min_set(cg_var *cv)
     return 0;
 }
 
+/*! Remove backslash (\) from string
+ *
+ * @param[in,out] str
+ */
+static int
+string_remove_backslash(char *str)
+{
+    int    i;
+    int    j;
+    int    escape;
+    size_t len;
+
+    j = 0; /* decode string, remove \<delimiters */
+    len = strlen(str);
+    escape = 0;
+
+    for (i=0;i<len;i++){
+        if (escape){
+            escape = 0;
+            str[j++] = str[i];
+        }
+        else if (str[i] == '\\')
+            escape++;
+        else
+            str[j++] = str[i];
+    }
+    for (;j<len;j++)
+        str[j] = '\0';
+    return 0;
+}
+
 /*! Parse cv from string. 
  *
  * This function expects an initialized cv as created by cv_new() or
@@ -2894,8 +2926,6 @@ cv_min_set(cg_var *cv)
  * @retval     1      Validation OK
  * @retval     0      Validation not OK, malloced reason is returned
  * @retval    -1      Error (fatal), with errno set to indicate error
-
-
  *
  * @code
  *  cg_var *cv = cv_new(CGV_STRING);
@@ -2914,8 +2944,6 @@ cv_parse1(const char   *str0,
     char  *str;
     char  *mask;
     int    masklen = 0;
-    int    i, j;
-    size_t len;
     
     if (reason && (*reason != NULL)){
         fprintf(stderr, "reason must be NULL on calling\n");
@@ -2960,15 +2988,7 @@ cv_parse1(const char   *str0,
         retval = parse_bool(str, &cv->var_bool, reason);
         break;
     case CGV_REST:
-        j = 0; /* decode string, remove \<delimiters */
-        /* XXX: unsure of the sanity of the use of strlen below, is it static or does the
-         * length change due to the loop logic? */
-        len = strlen(str);
-        for (i=0; i<len; i++)
-            if (str[i] != '\\')
-                str[j++] = str[i];
-        for (;j<len;j++)
-            str[j] = '\0';
+        string_remove_backslash(str);
         if (cv->var_rest)
             free(cv->var_rest);
         if ((cv->var_rest = strdup(str)) == NULL)
@@ -2976,13 +2996,7 @@ cv_parse1(const char   *str0,
         retval = 1;
         break;
     case CGV_STRING:
-        j = 0; /* decode string, remove \<delimiters */
-        len = strlen(str);
-        for (i=0;i<len;i++)
-            if (str[i] != '\\')
-                str[j++] = str[i];
-        for (;j<len;j++)
-            str[j] = '\0';
+        string_remove_backslash(str);
         if (cv->var_string){
             free(cv->var_string);
             cv->var_string = NULL;
@@ -3019,7 +3033,7 @@ cv_parse1(const char   *str0,
             break;
         if (masklen > 32 || masklen < 0) {
             retval = 0;
-            if (reason) 
+            if (reason)
                 if ((*reason = cligen_reason("Mask-length %s out of range:0 - 32", mask)) == NULL)
                     retval = -1;
             goto done;
