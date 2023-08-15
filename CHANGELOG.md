@@ -6,6 +6,8 @@ Expected: October 2023
 ### C/CLI-API changes on existing features
 Developers may need to change their code
 
+* Changed `tv` parameter of `time2str()` from struct to a pointer.
+  * All calls to `time2str()` need to be converted.
 * Removed obsolete functions `pt_name_get()` / `pt_name_set()`
 
 ### Corrected Bugs

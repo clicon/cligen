@@ -900,7 +900,7 @@ cligen_eval_pipe_post(cligen_handle h,
             goto done;
         }
         /* Block for 10 ms until input is available */
-        if ((ret = cligen_eval_poll(s, 10000)) < 0){
+        if ((ret = cligen_eval_poll(s, CLI_PIPE_TIMEOUT_US)) < 0){
             goto done;
         }
         while (ret != 0) {
@@ -915,7 +915,7 @@ cligen_eval_pipe_post(cligen_handle h,
             /* Immediate poll: possibility if writer is slow that input is dropped due
              * to starving of child in (maybe) single process systems
              */
-            if ((ret = cligen_eval_poll(s, 10000)) < 0)
+            if ((ret = cligen_eval_poll(s, CLI_PIPE_TIMEOUT_US)) < 0)
                 goto done;
         }
         if (cli_pipe_output_socket_set(-1) < 0)
