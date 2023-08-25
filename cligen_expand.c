@@ -775,22 +775,24 @@ pt_expand_pipe(cligen_handle h,
  * expanded cg-objects, but they in turn point back to the original
  * parse-tree. Therefore this new parse-tree cannot be free:d recursively.
  *
- * @param[in]  h       Cligen handle
- * @param[in]  co0     Parent, if any
- * @param[in]  pt      Original parse-tree consisting of a vector of cligen objects
- * @param[in]  cvt     Tokenized string: vector of tokens
- * @param[in]  cvv_var Cligen variable vector containing vars/values pair for completion
- * @param[in]  hide    If 0, include hidden commands. If 1, do not include hidden commands. 
- * @param[in]  expandvar Set if VARS should be expanded, eg ? <tab>
- * @param[in]  callbacks Callback structure of expanded treeref
- * @param[in,out] ptn  New expanded parse-tree
- * @retval     0       OK
- * @retval    -1       Error
+ * @param[in]     h         Cligen handle
+ * @param[in]     co0       Parent, if any
+ * @param[in]     ph0       Parse-tree head of current pt
+ * @param[in]     pt        Original parse-tree consisting of a vector of cligen objects
+ * @param[in]     cvt       Tokenized string: vector of tokens
+ * @param[in]     cvv_var   Cligen variable vector containing vars/values pair for completion
+ * @param[in]     hide      If 0, include hidden commands. If 1, do not include hidden commands. 
+ * @param[in]     expandvar Set if VARS should be expanded, eg ? <tab>
+ * @param[in]     callbacks Callback structure of expanded treeref
+ * @param[in,out] ptn       New expanded parse-tree
+ * @retval        0         OK
+ * @retval       -1         Error
  * @see pt_expand_cleanup
  */
 int
 pt_expand(cligen_handle h, 
           cg_obj       *co0,
+          pt_head      *ph0,
           parse_tree   *pt, 
           cvec         *cvt,
           cvec         *cvv_var,
@@ -809,17 +811,26 @@ pt_expand(cligen_handle h,
     parse_tree *pttmp = NULL;
     cvec       *cvv2 = NULL;
     cg_obj     *cop;
-    pt_head    *ph;
     char       *pipename;
-
+    pt_head    *ph = NULL;
+    char       *name;
+        
     if (pt_len_get(ptn) != 0){
         errno = EINVAL;
         goto done;      
     }
+    /* Maybe require */
     cvv_filter = co0?co0->co_filter:NULL;
     pt_sets_set(ptn, pt_sets_get(pt));
     if (pt_len_get(pt) == 0)
         goto ok;
+    /* If pipe tree (|pipe) then use that, else inherit properties from top-level tree */
+    if (ph0 != NULL &&
+        (name = cligen_ph_name_get(ph0)) != NULL &&
+        strlen(name) && name[0] == '|')
+        ph = ph0;
+    else
+        ph = cligen_pt_head_active_get(h);
     for (i=0; i<pt_len_get(pt); i++){ /* From pt (orig) build ptn (new) */
         if ((co = pt_vec_i_get(pt, i)) == NULL){
             pt_realloc(ptn); /* empty child */
@@ -859,13 +870,13 @@ pt_expand(cligen_handle h,
                 if (pt_expand1_co(h, co, hide, expandvar, cvv_filter, cvv_var, 0, callbacks, ptn) < 0)
                     goto done;
                 /* Given a terminal and output-pipe, add output pipe tree reference 
-                 * Note 1: cligen_pt_head_active_get() is top-level
                  * See also match_pattern_sets where "callbacks" is set
+                 * Note ph is either top-level tree or current, see assignment of ph0 above
                  */
                 if (co->co_type == CO_EMPTY &&
                     (cop = co->co_prev) != NULL &&
                     cop->co_callbacks &&
-                    (ph = cligen_pt_head_active_get(h)) != NULL &&
+                    ph != NULL &&
                     (pipename = cligen_ph_pipe_get(ph)) != NULL){
                     /* Forward look in pt to detect already such reference?
                      * If so skip, and let explicit entry override implicit

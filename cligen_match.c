@@ -788,6 +788,7 @@ callbacks_merge(cg_obj       *coref,
  * @param[in]     h         CLIgen handle
  * @param[in]     cvt       Tokenized string: vector of tokens
  * @param[in]     cvr       Rest variant,  eg remaining string in each step
+ * @param[in]     ph        Current parse-tree header
  * @param[in]     pt        Vector of commands. Array of cligen object pointers
  * @param[in]     pt_max    Length of the pt array
  * @param[in]     level     Current command level
@@ -805,6 +806,7 @@ static int
 match_pattern_sets(cligen_handle  h, 
                    cvec          *cvt,
                    cvec          *cvr,
+                   pt_head       *ph,
                    parse_tree    *pt,
                    int            level,
                    int            best,
@@ -853,6 +855,12 @@ match_pattern_sets(cligen_handle  h,
         }
         if (coref->co_type != CO_REFERENCE || coref->co_callbacks == NULL)
             coref = NULL;
+        else if (coref->co_type == CO_REFERENCE){
+            if ((ph = cligen_ph_find(h, coref->co_command)) == NULL){
+                fprintf(stderr, "%s not found", coref->co_command);
+                goto done;
+            }
+        }
     }
     /* If co_match is a new top-of-tree, save the callbacks and send them
      * on stack to sub-calls, so they can be merged with local callbacks.
@@ -868,7 +876,7 @@ match_pattern_sets(cligen_handle  h,
 #ifdef _DEBUG_SETS
     fprintf(stderr, "%s %*s match co:%s\n", __FUNCTION__, level*3,"", co_match->co_command);
 #endif
-    if (mr_last_get(mr0) && (strcmp(token,"") != 0)){
+    if (mr_last_get(mr0) && (strcmp(token, "") != 0)){
         mr_flags_set_co_match(mr0, co_match);
         *mrp = mr0;
         mr0 = NULL;
@@ -878,6 +886,7 @@ match_pattern_sets(cligen_handle  h,
         goto done;
     if (pt_expand(h,
                   co_match,
+                  ph,
                   co_pt_get(co_match),
                   cvt,
                   cvv,
@@ -907,7 +916,7 @@ match_pattern_sets(cligen_handle  h,
         while (!last_level(cvt, level)){
             if (mrc != NULL)
                 mrc = NULL;
-            if (match_pattern_sets(h, cvt, cvr, ptn,
+            if (match_pattern_sets(h, cvt, cvr, ph, ptn,
                                    level+1,
                                    best, 
                                    cvv,
@@ -942,7 +951,7 @@ match_pattern_sets(cligen_handle  h,
             mr0 = NULL;
             goto ok;    
         }
-        else if (match_pattern_sets(h, cvt, cvr, ptn,
+        else if (match_pattern_sets(h, cvt, cvr, ph, ptn,
                                     level+1, 
                                     best, 
                                     cvv,
@@ -1027,13 +1036,18 @@ match_pattern(cligen_handle h,
     cg_obj       *co_match;
     cg_obj       *co1 = NULL;
     parse_tree   *ptc;
+    pt_head      *ph;
     
     if (cvt == NULL || cvr == NULL || mrp == NULL){
         errno = EINVAL;
         goto done;
     }
+    if ((ph = cligen_pt_head_active_get(h)) == NULL){
+        perror("No active cligen tree");
+        goto done;
+    }
     if (match_pattern_sets(h, cvt, cvr,
-                           pt,
+                           ph, pt,
                            0,
                            best, 
                            cvv, 
@@ -1140,7 +1154,7 @@ match_pattern(cligen_handle h,
                 goto done;
             if ((cvv = cvec_new(0)) == NULL)
                 goto done;
-            if (pt_expand(h, co1, ptc, cvt, cvv, 1, 0, NULL, ptn) < 0)
+            if (pt_expand(h, co1, NULL, ptc, cvt, cvv, 1, 0, NULL, ptn) < 0)
                 goto done;
             /* Loop sets i which is used below */
             for (i=0; i<pt_len_get(ptn); i++){

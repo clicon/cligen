@@ -110,7 +110,9 @@ cli_show_help_commands(cligen_handle h,
         goto ok;
     if ((cvv = cvec_start(string)) == NULL)
         goto done;
-    if (pt_expand(h, NULL, pt,
+    if (pt_expand(h, NULL,
+                  NULL,
+                  pt,
                   NULL,
                   cvv,
                   1, /* Include hidden commands */
@@ -175,7 +177,9 @@ cli_tab_hook(cligen_handle h,
         goto ok;
     if ((cvv = cvec_start(cligen_buf(h))) == NULL)
         goto done; 
-    if (pt_expand(h, NULL, pt,
+    if (pt_expand(h, NULL,
+                  NULL,
+                  pt,
                   NULL,
                   cvv,
                   1,   /* Include hidden commands */
@@ -672,7 +676,9 @@ cliread_parse(cligen_handle  h,
     cv_string_set(cv, string); 
     if ((ptn = pt_new()) == NULL)
         goto done;
-    if (pt_expand(h, NULL, pt, cvt, cvv,
+    if (pt_expand(h, NULL,
+                  NULL,
+                  pt, cvt, cvv,
                   0,  /* Do not include hidden commands */
                   0,  /* VARS are not expanded, eg ? <tab> */
                   NULL,
