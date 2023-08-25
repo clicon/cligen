@@ -61,6 +61,9 @@ function runtest()
 
     newtest "count"
     expectpart "$(echo "$cmd \| count" | $cligen_file -f $fspec)" 0 7
+
+    newtest "double: cat | cat expect fail"
+    expectpart "$(echo "$cmd \| cat \| cat" | $cligen_file -f $fspec)" 0 "Unknown command"
 }
 
 newtest "$cligen_file -f $fspec"
