@@ -88,6 +88,7 @@ co_stats_global(uint64_t *created,
 }
 
 /*! Return the alloced memory of a single CLIgen object
+ *
  * @param[in]   y    YANG object
  * @param[out]  szp  Size of this YANG obj
  * @retval      0    OK
@@ -143,6 +144,7 @@ co_stats_one(cg_obj   *co,
 }
 
 /*! Return statistics of a CLIgen object recursively
+ *
  * @param[in]   co   CLIgen object
  * @param[out]  szp  Size of this co recursively
  * @retval      0    OK
@@ -191,7 +193,8 @@ co_up_set(cg_obj *co,
     return 0;
 }
 
-/*! return top-of-tree (ancestor) */
+/*! Return top-of-tree (ancestor) 
+ */
 cg_obj* 
 co_top(cg_obj *co0) 
 {
@@ -219,7 +222,8 @@ co_pt_realloc(cg_obj *co)
 }
 
 /*! Access function to get a CLIgen objects parse-tree head
- * @param[in]  co  CLIgen parse object
+ *
+ * @param[in]  co   CLIgen parse object
  * @retval     pt   parse-tree
  * @retval     NULL Error or no such parsetree
  */
@@ -234,6 +238,7 @@ co_pt_get(cg_obj *co)
 }
 
 /*! Set a CLIgen objects parse-tree head
+ *
  * @param[in]  co  CLIgen parse object
  * @param[in]  pt  CLIgen parse tree
  * @retval     0   OK
@@ -260,6 +265,7 @@ co_pt_set(cg_obj     *co,
 }
 
 /*! Clear a CLIgen objects parse-tree head (dont free old)
+ *
  * @param[in]  co  CLIgen parse object
  * @param[in]  pt  CLIgen parse tree
  * @retval     0   OK
@@ -354,6 +360,7 @@ co_filter_set(cg_obj *co,
 }
 
 /*! Assign a preference to a cligen variable object
+ *
  * Prefer more specific commands/variables  if you have to choose from several. 
  * @param[in] co   Cligen obe
  * @retval    pref Preference: positive integer
@@ -484,7 +491,7 @@ cov_pref(cg_obj *co)
 /*! Assign a preference to a cligen object
  *
  * @param[in]  co    cligen_object
- * @param[in]  exact if this match is exact (only applies to CO_COMMAND)
+ * @param[in]  exact If this match is exact (only applies to CO_COMMAND)
  * @retval     pref  Preference: positive integer
  *
  * The higher the better
@@ -538,8 +545,8 @@ co_size(enum cg_objtype type)
 /*! Malloc a CLIgen object. 
  *
  * @param[in] type  Type of cligen object
- * @retval co       OK
- * @retval NULL     Error
+ * @retval    co    OK
+ * @retval    NULL  Error
  */
 cg_obj *
 co_new_only(enum cg_objtype type)
@@ -562,8 +569,8 @@ co_new_only(enum cg_objtype type)
  * That is, a cligen parse-tree object with type == CO_COMMAND (not variable)
  * @param[in]  cmd   Initial command value
  * @param[in]  prev  parent object (or NULL)
- * @retval     NULL  Error
  * @retval     co    Created cligen object. Free with co_free()
+ * @retval     NULL  Error
  * @see cov_new
  * @see co_free
  */
@@ -597,8 +604,8 @@ co_new(char   *cmd,
  * That is, a cligen parse-tree object with type == CO_VARIABLE
  * @param[in]  cvtype  Cligen variable type
  * @param[in]  parent  parent object (or NULL)
- * @retval     NULL    Error
  * @retval     co      Created cligen object. Free with co_free()
+ * @retval     NULL    Error
  * @see co_new
  * @see co_free
  */
@@ -635,7 +642,7 @@ cov_new(enum cv_type cvtype,
  * @param[in]  flags  Copy flagst
  * @param[out] conp   Pointer to the object to copy to (is allocated)
  * @retval     0      OK
- * @retval     -1     Error
+ * @retval    -1      Error
  * @see co_expand_sub
  * @see co_copy1  For non-recursive
  */
@@ -729,13 +736,13 @@ co_copy(cg_obj  *co,
  * structure. To free such a co, the regular co_copy cannot be used since it would
  * free a pt structure still being use by other co:s.
  * working
- * @param[in]  co     The object to copy from
- * @param[in]  parent The parent of the new object, need not be same as parent of co
- * @param[in]  recursive  If set copy recursive, otherwise, only first level object
- * @param[in]  flags  Copy flags
- * @param[out] conp   Pointer to the object to copy to (is allocated)
- * @retval     0      OK
- * @retval     -1     Error
+ * @param[in]  co        The object to copy from
+ * @param[in]  parent    The parent of the new object, need not be same as parent of co
+ * @param[in]  recursive If set copy recursive, otherwise, only first level object
+ * @param[in]  flags     Copy flags
+ * @param[out] conp      Pointer to the object to copy to (is allocated)
+ * @retval     0         OK
+ * @retval    -1         Error
  * @see co_copy   recursive copy: If recurse is 1, this function is equivalent
  * @note mark & refdone flags are cleared
  * @note co_ref is cleared in the recursive case. (This seems ad-hoc)
@@ -833,13 +840,14 @@ co_copy1(cg_obj  *co,
 }
 
 /*! Compare two strings, extends strcmp 
+ *
  * Basically strcmp but there are some complexities which one may enable.
  * Also handles NULL (NULL < all strings)
  * @param[in]  s1
  * @param[in]  s2
- * @retval  0  equal
- * @retval <0  str1 is less than str2
- * @retval >0  str1 is greater than str2
+ * @retval     0   Equal
+ * @retval    <0   Str1 is less than str2
+ * @retval    >0   Str1 is greater than str2
  *
  * strcmp orders:  1 10 2
  * wheras strverscmp orders: 1 2 10
@@ -882,9 +890,9 @@ str_cmp(char *s1,
  *          + same expand, choice, range and regexp options. 
  * @param[in]  co1
  * @param[in]  co2
- * @retval  0  If equal
- * @retval <0  if co1 is less than co2
- * @retval >0  if co1 is greater than co2
+ * @retval     0    If equal
+ * @retval    <0    If co1 is less than co2
+ * @retval    >0    If co1 is greater than co2
  * @see str_cmp
  * XXX co_prefix is not examined
  */
@@ -996,6 +1004,7 @@ co_eq(cg_obj *co1,
 }
 
 /*! Free an individual syntax node (cg_obj).
+ *
  * @param[in]  co         CLIgen object
  * @param[in]  recursive  If set free recursive, if 0 free only cligen object, and parsetree
  * @retval     0          OK
@@ -1054,6 +1063,7 @@ co_free(cg_obj *co,
 }
 
 /*! Look for a CLIgen object in a (one-level) parse-tree in interval [low,high]
+ *
  * @param[in]  pt      CLIgen parse-tree
  * @param[in]  name    Name of node
  * @param[in]  low     Lower bound
@@ -1127,16 +1137,17 @@ co_insert_pos(parse_tree *pt,
 }
 
 /*! Add a cligen object (co1) to a parsetree(pt) alphabetically.
+ *
  * This involves searching in the parsetree for the position where it should be added,
  * Then checking whether an equivalent version already exists.
  * Then modifying the parsetree by shifting it down, and adding the new object.
  * There is som complexity if co == NULL.
  * @param[in] pt   Parse-tree
- * @param[in] co1  CLIgen object
- * @param[in] recursive  Recursive delete?
- * @retval    co   object if found (old _or_ new). NOTE: you must replace calling 
- *                 cg_obj with return.
- * @retval    NULL error
+ * @param[in] co1        CLIgen object
+ * @param[in] recursive  Recursive delete of old object if equal
+ * @retval    co         Object if found (old _or_ new). NOTE: you must replace calling 
+ *                       cg_obj with return.
+ * @retval    NULL       Error
  * @note co1 may be deleted in this call. Dont use co after this call,use retval
  * XXX: pt=[a b] + co1=[b] -> [a b] but children of one b is lost,..
  */
@@ -1166,7 +1177,7 @@ co_insert1(parse_tree *pt,
     return co1;
 }
 
-/* Backward compatible */
+/*! Backward compatible */
 cg_obj*
 co_insert(parse_tree *pt, 
           cg_obj     *co1)
@@ -1192,6 +1203,7 @@ co_find_one(parse_tree *pt,
 }
 
 /*! Set CLIgen object value
+ *
  * Allocate new string, remove old if already set.
  * @param[in]  co      CLIgen object
  * @param[in]  str     Value to set

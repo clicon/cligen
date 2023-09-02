@@ -239,7 +239,7 @@ transform_var_to_cmd(cg_obj *co,
  */
 static int
 tree_resolve(cligen_handle h,
-             cg_obj       *co,
+             cg_obj       *coref,
              cvec         *cvt,
              parse_tree  **ptrefp)
 {
@@ -252,7 +252,7 @@ tree_resolve(cligen_handle h,
     void                           *arg = NULL;
     int                             ret;
     
-    treename = co->co_command;
+    treename = coref->co_command;
     cligen_tree_resolve_wrapper_get(h, &fn, &arg);
     if (fn){
         if ((ret = fn(h, treename, cvt, arg, &treename2)) < 0)
@@ -719,46 +719,82 @@ pt_expand1_co(cligen_handle h,
     return retval;
 }
 
-/*! Given a terminal and output-pipe, add output pipe tree reference after the current object
+/*! Return name of local pipe reference, if any 
+ */
+char *
+pt_local_pipe(parse_tree *pt)
+{
+    int     i;
+    cg_obj *co;
+
+    for (i=0; i<pt_len_get(pt); i++){ /* From pt (orig) build ptn (new) */
+        if ((co = pt_vec_i_get(pt, i)) != NULL &&
+            co->co_type == CO_REFERENCE &&
+            *co->co_command == '|'){
+            return co->co_command;
+        }
+    }
+    return NULL;
+}
+
+/*! Sub-routine to pt_expand for tree reference nodes
  *
- * @param[in]  h            CLIgen handle
- * @param[in]  co0          Terminal original object
- * @param[in]  cop          Parent object
- * @param[in]  pipetreename Name of output pipe tree
- * @param[in]  callbacks    Use these callbacks in the new object
- * @retval     0            OK
- * @retval    -1            Error 
+ * @param[in]     h         Cligen handle
+ * @param[in]     co        Tree reference cligen object 
+ * @param[in]     cvt       Tokenized string: vector of tokens
+ * @param[in]     cvv_var   Cligen variable vector containing vars/values pair for completion
+ * @param[in]     hide      If 0, include hidden commands. If 1, do not include hidden commands. 
+ * @param[in]     expandvar Set if VARS should be expanded, eg ? <tab>
+ * @param[in]     callbacks Callback structure of expanded treeref
+ * @param[in]     cvv_filter Add these to expanded nodes co_filter, eg remove them
+ * @param[in,out] ptn       New expanded parse-tree
+ * @retval        0         OK
+ * @retval       -1         Error
  */
 static int
-pt_expand_pipe(cligen_handle h,
-               cg_obj       *co0,
-               cg_obj       *cop,
-               char         *pipetreename,
-               cg_callback  *callbacks)
+pt_expand_reference(cligen_handle h,
+                    cg_obj       *coref,
+                    cvec         *cvt,
+                    cvec         *cvv_var,
+                    int           hide,
+                    int           expandvar,
+                    cg_callback  *callbacks,
+                    cvec         *cvv_filter,
+                    parse_tree   *ptn)
 {
-    int      retval = -1;
-    cg_obj  *co = NULL;
-    cg_obj  *cot;
-
-    /* Create new reference node */
-    if ((co = co_new(pipetreename, cop)) == NULL)
+    int         retval = -1;
+    parse_tree *ptref = NULL;   /* tree referenced by pt0 orig */
+    cvec       *cvv2 = NULL;
+    parse_tree *pttmp = NULL;
+    cg_obj     *cot;
+    int         i;
+    
+    ptref = NULL;
+    if (tree_resolve(h, coref, cvt, &ptref) < 0)
         goto done;
-    co->co_type = CO_REFERENCE;
-    /* This relies on references being appended LAST, which means the reference will be
-     * processed after co0 */
-    if ((co = co_insert1(co_pt_get(cop), co, 1)) == NULL)  /* cot may be deleted */
+    /* pttmp is a transient copy of the expanded tree */
+    if ((pttmp = pt_new()) == NULL)
         goto done;
-    if (callbacks){
-        if (co_callback_copy(callbacks, &co->co_callbacks) < 0)
+    if ((cvv2 = cvec_new(0)) == NULL)
+        goto done;
+    if (co_find_label_filters(h, coref, cvv2) < 0)
+        goto done;
+    /* Expand ptref to pttmp */
+    if (co_expand_treeref_copy_shallow(h, coref, cvv2, cvv_var, ptref, pttmp) < 0)
+        goto done;
+    /* Copy the expand tree to the final tree. 
+     */
+    for (i=0; i<pt_len_get(pttmp); i++){
+        cot = pt_vec_i_get(pttmp, i);
+        if (pt_expand1_co(h, cot, hide, expandvar, cvv_filter, cvv_var, 1, callbacks, ptn) < 0)
             goto done;
     }
-    /* Add terminal */
-    if ((cot = co_new(NULL, co)) == NULL)
-        goto done;
-    cot->co_type = CO_EMPTY;
-    co_insert1(co_pt_get(co), cot, 1);
     retval = 0;
  done:
+    if (cvv2)
+        cvec_free(cvv2);
+    if (pttmp)
+        pt_free(pttmp, 0);
     return retval;
 }
 
@@ -777,43 +813,39 @@ pt_expand_pipe(cligen_handle h,
  *
  * @param[in]     h         Cligen handle
  * @param[in]     co0       Parent, if any
- * @param[in]     ph0       Parse-tree head of current pt
  * @param[in]     pt        Original parse-tree consisting of a vector of cligen objects
  * @param[in]     cvt       Tokenized string: vector of tokens
  * @param[in]     cvv_var   Cligen variable vector containing vars/values pair for completion
  * @param[in]     hide      If 0, include hidden commands. If 1, do not include hidden commands. 
  * @param[in]     expandvar Set if VARS should be expanded, eg ? <tab>
  * @param[in]     callbacks Callback structure of expanded treeref
+ * @param[in]     co_pipe   Pipe output extra default menu
  * @param[in,out] ptn       New expanded parse-tree
  * @retval        0         OK
  * @retval       -1         Error
  * @see pt_expand_cleanup
+ * @note there is a cornercase that has to do with multiple non-disjoint tree references:
+ *       If tree t1 and t2 have sub-co:s in common, they may destructively modify each other,
+ *       eg @t1:{a;b} @t2:{b;c}
+ *       then the common sub-elements of t1 can have extra elements of t2: @t1:{a;b;c}
  */
 int
 pt_expand(cligen_handle h, 
           cg_obj       *co0,
-          pt_head      *ph0,
           parse_tree   *pt, 
           cvec         *cvt,
           cvec         *cvv_var,
           int           hide,
           int           expandvar,
           cg_callback  *callbacks,
+          cg_obj       *co_pipe,
           parse_tree   *ptn)
 {
     int         retval = -1;
     cg_obj     *co;
     int         i;
-    int         j;      
     cvec       *cvv_filter = NULL;
-    cg_obj     *cot;
-    parse_tree *ptref = NULL;   /* tree referenced by pt0 orig */
-    parse_tree *pttmp = NULL;
-    cvec       *cvv2 = NULL;
     cg_obj     *cop;
-    char       *pipename;
-    pt_head    *ph = NULL;
-    char       *name;
         
     if (pt_len_get(ptn) != 0){
         errno = EINVAL;
@@ -824,75 +856,35 @@ pt_expand(cligen_handle h,
     pt_sets_set(ptn, pt_sets_get(pt));
     if (pt_len_get(pt) == 0)
         goto ok;
-    /* If pipe tree (|pipe) then use that, else inherit properties from top-level tree */
-    if (ph0 != NULL &&
-        (name = cligen_ph_name_get(ph0)) != NULL &&
-        strlen(name) && name[0] == '|')
-        ph = ph0;
-    else
-        ph = cligen_pt_head_active_get(h);
+    /* There is already a @|pipe menu on this level, no need for default */
     for (i=0; i<pt_len_get(pt); i++){ /* From pt (orig) build ptn (new) */
         if ((co = pt_vec_i_get(pt, i)) == NULL){
             pt_realloc(ptn); /* empty child */
         }
         else {
             if (co->co_type == CO_REFERENCE){
-                ptref = NULL;
-                if (tree_resolve(h, co, cvt, &ptref) < 0)
+                if (pt_expand_reference(h, co, cvt, cvv_var, hide, expandvar,
+                                        callbacks, cvv_filter, ptn) < 0)
                     goto done;
-                /* pttmp is a transient copy of the expanded tree */
-                if ((pttmp = pt_new()) == NULL)
-                    goto done;
-                if ((cvv2 = cvec_new(0)) == NULL)
-                    goto done;
-                if (co_find_label_filters(h, co, cvv2) < 0)
-                    goto done;
-                /* Expand ptref to pttmp */
-                if (co_expand_treeref_copy_shallow(h, co, cvv2, cvv_var, ptref, pttmp) < 0)
-                    goto done;
-                /* Copy the expand tree to the final tree. 
-                 */
-                for (j=0; j<pt_len_get(pttmp); j++){
-                    cot = pt_vec_i_get(pttmp, j);
-                    if (pt_expand1_co(h, cot, hide, expandvar, cvv_filter, cvv_var, 1, callbacks, ptn) < 0)
-                        goto done;
-                }
-                if (cvv2){
-                    cvec_free(cvv2);
-                    cvv2 = NULL;
-                }
-                if (pttmp){
-                    pt_free(pttmp, 0);
-                    pttmp = NULL;
-                }
             }
             else{
                 if (pt_expand1_co(h, co, hide, expandvar, cvv_filter, cvv_var, 0, callbacks, ptn) < 0)
                     goto done;
-                /* Given a terminal and output-pipe, add output pipe tree reference 
+                /* Given a terminal and output-pipe, add default output pipe tree reference 
                  * See also match_pattern_sets where "callbacks" is set
-                 * Note ph is either top-level tree or current, see assignment of ph0 above
+                 * Note ph is either top-level tree or current, see assignment of pipe_default above
                  */
                 if (co->co_type == CO_EMPTY &&
                     (cop = co->co_prev) != NULL &&
                     cop->co_callbacks &&
-                    ph != NULL &&
-                    (pipename = cligen_ph_pipe_get(ph)) != NULL){
-                    /* Forward look in pt to detect already such reference?
-                     * If so skip, and let explicit entry override implicit
-                     */
-                    int     j;
-                    cg_obj *coj;
-
-                    for (j=i+1; j<pt_len_get(pt); j++){
-                        coj = pt_vec_i_get(pt, j);
-                        if (coj && coj->co_type == CO_REFERENCE &&
-                            strcmp(coj->co_command, pipename) == 0)
-                            break;
-                    }
-                    if (j==pt_len_get(pt))
-                        if (pt_expand_pipe(h, co, cop, pipename, co0->co_callbacks) < 0)
+                    co_pipe != NULL){
+                    if (co0->co_callbacks){
+                        if (co_callback_copy(co0->co_callbacks, &co_pipe->co_callbacks) < 0)
                             goto done;
+                    }
+                    if (pt_expand_reference(h, co_pipe, cvt, cvv_var, hide, expandvar,
+                                            callbacks, cvv_filter, ptn) < 0)
+                        goto done;
                 }
             }
         } /* for */
@@ -908,10 +900,6 @@ pt_expand(cligen_handle h,
  ok:
     retval = 0;
  done:
-    if (cvv2)
-        cvec_free(cvv2);
-    if (pttmp)
-        pt_free(pttmp, 0);
     return retval;
 }
 

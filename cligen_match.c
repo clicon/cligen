@@ -788,7 +788,7 @@ callbacks_merge(cg_obj       *coref,
  * @param[in]     h         CLIgen handle
  * @param[in]     cvt       Tokenized string: vector of tokens
  * @param[in]     cvr       Rest variant,  eg remaining string in each step
- * @param[in]     ph        Current parse-tree header
+ * @param[in]     pipetree  Default pipe tree to use if no specific exists (or NULL)
  * @param[in]     pt        Vector of commands. Array of cligen object pointers
  * @param[in]     pt_max    Length of the pt array
  * @param[in]     level     Current command level
@@ -806,7 +806,7 @@ static int
 match_pattern_sets(cligen_handle  h, 
                    cvec          *cvt,
                    cvec          *cvr,
-                   pt_head       *ph,
+                   char          *pipe_default,
                    parse_tree    *pt,
                    int            level,
                    int            best,
@@ -824,6 +824,8 @@ match_pattern_sets(cligen_handle  h,
     char         *token;
     cg_callback  *callbacks = NULL;
     cg_obj       *coref = NULL;
+    char         *pipe_local;
+    cg_obj       *co_pipe = NULL;
 
     token = cvec_i_str(cvt, level+1); /* for debugging */
 #ifdef _DEBUG_SETS
@@ -855,11 +857,10 @@ match_pattern_sets(cligen_handle  h,
         }
         if (coref->co_type != CO_REFERENCE || coref->co_callbacks == NULL)
             coref = NULL;
-        else if (coref->co_type == CO_REFERENCE){
-            if ((ph = cligen_ph_find(h, coref->co_command)) == NULL){
-                fprintf(stderr, "%s not found", coref->co_command);
-                goto done;
-            }
+        else if (coref->co_type == CO_REFERENCE &&
+                 coref->co_command[0] == '|'){
+            /* If this is a pipe output tree, dont use default */
+                pipe_default = NULL;
         }
     }
     /* If co_match is a new top-of-tree, save the callbacks and send them
@@ -872,7 +873,6 @@ match_pattern_sets(cligen_handle  h,
         if (treeref_merge_co(co_match, callbacks) < 0)
             goto done;
     }
-
 #ifdef _DEBUG_SETS
     fprintf(stderr, "%s %*s match co:%s\n", __FUNCTION__, level*3,"", co_match->co_command);
 #endif
@@ -882,19 +882,34 @@ match_pattern_sets(cligen_handle  h,
         mr0 = NULL;
         goto ok;
     }
+    /* Local, explicit pipetree in pt overrides default */
+    if ((pipe_local = pt_local_pipe(co_pt_get(co_match))) == NULL &&
+        pipe_default != NULL) {
+        cbuf *cb = NULL;
+
+        if ((cb = cbuf_new()) == NULL)
+            goto done;
+        cprintf(cb, "|%s", pipe_default);
+        if ((co_pipe = co_new(pipe_default, NULL)) == NULL)
+            goto done;
+        cbuf_free(cb);
+        co_pipe->co_type = CO_REFERENCE;
+    }
     if ((ptn = pt_new()) == NULL)
         goto done;
     if (pt_expand(h,
                   co_match,
-                  ph,
                   co_pt_get(co_match),
                   cvt,
                   cvv,
                   !best,  /* If best is set, include hidden commands, otherwise do not */
                   1,      /* VARS are expanded, eg ? <tab> */
                   callbacks,
+                  co_pipe,
                   ptn) < 0) /* expand/choice variables */
         goto done;
+    if (pipe_local)
+        pipe_default = pipe_local;
     /* Check termination criteria */
     lastsyntax = last_pt(ptn); /* 0, 1 or 2 */
     switch (lastsyntax){
@@ -916,7 +931,9 @@ match_pattern_sets(cligen_handle  h,
         while (!last_level(cvt, level)){
             if (mrc != NULL)
                 mrc = NULL;
-            if (match_pattern_sets(h, cvt, cvr, ph, ptn,
+            if (match_pattern_sets(h, cvt, cvr,
+                                   pipe_default,
+                                   ptn,
                                    level+1,
                                    best, 
                                    cvv,
@@ -951,7 +968,9 @@ match_pattern_sets(cligen_handle  h,
             mr0 = NULL;
             goto ok;    
         }
-        else if (match_pattern_sets(h, cvt, cvr, ph, ptn,
+        else if (match_pattern_sets(h, cvt, cvr,
+                                    pipe_default,
+                                    ptn,
                                     level+1, 
                                     best, 
                                     cvv,
@@ -989,6 +1008,8 @@ match_pattern_sets(cligen_handle  h,
  ok:
     retval = 0;
  done:
+    if (co_pipe)
+        co_free(co_pipe, 1);
     if (callbacks0 != callbacks)
         co_callbacks_free(&callbacks);
     if (mrcprev && mrcprev != mrc){
@@ -1047,7 +1068,8 @@ match_pattern(cligen_handle h,
         goto done;
     }
     if (match_pattern_sets(h, cvt, cvr,
-                           ph, pt,
+                           cligen_ph_pipe_get(ph),
+                           pt,
                            0,
                            best, 
                            cvv, 
@@ -1154,7 +1176,7 @@ match_pattern(cligen_handle h,
                 goto done;
             if ((cvv = cvec_new(0)) == NULL)
                 goto done;
-            if (pt_expand(h, co1, NULL, ptc, cvt, cvv, 1, 0, NULL, ptn) < 0)
+            if (pt_expand(h, co1, ptc, cvt, cvv, 1, 0, NULL, NULL, ptn) < 0)
                 goto done;
             /* Loop sets i which is used below */
             for (i=0; i<pt_len_get(ptn); i++){

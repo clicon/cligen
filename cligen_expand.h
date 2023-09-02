@@ -59,8 +59,10 @@
  * Prototypes
  */
 int co_isfilter(cvec *cvv_filter, char *label);
-int pt_expand(cligen_handle h, cg_obj *co, pt_head *ph, parse_tree *pt, cvec *cvt, cvec *cvv,
-              int hide, int expandvar, cg_callback *callbacks, parse_tree *ptn);
+char *pt_local_pipe(parse_tree *pt);
+int pt_expand(cligen_handle h, cg_obj *co, parse_tree *pt, cvec *cvt, cvec *cvv,
+              int hide, int expandvar, cg_callback *callbacks,
+              cg_obj *co_pipe, parse_tree *ptn);
 int pt_expand_cleanup(cligen_handle h, parse_tree *pt);
 int reference_path_match(cg_obj *co1, parse_tree *pt0, cg_obj **co0p);
 
