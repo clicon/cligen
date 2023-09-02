@@ -111,13 +111,12 @@ cli_show_help_commands(cligen_handle h,
     if ((cvv = cvec_start(string)) == NULL)
         goto done;
     if (pt_expand(h, NULL,
-                  NULL,
                   pt,
                   NULL,
                   cvv,
                   1, /* Include hidden commands */
                   0, /* VARS are not expanded, eg ? <tab> */
-                  NULL,
+                  NULL, NULL,
                   ptn) < 0)      /* expansion */
         goto done;
     if (show_help_line(h, stdout, string, ptn, cvv) < 0)
@@ -178,13 +177,12 @@ cli_tab_hook(cligen_handle h,
     if ((cvv = cvec_start(cligen_buf(h))) == NULL)
         goto done; 
     if (pt_expand(h, NULL,
-                  NULL,
                   pt,
                   NULL,
                   cvv,
                   1,   /* Include hidden commands */
                   0,   /* VARS are not expanded, eg ? <tab> */
-                  NULL,
+                  NULL, NULL,
                   ptn) < 0)      /* expansion */
         goto done;
     /* Note, can change cligen buf pointer (append and increase) */
@@ -677,11 +675,10 @@ cliread_parse(cligen_handle  h,
     if ((ptn = pt_new()) == NULL)
         goto done;
     if (pt_expand(h, NULL,
-                  NULL,
                   pt, cvt, cvv,
                   0,  /* Do not include hidden commands */
                   0,  /* VARS are not expanded, eg ? <tab> */
-                  NULL,
+                  NULL, NULL,
                   ptn) < 0) /* sub-tree expansion, ie choice, expand function */
         goto done;
     if (match_pattern_exact(h, cvt, cvr,
@@ -748,7 +745,6 @@ cliread(cligen_handle h,
 
 /*! Read line from terminal, parse the string, and invoke callbacks.
  *
- * 
  * Return both results from parsing (function return), and eventual result
  * from callback (if function return =1).
  * Use this function if you want the whole enchilada without special operation
@@ -883,13 +879,13 @@ cligen_eval_pipe_pre(cligen_handle h,
  * Given socket to pipe function, close write side, poll/read and redirect to 
  * basic output function, then wait for child completion
  * @param[in]  h        CLIgen handle
- * @param[in]  s        Socket
+ * @param[in]  s0       Socket
  * @param[in]  childpid Pid of child
  */
 static int
 cligen_eval_pipe_post(cligen_handle h,
-                     int            s0,
-                     pid_t          childpid)
+                      int           s0,
+                      pid_t         childpid)
 {
     int     retval = -1;
     int     ret;
@@ -921,7 +917,7 @@ cligen_eval_pipe_post(cligen_handle h,
             /* Immediate poll: possibility if writer is slow that input is dropped due
              * to starving of child in (maybe) single process systems
              */
-            if ((ret = cligen_eval_poll(s, CLI_PIPE_TIMEOUT_US)) < 0)
+            if ((ret = cligen_eval_poll(s, CLI_PIPE_TIMEOUT_US2)) < 0)
                 goto done;
         }
         if (cli_pipe_output_socket_set(-1) < 0)

@@ -42,7 +42,8 @@
  * Constants
  */
 /*! Timeout for forked cli output pipe modification function in us */
-#define CLI_PIPE_TIMEOUT_US 100000 /* 100 ms */
+#define CLI_PIPE_TIMEOUT_US 1000000 /* 100 ms */
+#define CLI_PIPE_TIMEOUT_US2 10000 /* 10 ms */
 
 /*
  * Function Prototypes
