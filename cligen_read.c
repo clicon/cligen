@@ -1028,6 +1028,8 @@ cligen_eval(cligen_handle h,
     }
     retval = 0;
  done:
+    if (spipe != -1)
+        close(spipe);
     if (wh)
         free(wh);
     if (cvv1)
