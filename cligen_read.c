@@ -822,6 +822,20 @@ cligen_eval_poll(int          s,
     return ret;
 }
 
+void
+signal_unblock(int sig)
+{
+        sigset_t set;
+
+        sigemptyset(&set);
+        if (sig)
+                sigaddset(&set, sig);
+        else 
+                sigfillset(&set);
+
+        sigprocmask(SIG_UNBLOCK, &set, NULL);
+}
+
 /*! Fork pipe function and return socker and pid, redirect to pipe_output_socket
  *
  * @param[in]  h     CLIgen handle
@@ -858,6 +872,9 @@ cligen_eval_pipe_pre(cligen_handle h,
         }
         close(spair[1]);
         fn = co_callback_fn_get(cc);
+        signal_unblock(SIGTERM);
+        signal_unblock(SIGINT);
+
         if ((retval = (*fn)(cligen_userhandle(h)?cligen_userhandle(h):h, cvv, cc->cc_cvec)) != 0)
             fprintf(stderr, "%s child retval:%d\n", __FUNCTION__, retval);
         exit(retval);
@@ -901,10 +918,14 @@ cligen_eval_pipe_post(cligen_handle h,
             perror("shutdown");
             goto done;
         }
-        /* Block for 10 ms until input is available */
-        if ((ret = cligen_eval_poll(s, CLI_PIPE_TIMEOUT_US)) < 0){
-            goto done;
+        /* Block until input is available */
+        do {
+            if ((ret = cligen_eval_poll(s, 1000*1000)) < 0){
+                goto done;
+            }
         }
+        while (ret == 0);
+        /* Read until EOF */
         while (ret != 0) {
             if ((len = read(s, buf, 4096)) < 0){
                 perror("cli_pipe_exec_cb, read");
@@ -917,7 +938,7 @@ cligen_eval_pipe_post(cligen_handle h,
             /* Immediate poll: possibility if writer is slow that input is dropped due
              * to starving of child in (maybe) single process systems
              */
-            if ((ret = cligen_eval_poll(s, CLI_PIPE_TIMEOUT_US2)) < 0)
+            if ((ret = cligen_eval_poll(s, CLI_PIPE_TIMEOUT_US)) < 0)
                 goto done;
         }
         if (cli_pipe_output_socket_set(-1) < 0)
