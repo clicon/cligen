@@ -12,6 +12,8 @@ Developers may need to change their code
 
 ### Corrected Bugs
 
+* Fixed: [CLI show config | display <format> exits over mountpoints with large YANGs](https://github.com/clicon/clixon-controller/issues/39)
+  * Removed timeout for pipes and enabled ctrl-C
 * Fixed: [Escaping with backslash(\) in variable strings cannot be done for backslash itself](https://github.com/clicon/cligen/issues/96)
 
 ## 6.3.0
