@@ -816,7 +816,8 @@ cligen_eval_poll(int          s,
 
     FD_ZERO(&fdset);
     FD_SET(s, &fdset);
-    tv.tv_usec = usec;
+    tv.tv_sec = usec/1000000;
+    tv.tv_usec = usec%1000000;
     if ((ret = select(FD_SETSIZE, &fdset, NULL, NULL, &tv)) < 0)
         perror("cligen_eval_poll");
     return ret;
