@@ -1,7 +1,7 @@
 # Cligen Changelog
         
 ## 6.4.0
-Expected: October 2023
+30 September 2023
 
 ### C/CLI-API changes on existing features
 Developers may need to change their code
@@ -12,6 +12,7 @@ Developers may need to change their code
 
 ### Corrected Bugs
 
+* Output pipes released in 6.3 have several minor bugfixes
 * Fixed: [CLI show config | display <format> exits over mountpoints with large YANGs](https://github.com/clicon/clixon-controller/issues/39)
   * Removed timeout for pipes and enabled ctrl-C
 * Fixed: [Escaping with backslash(\) in variable strings cannot be done for backslash itself](https://github.com/clicon/cligen/issues/96)
