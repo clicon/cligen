@@ -61,6 +61,7 @@
 #include "cligen_util.h"
 
 /*! Utility function to append string cv to a cligen vector
+ *
  * It is a utility function since it can be made using existing cv and cvec functions
  * but common since string type is the most common
  * @param[in]   cvv  cligen variable vector

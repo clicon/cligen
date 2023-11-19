@@ -145,12 +145,12 @@ stripdup(char *s0)
 <NAMEORTYPE>\>            { BEGIN(INITIAL); return *yytext; }
 <NAMEORTYPE>\n            { _CY->cy_linenum++; }
 <NAMEORTYPE>\:            { return *yytext; }
-<NAMEORTYPE>[ \t]+        { BEGIN(VARIABLE); return ' '; }
+<NAMEORTYPE>[ \t]+        { BEGIN(VARIABLE); }
 <NAMEORTYPE>([^ \t>:]|\\.)+  { 
                             cligen_parselval.string = strdup(yytext);
                             return NAME; }
 
-<VARIABLE>[ \t]+          { return ' '; }
+<VARIABLE>[ \t]+
 <VARIABLE>\n              { _CY->cy_linenum++; }
 <VARIABLE>\>              { BEGIN(INITIAL); return *yytext; }
 <VARIABLE>\:              { return *yytext; }
@@ -177,7 +177,7 @@ stripdup(char *s0)
                                  cligen_parselval.string = strdup(yytext);
                                  return NAME; }
 
-<CHOICE>[ \t]+          { return ' '; }
+<CHOICE>[ \t]+          
 <CHOICE>\n              { _CY->cy_linenum++; }
 <CHOICE>\|              { return *yytext; }
 <CHOICE>\>              { BEGIN(INITIAL); return *yytext; }

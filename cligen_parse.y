@@ -102,7 +102,6 @@
 #include "cligen_object.h"
 #include "cligen_syntax.h"
 #include "cligen_handle.h"
-    //#include "cligen_util.h"
 #include "cligen_parse.h"
 
 static int debug = 0;
@@ -1396,52 +1395,84 @@ cmd         : NAME           { _PARSE_DEBUG("cmd->NAME");
 
 variable    : NAME          { if (cgy_var_name_type(_cy, $1, $1)<0) _YYERROR("variable"); }
             | NAME ':' NAME { if (cgy_var_name_type(_cy, $1, $3)<0) _YYERROR("variable"); free($3); }
-            | NAME ' '      { if (cgy_var_name_type(_cy, $1, $1) < 0) _YYERROR("variable"); }
+            | NAME  { if (cgy_var_name_type(_cy, $1, $1) < 0) _YYERROR("variable"); }
               keypairs
-            | NAME ':' NAME ' ' { if (cgy_var_name_type(_cy, $1, $3) < 0) _YYERROR("variable"); free($3); }
+            | NAME ':' NAME  { if (cgy_var_name_type(_cy, $1, $3) < 0) _YYERROR("variable"); free($3); }
               keypairs
             ;
 
-keypairs    : keypair 
-            | keypairs ' ' keypair
+keypairs    : keypair {
+                     _PARSE_DEBUG("keypairs->keypair");
+              }
+            | keypairs  keypair {
+                     _PARSE_DEBUG("keypairs->keypairs keypair");
+              }
             ;
 
 numdec      : NUMBER { $$ = $1; }
             | DECIMAL 
             ;
 
-keypair     : NAME '(' ')' { expand_fn(_cy, $1); }
-            | NAME '(' exparglist ')' { expand_fn(_cy, $1); }
+keypair     : NAME '(' ')' {
+                 _PARSE_DEBUG("keypair->name()");
+                 expand_fn(_cy, $1);
+              }
+            | NAME '(' exparglist ')' {
+                 _PARSE_DEBUG("keypair->name(exparglist)");
+                 expand_fn(_cy, $1); }
             | V_SHOW ':' NAME { 
+                 _PARSE_DEBUG("keypair->show:name");
                  _CY->cy_var->co_show = $3; 
               }
             | V_SHOW ':' DQ charseq DQ {
+                 _PARSE_DEBUG("keypair->show:DQ charseq DQ");
                  _CY->cy_var->co_show = $4; 
               }
             | V_RANGE '[' numdec ':' numdec ']' { 
+                 _PARSE_DEBUG("keypair->range [<nr>:<nr>]");
                 if (cg_range(_cy, $3, $5) < 0) _YYERROR("keypair"); free($3); free($5); 
               }
-            | V_RANGE '[' numdec ']' { 
-                if (cg_range(_cy, NULL, $3) < 0) _YYERROR("keypair"); free($3); 
+            | V_RANGE '[' numdec ']' {
+                 _PARSE_DEBUG("keypair->range [<nr>]");
+                 if (cg_range(_cy, NULL, $3) < 0) _YYERROR("keypair"); free($3); 
               }
             | V_LENGTH '[' NUMBER ':' NUMBER ']' { 
-                if (cg_length(_cy, $3, $5) < 0) _YYERROR("keypair"); free($3); free($5); 
+                 _PARSE_DEBUG("keypair->length[number:number]");
+                 if (cg_length(_cy, $3, $5) < 0) _YYERROR("keypair"); free($3); free($5); 
               }
-            | V_LENGTH '[' NUMBER ']' { 
-                if (cg_length(_cy, NULL, $3) < 0) _YYERROR("keypair"); free($3); 
+            | V_LENGTH '[' NUMBER ']' {
+                 _PARSE_DEBUG("keypair->length[number]");
+                 if (cg_length(_cy, NULL, $3) < 0) _YYERROR("keypair"); free($3); 
               }
             | V_FRACTION_DIGITS ':' NUMBER { 
+                 _PARSE_DEBUG("keypair->fraction-digits:number");
                 if (cg_dec64_n(_cy, $3) < 0) _YYERROR("keypair"); free($3); 
               }
-            | V_CHOICE choices { _CY->cy_var->co_choice = $2; }
+            | V_CHOICE choices {
+                 _PARSE_DEBUG("keypair->choice choices");
+                 _CY->cy_var->co_choice = $2;
+              }
             | V_KEYWORD ':' NAME { 
+                 _PARSE_DEBUG("keypair->keyword name");
                 _CY->cy_var->co_keyword = $3;  
                 _CY->cy_var->co_vtype=CGV_STRING; 
               }
-            | V_REGEXP  ':' DQ charseq DQ { if (cg_regexp(_cy, $4, 0) < 0) _YYERROR("keypair"); free($4); }
-            | V_REGEXP  ':' '!'  DQ charseq DQ { if (cg_regexp(_cy, $5, 1) < 0) _YYERROR("keypair"); free($5);}
-            | V_TRANSLATE ':' NAME '(' ')' { cg_translate(_cy, $3); }
-            | V_PREFERENCE ':' NUMBER { cg_preference(_cy, $3); free($3); }
+            | V_REGEXP  ':' DQ charseq DQ {
+                 _PARSE_DEBUG("keypair->regexp : DQ charseq DQ");
+                 if (cg_regexp(_cy, $4, 0) < 0) _YYERROR("keypair"); free($4);
+              }
+            | V_REGEXP  ':' '!'  DQ charseq DQ {
+                 _PARSE_DEBUG("keypair->regexp : ! DQ charseq DQ");
+                 if (cg_regexp(_cy, $5, 1) < 0) _YYERROR("keypair"); free($5);
+              }
+            | V_TRANSLATE ':' NAME '(' ')' {
+                 _PARSE_DEBUG("keypair->translate : name ()");
+                 cg_translate(_cy, $3);
+              }
+            | V_PREFERENCE ':' NUMBER {
+                 _PARSE_DEBUG("keypair->preference : number");
+                 cg_preference(_cy, $3); free($3);
+              }
             ;
 
 exparglist : exparglist ',' exparg
