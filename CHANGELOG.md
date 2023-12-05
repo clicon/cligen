@@ -1,5 +1,19 @@
 # Cligen Changelog
-        
+
+* [6.5.0](#650) 5 December 2023
+* [6.4.0](#640) 30 September 2023
+* [6.3.0](#630) 29 July 2023
+* [6.2.0](#620) 30 April 2023
+* [6.1.0](#610) 19 Feb 2023
+* [6.0.0](#600) 29 Nov 2022
+
+## 6.5.0
+5 December 2023
+
+### Corrected Bugs
+
+* Fixed: [Space after comma not allowed in pre-function parsing](https://github.com/clicon/cligen/issues/101)
+
 ## 6.4.0
 30 September 2023
 
@@ -127,7 +141,7 @@ Developers may need to change their code
   * https://github.com/clicon/cligen/issues/73
   * https://github.com/clicon/clixon/issues/301
   * This was introduced in CLIgen 5.4
- 
+
 ## 5.5.0
 20 January 2022
 
@@ -320,8 +334,8 @@ children. This is a work to make parse-tree a first level object for future enha
   * Split cligen_gen.[ch] into cligen_object.[ch] and cligen_parsetree.[ch]
     * parsetree structure hidden in cligen_parsetree.c
   * Access macros replace direct structure access as follows:
-    * `pt->pt_vec` --> `pt_vec_get(pt)` 
-    * `pt->pt_vec[i]` --> `pt_vec_i_get(pt, i)` 
+    * `pt->pt_vec` --> `pt_vec_get(pt)`
+    * `pt->pt_vec[i]` --> `pt_vec_i_get(pt, i)`
     * `pt->pt_len` --> `pt_len_get(pt)`
     * `co->co_max` --> `parse_tree *pt = co_pt_get(co); pt_len_get(pt, i)`
     * `co->co_next[i]` --> `parse_tree *pt = co_pt_get(co); pt_vec_i_get(pt, i)`
@@ -363,7 +377,7 @@ also a small (non-backward-compatible) API change.
   * Global start and threshold limit can be set and read with `cbuf_alloc_set()` and `cbuf_alloc_get()`, (signature changed).
   * New function `cbuf_new_alloc()` to start from another (individual) buffer size.
 * API-change
-  * `cligen_print()` replaced by `pt_print()` 
+  * `cligen_print()` replaced by `pt_print()`
   * `cligen_print_obj()` replaced by `co_print()`
   * Size functions for memory analysis of cv and cvecs: `cv_size()` and `cvec_size()`.
 * BugFix: Negative uint:s get parse error messages as if they are uint64, such as when uint8 parses -1.
@@ -422,13 +436,13 @@ No new functionality, just a release number bump to synchronize with Clixon
 * Added XSD regexp w libxml2 support
   * Added libxml2 regex compile and exec functions
   * Added libxml2 to configure, enable it at install-time with:
-    * `./configure --with-libxml2`      
+    * `./configure --with-libxml2`
   * Enable libxml2 based regexp:s at program start with: `cligen_regexp_xsd_set(h, 1)`
 * [Choice with space is not working in CLIgen code](https://github.com/olofhagsand/cligen/issues/24) is fixed, but you need to use escape backslash character `\` to make it work.
   * Example using spec: `choice <string choice:nospace|with\ space>;`
     ```
     cli> choice ?
-    nospace                   with\ space              
+    nospace                   with\ space
     cli> choice with\ space
     cli>
     ```
@@ -483,7 +497,6 @@ No new functionality, just a release number bump to synchronize with Clixon
         CLICON_PLUGIN="example_cli";
         a b, fn();
         ```
-
 ## 3.8.0
 6 Nov 2018
 
@@ -491,7 +504,7 @@ No new functionality, just a release number bump to synchronize with Clixon
 * Moved hidden C structures from .c files to internal .h headers
   * Requested by Dcarnejo in https://github.com/olofhagsand/cligen/issues/15
   * Four new internal headers created: cligen_cv_internal.h, cligen_cvec_internal.h, cligen_buf_internal.h and cligen_handle_internal.h
-* Renamed cligen_var.[ch] to  cligen_cv.[ch] 
+* Renamed cligen_var.[ch] to  cligen_cv.[ch]
 * Restored cvec_find_var (as requested by Matt Smith Netgate)
 
 ## 3.7.0
@@ -500,12 +513,12 @@ No new functionality, just a release number bump to synchronize with Clixon
 * Fixed bug that REST variable did not work with regexp (thanks David Cornejo, Netgate)
   * For example this now works: <a:rest regexp:".*">;
 * Added three CLIGEN_TABMODE_* flags for setting with cligen_tabmode_set:
-  * CLIGEN_TABMODE_COLUMNS: 0: short/ios mode, 1: long/junos mode 
+  * CLIGEN_TABMODE_COLUMNS: 0: short/ios mode, 1: long/junos mode
   * CLIGEN_TABMODE_VARS:    0: command preference, 1: vars have equal pref
   * CLIGEN_TABMODE_STEPS:   0: complete single step. 1: all steps at once
   * Deprecated `cligen_completion_set() and cligen_completion()`, use cligen_tabmode() instead.
 * Append arguments to reference callback
-  * such as: @datamodel:example, cli_show_auto("candidate", "text");               
+  * such as: @datamodel:example, cli_show_auto("candidate", "text");
 * Added --enable-debug to configure. Thanks rbgarga
 * Removed support for single callback functions
   * Enable by defining CALLBACK_SINGLEARG
@@ -526,13 +539,13 @@ No new functionality, just a release number bump to synchronize with Clixon
   * dual free when recursive calls
   * Separated line buffer and kill buffer handling to indefinite length, with
     separet functions, eg cligen_buf_increase() +-> cligen_killbuf_increase().
-  
+
 * Fixed bug that appeared when expanding non-completed sub-strings. Eg "Interface eth0
   10.1.2. ?" could produce a cligen parse error and program termination
   in some circumstances. Detected by Netgate.
 
 * Accept input with multiple lines into a single variable. (Thanks Matthew Smith)
-        
+
 ## R3.6.0 (19 November 2017)
 
 * Fixed newline for non-line scrolling mode
@@ -545,11 +558,11 @@ No new functionality, just a release number bump to synchronize with Clixon
 ```
 
 * Added signal SIGWINCH handling for window change size and adapting printing
-  of help string to window resize. 
+  of help string to window resize.
 
 * Added support for multi-argument callback CLI expand functions.
     See cligen_expandv_str2fn()
-        
+
 * Added support for multi-argument callback CLI functions. See below where the third argument is a vector instead of a single argument.
   To use this, all CLI callback functions need to be rewritten.
   The old style remains but cannot be mixed with the new.
@@ -557,15 +570,15 @@ No new functionality, just a release number bump to synchronize with Clixon
 ```
     int callback(cligen_handle handle, cvec *cvv, cvec *argv);
 ```
-        
-* Removed alias int for int32.  
-* Added option for "relaxed" handling of variable matching. So that 
-  * eg <a:string length[4]> | <a:string length[40]> is allowed. 
+
+* Removed alias int for int32.
+* Added option for "relaxed" handling of variable matching. So that
+  * eg <a:string length[4]> | <a:string length[40]> is allowed.
   * See cligen_match_cgvar_same().
 
 * type_max2str - get max value of a type
 
-* Added doxygen reference and function call documentation. Just do 'make doc' 
+* Added doxygen reference and function call documentation. Just do 'make doc'
   and direct your browser to doc/index.html
 
 * Fixed parse bugs for some choices syntax, eg <a choice:1.0|length> did not work.
@@ -620,8 +633,8 @@ possibility to limit the length of a string. Example: <s:string
 length[2:10]>; # string length must bebetween 2 and 10 <s:string
 length[10]>; # string length must be shorter than 10
 
-Integer ranges can be defined with only an upper limit, lower limit can be 
-suppressed: 
+Integer ranges can be defined with only an upper limit, lower limit can be
+suppressed:
    <x:int32 range[125]>;
 
 Added a 'show' field in the variable syntax to distinguish between a name of a variable used for reference and how it is displayed in the CLI:
@@ -651,7 +664,7 @@ September 2013
 Changed 'range' variable syntax, the old did not allow negative numbers.
 NOTE: You need to change all variable syntax statements of the form:
     <a:int range:3-89>
-to 
+to
     <a:int range[3:89]>
 The old syntax will be kept for some releases.
 
@@ -661,12 +674,12 @@ Setting of terminal length, not hardcode to 80:
 Added help-text and cligen variable vector to expanded variables. An
 expand callback now has a 'vars' and 'helptext' argument:
 NOTE: You need to change all expand callbacks in your user C-code:
-   int expandcb(cligen_handle h, char *fn_str, cg_var *arg, 
+   int expandcb(cligen_handle h, char *fn_str, cg_var *arg,
                 int *nr, char ***commands);
 to
-   int expandcb(cligen_handle h, char *fn_str, cvec *vars, cg_var *arg, 
+   int expandcb(cligen_handle h, char *fn_str, cvec *vars, cg_var *arg,
                 int *nr, char ***commands, char ***helptexts);
-The helptext variable is set in the same way as 'commands'. If it is left empty, 
+The helptext variable is set in the same way as 'commands'. If it is left empty,
 the help-text in the specification is used.
 'vars' is a cligen variable vector of the command line. Same semantics as in cligen
 calbacks.
@@ -683,7 +696,7 @@ fields. The default field is removed and can be implemented by
 userdata.
 
 Added an empty variable type that has no values (thanks Benny)
-        
+
 Added pt_apply that applies a function call recursively on all cg_obj:s in a parse-tree
 
 Added cligen_logsyntax[_set]() as a debug-function to track dynamic
@@ -694,12 +707,12 @@ Removed the --gl-select configure option by making it mandatory.
 ## R3_3_0
 April 2013
 
-Variable syntax: '<' <name> 'type:'<type>'>' is no longer supported. 
+Variable syntax: '<' <name> 'type:'<type>'>' is no longer supported.
 Use instead: '<' <name>':'<type>'>'.
 NOTE: You need to change all variable syntax statements of the form:
-   <a type:int> 
-to 
-   <a:int> 
+   <a type:int>
+to
+   <a:int>
 
 Syntax for referencing sub-trees (like function-calls) have been
 introduced. The new reference operator is '@'. A subtree is unfolded
@@ -741,16 +754,16 @@ List of callbacks. Example:
   a b, z("fie");
 Both x, y and z will be called when 'a b' is typed.
 
-regexp variables re-introduced. 
-Example: 
+regexp variables re-introduced.
+Example:
   <name:string regexp:"[a-z]+[0-8]+\\.[0-9]">;
   <name:string regexp:"(ab|a)b*c">;
 
 Refactoring (no API changes):
 1. Parse-code - Merged the two yacc parsers into one. This gives
 better performance but more importantly less complex code. Documented in
-docs/block-chart.pdf. 
-2. Search and insertion is made using binary search instead of linear. Load 30K syntax 
+docs/block-chart.pdf.
+2. Search and insertion is made using binary search instead of linear. Load 30K syntax
 lines now takes 0.2s instead of 13.2s.
 
 ## R3_1_0
@@ -779,7 +792,7 @@ NOTE: You need to change all expand callbacks in your user C-code:
    int expandcb(cligen_handle h, char *fn_str, cg_var *arg, int *nr, char ***commands);
 to
    int expandcb(cligen_handle h, char *fn_str, cg_var *arg, int *nr, char ***commands, char ***comments);
-The comments variable is set in the same way as 'commands'. If it is left empty, 
+The comments variable is set in the same way as 'commands'. If it is left empty,
 the help-text in the specification is used.
 
 Setting of terminal length, not hardcode to 80:
