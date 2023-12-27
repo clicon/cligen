@@ -61,12 +61,12 @@ int      cbuf_alloc_get(size_t *start, size_t *threshold);
 int      cbuf_alloc_set(size_t start, size_t threshold);
 cbuf    *cbuf_new(void);
 cbuf    *cbuf_new_alloc(size_t sz);
-
 void     cbuf_free(cbuf *cb);
 char    *cbuf_get(cbuf *cb);
 size_t   cbuf_len(cbuf *cb);
 size_t   cbuf_buflen(cbuf *cb);
 int      cprintf(cbuf *cb, const char *format, ...) __attribute__ ((format (printf, 2, 3)));
+int      vcprintf(cbuf *cb, const char *format, va_list ap);
 void     cbuf_reset(cbuf *cb);
 int      cbuf_append(cbuf *cb, int c);
 int      cbuf_append_str(cbuf *cb, char *str);

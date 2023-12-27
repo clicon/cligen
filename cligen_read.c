@@ -826,15 +826,14 @@ cligen_eval_poll(int          s,
 void
 signal_unblock(int sig)
 {
-        sigset_t set;
+    sigset_t set;
 
-        sigemptyset(&set);
-        if (sig)
-                sigaddset(&set, sig);
-        else 
-                sigfillset(&set);
-
-        sigprocmask(SIG_UNBLOCK, &set, NULL);
+    sigemptyset(&set);
+    if (sig)
+        sigaddset(&set, sig);
+    else 
+        sigfillset(&set);
+    sigprocmask(SIG_UNBLOCK, &set, NULL);
 }
 
 /*! Fork pipe function and return socker and pid, redirect to pipe_output_socket

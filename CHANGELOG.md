@@ -1,11 +1,19 @@
 # Cligen Changelog
 
+* [6.6.0](#660) Expected: February 2024
 * [6.5.0](#650) 5 December 2023
 * [6.4.0](#640) 30 September 2023
 * [6.3.0](#630) 29 July 2023
 * [6.2.0](#620) 30 April 2023
 * [6.1.0](#610) 19 Feb 2023
 * [6.0.0](#600) 29 Nov 2022
+
+## 6.6.0
+Expected: February 2024
+
+### Minor items
+
+* Added vcprintf
 
 ## 6.5.0
 5 December 2023

@@ -262,6 +262,35 @@ cprintf(cbuf       *cb,
     return retval;
 }
 
+int
+vcprintf(cbuf       *cb,
+         const char *format,
+         va_list     ap)
+{
+    int     retval = -1;
+    int     len;
+    int     ret;
+    va_list ap1;
+    
+    va_copy(ap1, ap);
+    if (cb == NULL)
+        goto ok;
+    if ((len = vsnprintf(NULL, 0, format, ap)) < 0) /* dryrun, just get len */
+        goto done;
+    /* Ensure buffer is large enough */
+    if (cbuf_realloc(cb, len) < 0)
+        goto done;
+    if ((ret = vsnprintf(cb->cb_buffer+cb->cb_strlen, /* str */
+                         cb->cb_buflen-cb->cb_strlen, /* size */
+                         format, ap1)) < 0)
+        goto done;
+    cb->cb_strlen += ret;
+ ok:
+    retval = 0;
+ done:
+    return retval;
+}
+
 /*! Append a string to a cbuf
   *
   * An optimized special case of cprintf
