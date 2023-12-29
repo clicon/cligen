@@ -279,7 +279,7 @@ last_pt(parse_tree *pt)
 {
     int     i;
     cg_obj *co;
-    size_t  len;
+    ssize_t len;
 
     len = pt_len_get(pt);
     if (len == 0)
@@ -1058,6 +1058,8 @@ match_pattern(cligen_handle h,
     cg_obj       *co1 = NULL;
     parse_tree   *ptc;
     pt_head      *ph;
+    parse_tree   *ptn = NULL;
+    cvec         *cvv1 = NULL;
     
     if (cvt == NULL || cvr == NULL || mrp == NULL){
         errno = EINVAL;
@@ -1169,14 +1171,11 @@ match_pattern(cligen_handle h,
          * Special case: if a NULL child is not found, then set result == CG_NOMATCH
          */
         if ((ptc = co_pt_get(co1)) != NULL && best){
-            parse_tree *ptn;
-            cvec       *cvv;
-
             if ((ptn = pt_new()) == NULL)
                 goto done;
-            if ((cvv = cvec_new(0)) == NULL)
+            if ((cvv1 = cvec_new(0)) == NULL)
                 goto done;
-            if (pt_expand(h, co1, ptc, cvt, cvv, 1, 0, NULL, NULL, ptn) < 0)
+            if (pt_expand(h, co1, ptc, cvt, cvv1, 1, 0, NULL, NULL, ptn) < 0)
                 goto done;
             /* Loop sets i which is used below */
             for (i=0; i<pt_len_get(ptn); i++){
@@ -1193,8 +1192,6 @@ match_pattern(cligen_handle h,
                 mr_pt_reset(mr);
             }
             pt_expand_cleanup(h, ptn);
-            pt_free(ptn, 0);
-            cvec_free(cvv);
         }
         break;
     default:
@@ -1203,6 +1200,10 @@ match_pattern(cligen_handle h,
     *mrp = mr;
     retval = 0;
  done:
+    if (cvv1)
+        cvec_free(cvv1);
+    if (ptn)
+        pt_free(ptn, 0);
     return retval;
 } /* match_pattern */
 
