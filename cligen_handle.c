@@ -168,6 +168,7 @@ cligen_init(void)
         sigh.sa_handler = sigwinch_handler;
         if (sigaction(SIGWINCH, &sigh, NULL) < 0){
             perror("sigaction");
+            free(ch);
             return NULL;
         }
     }

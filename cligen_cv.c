@@ -1382,8 +1382,7 @@ parse_dec64(char    *str,
         ss[i] = '0';
     ss[len1+n] = '\0'; /* trailing zero */
     /* XXX: remove any beginning zeros */
-    if ((retval = parse_int64_base(ss, 10, INT64_MIN, INT64_MAX, dec64_i, reason)) != 1)
-        goto done;
+    retval = parse_int64_base(ss, 10, INT64_MIN, INT64_MAX, dec64_i, reason);
   done:
     if (s0)
         free(s0);

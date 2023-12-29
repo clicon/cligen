@@ -379,6 +379,7 @@ co_expand_treeref_copy_shallow(cligen_handle h,
             if (co_expand_treeref_copy_shallow(h, co0, cvv, cvt, ptref2, ptnew) < 0)
                 goto done;
             cvec_free(cvv);
+            cvv = NULL;
         }
         else{
             if (co_expand_sub(cot, coparent, &con) < 0)
@@ -398,6 +399,8 @@ co_expand_treeref_copy_shallow(cligen_handle h,
     } /* for i */
     retval = 0;
  done:
+    if (cvv)
+        cvec_free(cvv);
     return retval;
 }
 
@@ -486,7 +489,7 @@ pt_expand_fnv(cligen_handle h,
     cvec       *commands;
     cvec       *helptexts;
     cg_var     *cv = NULL;
-    char       *helpstr;
+    char       *helpstr = NULL;
     cg_obj     *con = NULL;
     int         i;
     const char *value;
@@ -519,8 +522,10 @@ pt_expand_fnv(cligen_handle h,
         goto done;
     i = 0;
     while ((cv = cvec_each(commands, cv)) != NULL) {
-        if (i < cvec_len(helptexts))
-            helpstr = strdup(cv_string_get(cvec_i(helptexts, i)));
+        if (i < cvec_len(helptexts)){
+            if ((helpstr = strdup(cv_string_get(cvec_i(helptexts, i)))) == NULL)
+                goto done;
+        }
         else
             helpstr = NULL;
         i++;
@@ -543,8 +548,11 @@ pt_expand_fnv(cligen_handle h,
                 goto done;
         }
         /* 'cmd' always points to mutable string, helpstr is consumed */
-        if (transform_var_to_cmd(con, (char*)cmd, helpstr) < 0)
+        if (transform_var_to_cmd(con, (char*)cmd, helpstr) < 0){
+            helpstr = NULL;
             goto done;
+        }
+        helpstr = NULL;
         /* Save the unescaped string */
         if (cmd != value)
             co_value_set(con, (char*)value);
@@ -560,6 +568,8 @@ pt_expand_fnv(cligen_handle h,
     }
     if (cvv1)
         cvec_free(cvv1);
+    if (helpstr)
+        free(helpstr);
     return retval;
 }
 

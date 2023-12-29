@@ -578,7 +578,7 @@ print_help_lines(cligen_handle h,
     }
     for (i=0; i<pt_len_get(ptmatch); i++){
         co = pt_vec_i_get(ptmatch, i);
-        if (co->co_command == NULL)
+        if (co == NULL || co->co_command == NULL)
             continue;
         cmd = NULL;
         switch(co->co_type){
