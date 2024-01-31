@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 1991, 1992, 1993 by Chris Thewalt (thewalt@ce.berkeley.edu)
  *
- * Permission to use, copy, modify, and distribute this software 
+ * Permission to use, copy, modify, and distribute this software
  * for any purpose and without fee is hereby granted, provided
  * that the above copyright notices appear in all copies and that both the
  * copyright notice and this permission notice appear in supporting
@@ -55,7 +55,7 @@ static void     gl_init1(void);         /* prepare to edit a line */
 static void     gl_cleanup(void);       /* to undo gl_init1 */
 void            gl_char_init(void);     /* get ready for no echo input */
 void            gl_char_cleanup(void);  /* undo gl_char_init */
-static size_t   (*gl_strlen)() = (size_t(*)())strlen; 
+static size_t   (*gl_strlen)() = (size_t(*)())strlen;
                                         /* returns printable prompt width */
 
 static int      gl_addchar(cligen_handle h, int c);     /* install specified char */
@@ -166,7 +166,7 @@ struct termio   new_termio, old_termio;
 #include <ttdef.h>
 #include <iodef.h>
 #include unixio
-   
+
 static int   setbuff[2];             /* buffer to set terminal attributes */
 static short chan = -1;              /* channel to terminal */
 struct dsc$descriptor_s descrip;     /* VMS descriptor */
@@ -237,7 +237,7 @@ void
 gl_char_cleanup(void)           /* undo effects of gl_char_init */
 {
 #ifdef __unix__
-#ifdef POSIX 
+#ifdef POSIX
     tcsetattr(0, TCSADRAIN, &old_termios);
 #else                   /* not POSIX */
 #ifdef TIOCSETN         /* BSD */
@@ -253,7 +253,7 @@ gl_char_cleanup(void)           /* undo effects of gl_char_init */
     (void)sys$qiow(0,chan,IO$_SETMODE,0,0,0,setbuff,8,0,0,0,0);
     sys$dassgn(chan);
     chan = -1;
-#endif 
+#endif
 }
 
 #if MSDOS || __EMX__ || __GO32__
@@ -286,9 +286,9 @@ static struct regfd *extfds = NULL;
 
 /* XXX: If arg is malloced, the treatment of arg creates leaks */
 int
-gl_regfd(int fd, 
-         cligen_fd_cb_t *cb, 
-         void *arg)
+gl_regfd(int             fd,
+         cligen_fd_cb_t *cb,
+         void           *arg)
 {
     int i;
     struct regfd *tmp;
@@ -373,7 +373,7 @@ gl_exitchar_add(char c)
         }
 }
 
-/* check if c is an exit char */
+/*! Check if c is an exit char */
 static int
 gl_exitchar(char c)
 {
@@ -403,7 +403,8 @@ gl_exit(cligen_handle h)
     return gl_buf;
 }
 
-/*! Get a character without echoing it to screen 
+/*! Get a character without echoing it to screen
+ *
  * @param[in]  h     CLIgen handle
  */
 static int
@@ -414,7 +415,7 @@ gl_getc(cligen_handle h)
     unsigned char  ch;
 #endif
 
-#if CLIGEN_REGFD 
+#if CLIGEN_REGFD
     gl_select(); /* block until something arrives on stdin */
 #endif
 #ifdef __unix__
@@ -492,8 +493,8 @@ gl_putc(int c)
 static int
 gl_puts(char *buf)
 {
-    int len; 
-    
+    int len;
+
     if (buf) {
         len = strlen(buf);
         if (write(1, buf, len) < 0)
@@ -502,7 +503,8 @@ gl_puts(char *buf)
     return 0;
 }
 
-/*! set up variables and terminal 
+/*! set up variables and terminal
+ *
  * @see gl_init  cal this once first
  */
 static void
@@ -540,7 +542,8 @@ gl_getwidth(void)
     return gl_termw;
 }
 
-/*! Set UTF-8 experimental mode 
+/*! Set UTF-8 experimental mode
+ *
  * @param[in] enabled   Set to 1 to enable UTF-8 experimental mode
  */
 int
@@ -550,7 +553,8 @@ gl_utf8_set(int mode)
     return 0;
 }
 
-/*! get UTF-8 experimental mode 
+/*! get UTF-8 experimental mode
+ *
  * @retval 0 UTF-8 is disabled
  * @retval 1 UTF-8 is enabled
  */
@@ -589,7 +593,7 @@ gl_getline(cligen_handle h,
     int             sig;
 #endif
 
-    gl_init1(); 
+    gl_init1();
     gl_prompt = (cligen_prompt(h))? cligen_prompt(h) : "";
     cligen_buf(h)[0] = 0;
     if (gl_in_hook)
@@ -607,7 +611,7 @@ gl_getline(cligen_handle h,
                         goto err;
                     gl_fixup(h, gl_prompt, -2, gl_pos);
                 }
-                else{ 
+                else{
                     escape = 0;
                     if (gl_search_mode)
                         search_addchar(h, c);
@@ -640,15 +644,15 @@ gl_getline(cligen_handle h,
                 gl_newline(h);
                 goto done;
                 /*NOTREACHED*/
-                break; 
+                break;
             case '\001': gl_fixup(h, gl_prompt, -1, 0);         /* ^A */
                 break;
             case '\002': gl_fixup(h, gl_prompt, -1, gl_pos-1);  /* ^B */
                 break;
             case '\004':                                        /* ^D */
-                if (gl_cnt == 0) 
+                if (gl_cnt == 0)
                     goto exit;
-                else 
+                else
                     gl_del(h, 0);
                 break;
             case '\005': gl_fixup(h, gl_prompt, -1, gl_cnt);    /* ^E */
@@ -707,14 +711,14 @@ gl_getline(cligen_handle h,
                                        cligen_buf(h), gl_strlen(gl_prompt), &tmp);
                     if (loc != -1 || tmp != gl_pos)
                         gl_fixup(h, gl_prompt, loc, tmp);
-                    if (strchr (cligen_buf(h), '\n')) 
+                    if (strchr (cligen_buf(h), '\n'))
                         goto done;
                 }
                 break;
             case '\033':        /* ansi arrow keys (ESC) */
                 c = gl_getc(h);
                 /* ESC-[ is normal and ESC-O is application cursor keys */
-                if (c == '[' || c == 'O') { 
+                if (c == '[' || c == 'O') {
                     switch(c = gl_getc(h)) {
                     case 'A':                                   /* up */
                         hist_copy_prev(h);
@@ -813,7 +817,7 @@ gl_getline(cligen_handle h,
                         gl_redraw(h);
                         gl_kill(h, 0);
                         c = 0;
-                    } 
+                    }
                 }
 #endif /* __unix__ */
                 if (c > 0)
@@ -836,12 +840,13 @@ gl_getline(cligen_handle h,
     return -1;
 }
 
-/*! Add the character c to the input buffer at current location 
+/*! Add the character c to the input buffer at current location
+ *
  * @param[in]  h     CLIgen handle
  * @param[in]  c     Character
  */
 static int
-gl_addchar(cligen_handle h, 
+gl_addchar(cligen_handle h,
            int           c)
 {
     int  i;
@@ -861,7 +866,8 @@ gl_addchar(cligen_handle h,
     return 0;
 }
 
-/*! Add the kill buffer to the input buffer at current location 
+/*! Add the kill buffer to the input buffer at current location
+ *
  * @param[in]  h     CLIgen handle
  */
 static int
@@ -895,7 +901,8 @@ gl_yank(cligen_handle h)
     return 0;
 }
 
-/*! Switch character under cursor and to left of cursor 
+/*! Switch character under cursor and to left of cursor
+ *
  * @param[in]  h     CLIgen handle
  */
 static void
@@ -913,7 +920,7 @@ gl_transpose(cligen_handle h)
         gl_putc('\007');
 }
 
-/*! Cleans up entire line before returning to caller. 
+/*! Cleans up entire line before returning to caller.
  *
  * @param[in]  h     CLIgen handle
  * A \n is appended. If line longer than screen, redraw starting at beginning
@@ -928,11 +935,10 @@ gl_newline(cligen_handle h)
         loc = gl_width - 5;     /* shifts line back to start position */
     else
         loc = gl_cnt;
-    
     cligen_buf_increase(h, gl_cnt+1); /* \n\0 added */
     if (gl_out_hook) {
         len = strlen(cligen_buf(h));
-    } 
+    }
     if (loc > len)
         loc = len;
     gl_fixup(h, cligen_prompt(h), -1, loc);     /* must do this before appending \n */
@@ -941,13 +947,14 @@ gl_newline(cligen_handle h)
     gl_putc('\n');
 }
 
-/*! Delete a character.  
+/*! Delete a character.
+ *
  * @param[in] h    CLIgen handle
  * @param[in] loc  -1 : delete character to left of cursor
  *                 0 : delete character under cursor
  */
 static void
-gl_del(cligen_handle h, 
+gl_del(cligen_handle h,
        int           loc)
 {
     int i;
@@ -960,12 +967,13 @@ gl_del(cligen_handle h,
         gl_putc('\007');
 }
 
-/*! Delete position to end of line 
+/*! Delete position to end of line
+ *
  * @param[in]  h     CLIgen handle
- * @param[in]  pos   Delete from pos to the end of line 
+ * @param[in]  pos   Delete from pos to the end of line
  */
 static void
-gl_kill(cligen_handle h, 
+gl_kill(cligen_handle h,
         int           pos)
 {
     if (pos < gl_cnt) {
@@ -977,12 +985,13 @@ gl_kill(cligen_handle h,
         gl_putc('\007');
 }
 
-/* Delete from pos to start of line 
+/* Delete from pos to start of line
+ *
  * @param[in]  h     CLIgen handle
- * @param[in]  pos   Delete from pos to start of line 
+ * @param[in]  pos   Delete from pos to start of line
  */
 static void
-gl_kill_begin(cligen_handle h, 
+gl_kill_begin(cligen_handle h,
               int           pos)
 {
     int i;
@@ -1002,17 +1011,18 @@ gl_kill_begin(cligen_handle h,
         gl_putc('\007');
 }
 
-/*! Delete one previous word from pos 
+/*! Delete one previous word from pos
+ *
  * @param[in]  h     CLIgen handle
- * @param[in]  pos   Delete one previous word from pos 
+ * @param[in]  pos   Delete one previous word from pos
  */
 static int
-gl_kill_word(cligen_handle h, 
+gl_kill_word(cligen_handle h,
              int           pos)
 {
     int i, wpos;
 
-    if (pos == 0) 
+    if (pos == 0)
         gl_putc('\007');
     else {
         wpos = pos;
@@ -1020,7 +1030,7 @@ gl_kill_word(cligen_handle h,
             pos--;
         while (isspace((int)cligen_buf(h)[pos]) && pos > 0)
             pos--;
-        while (!isspace((int)cligen_buf(h)[pos]) && pos > 0) 
+        while (!isspace((int)cligen_buf(h)[pos]) && pos > 0)
             pos--;
         if (pos < gl_cnt && isspace((int)cligen_buf(h)[pos]))   /* move onto word */
             pos++;
@@ -1037,19 +1047,20 @@ gl_kill_word(cligen_handle h,
     return 0;
 }
 
-/*! Move forward or backword one word 
+/*! Move forward or backword one word
+ *
  * @param[in]  h          CLIgen handle
  * @param[in]  direction  >0 forward; else backward
  */
 static void
-gl_word(cligen_handle h, 
+gl_word(cligen_handle h,
         int           direction)
 
 {
     int pos = gl_pos;
 
     if (direction > 0) {                /* forward */
-        while (!isspace((int)cligen_buf(h)[pos]) && (pos < gl_cnt)) 
+        while (!isspace((int)cligen_buf(h)[pos]) && (pos < gl_cnt))
             pos++;
         while (isspace((int)cligen_buf(h)[pos]) && pos < gl_cnt)
             pos++;
@@ -1058,7 +1069,7 @@ gl_word(cligen_handle h,
             pos--;
         while (isspace((int)cligen_buf(h)[pos]) && pos > 0)
             pos--;
-        while (!isspace((int)cligen_buf(h)[pos]) && pos > 0) 
+        while (!isspace((int)cligen_buf(h)[pos]) && pos > 0)
             pos--;
         if (pos < gl_cnt && isspace((int)cligen_buf(h)[pos]))   /* move onto word */
             pos++;
@@ -1082,7 +1093,7 @@ move_cursor_right(int nr)
     char   str[16];
     int    i;
     size_t len;
-    
+
     gl_putc(033);
     gl_putc('[');
     snprintf(str, 15, "%d", nr);
@@ -1109,7 +1120,7 @@ unwrap_line()
 }
 
 int
-wrap(int p, 
+wrap(int p,
      int plen)
 {
     return (p+plen+1)%gl_termw==0;
@@ -1133,9 +1144,10 @@ void gl_clear_screen(cligen_handle h)
     gl_fixup(h, cligen_prompt(h), -2, gl_pos);
 }
 
-/*! Emit a newline, reset and redraw prompt and current input line 
+/*! Emit a newline, reset and redraw prompt and current input line
+ *
  * @param[in]  h     CLIgen handle
-*/
+ */
 void
 gl_redraw(cligen_handle h)
 {
@@ -1156,13 +1168,13 @@ gl_redraw(cligen_handle h)
  *                    with -1 indicating no changes, -2 indicating we're on
  *                    a new line, redraw everything.
  * @param[in] cursor  The desired location of the cursor after the call.
- *                    A value of cligen_buf_size(h) can be used  to indicate 
+ *                    A value of cligen_buf_size(h) can be used  to indicate
  *                    the cursor should move just past the end of the input line.
  */
 static void
-gl_fixup_noscroll(cligen_handle h, 
-                  char         *prompt, 
-                  int           change, 
+gl_fixup_noscroll(cligen_handle h,
+                  char         *prompt,
+                  int           change,
                   int           cursor)
 {
     int          left = 0, right = -1;          /* bounds for redraw */
@@ -1216,7 +1228,7 @@ gl_fixup_noscroll(cligen_handle h,
             backup = gl_pos - change;
         }
         right = gl_cnt;
-        new_right = (gl_extent && (right > left + gl_extent))? 
+        new_right = (gl_extent && (right > left + gl_extent))?
             left + gl_extent : right;
     }
     pad -= gl_cnt - fixup_gl_shift;
@@ -1252,7 +1264,7 @@ gl_fixup_noscroll(cligen_handle h,
                 unwrap_line();
             else
                 gl_putc('\b');
-        } 
+        }
     }
     else {
         for (i=gl_pos; i < cursor; i++)
@@ -1275,9 +1287,9 @@ gl_fixup_noscroll(cligen_handle h,
  *            move just past the end of the input line.
  */
 static void
-gl_fixup_scroll(cligen_handle h, 
-                char         *prompt, 
-                int           change, 
+gl_fixup_scroll(cligen_handle h,
+                char         *prompt,
+                int           change,
                 int           cursor)
 {
     int          left = 0, right = -1;          /* bounds for redraw */
@@ -1326,9 +1338,8 @@ gl_fixup_scroll(cligen_handle h,
     if (fixup_off_right || (fixup_off_left && cursor < fixup_gl_shift + gl_width - gl_scrollw / 2)){
         extra = 2;                      /* shift the scrolling boundary */
     }
-    else 
+    else
         extra = 0;
-    
     new_shift = cursor + extra + gl_scrollw - gl_width;
     if (new_shift > 0) {
         new_shift /= gl_scrollw;
@@ -1350,7 +1361,7 @@ gl_fixup_scroll(cligen_handle h,
         }
         fixup_off_right = (gl_cnt > fixup_gl_shift + gl_width - 1)? 1 : 0;
         right = (fixup_off_right)? fixup_gl_shift + gl_width - 2 : gl_cnt;
-        new_right = (gl_extent && (right > left + gl_extent))? 
+        new_right = (gl_extent && (right > left + gl_extent))?
             left + gl_extent : right;
     }
     pad -= (fixup_off_right)? gl_width - 1 : gl_cnt - fixup_gl_shift;
@@ -1368,7 +1379,7 @@ gl_fixup_scroll(cligen_handle h,
         if (fixup_off_right && new_right == right) {
             gl_putc('$');
             gl_pos++;
-        } else { 
+        } else {
             for (i=0; i < pad; i++)     /* erase remains of prev line */
                 gl_putc(' ');
             gl_pos += pad;
@@ -1386,9 +1397,9 @@ gl_fixup_scroll(cligen_handle h,
 }
 
 static inline void
-gl_fixup(cligen_handle h, 
-         char         *prompt, 
-         int           change, 
+gl_fixup(cligen_handle h,
+         char         *prompt,
+         int           change,
          int           cursor)
 {
     if (gl_scrolling_mode)
@@ -1399,7 +1410,7 @@ gl_fixup(cligen_handle h,
 
 /******************* strlen stuff **************************************/
 
-void 
+void
 gl_strwidth(size_t (*func)())
 {
     if (func != 0) {
@@ -1411,7 +1422,7 @@ gl_strwidth(size_t (*func)())
 /******************* Search stuff **************************************/
 
 
-static void  
+static void
 search_update(cligen_handle h,
               int           c)
 {
@@ -1446,10 +1457,11 @@ search_update(cligen_handle h,
 }
 
 /*! Search addchar
+ *
  * @param[in]  h     CLIgen handle
  */
-static void 
-search_addchar(cligen_handle h, 
+static void
+search_addchar(cligen_handle h,
                int           c)
 {
     char *loc;
@@ -1478,9 +1490,10 @@ search_addchar(cligen_handle h,
 }
 
 /*! Search terminate
+ *
  * @param[in]  h     CLIgen handle
  */
-static void     
+static void
 search_term(cligen_handle h)
 {
     gl_search_mode = 0;
@@ -1492,10 +1505,11 @@ search_term(cligen_handle h)
 }
 
 /*! Search backwards
+ *
  * @param[in]  h     CLIgen handle
  */
-static void     
-search_back(cligen_handle h, 
+static void
+search_back(cligen_handle h,
             int           new_search)
 {
     int    found = 0;
@@ -1506,7 +1520,7 @@ search_back(cligen_handle h,
     if (gl_search_mode == 0) {
         last = hist_last_get(h);
         hist_pos_set(h, last);
-        search_last = last;     
+        search_last = last;
         search_update(h, 0);
         gl_search_mode = 1;
         cligen_buf(h)[0] = 0;
@@ -1524,7 +1538,7 @@ search_back(cligen_handle h,
                if (new_search)
                    search_last = hist_pos(h);
                found = 1;
-            } 
+            }
         }
     } else {
         gl_putc('\007');
@@ -1532,10 +1546,11 @@ search_back(cligen_handle h,
 }
 
 /*! Search forward
+ *
  * @param[in]  h     CLIgen handle
  */
-static void     
-search_forw(cligen_handle h, 
+static void
+search_forw(cligen_handle h,
             int           new_search)
 {
     int    found = 0;
@@ -1547,8 +1562,7 @@ search_forw(cligen_handle h,
         last = hist_last_get(h);
         hist_pos_set(h, last);
         search_last = last;
-
-        search_update(h, 0);    
+        search_update(h, 0);
         gl_search_mode = 1;
         cligen_buf(h)[0] = 0;
         gl_fixup(h, search_prompt, 0, 0);
@@ -1565,7 +1579,7 @@ search_forw(cligen_handle h,
                if (new_search)
                    search_last = hist_pos(h);
                found = 1;
-            } 
+            }
         }
     } else {
         gl_putc('\007');

@@ -2,7 +2,7 @@
   CLIgen hello world application
 
   ***** BEGIN LICENSE BLOCK *****
- 
+
   Copyright (C) 2001-2022 Olof Hagsand
 
   This file is part of CLIgen.
@@ -25,7 +25,7 @@
   of those above. If you wish to allow use of your version of this file only
   under the terms of the GPL, and not to allow others to
   use your version of this file under the terms of Apache License version 2, indicate
-  your decision by deleting the provisions above and replace them with the 
+  your decision by deleting the provisions above and replace them with the
   notice and other provisions required by the GPL. If you do not delete
   the provisions above, a recipient may use your version of this file under
   the terms of any one of the Apache License version 2 or the GPL.
@@ -63,7 +63,7 @@ str2fn(char *name, void *arg, char **error)
 
 
 /*! The command syntax specification */
-static char *hello_syntax = "prompt=\"hello> \";\n" 
+static char *hello_syntax = "prompt=\"hello> \";\n"
     "hello(\"Greet the world\") world, cb(\"Hello World!\");"
     ;
 
@@ -87,7 +87,7 @@ main(int argc, char *argv[])
         goto done;
     pt = cligen_ph_parsetree_get(ph);
     /* Bind callback (hello_cb) to all commands */
-    if (cligen_callbackv_str2fn(pt, str2fn, NULL) < 0)     
+    if (cligen_callbackv_str2fn(pt, str2fn, NULL) < 0)
         goto done;
     /* Run the CLI command interpreter */
     if (cligen_loop(h) < 0)

@@ -1,8 +1,8 @@
 /*
-  CLI generator. 
+  CLI generator.
 
   ***** BEGIN LICENSE BLOCK *****
- 
+
   Copyright (C) 2001-2022 Olof Hagsand
 
   This file is part of CLIgen.
@@ -25,7 +25,7 @@
   of those above. If you wish to allow use of your version of this file only
   under the terms of the GPL, and not to allow others to
   use your version of this file under the terms of Apache License version 2, indicate
-  your decision by deleting the provisions above and replace them with the 
+  your decision by deleting the provisions above and replace them with the
   notice and other provisions required by the GPL. If you do not delete
   the provisions above, a recipient may use your version of this file under
   the terms of any one of the Apache License version 2 or the GPL.
@@ -47,7 +47,7 @@
  * Two data structures: a list and a stack.
  * The stack keeps track of syntactic levels: (decl) and [decl] so that
  * the stack is pushed and later popped  to keep track of where you are.
- * The list keeps track of the list of objects that are currently affected. Every choice and 
+ * The list keeps track of the list of objects that are currently affected. Every choice and
  * option extends the list. Operations apply to all objects on the list..
  */
 struct cgy_stack{
@@ -74,7 +74,7 @@ struct cligen_parse_yacc{
     struct cgy_stack     *cy_stack;        /* Stack of levels: push/pop on () and [] */
     struct cgy_list      *cy_list;         /* (Parallel) List of objects currently 'active' */
     cg_obj               *cy_var;
-    cg_callback          *cy_callbacks; 
+    cg_callback          *cy_callbacks;
     int                   cy_lex_state;  /* lex start condition (ESCAPE/COMMENT) */
     int                   cy_lex_string_state; /* lex start condition (STRING) */
     int                   cy_optional;     /* Keep track of [] level, 0..n. All co objects

@@ -2,7 +2,7 @@
   CLI generator. Take idl as input and generate a tree for use in cli.
 
   ***** BEGIN LICENSE BLOCK *****
- 
+
   Copyright (C) 2001-2022 Olof Hagsand
 
   This file is part of CLIgen.
@@ -25,14 +25,14 @@
   of those above. If you wish to allow use of your version of this file only
   under the terms of the GPL, and not to allow others to
   use your version of this file under the terms of Apache License version 2, indicate
-  your decision by deleting the provisions above and replace them with the 
+  your decision by deleting the provisions above and replace them with the
   notice and other provisions required by the GPL. If you do not delete
   the provisions above, a recipient may use your version of this file under
   the terms of any one of the Apache License version 2 or the GPL.
 
   ***** END LICENSE BLOCK *****
 
-  * "Expand" means make a new "shadow" parse-tree (ptn) from an original (pt) 
+  * "Expand" means make a new "shadow" parse-tree (ptn) from an original (pt)
   * The shadow parsetree has new objects, but they in turn do NOT copy their parsetrees if any
   * The copying is made as follows:
   * pt -->  [0 1..n]                        [0 1..m]  <-- ptn
@@ -175,7 +175,7 @@ co_expand_sub(cg_obj  *co0,
  * @param[in]  helptext  Helptext of command, can be NULL already malloced is consumed
  */
 static int
-transform_var_to_cmd(cg_obj *co, 
+transform_var_to_cmd(cg_obj *co,
                      char   *cmd,
                      char   *helptext)
 {
@@ -230,7 +230,7 @@ transform_var_to_cmd(cg_obj *co,
 /*! Look up treeref from @<treefer> and return expanded parse-tree
  *
  * @param[in]  h       Cligen handle
- * @param[in]  co      Cligen treeref object 
+ * @param[in]  co      Cligen treeref object
  * @param[in]  cvt     Tokenized string: vector of tokens
  * @param[out] ptrefp  Treeref Parse-tree result
  * @retval     1       OK
@@ -251,7 +251,7 @@ tree_resolve(cligen_handle h,
     cligen_tree_resolve_wrapper_fn *fn = NULL;
     void                           *arg = NULL;
     int                             ret;
-    
+
     treename = coref->co_command;
     cligen_tree_resolve_wrapper_get(h, &fn, &arg);
     if (fn){
@@ -278,7 +278,7 @@ tree_resolve(cligen_handle h,
     if ((cow = cligen_ph_workpoint_get(ph)) != NULL)
         *ptrefp = co_pt_get(cow);
     else
-        *ptrefp = cligen_ph_parsetree_get(ph);      
+        *ptrefp = cligen_ph_parsetree_get(ph);
  ok:
     retval = 0;
  done:
@@ -287,8 +287,11 @@ tree_resolve(cligen_handle h,
     return retval;
 }
 
-/*! Find filter labels defined as "filter:@remove:<label>": and return in cvv  
- * @param[out]  cvv  Cligen variable vector with filters as names
+/*! Find filter labels defined as "filter:@remove:<label>": and return in cvv
+ *
+ * @param[in]  h    CLIgen handle
+ * @param[in]  co
+ * @param[out] cvv  Cligen variable vector with filters as names
  */
 static int
 co_find_label_filters(cligen_handle h,
@@ -300,7 +303,7 @@ co_find_label_filters(cligen_handle h,
     char   *name;
     char   *filter;
     cg_var *cv1;
-    
+
     cv = NULL;
     while ((cv = cvec_each(co->co_cvec, cv)) != NULL){
         if ((name = cv_name_get(cv)) != NULL){
@@ -337,7 +340,7 @@ co_find_label_filters(cligen_handle h,
  * @b
  * This is to handle cases of predefined trees, like @datamodel
  */
-static int 
+static int
 co_expand_treeref_copy_shallow(cligen_handle h,
                                cg_obj       *co0,
                                cvec         *cvv_filter,
@@ -353,7 +356,7 @@ co_expand_treeref_copy_shallow(cligen_handle h,
     parse_tree *ptref2 = NULL;   /* tree referenced by pt0 orig */
     cvec       *cvv = NULL;
     cg_var     *cv;
-    
+
     coparent = co_up(co0);
     for (i=0; i<pt_len_get(ptorig); i++){
         if ((cot = pt_vec_i_get(ptorig, i)) == NULL)
@@ -384,7 +387,7 @@ co_expand_treeref_copy_shallow(cligen_handle h,
         else{
             if (co_expand_sub(cot, coparent, &con) < 0)
                 goto done;
-            /* Backpointer to the "ref" node - overrides co_expand_sub 
+            /* Backpointer to the "ref" node - overrides co_expand_sub
              * This actually seems to be to the treehead?
              */
             con->co_ref = co0;
@@ -393,7 +396,7 @@ co_expand_treeref_copy_shallow(cligen_handle h,
             if (cvec_len(cvv_filter) &&
                 co_filter_set(con, cvv_filter) == NULL)
                 goto done;
-            if (co_insert(ptnew, con) == NULL) 
+            if (co_insert(ptnew, con) == NULL)
                 goto done;
         }
     } /* for i */
@@ -405,9 +408,9 @@ co_expand_treeref_copy_shallow(cligen_handle h,
 }
 
 /*! Escape special characters in a string for its usage as CLI keyword.
- *  If no escaping is required, return original string.
- *  Otherwise, allocate a new string for escaped result.
  *
+ * If no escaping is required, return original string.
+ * Otherwise, allocate a new string for escaped result.
  * @param[in]   s    Original string.
  * @retval      e    Escaped string, malloced, must be freed
  * @retval      NULL Error
@@ -464,25 +467,27 @@ cligen_escape(const char* s)
 /*! Call expand callback and insert expanded commands in place of variable
  *
  * Variable argument callback variant
- * @param[in]  h         CLIgen handle
- * @param[in]  co        CLIgen object
- * @param[in]  coparent  CLIgen object parent
- * @param[in]  transient co may be "transient" if so use co->co_ref as new co_ref,...
- * @param[out] cvv_var   Cligen variable vector containing vars/values pair for completion
- * @param[out] ptn       New parse-tree initially an empty pointer, its value is returned.
- * @retval     0         OK
- * @retval    -1         Error
+ * @param[in]  h          CLIgen handle
+ * @param[in]  co         CLIgen object
+ * @param[in]  co_parent  CLIgen object parent
+ * @param[out] cvv_var    Cligen variable vector containing vars/values pair for completion
+ * @param[in]  cvv_filter Add these to expanded nodes co_filter, eg remove them
+ * @param[in]  callbacks  Callback structure of expanded treeref
+ * @param[in]  transient  co may be "transient" if so use co->co_ref as new co_ref,...
+ * @param[out] ptn        New parse-tree initially an empty pointer, its value is returned.
+ * @retval     0          OK
+ * @retval    -1          Error
  * This is the only place where expand callbacks are invoked
  * @see cligen_eval where cligen callbacks are invoked
  */
 static int
-pt_expand_fnv(cligen_handle h, 
-              cg_obj       *co,     
+pt_expand_fnv(cligen_handle h,
+              cg_obj       *co,
               cg_obj       *co_parent,
-              int           transient,        
+              cvec         *cvv_var,
               cvec         *cvv_filter,
               cg_callback  *callbacks,
-              cvec         *cvv_var,
+              int           transient,
               parse_tree   *ptn)
 {
     int         retval = -1;
@@ -513,11 +518,11 @@ pt_expand_fnv(cligen_handle h,
     if (callbacks && callbacks->cc_cvec){
         cligen_callback_arguments_set(h, callbacks->cc_cvec);
     }
-    if ((*co->co_expandv_fn)(cligen_userhandle(h)?cligen_userhandle(h):h, 
-                             co->co_expand_fn_str, 
+    if ((*co->co_expandv_fn)(cligen_userhandle(h)?cligen_userhandle(h):h,
+                             co->co_expand_fn_str,
                              cvv1,
                              co->co_expand_fn_vec,
-                             commands, 
+                             commands,
                              helptexts) < 0)
         goto done;
     i = 0;
@@ -533,7 +538,7 @@ pt_expand_fnv(cligen_handle h,
         if (co_expand_sub(co, co_parent, &con) < 0)
             goto done;
         if (transient && con->co_ref){
-            con->co_ref = co->co_ref; 
+            con->co_ref = co->co_ref;
         }
         if (pt_vec_append(ptn, con) < 0)
             goto done;
@@ -574,14 +579,15 @@ pt_expand_fnv(cligen_handle h,
 }
 
 /*! Expand a choice rule with actual commands
- * @param[in]  co        Original cligen object (to expand into ptn)
+ *
+ * @param[in]  co         Original cligen object (to expand into ptn)
  * @param[in]  cvv_filter Add these to expanded nodes co_filter, eg remove them
- * @param[out] ptn       New parse-tree initially an empty pointer, its value is returned.
- * @retval     0         OK
- * @retval    -1         Error
+ * @param[out] ptn        New parse-tree initially an empty pointer, its value is returned.
+ * @retval     0          OK
+ * @retval    -1          Error
  */
 static int
-pt_expand_choice(cg_obj       *co,     
+pt_expand_choice(cg_obj       *co,
                  cvec         *cvv_filter,
                  parse_tree   *ptn)
 {
@@ -598,12 +604,12 @@ pt_expand_choice(cg_obj       *co,
             con = NULL;
             if (co_expand_sub(co, NULL, &con) < 0)
                 goto done;
-            if (transform_var_to_cmd(con, strdup(c), NULL) < 0) 
+            if (transform_var_to_cmd(con, strdup(c), NULL) < 0)
                 goto done;
             if (cvv_filter && co_filter_set(con, cvv_filter) == NULL)
                 goto done;
             /* con may be deleted in the call and need to be replaced */
-            if ((con = co_insert1(ptn, con, 0)) == NULL) 
+            if ((con = co_insert1(ptn, con, 0)) == NULL)
                 goto done;
 
         }
@@ -626,8 +632,8 @@ co_isfilter(cvec *cvv_filter,
 {
     cg_var *cv = NULL;
     char   *name;
-    
-    /* use filter cache? 
+
+    /* use filter cache?
      */
     while ((cv = cvec_each(cvv_filter, cv)) != NULL){
         if ((name = cv_name_get(cv)) != NULL && strcmp(cv_name_get(cv), label) == 0)
@@ -635,30 +641,30 @@ co_isfilter(cvec *cvv_filter,
     }
     return 0;
 }
-                        
+
 /*! pt_expand function for expanding children to parse-tree
  *
  * @param[in]     h          Cligen handle
  * @param[in]     co         Original cligen object, new copy into ptn
- * @param[in]     hide       If 0, include hidden commands. If 1, do not include hidden commands. 
+ * @param[in]     hide       If 0, include hidden commands. If 1, do not include hidden commands.
  * @param[in]     expandvar  Set if VARS should be expanded, eg ? <tab>
- * @param[in]     cvv_filter
  * @param[in]     cvv_var    Cligen variable vector containing vars/values pair for completion
+ * @param[in]     cvv_filter Add these to expanded nodes co_filter, eg remove them
+ * @param[in]     callbacks  Callback structure of expanded treeref
  * @param[in]     transient  co may be "transient" if so use co->co_ref as new co_ref,...
- * @param[in]     callbacks Callback structure of expanded treeref
  * @param[in,out] ptn        New expanded parse-tree
  * @retval        0          OK
  * @retval       -1          Error
  */
 static int
-pt_expand1_co(cligen_handle h, 
+pt_expand1_co(cligen_handle h,
               cg_obj       *co,
               int           hide,
               int           expandvar,
-              cvec         *cvv_filter,
               cvec         *cvv_var,
-              int           transient,
+              cvec         *cvv_filter,
               cg_callback  *callbacks,
+              int           transient,
               parse_tree   *ptn)
 {
     int     retval = -1;
@@ -693,7 +699,7 @@ pt_expand1_co(cligen_handle h,
     /* Expand variable - call expand callback and insert expanded
      * commands in place of the variable
      */
-    else if (co->co_type == CO_VARIABLE && 
+    else if (co->co_type == CO_VARIABLE &&
              co->co_expandv_fn != NULL){
         /* If I add conditional here, you need to explicitly have a
          * a "free" variable expression, not just expands.
@@ -704,7 +710,12 @@ pt_expand1_co(cligen_handle h,
          * this iteration and if not add it?
          */
         if (expandvar){
-            if (pt_expand_fnv(h, co, NULL, transient, cvv_filter, callbacks, cvv_var, ptn) < 0)
+            if (pt_expand_fnv(h, co, NULL,
+                              cvv_var,
+                              cvv_filter,
+                              callbacks,
+                              transient,
+                              ptn) < 0)
                 goto done;
         }
     }
@@ -714,7 +725,7 @@ pt_expand1_co(cligen_handle h,
         if (co_expand_sub(co, NULL, &con) < 0)
             goto done;
         /* con may be deleted in the call and need to be replaced */
-        if ((con = co_insert1(ptn, con, 0)) == NULL) 
+        if ((con = co_insert1(ptn, con, 0)) == NULL)
             goto done;
         if (transient && con->co_ref){
             con->co_ref = co->co_ref;
@@ -729,7 +740,7 @@ pt_expand1_co(cligen_handle h,
     return retval;
 }
 
-/*! Return name of local pipe reference, if any 
+/*! Return name of local pipe reference, if any
  */
 char *
 pt_local_pipe(parse_tree *pt)
@@ -749,27 +760,27 @@ pt_local_pipe(parse_tree *pt)
 
 /*! Sub-routine to pt_expand for tree reference nodes
  *
- * @param[in]     h         Cligen handle
- * @param[in]     co        Tree reference cligen object 
- * @param[in]     cvt       Tokenized string: vector of tokens
- * @param[in]     cvv_var   Cligen variable vector containing vars/values pair for completion
- * @param[in]     hide      If 0, include hidden commands. If 1, do not include hidden commands. 
- * @param[in]     expandvar Set if VARS should be expanded, eg ? <tab>
- * @param[in]     callbacks Callback structure of expanded treeref
+ * @param[in]     h          Cligen handle
+ * @param[in]     co         Tree reference cligen object
+ * @param[in]     cvt        Tokenized string: vector of tokens
+ * @param[in]     cvv_var    Cligen variable vector containing vars/values pair for completion
  * @param[in]     cvv_filter Add these to expanded nodes co_filter, eg remove them
- * @param[in,out] ptn       New expanded parse-tree
- * @retval        0         OK
- * @retval       -1         Error
+ * @param[in]     hide       If 0, include hidden commands. If 1, do not include hidden commands.
+ * @param[in]     expandvar  Set if VARS should be expanded, eg ? <tab>
+ * @param[in]     callbacks  Callback structure of expanded treeref
+ * @param[in,out] ptn        New expanded parse-tree
+ * @retval        0          OK
+ * @retval       -1          Error
  */
 static int
 pt_expand_reference(cligen_handle h,
                     cg_obj       *coref,
                     cvec         *cvt,
                     cvec         *cvv_var,
+                    cvec         *cvv_filter,
                     int           hide,
                     int           expandvar,
                     cg_callback  *callbacks,
-                    cvec         *cvv_filter,
                     parse_tree   *ptn)
 {
     int         retval = -1;
@@ -778,7 +789,7 @@ pt_expand_reference(cligen_handle h,
     parse_tree *pttmp = NULL;
     cg_obj     *cot;
     int         i;
-    
+
     ptref = NULL;
     if (tree_resolve(h, coref, cvt, &ptref) < 0)
         goto done;
@@ -792,11 +803,16 @@ pt_expand_reference(cligen_handle h,
     /* Expand ptref to pttmp */
     if (co_expand_treeref_copy_shallow(h, coref, cvv2, cvv_var, ptref, pttmp) < 0)
         goto done;
-    /* Copy the expand tree to the final tree. 
+    /* Copy the expand tree to the final tree.
      */
     for (i=0; i<pt_len_get(pttmp); i++){
         cot = pt_vec_i_get(pttmp, i);
-        if (pt_expand1_co(h, cot, hide, expandvar, cvv_filter, cvv_var, 1, callbacks, ptn) < 0)
+        if (pt_expand1_co(h, cot, hide, expandvar,
+                          cvv_var,
+                          cvv_filter,
+                          callbacks,
+                          1,
+                          ptn) < 0)
             goto done;
     }
     retval = 0;
@@ -810,8 +826,8 @@ pt_expand_reference(cligen_handle h,
 
 /*! Expand all tree references and <variables> from an original to a new parsetree
  *
- * The parsetree is expanded by examining the objects they point to: 
- * - those objects that are expansion-variables (eg <string expand:foo>) 
+ * The parsetree is expanded by examining the objects they point to:
+ * - those objects that are expansion-variables (eg <string expand:foo>)
  * - or choice variables
  * are transformed into a new parsetree vector with commands with a reference point back
  * to the original.
@@ -826,7 +842,7 @@ pt_expand_reference(cligen_handle h,
  * @param[in]     pt        Original parse-tree consisting of a vector of cligen objects
  * @param[in]     cvt       Tokenized string: vector of tokens
  * @param[in]     cvv_var   Cligen variable vector containing vars/values pair for completion
- * @param[in]     hide      If 0, include hidden commands. If 1, do not include hidden commands. 
+ * @param[in]     hide      If 0, include hidden commands. If 1, do not include hidden commands.
  * @param[in]     expandvar Set if VARS should be expanded, eg ? <tab>
  * @param[in]     callbacks Callback structure of expanded treeref
  * @param[in]     co_pipe   Pipe output extra default menu
@@ -840,9 +856,9 @@ pt_expand_reference(cligen_handle h,
  *       then the common sub-elements of t1 can have extra elements of t2: @t1:{a;b;c}
  */
 int
-pt_expand(cligen_handle h, 
+pt_expand(cligen_handle h,
           cg_obj       *co0,
-          parse_tree   *pt, 
+          parse_tree   *pt,
           cvec         *cvt,
           cvec         *cvv_var,
           int           hide,
@@ -856,10 +872,10 @@ pt_expand(cligen_handle h,
     int         i;
     cvec       *cvv_filter = NULL;
     cg_obj     *cop;
-        
+
     if (pt_len_get(ptn) != 0){
         errno = EINVAL;
-        goto done;      
+        goto done;
     }
     /* Maybe require */
     cvv_filter = co0?co0->co_filter:NULL;
@@ -873,14 +889,22 @@ pt_expand(cligen_handle h,
         }
         else {
             if (co->co_type == CO_REFERENCE){
-                if (pt_expand_reference(h, co, cvt, cvv_var, hide, expandvar,
-                                        callbacks, cvv_filter, ptn) < 0)
+                if (pt_expand_reference(h, co, cvt, cvv_var,
+                                        cvv_filter,
+                                        hide, expandvar,
+                                        callbacks,
+                                        ptn) < 0)
                     goto done;
             }
             else{
-                if (pt_expand1_co(h, co, hide, expandvar, cvv_filter, cvv_var, 0, callbacks, ptn) < 0)
+                if (pt_expand1_co(h, co, hide, expandvar,
+                                  cvv_var,
+                                  cvv_filter,
+                                  callbacks,
+                                  0,
+                                  ptn) < 0)
                     goto done;
-                /* Given a terminal and output-pipe, add default output pipe tree reference 
+                /* Given a terminal and output-pipe, add default output pipe tree reference
                  * See also match_pattern_sets where "callbacks" is set
                  * Note ph is either top-level tree or current, see assignment of pipe_default above
                  */
@@ -892,8 +916,11 @@ pt_expand(cligen_handle h,
                         if (co_callback_copy(co0->co_callbacks, &co_pipe->co_callbacks) < 0)
                             goto done;
                     }
-                    if (pt_expand_reference(h, co_pipe, cvt, cvv_var, hide, expandvar,
-                                            callbacks, cvv_filter, ptn) < 0)
+                    if (pt_expand_reference(h, co_pipe, cvt, cvv_var,
+                                            cvv_filter,
+                                            hide, expandvar,
+                                            callbacks,
+                                            ptn) < 0)
                         goto done;
                 }
             }
@@ -929,7 +956,7 @@ pt_expand_cleanup(cligen_handle h,
     int         retval = -1;
     int         i;
     cg_obj     *co;
-    
+
     for (i=0; i<pt_len_get(pt); i++){
         if ((co = pt_vec_i_get(pt, i)) != NULL){
             if (co_value_set(co, NULL) < 0)
@@ -942,6 +969,7 @@ pt_expand_cleanup(cligen_handle h,
 }
 
 /*! Return object in original tree from  object in a referenced tree
+ *
  * Given an object in a referenced tree, and the top of the original tree,
  * return the corresponding object in the original tree.
  * The figure tries to show:
@@ -955,8 +983,8 @@ pt_expand_cleanup(cligen_handle h,
        (given)     (we want to find this)
  */
 int
-reference_path_match(cg_obj     *co1, 
-                     parse_tree *pt0, 
+reference_path_match(cg_obj     *co1,
+                     parse_tree *pt0,
                      cg_obj    **co0p)
 {
     cg_obj    *co0, *co;

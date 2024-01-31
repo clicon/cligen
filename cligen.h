@@ -1,8 +1,8 @@
 /*
-  CLIgen is a CLI generator. 
+  CLIgen is a CLI generator.
 
   ***** BEGIN LICENSE BLOCK *****
- 
+
   Copyright (C) 2001-2022 Olof Hagsand
 
   This file is part of CLIgen.
@@ -25,7 +25,7 @@
   of those above. If you wish to allow use of your version of this file only
   under the terms of the GPL, and not to allow others to
   use your version of this file under the terms of Apache License version 2, indicate
-  your decision by deleting the provisions above and replace them with the 
+  your decision by deleting the provisions above and replace them with the
   notice and other provisions required by the GPL. If you do not delete
   the provisions above, a recipient may use your version of this file under
   the terms of any one of the Apache License version 2 or the GPL.
@@ -34,9 +34,9 @@
 
 */
 
-/* 
+/*
    You include cligen.h which includes the other cligen include files for you.
-   All cligen include files are placed in the sub-directory cligen/cligen*.h. 
+   All cligen include files are placed in the sub-directory cligen/cligen*.h.
 */
 #include <stdio.h>
 #include <netinet/in.h>
@@ -54,7 +54,7 @@ typedef void *cligen_handle; /* API */
 #ifdef __cplusplus
 extern "C" {
 #endif
-    
+
 #include <cligen/cligen_buf.h>
 #include <cligen/cligen_cv.h>
 #include <cligen/cligen_cvec.h>

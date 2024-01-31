@@ -1,6 +1,6 @@
 /*
   ***** BEGIN LICENSE BLOCK *****
- 
+
   Copyright (C) 2001-2022 Olof Hagsand
 
   This file is part of CLIgen.
@@ -23,7 +23,7 @@
   of those above. If you wish to allow use of your version of this file only
   under the terms of the GPL, and not to allow others to
   use your version of this file under the terms of Apache License version 2, indicate
-  your decision by deleting the provisions above and replace them with the 
+  your decision by deleting the provisions above and replace them with the
   notice and other provisions required by the GPL. If you do not delete
   the provisions above, a recipient may use your version of this file under
   the terms of any one of the Apache License version 2 or the GPL.
@@ -44,10 +44,10 @@
 
 /* OR CLIGEN_TABMODE_* using cligen_tabmode_set() */
 /* Show columns info: 0: short/ios mode, 1: long/junos mode */
-#define CLIGEN_TABMODE_COLUMNS 0x01 
+#define CLIGEN_TABMODE_COLUMNS 0x01
 
 /* Command keyword preference over variables:
- * 0: command completion preference, 
+ * 0: command completion preference,
  * 1: same preference for vars
  */
 #define CLIGEN_TABMODE_VARS    0x02
@@ -60,7 +60,7 @@
 /*
  * Types
  */
-/*! CLIgen eval wrap function to check state before and after a callback function 
+/*! CLIgen eval wrap function to check state before and after a callback function
  *
  * @param[in]  arg   Argument to wrap function
  * @param[in]  wh    Wrap handle. If NULL: init, othewise compare present state with wh

@@ -1,6 +1,6 @@
 /*
   ***** BEGIN LICENSE BLOCK *****
- 
+
   Copyright (C) 2001-2022 Olof Hagsand
 
   This file is part of CLIgen.
@@ -23,7 +23,7 @@
   of those above. If you wish to allow use of your version of this file only
   under the terms of the GPL, and not to allow others to
   use your version of this file under the terms of Apache License version 2, indicate
-  your decision by deleting the provisions above and replace them with the 
+  your decision by deleting the provisions above and replace them with the
   notice and other provisions required by the GPL. If you do not delete
   the provisions above, a recipient may use your version of this file under
   the terms of any one of the Apache License version 2 or the GPL.
@@ -40,7 +40,7 @@
  */
 
 /* The following function types map from strings (function names) to actual
- * functions.  
+ * functions.
  * These are used when parsing a file (eg CLI specification) that needs
  * to map function names (string) to actual function pointers.
  * (We may be stretching the power of C here,...)
@@ -62,21 +62,21 @@ int
 clispec_parse_str(cligen_handle  h,
                   char          *str,
                   char          *name,
-                  char          *treename, 
+                  char          *treename,
                   parse_tree    *pt,
                   cvec          *globals);
 int
 clispec_parse_file(cligen_handle h,
                    FILE         *f,
-                   char         *name, 
-                   char         *treename, 
+                   char         *name,
+                   char         *treename,
                    parse_tree   *obsolete,
                    cvec         *globals);
 
 int cligen_callbackv_str2fn(parse_tree *pt, cgv_str2fn_t *str2fn, void *arg);
 int cligen_expandv_str2fn(parse_tree *pt, expandv_str2fn_t *str2fn, void *arg);
 int cligen_translate_str2fn(parse_tree *pt, translate_str2fn_t *str2fn, void *arg);
-int cligen_parse_debug(int d); 
+int cligen_parse_debug(int d);
 
 #endif /* _CLIGEN_SYNTAX_H_ */
 

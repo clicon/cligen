@@ -1,6 +1,6 @@
 /*
   ***** BEGIN LICENSE BLOCK *****
- 
+
   Copyright (C) 2001-2022 Olof Hagsand
 
   This file is part of CLIgen.
@@ -23,7 +23,7 @@
   of those above. If you wish to allow use of your version of this file only
   under the terms of the GPL, and not to allow others to
   use your version of this file under the terms of Apache License version 2, indicate
-  your decision by deleting the provisions above and replace them with the 
+  your decision by deleting the provisions above and replace them with the
   notice and other provisions required by the GPL. If you do not delete
   the provisions above, a recipient may use your version of this file under
   the terms of any one of the Apache License version 2 or the GPL.
@@ -64,7 +64,7 @@
 #define _CY ((cligen_yacc *)_cy)
 
 #undef cligen_parsewrap
-int 
+int
 cligen_parsewrap(void)
 {
   return 1;
@@ -82,7 +82,7 @@ stripdup(char *s0)
     return NULL;
   }
   while ((s = index(s1, '\\')) != NULL)
-    memmove(s, s+1, strlen(s)); 
+    memmove(s, s+1, strlen(s));
   return s1;
 }
 
@@ -120,17 +120,17 @@ stripdup(char *s0)
 <INITIAL>\{               { return *yytext; }
 <INITIAL>\}               { return *yytext; }
 <INITIAL>\@               { return *yytext; }
-<INITIAL>([^@ \t,#\n=;\\<\(\)\[\]\|\{\}]|\\.)+  { 
+<INITIAL>([^@ \t,#\n=;\\<\(\)\[\]\|\{\}]|\\.)+  {
                             cligen_parselval.string = stripdup(yytext);
                             return NAME; }
 <INITIAL>.                { return -1; }
 
-<HELP>\n                  { _CY->cy_linenum++; 
+<HELP>\n                  { _CY->cy_linenum++;
                             return *yytext; }
 <HELP><<EOF>>             { return MY_EOF; }
 <HELP>\"\)                { BEGIN(INITIAL); return DQP; /* double-quote parenthes */}
 <HELP>\\                  { _CY->cy_lex_state = HELP; BEGIN(ESCAPE); }
-<HELP>[^\\"\n]+           { 
+<HELP>[^\\"\n]+           {
                              int i;
                              for (i=0;i<strlen(yytext);i++){
                                 if (!isblank(yytext[i]))
@@ -146,7 +146,7 @@ stripdup(char *s0)
 <NAMEORTYPE>\n            { _CY->cy_linenum++; }
 <NAMEORTYPE>\:            { return *yytext; }
 <NAMEORTYPE>[ \t]+        { BEGIN(VARIABLE); }
-<NAMEORTYPE>([^ \t>:]|\\.)+  { 
+<NAMEORTYPE>([^ \t>:]|\\.)+  {
                             cligen_parselval.string = strdup(yytext);
                             return NAME; }
 
@@ -173,21 +173,21 @@ stripdup(char *s0)
 <VARIABLE>preference      { return V_PREFERENCE; }
 <VARIABLE>[-+]?[0-9]+\.[0-9]+ { cligen_parselval.string = strdup(yytext); return DECIMAL;}
 <VARIABLE>[-+]?[0-9]+     { cligen_parselval.string = strdup(yytext); return NUMBER;}
-<VARIABLE>([^ \t\n>:\|\"\(\)\[\]]|\\.)+ { 
+<VARIABLE>([^ \t\n>:\|\"\(\)\[\]]|\\.)+ {
                                  cligen_parselval.string = strdup(yytext);
                                  return NAME; }
 
-<CHOICE>[ \t]+          
+<CHOICE>[ \t]+
 <CHOICE>\n              { _CY->cy_linenum++; }
 <CHOICE>\|              { return *yytext; }
 <CHOICE>\>              { BEGIN(INITIAL); return *yytext; }
 <CHOICE>[-+]?[0-9]+\.[0-9]+ { cligen_parselval.string = strdup(yytext); return DECIMAL;}
 <CHOICE>[-+]?[0-9]+     { cligen_parselval.string = strdup(yytext); return NUMBER;}
-<CHOICE>([^ \t\n>\|\"\(\)\[\]]|\\.)+ { 
+<CHOICE>([^ \t\n>\|\"\(\)\[\]]|\\.)+ {
                                  cligen_parselval.string = strdup(yytext);
                                  return NAME; }
 
-<OPTION>[ \t]+            
+<OPTION>[ \t]+
 <OPTION>,                { return *yytext; }
 <OPTION>#                 { _CY->cy_lex_state =INITIAL; BEGIN(COMMENT); }
 <OPTION>\n                { _CY->cy_linenum++; }
@@ -198,7 +198,7 @@ stripdup(char *s0)
 <OPTION>\)                { return *yytext; }
 <OPTION>\{                { BEGIN(INITIAL); return *yytext;}
 <OPTION>\"                { _CY->cy_lex_string_state =INITIAL;BEGIN(STRING); return DQ; }
-<OPTION>([^ \t,#\n=;\(\)\{\}\"]|\\.)+   { 
+<OPTION>([^ \t,#\n=;\(\)\{\}\"]|\\.)+   {
                                  cligen_parselval.string = strdup(yytext);
                                  return NAME; }
 <OPTION>.                 { return -1;}
@@ -212,13 +212,13 @@ stripdup(char *s0)
 <STRING>[^\\"\n]+         { cligen_parselval.string = strdup(yytext);
                             return CHARS;}
 
-<ESCAPE>.                 { BEGIN(_CY->cy_lex_state); 
-                             cligen_parselval.string = strdup(yytext); 
+<ESCAPE>.                 { BEGIN(_CY->cy_lex_state);
+                             cligen_parselval.string = strdup(yytext);
                              return CHARS; }
 
 <COMMENT>\n               { _CY->cy_linenum++; BEGIN(_CY->cy_lex_state);}
 <COMMENT><<EOF>>          { return MY_EOF; }
-<COMMENT>[^\n]+   
+<COMMENT>[^\n]+
 
 %%
 
@@ -231,13 +231,14 @@ cgl_init(cligen_yacc *cy)
   cy->cy_lexbuf = yy_scan_string (cy->cy_parse_string);
 #if 1 /* XXX: just to use unput to avoid warning  */
   if (0)
-    yyunput(0, ""); 
+    yyunput(0, "");
 #endif
 
   return 0;
 }
 
 /*! Exit cligen lex parser. Free buffers
+ *
  * Even within Flex version 2.5 (this is assumed), freeing buffers is different.
  */
 int

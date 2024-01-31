@@ -1,6 +1,6 @@
 /*
   ***** BEGIN LICENSE BLOCK *****
- 
+
   Copyright (C) 2001-2022 Olof Hagsand
 
   This file is part of CLIgen.
@@ -23,7 +23,7 @@
   of those above. If you wish to allow use of your version of this file only
   under the terms of the GPL, and not to allow others to
   use your version of this file under the terms of Apache License version 2, indicate
-  your decision by deleting the provisions above and replace them with the 
+  your decision by deleting the provisions above and replace them with the
   notice and other provisions required by the GPL. If you do not delete
   the provisions above, a recipient may use your version of this file under
   the terms of any one of the Apache License version 2 or the GPL.
@@ -32,7 +32,7 @@
 
 
   CLIgen variables - cgv
-  cgv:s are created when parsing an input string as instances of cg_obj variable 
+  cgv:s are created when parsing an input string as instances of cg_obj variable
   when matching.
   Note that a cg_obj is a syntax object and contains a part that specifies cgv:s called cov
 */
@@ -55,7 +55,7 @@ typedef unsigned char uuid_t[16];
  * First, built in types,
  * Some types have their values in-line (eg in the cgv struct), others
  * have pointers to the value.
- * Cgvs with pointers are: string, interface, rest, choice, 
+ * Cgvs with pointers are: string, interface, rest, choice,
  * expand.
  */
 enum cv_type{
@@ -81,7 +81,7 @@ enum cv_type{
   CGV_URL,       /* <proto>://[<user>[:<passwd>]@]<addr>[/<path>] */
   CGV_UUID,      /* Universally Unique Identifier: 550e8400-e29b-41d4-a716-446655440000 */
   CGV_TIME,      /* ISO 8601 date+timestamp: 2008-09-21T18:57:21.003 (extended format) */
-  CGV_VOID,      /* Pointer to external data. Notes: not freed on cv_free; 
+  CGV_VOID,      /* Pointer to external data. Notes: not freed on cv_free;
                     not null-terminated string, cv_cp/dup will retain pointer */
   CGV_EMPTY,     /* A type without a value */
 };
@@ -104,7 +104,7 @@ enum cv_type{
 #define cv_isstring(t)((t)==CGV_STRING||(t)==CGV_REST|| \
                         (t)==CGV_INTERFACE)
 
-#define cv_typemax(t) 
+#define cv_typemax(t)
 
 /*
  * Cligen Variable structure
@@ -112,8 +112,8 @@ enum cv_type{
  * A cg_var is a variable instantiation, ie it has a name and a value and is typed.
  * The type determines how the values are stored. Some values are stored in-line
  * using a union structure (such as int) while others uses pointers (eg string).
- * It is different from cg_obj of type CO_VARIABLE in that the cg_obj is a 
- * specification. 
+ * It is different from cg_obj of type CO_VARIABLE in that the cg_obj is a
+ * specification.
  */
 typedef struct cg_var cg_var;
 
@@ -223,7 +223,7 @@ int     cv_min_set(cg_var *cv);
 int     cv_cmp(cg_var *cgv1, cg_var *cgv2);
 int     cv_cp(cg_var *n, cg_var *old);
 cg_var *cv_dup(cg_var *old);
-int     cv_parse(const char *str, cg_var *cgv); 
+int     cv_parse(const char *str, cg_var *cgv);
 int     cv_parse1(const char *str, cg_var *cgv, char **reason); /* better err-handling */
 
 int     cv_validate(cligen_handle h, cg_var *cv, struct cg_varspec *cs, char *cmd, char **reason);

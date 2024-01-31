@@ -1,6 +1,6 @@
 /*
   ***** BEGIN LICENSE BLOCK *****
- 
+
   Copyright (C) 2001-2022 Olof Hagsand
 
   This file is part of CLIgen.
@@ -23,7 +23,7 @@
   of those above. If you wish to allow use of your version of this file only
   under the terms of the GPL, and not to allow others to
   use your version of this file under the terms of Apache License version 2, indicate
-  your decision by deleting the provisions above and replace them with the 
+  your decision by deleting the provisions above and replace them with the
   notice and other provisions required by the GPL. If you do not delete
   the provisions above, a recipient may use your version of this file under
   the terms of any one of the Apache License version 2 or the GPL.
@@ -66,7 +66,7 @@ co_callback_next(cg_callback *cc)
 
 /*! Copy a linked list of cg_obj callback objects
  *
- * Copy a linked list of cg_obj callback objects, including function pointer, 
+ * Copy a linked list of cg_obj callback objects, including function pointer,
  * function name,
  *
  * @param[in]  cc0  The object to copy from
@@ -75,7 +75,7 @@ co_callback_next(cg_callback *cc)
  * @retval     -1     Error
  */
 int
-co_callback_copy(cg_callback  *cc0, 
+co_callback_copy(cg_callback  *cc0,
                  cg_callback **ccn)
 {
     int                  retval = -1;
@@ -113,9 +113,9 @@ co_callback_copy(cg_callback  *cc0,
 static int
 co_callback_one_free(cg_callback *cc)
 {
-    if (cc->cc_cvec)    
+    if (cc->cc_cvec)
         cvec_free(cc->cc_cvec);
-    if (cc->cc_fn_str)  
+    if (cc->cc_fn_str)
         free(cc->cc_fn_str);
     free(cc);
     return 0;
@@ -129,7 +129,7 @@ int
 co_callbacks_free(cg_callback **ccp)
 {
    cg_callback *cc;
-   
+
    while ((cc = *ccp) != NULL){
         *ccp = co_callback_next(cc);
         co_callback_one_free(cc);
@@ -145,7 +145,7 @@ co_callback2cbuf(cbuf        *cb,
 {
     int     i;
     cg_var *cv;
-    
+
     if (cc->cc_fn_str){
         cprintf(cb, ", %s(", cc->cc_fn_str);
         if (cc->cc_cvec){

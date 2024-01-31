@@ -1,6 +1,6 @@
 /*
   ***** BEGIN LICENSE BLOCK *****
- 
+
   Copyright (C) 2001-2022 Olof Hagsand
 
   This file is part of CLIgen.
@@ -23,15 +23,15 @@
   of those above. If you wish to allow use of your version of this file only
   under the terms of the GPL, and not to allow others to
   use your version of this file under the terms of Apache License version 2, indicate
-  your decision by deleting the provisions above and replace them with the 
+  your decision by deleting the provisions above and replace them with the
   notice and other provisions required by the GPL. If you do not delete
   the provisions above, a recipient may use your version of this file under
   the terms of any one of the Apache License version 2 or the GPL.
 
   ***** END LICENSE BLOCK *****
 
- * This is an internal CLIgen header file 
- * Do not use these struct for external use, the internal structure may change. 
+ * This is an internal CLIgen header file
+ * Do not use these struct for external use, the internal structure may change.
  * @see cligen_cv.h for external API use
 */
 
@@ -88,7 +88,7 @@ struct cg_var {
         char                varu_macaddr[6];
         struct {
             char           *varurl_proto;
-            char           *varurl_addr; 
+            char           *varurl_addr;
             char           *varurl_path;
             char           *varurl_user;
             char           *varurl_passwd;

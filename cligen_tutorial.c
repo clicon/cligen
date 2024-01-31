@@ -2,7 +2,7 @@
   CLIgen tutorial application
 
   ***** BEGIN LICENSE BLOCK *****
- 
+
   Copyright (C) 2001-2022 Olof Hagsand
 
   This file is part of CLIgen.
@@ -25,7 +25,7 @@
   of those above. If you wish to allow use of your version of this file only
   under the terms of the GPL, and not to allow others to
   use your version of this file under the terms of Apache License version 2, indicate
-  your decision by deleting the provisions above and replace them with the 
+  your decision by deleting the provisions above and replace them with the
   notice and other provisions required by the GPL. If you do not delete
   the provisions above, a recipient may use your version of this file under
   the terms of any one of the Apache License version 2 or the GPL.
@@ -72,8 +72,8 @@ callback(cligen_handle h,
     cv = NULL;
     while ((cv = cvec_each(cvv, cv)) != NULL) {
         cv2str(cv, buf, sizeof(buf)-1);
-        cligen_output(stderr, "\t%d name:%s type:%s value:%s\n", 
-                i++, 
+        cligen_output(stderr, "\t%d name:%s type:%s value:%s\n",
+                i++,
                 cv_name_get(cv),
                 cv_type2str(cv_type_get(cv)),
                 buf
@@ -112,7 +112,6 @@ letters(cligen_handle h,
         printf("%s\n", str);
     return 0;
 }
-
 
 /*! This callback is for hidden commands
  */
@@ -183,6 +182,7 @@ unknown(cligen_handle h,
 }
 
 /*! Example of static string to function mapper for the callback functions above.
+ *
  * Better to use dlopen, mmap or some other more flexible scheme.
  */
 cgv_fnstype_t *
@@ -220,7 +220,8 @@ str2fn(char  *name,
     return unknown; /* allow any function (for testing) */
 }
 
-/*! Example of expansion(completion) function. 
+/*! Example of expansion(completion) function.
+ *
  * It is called every time a variable of the form <expand> needs to be evaluated.
  * Note the mallocing of vectors which could probably be done in a
  * friendlier way.
@@ -228,10 +229,10 @@ str2fn(char  *name,
  * would have introduced som more dynamics.
  */
 int
-cli_expand_cb(cligen_handle h, 
-              char         *fn_str, 
-              cvec         *cvv, 
-              cvec         *argv, 
+cli_expand_cb(cligen_handle h,
+              char         *fn_str,
+              cvec         *cvv,
+              cvec         *argv,
               cvec         *commands,     /* vector of function strings */
               cvec         *helptexts)   /* vector of help-texts */
 {
@@ -253,6 +254,7 @@ str2fn_exp(char  *name,
 }
 
 /*! Translate function from an original value to a new.
+ *
  * In this case, assume string and increment characters, eg HAL->IBM
  */
 int
@@ -261,7 +263,7 @@ incstr(cligen_handle h,
 {
     char *str;
     int i;
-    
+
     if (cv_type_get(cv) != CGV_STRING)
         return 0;
     str = cv_string_get(cv);
@@ -270,7 +272,8 @@ incstr(cligen_handle h,
     return 0;
 }
 
-/* Translating functions of type translate_str2fn_t 
+/*! Translating functions of type translate_str2fn_t
+ *
  * See the following rule in tutorial_cli:
  *     increment <var:string translate:incstr()>, callback();
  */
@@ -287,7 +290,7 @@ str2fn_trans(char  *name,
 /*
  * Global variables.
  */
-static void 
+static void
 usage(char *argv)
 {
     fprintf(stderr, "Usage:%s [-h][-f <filename>][-q], where the options have the following meaning:\n"
@@ -317,7 +320,7 @@ main(int   argc,
     int             quiet = 0;
 
     if ((h = cligen_init()) == NULL)
-        goto done;    
+        goto done;
     argv++;argc--;
     for (;(argc>0)&& *argv; argc--, argv++){
         if (**argv != '-')
@@ -332,7 +335,7 @@ main(int   argc,
         case 'q': /* quiet */
             quiet++;
             break;
-        case 'f' : 
+        case 'f' :
             argc--;argv++;
             filename = *argv;
             if ((f = fopen(filename, "r")) == NULL){
@@ -356,7 +359,7 @@ main(int   argc,
             goto done;
         if (cligen_expandv_str2fn(pt, str2fn_exp, NULL) < 0)
             goto done;
-        if (cligen_translate_str2fn(pt, str2fn_trans, NULL) < 0)     
+        if (cligen_translate_str2fn(pt, str2fn_trans, NULL) < 0)
             goto done;
     }
     if ((str = cvec_find_str(globals, "prompt")) != NULL)

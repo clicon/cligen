@@ -1,6 +1,6 @@
 /*
   ***** BEGIN LICENSE BLOCK *****
- 
+
   Copyright (C) 2001-2022 Olof Hagsand
 
   This file is part of CLIgen.
@@ -23,7 +23,7 @@
   of those above. If you wish to allow use of your version of this file only
   under the terms of the GPL, and not to allow others to
   use your version of this file under the terms of Apache License version 2, indicate
-  your decision by deleting the provisions above and replace them with the 
+  your decision by deleting the provisions above and replace them with the
   notice and other provisions required by the GPL. If you do not delete
   the provisions above, a recipient may use your version of this file under
   the terms of any one of the Apache License version 2 or the GPL.
@@ -54,9 +54,9 @@ enum cg_objtype{
  * Types
  */
 
-/* Expand callback function for vector arguments (should be in cligen_expand.h) 
+/* Expand callback function for vector arguments (should be in cligen_expand.h)
    Returns 0 if handled expand, that is, it returned commands for 'name'
-           1 if did not handle expand 
+           1 if did not handle expand
           -1 on error.
 */
 typedef int (expandv_cb)(cligen_handle h,       /* handler: cligen or userhandle */
@@ -67,8 +67,9 @@ typedef int (expandv_cb)(cligen_handle h,       /* handler: cligen or userhandle
                          cvec         *helptexts /* vector of help-texts */
                              );
 
-/*! Callback for translating a variable, 
- * Typical usecase is translate a cleartext to encrypt passwords. 
+/*! Callback for translating a variable,
+ *
+ * Typical usecase is translate a cleartext to encrypt passwords.
  * The variable type must be the same.
  * @param[in]  h   CLIgen handle
  * @param[in]  cv  CLIgen variable
@@ -99,12 +100,12 @@ struct cg_varspec{
     char           *cgs_translate_fn_str; /* translate function string */
     translate_cb_t *cgs_translate_fn;  /* variable translate function */
     char           *cgs_choice;        /* list of choices */
-    /* int range / str length of cvv_low/upper bound intervals. Note, the two 
+    /* int range / str length of cvv_low/upper bound intervals. Note, the two
      * range-cvvs must have the same length. */
-    int             cgs_rangelen;      
-    /* array of lower bound of intervals range. If cv type is CGV_EMPTY 
+    int             cgs_rangelen;
+    /* array of lower bound of intervals range. If cv type is CGV_EMPTY
      * it means the min value of the type (eg <a:int32 range[40]> */
-    cvec           *cgs_rangecvv_low;  
+    cvec           *cgs_rangecvv_low;
     cvec           *cgs_rangecvv_upp;  /* array of upper bound of intervals */
     cvec           *cgs_regex;         /* List of regular expressions */
     uint8_t         cgs_dec64_n;       /* negative decimal exponential 1..18 */
@@ -114,7 +115,7 @@ typedef struct cg_varspec cg_varspec;
 /* Default number of fraction digits if type is DEC64 */
 #define CGV_DEC64_N_DEFAULT 2
 
-/* General purpose flags for cg_obj co_flags type 
+/* General purpose flags for cg_obj co_flags type
  */
 #define CO_FLAGS_HIDE      0x01  /* Don't show in help/completion */
 #define CO_FLAGS_MARK      0x02  /* Only used internally (for recursion avoidance) */
@@ -141,8 +142,8 @@ struct cg_obj_common{
     char               *coc_command;   /* malloc:ed matching string / name or type */
     char               *coc_prefix;    /* Prefix. Can be used in cases where co_command is not unique */
     cg_callback        *coc_callbacks; /* linked list of callbacks and arguments */
-    cvec               *coc_cvec;      /* List of cligen local variables, such as "hide" 
-                                       * Special labels on @treerefs are: 
+    cvec               *coc_cvec;      /* List of cligen local variables, such as "hide"
+                                       * Special labels on @treerefs are:
                                        *     @add:<label> and @remove:<label>
                                        * which control tree ref macro expansion
                                        */
@@ -150,19 +151,20 @@ struct cg_obj_common{
                                        * In this node and all its descendant
                                        * Alt: re-use co_cvec for this.
                                        * See also reftree_filter for global filters
-                                       */ 
+                                       */
     char               *coc_helpstring; /* String of CLIgen helptexts */
     uint32_t            coc_flags;     /* General purpose flags, see CO_FLAGS_HIDE and others above */
-    struct cg_obj      *coc_ref;       /* Ref to original (if this is expanded) 
+    struct cg_obj      *coc_ref;       /* Ref to original (if this is expanded)
                                        * Typical from expanded command to original variable
                                        */
-    struct cg_obj      *coc_treeref_orig; /* Ref to original (if this is a tree reference) 
-                                          * Only set in co_copy 
+    struct cg_obj      *coc_treeref_orig; /* Ref to original (if this is a tree reference)
+                                          * Only set in co_copy
                                           */
     char               *coc_value;     /* Expanded value can be a string with a constant. */
 };
 
 /*! cligen gen object is a parse-tree node. A cg_obj is either a command, a variable or a tree reference
+ *
  * A cg_obj:
  *      o <--- cg_obj
  *      ^
@@ -185,7 +187,7 @@ struct cg_obj{
 
 };
 
-typedef struct cg_obj cg_obj; 
+typedef struct cg_obj cg_obj;
 
 /* Access macro to cligen object variable specification */
 #define co2varspec(co)  &(co)->u.cou_var
@@ -218,7 +220,7 @@ typedef struct cg_obj cg_obj;
 #define co_translate_fn  u.cou_var.cgs_translate_fn
 #define co_choice        u.cou_var.cgs_choice
 #define co_keyword       u.cou_var.cgs_choice
-#define co_rangelen      u.cou_var.cgs_rangelen 
+#define co_rangelen      u.cou_var.cgs_rangelen
 #define co_rangecvv_low  u.cou_var.cgs_rangecvv_low
 #define co_rangecvv_upp  u.cou_var.cgs_rangecvv_upp
 #define co_regex         u.cou_var.cgs_regex

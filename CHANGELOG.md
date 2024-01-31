@@ -13,6 +13,8 @@ Expected: February 2024
 
 ### Minor items
 
+* Made coverity analysis and fixed most of them
+  * Some were ignored being for generated code (eg lex) or not applicable
 * Added vcprintf
 
 ## 6.5.0

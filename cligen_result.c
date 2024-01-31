@@ -1,7 +1,7 @@
 /*
 
   ***** BEGIN LICENSE BLOCK *****
- 
+
   Copyright (C) 2001-2022 Olof Hagsand
 
   This file is part of CLIgen.
@@ -24,7 +24,7 @@
   of those above. If you wish to allow use of your version of this file only
   under the terms of the GPL, and not to allow others to
   use your version of this file under the terms of Apache License version 2, indicate
-  your decision by deleting the provisions above and replace them with the 
+  your decision by deleting the provisions above and replace them with the
   notice and other provisions required by the GPL. If you do not delete
   the provisions above, a recipient may use your version of this file under
   the terms of any one of the Apache License version 2 or the GPL.
@@ -58,13 +58,13 @@
 /*! Result vector from match_pattern_* family of functions
  */
 struct match_result{
-    parse_tree  *mr_pt;        
+    parse_tree  *mr_pt;
     char        *mr_reason; /* Error reason if mr_len=0. Can also be carried by a mr_len!=0 
                              * to store first error in case it is needed in a later error */
     int          mr_level;
     int          mr_last;
     char        *mr_token;  /* Direct, not copied */
-    cg_obj      *mr_co_match_orig; /* Kludge, save (latest) matched object, see 
+    cg_obj      *mr_co_match_orig; /* Kludge, save (latest) matched object, see
                                       mr_flags_set_co_match() */
 };
 
@@ -90,7 +90,7 @@ mr_pt_reset(match_result *mr)
 /*! Truncate parse-tree vector: free all extra elements, keep nr of heading elements
  *
  * the objects in the tail of the pt tree is freed.
- * @param[in]  mr  
+ * @param[in]  mr
  * @param[in]  len   >0
  */
 int
@@ -136,6 +136,7 @@ mr_reason_get(match_result *mr)
 }
 
 /*! Reset/empty matchvec of indexes by g and incrementing vector
+ *
  * @param[in,out]  mr      Match result struct
  * @param[in]      reason  Malloced string (consumed here)
  */
@@ -183,6 +184,7 @@ mr_last_set(match_result *mr)
 }
 
 /*! Move an error reason from one mr to the next
+ *
  * There is a case for keeping the first error reason in case of multiple
  */
 int
@@ -200,13 +202,14 @@ mr_mv_reason(match_result *from,
 }
 
 /*! Create new CLIgen match result
+ *
  * @see mr_free
  */
 match_result *
 mr_new(void)
 {
     match_result *mr;
-    
+
     if ((mr = malloc(sizeof(*mr))) == NULL)
         return NULL;
     memset(mr, 0, sizeof(*mr));
@@ -218,6 +221,7 @@ mr_new(void)
 }
 
 /*! Free a return structure
+ *
  * Dont free the parse tree mr_parsetree XXX why?
  */
 int
@@ -233,9 +237,10 @@ mr_free(match_result *mr)
 }
 
 /*! Map from match-result to cligen-result
+ *
  * Could probably collapse the two concepts into one, but there is some history
  */
-cligen_result 
+cligen_result
 mr2result(match_result *mr)
 {
     switch (mr_pt_len_get(mr)){

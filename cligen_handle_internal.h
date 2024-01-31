@@ -1,6 +1,6 @@
 /*
   ***** BEGIN LICENSE BLOCK *****
- 
+
   Copyright (C) 2001-2022 Olof Hagsand
 
   This file is part of CLIgen.
@@ -23,15 +23,15 @@
   of those above. If you wish to allow use of your version of this file only
   under the terms of the GPL, and not to allow others to
   use your version of this file under the terms of Apache License version 2, indicate
-  your decision by deleting the provisions above and replace them with the 
+  your decision by deleting the provisions above and replace them with the
   notice and other provisions required by the GPL. If you do not delete
   the provisions above, a recipient may use your version of this file under
   the terms of any one of the Apache License version 2 or the GPL.
 
   ***** END LICENSE BLOCK *****
 
- * This is an internal CLIgen header file 
- * Do not use these struct for external use, the internal structure may change. 
+ * This is an internal CLIgen header file
+ * Do not use these struct for external use, the internal structure may change.
  * @see cligen_handle.h for external API use
 */
 
@@ -65,8 +65,8 @@ typedef struct pt_head  { /* Linked list of cligen parse-trees */
     struct pt_head  *ph_next;
     char            *ph_name;      /* Parse-tree head */
     parse_tree      *ph_parsetree; /* Should be free:d */
-    char            *ph_prompt;    /* Tree-specific prompt */ 
-    cg_obj          *ph_workpt;    /* Shortcut to "working point" cligen object, or more 
+    char            *ph_prompt;    /* Tree-specific prompt */
+    cg_obj          *ph_workpt;    /* Shortcut to "working point" cligen object, or more
                                     * specifically its parse-tree sub vector. */
     char           *ph_output_pipe; /* Name of output-pipe tree associated w this tree */
 } pt_head;
@@ -83,13 +83,13 @@ struct cligen_handle{
     cg_obj     *ch_co_match;     /* Matching object in latest evaluation */
     cvec       *ch_callback_arguments; /* Callback arguments */
     char       *ch_fn_str;       /* Name of active callback function */
-    int         ch_completion;   /* completion mode */    
+    int         ch_completion;   /* completion mode */
     char       *ch_nomatch;      /* Why did a string not match an evaluation? */
     int         ch_tabmode;      /* short or long output mode on TAB */
 
     int         ch_lexicalorder; /* strcmp (0) or strverscmp (1) syntax order.
                                     Also, this is global for now */
-    int         ch_ignorecase; /* dont care about aA (0), care about aA (1) 
+    int         ch_ignorecase; /* dont care about aA (0), care about aA (1)
                                      does not work if lexicalorder is set.
                                      Also this is global for now
                                   */
@@ -102,7 +102,6 @@ struct cligen_handle{
     int         ch_hist_cur;     /* Current position (line) in history */
     int         ch_hist_last;    /* Last position in history */
     char       *ch_hist_pre;     /* Previous position in history */
-    
     void       *ch_userhandle;   /* Use this as app-specific callback handle */
     void       *ch_userdata;     /* application-specific data (any data) */
     int         ch_regex_xsd;    /* 0: POSIX / REGEX(3); 1: LIBXML2 XSD */

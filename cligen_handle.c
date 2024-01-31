@@ -1,6 +1,6 @@
 /*
   ***** BEGIN LICENSE BLOCK *****
- 
+
   Copyright (C) 2001-2022 Olof Hagsand
 
   This file is part of CLIgen.
@@ -23,7 +23,7 @@
   of those above. If you wish to allow use of your version of this file only
   under the terms of the GPL, and not to allow others to
   use your version of this file under the terms of Apache License version 2, indicate
-  your decision by deleting the provisions above and replace them with the 
+  your decision by deleting the provisions above and replace them with the
   notice and other provisions required by the GPL. If you do not delete
   the provisions above, a recipient may use your version of this file under
   the terms of any one of the Apache License version 2 or the GPL.
@@ -101,6 +101,7 @@ static int _helpstr_truncate = 0;
 static int _helpstr_lines = 0;
 
 /*! Get window size and set terminal row size
+ *
  * @param[in] h       CLIgen handle
  * The only real effect this has is to set the getline width parameter which effects scrolling
  * man ioctl_tty(2)
@@ -135,12 +136,13 @@ sigwinch_handler(int arg)
     cligen_gwinsz(0);
 }
 
-/*! This is the first call the CLIgen API and returns a handle. 
+/*! This is the first call the CLIgen API and returns a handle.
+ *
  * Allocate CLIgen handle to be used in API calls
  * Initialize prompt, tabs, query terminal setting for width etc.
  * @retval h  CLIgen handle
  */
-cligen_handle 
+cligen_handle
 cligen_init(void)
 {
     struct cligen_handle *ch;
@@ -173,7 +175,7 @@ cligen_init(void)
         }
     }
     else
-        terminal_rows_set1(0); 
+        terminal_rows_set1(0);
     cliread_init(h);
     cligen_buf_init(h);
     /* getline cant function without some history */
@@ -183,6 +185,7 @@ cligen_init(void)
 }
 
 /*! This is the last call to the CLIgen API an application should make
+ *
  * @param[in] h       CLIgen handle
  */
 int
@@ -196,7 +199,7 @@ cligen_exit(cligen_handle h)
     if (ch->ch_prompt)
         free(ch->ch_prompt);
     if (ch->ch_nomatch)
-        free(ch->ch_nomatch);  
+        free(ch->ch_nomatch);
     if (ch->ch_treename_keyword)
         free(ch->ch_treename_keyword);
     if (ch->ch_fn_str)
@@ -210,6 +213,7 @@ cligen_exit(cligen_handle h)
 }
 
 /*! Check struct magic number for sanity checks
+ *
  * @param[in] h       CLIgen handle
  * return 0 if OK, -1 if fail.
  */
@@ -222,10 +226,11 @@ cligen_check(cligen_handle h)
     return ch->ch_magic == CLIGEN_MAGIC ? 0 : -1;
 }
 
-/*! return CLIgen exiting status
+/*! Return CLIgen exiting status
+ *
  * @param[in] h       CLIgen handle
  */
-int 
+int
 cligen_exiting(cligen_handle h)
 {
     struct cligen_handle *ch = handle(h);
@@ -234,10 +239,11 @@ cligen_exiting(cligen_handle h)
 }
 
 /*! Set  CLIgen exiting status
+ *
  * @param[in] h       CLIgen handle
  */
-int 
-cligen_exiting_set(cligen_handle h, 
+int
+cligen_exiting_set(cligen_handle h,
                    int           status)
 {
     struct cligen_handle *ch = handle(h);
@@ -247,6 +253,7 @@ cligen_exiting_set(cligen_handle h,
 }
 
 /*! Get comment character.
+ *
  * @param[in] h       CLIgen handle
  */
 char
@@ -258,10 +265,11 @@ cligen_comment(cligen_handle h)
 }
 
 /*! Set comment character.
+ *
  * @param[in] h       CLIgen handle
  */
 int
-cligen_comment_set(cligen_handle h, 
+cligen_comment_set(cligen_handle h,
                    char          c)
 {
     struct cligen_handle *ch = handle(h);
@@ -271,6 +279,7 @@ cligen_comment_set(cligen_handle h,
 }
 
 /*! Get current prompt string
+ *
  * @param[in] h       CLIgen handle
  */
 char*
@@ -282,11 +291,12 @@ cligen_prompt(cligen_handle h)
 }
 
 /*! Set CLIgen prompt string. See manual for special prompt characters.
+ *
  * @param[in] h       CLIgen handle
  * @param[in] prompt  Prompt string
  */
 int
-cligen_prompt_set(cligen_handle h, 
+cligen_prompt_set(cligen_handle h,
                   char         *prompt)
 {
     struct cligen_handle *ch = handle(h);
@@ -349,6 +359,7 @@ cligen_pt_head_active_set(cligen_handle h,
 }
 
 /*! Get name of treename keyword used in parsing
+ *
  * @param[in] h       CLIgen handle
  * Example in CLIgen file where 'treename' is treename_keyword:
  * treename = "foo";
@@ -364,10 +375,11 @@ cligen_treename_keyword(cligen_handle h)
 }
 
 /*! Set currently active parsetree by name.
+ *
  * @param[in] h       CLIgen handle
  */
 int
-cligen_treename_keyword_set(cligen_handle h, 
+cligen_treename_keyword_set(cligen_handle h,
                             char         *treename)
 {
     struct cligen_handle *ch = handle(h);
@@ -383,6 +395,7 @@ cligen_treename_keyword_set(cligen_handle h,
 }
 
 /*! Return CLIgen object that matched in the current callback.
+ *
  *  After an evaluation when calling a callback, a node has been matched in the
  * current parse-tree. This matching node is returned (and set) here.
  * @param[in] h       CLIgen handle
@@ -399,7 +412,7 @@ cligen_co_match(cligen_handle h)
  * @param[in] h       CLIgen handle
  */
 int
-cligen_co_match_set(cligen_handle h, 
+cligen_co_match_set(cligen_handle h,
                     cg_obj       *co)
 {
     struct cligen_handle *ch = handle(h);
@@ -426,7 +439,7 @@ cligen_callback_arguments_get(cligen_handle h)
  * @param[in] args Callback arguments
  */
 int
-cligen_callback_arguments_set(cligen_handle h, 
+cligen_callback_arguments_set(cligen_handle h,
                               cvec         *args)
 {
     struct cligen_handle *ch = handle(h);
@@ -461,7 +474,7 @@ cligen_fn_str_get(cligen_handle h)
  * @param[in] fn_str  Name of function that was called in this callback
  */
 int
-cligen_fn_str_set(cligen_handle h, 
+cligen_fn_str_set(cligen_handle h,
                   char         *fn_str)
 {
     struct cligen_handle *ch = handle(h);
@@ -478,9 +491,10 @@ cligen_fn_str_set(cligen_handle h,
 }
 
 /*! Get number of displayed terminal rows.
+ *
  * @param[in] h       CLIgen handle
  */
-int 
+int
 cligen_terminal_rows(cligen_handle h)
 {
 //    struct cligen_handle *ch = handle(h);
@@ -489,10 +503,11 @@ cligen_terminal_rows(cligen_handle h)
 }
 
 /*! Set number of displayed terminal rows, internal function
+ *
  * @param[in] h       CLIgen handle
  * @param[in] rows    Number of lines in a terminal (y-direction)
  */
-static int 
+static int
 terminal_rows_set1(int rows)
 {
     _terminalrows = rows;
@@ -500,11 +515,12 @@ terminal_rows_set1(int rows)
 }
 
 /*! Set number of displayed terminal rows.
+ *
  * @param[in] h       CLIgen handle
  * @param[in] rows    Number of lines in a terminal (y-direction)
  */
-int 
-cligen_terminal_rows_set(cligen_handle h, 
+int
+cligen_terminal_rows_set(cligen_handle h,
                          int           rows)
 {
     int            retval = -1;
@@ -535,7 +551,7 @@ cligen_terminal_rows_set(cligen_handle h,
  *
  * @param[in] h       CLIgen handle
  */
-int 
+int
 cligen_terminal_width(cligen_handle h)
 {
 //    struct cligen_handle *ch = handle(h);
@@ -550,14 +566,14 @@ cligen_terminal_width(cligen_handle h)
  * @note if length = 0, then set it to 65535 to effectively disable all scrolling mechanisms
  * @note if length < 21 set it to 21, which is getline's limit.
  */
-int 
-cligen_terminal_width_set(cligen_handle h, 
+int
+cligen_terminal_width_set(cligen_handle h,
                           int           width)
 {
     //    struct cligen_handle *ch = handle(h);
     int retval = -1;
 
-    /* if width = 0, then set it to 65535 to effectively disable all scrolling mechanisms 
+    /* if width = 0, then set it to 65535 to effectively disable all scrolling mechanisms
      * This is somewhat complex and there may be some missed cornercases:
      * - Set very high width to disable horizontal scrolling
      * - But return 80 width see cligen_terminal_width
@@ -580,7 +596,7 @@ cligen_terminal_width_set(cligen_handle h,
  * @retval    0       UTF-8 mode disabled
  * @retval    1       UTF-8 mode enabled
  */
-int 
+int
 cligen_utf8_get(cligen_handle h)
 {
     return gl_utf8_get();
@@ -592,7 +608,7 @@ cligen_utf8_get(cligen_handle h)
  * @retval    0       UTF-8 mode disabled
  * @retval    1       UTF-8 mode enabled
  */
-int 
+int
 cligen_utf8_set(cligen_handle h,
                 int           mode)
 {
@@ -605,7 +621,7 @@ cligen_utf8_set(cligen_handle h,
  * @retval    0       Line scrolling off
  * @retval    1       Line scrolling on
  */
-int 
+int
 cligen_line_scrolling(cligen_handle h)
 {
     return gl_getscrolling();
@@ -617,7 +633,7 @@ cligen_line_scrolling(cligen_handle h)
  * @param[in] mode   0: turn line scrolling off, 1: turn on
  * @retval    old    Previous setting
  */
-int 
+int
 cligen_line_scrolling_set(cligen_handle h,
                           int           mode)
 {
@@ -637,7 +653,7 @@ cligen_line_scrolling_set(cligen_handle h,
  * @retval    1       Truncate help string on right margin (do not wrap long help lines)
  * @see print_help_line
  */
-int 
+int
 cligen_helpstring_truncate(cligen_handle h)
 {
     return _helpstr_truncate;
@@ -653,7 +669,7 @@ cligen_helpstring_truncate(cligen_handle h)
  * @retval     0     OK
  * @see print_help_line
  */
-int 
+int
 cligen_helpstring_truncate_set(cligen_handle h,
                                int           mode)
 {
@@ -669,7 +685,7 @@ cligen_helpstring_truncate_set(cligen_handle h,
  * @retval    n       Number of help string lines to display per command, 0 is unlimted
  * @see print_help_line
  */
-int 
+int
 cligen_helpstring_lines(cligen_handle h)
 {
     return _helpstr_lines;
@@ -683,7 +699,7 @@ cligen_helpstring_lines(cligen_handle h)
  * @retval    n       Number of help string lines to display per command, 0 means unlimited.
  * @see print_help_line
  */
-int 
+int
 cligen_helpstring_lines_set(cligen_handle h,
                                int        lines)
 {
@@ -691,13 +707,13 @@ cligen_helpstring_lines_set(cligen_handle h,
     return 0;
 }
 
-/*! Get tab-mode. 
+/*! Get tab-mode.
  *
  * @param[in] h       CLIgen handle
  * @retval    flags   Bitwise OR of CLIGEN_TABMODE_* flags
  * @see cligen_tabmode_set for documentation on mode
  */
-int 
+int
 cligen_tabmode(cligen_handle h)
 {
     struct cligen_handle *ch = handle(h);
@@ -713,7 +729,7 @@ cligen_tabmode(cligen_handle h)
  * 0 is 'short/ios' mode, 1 is long/junos mode.
  * Two ways to show commands: show_help_column and show_help_line
  * show_help_line
- *  cli> interface name 
+ *  cli> interface name
  * 100GigabyteEthernet6/0/0 TenGigabyteEthernet6/0/0 TenGigabyteEthernet6/0
  * TenGigabyteEthernet6/0/0 TenGigabyteEthernet6/0/0 TenGigabyteEthernet6/0
  *
@@ -727,7 +743,7 @@ cligen_tabmode(cligen_handle h)
  * long/junos: TAB and ?: show_multi_long
  *
  * CLIGEN_TABMODE_VARS:
- * 0: command completion preference, 
+ * 0: command completion preference,
  * 1: same preference for vars
  * @example if clispec is:
  * a {
@@ -743,11 +759,11 @@ cligen_tabmode(cligen_handle h)
  * CLIGEN_TABMODE_STEPS
  * 0: complete 1 level. 1: complete all
  * Example: syntax is 'a b;':
- * 0: gives completion to 'a ' on first TAB and to 'a b ' on second. 
+ * 0: gives completion to 'a ' on first TAB and to 'a b ' on second.
  * 1: gives completion to 'a b ' on first TAB.
  */
-int 
-cligen_tabmode_set(cligen_handle h, 
+int
+cligen_tabmode_set(cligen_handle h,
                    int           mode)
 {
     struct cligen_handle *ch = handle(h);
@@ -759,7 +775,7 @@ cligen_tabmode_set(cligen_handle h,
 static int _lexicalorder = 0; /* XXX shouldnt be global */
 
 /*! Get lexical matching order
- * 
+ *
  * @param[in] h       CLIgen handle
  * @retval 0  strcmp
  * @retval 1  strverscmp
@@ -774,12 +790,12 @@ cligen_lexicalorder(cligen_handle h)
 }
 
 /*! Set lexical matching order.
- * 
+ *
  * @param[in] h  CLIgen handle
  * @param[in] n  strcmp (0) or strverscmp (1).
  */
 int
-cligen_lexicalorder_set(cligen_handle h, 
+cligen_lexicalorder_set(cligen_handle h,
                         int           n)
 {
 //    struct cligen_handle *ch = handle(h);
@@ -792,6 +808,7 @@ cligen_lexicalorder_set(cligen_handle h,
 static int _ignorecase = 0; /* XXX shouldnt be global */
 
 /*! Ignore uppercase/lowercase or not
+ *
  * @param[in] h       CLIgen handle
  */
 int
@@ -804,10 +821,11 @@ cligen_ignorecase(cligen_handle h)
 }
 
 /*! Ignore uppercase/lowercase or not
+ *
  * @param[in] h       CLIgen handle
  */
 int
-cligen_ignorecase_set(cligen_handle h, 
+cligen_ignorecase_set(cligen_handle h,
                       int           n)
 {
 //    struct cligen_handle *ch = handle(h);
@@ -818,9 +836,11 @@ cligen_ignorecase_set(cligen_handle h,
 }
 
 /*! Debug syntax by printing dynamically on stderr. Get function.
+ *
  * @param[in] h       CLIgen handle
  */
-int cligen_logsyntax(cligen_handle h)
+int
+cligen_logsyntax(cligen_handle h)
 {
     struct cligen_handle *ch = handle(h);
 
@@ -828,10 +848,12 @@ int cligen_logsyntax(cligen_handle h)
 }
 
 /*! Debug syntax by printing dynamically on stderr. Set function.
+ *
  * @param[in] h       CLIgen handle
  */
-int cligen_logsyntax_set(cligen_handle h, 
-                         int           n)
+int
+cligen_logsyntax_set(cligen_handle h,
+                     int           n)
 {
     struct cligen_handle *ch = handle(h);
 
@@ -842,7 +864,7 @@ int cligen_logsyntax_set(cligen_handle h,
 /*! Get app-specific handle for callbacks instead of cligen handle.
  *
  * An application may choose to use another handle than cligen_handle in callbacks
- * and completion functions. 
+ * and completion functions.
  * @param[in] h       CLIgen handle
  */
 void*
@@ -854,10 +876,11 @@ cligen_userhandle(cligen_handle h)
 }
 
 /*! Set app-specific handle for callbacks instead of cligen handle
+ *
  * @param[in] h       CLIgen handle
  */
 int
-cligen_userhandle_set(cligen_handle h, 
+cligen_userhandle_set(cligen_handle h,
                       void         *userhandle)
 {
     struct cligen_handle *ch = handle(h);
@@ -867,6 +890,7 @@ cligen_userhandle_set(cligen_handle h,
 }
 
 /*! Get app-specific data associated with cligen handle
+ *
  * @param[in] h       CLIgen handle
  */
 void*
@@ -878,10 +902,11 @@ cligen_userdata(cligen_handle h)
 }
 
 /*! Set app-specific data to associate with cligen handle.
+ *
  * @param[in] h       CLIgen handle
  */
 int
-cligen_userdata_set(cligen_handle h, 
+cligen_userdata_set(cligen_handle h,
                       void         *userdata)
 {
     struct cligen_handle *ch = handle(h);
@@ -905,11 +930,12 @@ cligen_regex_xsd(cligen_handle h)
 }
 
 /*! Set regex engine to 0: posix, or 1: XSD / Libxml2
+ *
  * @param[in] h       CLIgen handle
  * @param[in] mode    0: posix (default), 1: libxml2 xsd regex
  */
 int
-cligen_regex_xsd_set(cligen_handle h, 
+cligen_regex_xsd_set(cligen_handle h,
                      int           mode)
 {
     struct cligen_handle *ch = handle(h);
@@ -945,19 +971,21 @@ cligen_killbuf(cligen_handle h)
 }
 
 /*! Return length cligen line buffer
+ *
  * @param[in] h       CLIgen handle
  * @see cligen_buf_increase
  */
-int 
+int
 cligen_buf_size(cligen_handle h)
 {
     return _getline_bufsize;
 }
 
 /*! Return length cligen kill buffer
+ *
  * @param[in] h       CLIgen handle
  */
-int 
+int
 cligen_killbuf_size(cligen_handle h)
 {
     return _getline_killbufsize;
@@ -985,6 +1013,7 @@ cligen_buf_init(cligen_handle h)
 }
 
 /*! Increase cligen buffer length with *2 to satisfy new length
+ *
  * @param[in] h       CLIgen handle
  * @param[in] len1    New minimal length (add null for end of string)
  * |-------------------|------|--------||------|
@@ -992,7 +1021,7 @@ cligen_buf_init(cligen_handle h)
  * ch_buf              len0   |     len1+1     |
  *                            bufsize0         bufsize1 = 2^n*bufsize0
  */
-int       
+int
 cligen_buf_increase(cligen_handle h,
                     size_t        len1)
 {
@@ -1002,7 +1031,7 @@ cligen_buf_increase(cligen_handle h,
     if (_getline_bufsize >= len1 + 1)
       return 0;
     while (_getline_bufsize < len1 + 1)
-      _getline_bufsize *= 2;      
+      _getline_bufsize *= 2;
     if ((ch->ch_buf = realloc(ch->ch_buf, _getline_bufsize)) == NULL){
         fprintf(stderr, "%s realloc: %s\n", __FUNCTION__, strerror(errno));
         return -1;
@@ -1012,10 +1041,11 @@ cligen_buf_increase(cligen_handle h,
 }
 
 /*! Increase cligen kill buffer length with *2 to satisfy new length
+ *
  * @param[in] h       CLIgen handle
  * @param[in] len1    New minimal length
  */
-int       
+int
 cligen_killbuf_increase(cligen_handle h,
                         size_t        len1)
 {
@@ -1025,7 +1055,7 @@ cligen_killbuf_increase(cligen_handle h,
     if (_getline_killbufsize >= len1 + 1)
       return 0;
     while (_getline_killbufsize < len1 + 1)
-      _getline_killbufsize *= 2;      
+      _getline_killbufsize *= 2;
     if ((ch->ch_killbuf = realloc(ch->ch_killbuf, _getline_killbufsize)) == NULL){
         fprintf(stderr, "%s realloc: %s\n", __FUNCTION__, strerror(errno));
         return -1;
@@ -1071,11 +1101,12 @@ cligen_delimiter_set(cligen_handle h,
 }
 
 /*! Get preference mode, return all with same pref(ambiguos) or first (1)
+ *
  * @param[in] h      CLIgen handle
  * @retval    1      Preference mode is set (return first)
  * @retval    0      Preference mode is not set (ambiguous)
  */
-int 
+int
 cligen_preference_mode(cligen_handle h)
 {
     struct cligen_handle *ch = handle(h);
@@ -1116,7 +1147,7 @@ cligen_preference_mode(cligen_handle h)
  * @param[in] flag   0: ambiguous error, 1: terminal first, 2: non-terminal first match, 3: non-terminal+terminal
  * @retval    0      OK
  */
-int 
+int
 cligen_preference_mode_set(cligen_handle h,
                            int           flag)
 {
@@ -1126,7 +1157,7 @@ cligen_preference_mode_set(cligen_handle h,
     return 0;
 }
 
-/*! Get status of string case compare 
+/*! Get status of string case compare
  *
  * @param[in] h   CLIgen handle
  * @retval    0   Case-sensitive, ie aA != aa
@@ -1151,7 +1182,7 @@ cligen_caseignore_set(cligen_handle h,
                       int           ignorecase)
 {
     struct cligen_handle *ch = handle(h);
-    
+
     ch->ch_ignore_case = ignorecase;
     return 0;
 }
@@ -1190,12 +1221,13 @@ cligen_expand_first_set(cligen_handle h,
                         int           expand_first)
 {
     struct cligen_handle *ch = handle(h);
-    
+
     ch->ch_expand_first = expand_first;
     return 0;
 }
 
 /*! Changes cvec find function behaviour, exclude keywords or include them.
+ *
  * @param[in] h
  * @param[in] status
  */
@@ -1204,12 +1236,13 @@ cligen_exclude_keys_set(cligen_handle h,
                         int           status)
 {
     struct cligen_handle *ch = handle(h);
-    
+
     ch->ch_exclude_keys = status;
     return 0;
 }
 
 /*! Changes cvec find function behaviour, exclude keywords or include them.
+ *
  * @param[in] h
  * @see cv_exclude_keys
  */
@@ -1230,6 +1263,7 @@ cligen_exclude_keys_get(cligen_handle h)
 static int excludekeys = 0;
 
 /*! Changes cvec find function behaviour, exclude keywords or include them.
+ *
  * @param[in] status
  */
 int
@@ -1238,7 +1272,9 @@ cv_exclude_keys(int status)
     excludekeys = status;
     return 0;
 }
+
 /*! Changes cvec find function behaviour, exclude keywords or include them.
+ *
  * @param[in] status
  */
 int
@@ -1248,14 +1284,14 @@ cv_exclude_keys_get(void)
 }
 #endif
 
-/*! Set CLIgen eval wrap function to check state before and after a callback function 
+/*! Set CLIgen eval wrap function to check state before and after a callback function
  *
  * @param[in] h     CLIgen handle
  * @param[in] fn    Register function to call before and after each callback
  * @param[in] arg   Call function with this argument
  */
 int
-cligen_eval_wrap_fn_set(cligen_handle        h, 
+cligen_eval_wrap_fn_set(cligen_handle        h,
                         cligen_eval_wrap_fn *fn,
                         void                *arg)
 {
@@ -1266,7 +1302,7 @@ cligen_eval_wrap_fn_set(cligen_handle        h,
     return 0;
 }
 
-/*! Get CLIgen eval wrap function to check state before and after a callback function 
+/*! Get CLIgen eval wrap function to check state before and after a callback function
  *
  * @param[in]  h     CLIgen handle
  * @param[out] fn    Register function to call before and after each callback
@@ -1293,7 +1329,7 @@ cligen_eval_wrap_fn_get(cligen_handle         h,
  * @param[in] arg   Call function with this argument
  */
 int
-cligen_tree_resolve_wrapper_set(cligen_handle          h, 
+cligen_tree_resolve_wrapper_set(cligen_handle          h,
                                 cligen_tree_resolve_wrapper_fn *fn,
                                 void                   *arg)
 {

@@ -2,7 +2,7 @@
   CLI generator. Take idl as input and generate a tree for use in cli.
 
   ***** BEGIN LICENSE BLOCK *****
- 
+
   Copyright (C) 2001-2022 Olof Hagsand
 
   This file is part of CLIgen.
@@ -25,7 +25,7 @@
   of those above. If you wish to allow use of your version of this file only
   under the terms of the GPL, and not to allow others to
   use your version of this file under the terms of Apache License version 2, indicate
-  your decision by deleting the provisions above and replace them with the 
+  your decision by deleting the provisions above and replace them with the
   notice and other provisions required by the GPL. If you do not delete
   the provisions above, a recipient may use your version of this file under
   the terms of any one of the Apache License version 2 or the GPL.
@@ -76,9 +76,9 @@
 #define _CY ((cligen_yacc *)_cy)
 
 #define _YYERROR(msg) { cligen_parseerror(_CY, (msg)); YYERROR; }
-    
+
 /* add _cy to error paramaters */
-#define YY_(msgid) msgid 
+#define YY_(msgid) msgid
 
 #include "cligen_config.h"
 
@@ -115,7 +115,7 @@ static int debug = 0;
 
 extern int cligen_parseget_lineno  (void);
 
-int 
+int
 cligen_parse_debug(int d)
 {
     debug = d;
@@ -123,25 +123,27 @@ cligen_parse_debug(int d)
 }
 
 /*! CLIGEN parse error routine
+ *
  * Also called from yacc generated code *
  * @param[in]  cy  CLIgen yacc parse struct
  */
 void cligen_parseerror(void *_cy,
-                       char *s) 
-{ 
+                       char *s)
+{
     cligen_yacc *cy = (cligen_yacc *)_cy;
 
-    fprintf(stderr, "%s:%d: Error: %s: at or before: '%s'\n", 
+    fprintf(stderr, "%s:%d: Error: %s: at or before: '%s'\n",
             cy->cy_name,
             cy->cy_linenum ,
-            s, 
-            cligen_parsetext); 
+            s,
+            cligen_parsetext);
     return;
 }
 
 #define cligen_parseerror1(cy, s) cligen_parseerror(cy, s)
 
-/*! Create a CLIgen variable (cv) and store it in the current variable object 
+/*! Create a CLIgen variable (cv) and store it in the current variable object
+ *
  * Note that only one such cv can be stored.
  * @param[in]  cy  CLIgen yacc parse struct
  */
@@ -205,6 +207,7 @@ cgy_flag(cligen_yacc *cy,
 }
 
 /*! Set a new treename. In fact registers the previous tree and creates a new .
+ *
  * Note that one could have used an assignment: treename = <name>; for this but
  * I decided to create special syntax for this so that assignments can use any
  * variable names.
@@ -217,7 +220,7 @@ cgy_treename(cligen_yacc *cy,
 {
     cg_obj          *co = NULL;
     cg_obj          *cot;
-    struct cgy_list *cl; 
+    struct cgy_list *cl;
     int              retval = -1;
     int              i;
     parse_tree      *pt;
@@ -233,7 +236,7 @@ cgy_treename(cligen_yacc *cy,
     cot = co_top(co); /* co and cot can be same object */
     pt = co_pt_get(cot);
     /* If anything parsed */
-    if (pt_len_get(pt) > 0){ 
+    if (pt_len_get(pt) > 0){
         /* 2. Add the old parse-tree with old name*/
         for (i=0; i<pt_len_get(pt); i++){
             if ((co=pt_vec_i_get(pt, i)) != NULL)
@@ -268,6 +271,7 @@ cgy_treename(cligen_yacc *cy,
 }
 
 /*! Variable assignment
+ *
  * Only string type supported for now
  * @param[in]  cy  CLIgen yacc parse struct
  */
@@ -284,7 +288,7 @@ cgy_assignment(cligen_yacc *cy,
 
     if (cs == NULL){
         errno = EINVAL;
-        goto done;      
+        goto done;
     }
     if (debug)
         fprintf(stderr, "%s: %s=%s\n", __FUNCTION__, var, val);
@@ -345,7 +349,7 @@ cgy_callback(cligen_yacc *cy,
         ccp = &((*ccp)->cc_next);
     if ((cc = malloc(sizeof(*cc))) == NULL){
         fprintf(stderr, "%s: malloc: %s\n", __FUNCTION__, strerror(errno));
-        cligen_parseerror1(cy, "Allocating cligen callback"); 
+        cligen_parseerror1(cy, "Allocating cligen callback");
         return -1;
     }
     memset(cc, 0, sizeof(*cc));
@@ -358,11 +362,12 @@ cgy_callback(cligen_yacc *cy,
 }
 
 /*! Create a callback argument  and store it in the current callback
+ *
  * @param[in]  cy  CLIgen yacc parse struct
  */
 static int
-cgy_callback_arg(cligen_yacc *cy, 
-                 char        *type, 
+cgy_callback_arg(cligen_yacc *cy,
+                 char        *type,
                  char        *arg)
 {
     int          retval = -1;
@@ -436,13 +441,13 @@ cg_preference(cligen_yacc *cy,
 {
     cg_obj *yv;
     char   *reason = NULL;
-    
+
     if ((yv = cy->cy_var) == NULL){
         fprintf(stderr, "No var obj");
         return -1;
     }
     if (parse_uint16(pref, &yv->co_preference, &reason) != 1){
-        cligen_parseerror1(cy, reason); 
+        cligen_parseerror1(cy, reason);
         return -1;
     }
     return 0;
@@ -466,7 +471,8 @@ cgy_list_push(cg_obj           *co,
     return 0;
 }
 
-/*! Delete whole list 
+/*! Delete whole list
+ *
  * @param[in]  cy  CLIgen yacc parse struct
  */
 static int
@@ -481,7 +487,8 @@ cgy_list_delete(struct cgy_list **cl0)
     return 0;
 }
 
-/*! Create new tmp variable cligen object 
+/*! Create new tmp variable cligen object
+ *
  * It must be filled in by later functions.
  * The reason is, the variable must be completely parsed by successive syntax
  * (eg <type:> stuff) and we cant insert it into the object tree until that is done.
@@ -498,7 +505,7 @@ cgy_var_create(cligen_yacc *cy)
     /* Create unassigned variable object */
     if ((co = cov_new(CGV_ERR, NULL)) == NULL){
         fprintf(stderr, "%s: malloc: %s\n", __FUNCTION__, strerror(errno));
-        cligen_parseerror1(cy, "Allocating cligen object"); 
+        cligen_parseerror1(cy, "Allocating cligen object");
         return NULL;
     }
     if (cy->cy_optional){
@@ -510,6 +517,7 @@ cgy_var_create(cligen_yacc *cy)
 }
 
 /*! Set name and type on a (previously created) variable
+ *
  * @param[in]  cy  CLIgen yacc parse struct
  * @see cgy_var_create
  */
@@ -518,9 +526,9 @@ cgy_var_name_type(cligen_yacc *cy,
                   char        *name,
                   char        *type)
 {
-    cy->cy_var->co_command = name; 
+    cy->cy_var->co_command = name;
     if ((cy->cy_var->co_vtype = cv_str2type(type)) == CGV_ERR){
-        cligen_parseerror1(cy, "Invalid type"); 
+        cligen_parseerror1(cy, "Invalid type");
         fprintf(stderr, "%s: Invalid type: %s\n", __FUNCTION__, type);
         return -1;
     }
@@ -528,7 +536,8 @@ cgy_var_name_type(cligen_yacc *cy,
 }
 
 /*! Complete variable cligen object after parsing is complete,
- * And insert it into object hierarchies. 
+ *
+ * And insert it into object hierarchies.
  * That is, insert a variable in each hieracrhy.
  * @param[in]  cy  CLIgen yacc parse struct
  * @retval 0 on OK
@@ -537,7 +546,7 @@ cgy_var_name_type(cligen_yacc *cy,
 static int
 cgy_var_post(cligen_yacc *cy)
 {
-    struct cgy_list *cl; 
+    struct cgy_list *cl;
     cg_obj          *coc = NULL; /* variable copy object */
     cg_obj          *coparent; /* parent */
     cg_obj          *co;  /* new obj/sister */
@@ -548,11 +557,11 @@ cgy_var_post(cligen_yacc *cy)
         coy->co_vtype = cv_str2type(coy->co_command);
 #endif
     if (debug)
-        fprintf(stderr, "%s: cmd:%s vtype:%d\n", __FUNCTION__, 
+        fprintf(stderr, "%s: cmd:%s vtype:%d\n", __FUNCTION__,
                 coy->co_command,
                 coy->co_vtype );
     if (coy->co_vtype == CGV_ERR){
-        cligen_parseerror1(cy, "Wrong or unassigned variable type");    
+        cligen_parseerror1(cy, "Wrong or unassigned variable type");
         return -1;
     }
 #if 0 /* XXX dont really know what i am doing but variables dont behave nice in choice */
@@ -582,7 +591,8 @@ cgy_var_post(cligen_yacc *cy)
     return 0;
 }
 
-/*! Create a new command object. 
+/*! Create a new command object.
+ *
  * Actually, create a new for every tree in the list
  * and replace the old with the new object.
  * @param[in]  cy  CLIgen yacc parse struct
@@ -594,7 +604,7 @@ static int
 cgy_cmd(cligen_yacc *cy,
         char        *cmd)
 {
-    struct cgy_list *cl; 
+    struct cgy_list *cl;
     cg_obj          *cop; /* parent */
     cg_obj          *conew; /* new obj */
     cg_obj          *co; /* new/sister */
@@ -604,8 +614,8 @@ cgy_cmd(cligen_yacc *cy,
         if (debug)
             fprintf(stderr, "%s: %s parent:%s\n",
                     __FUNCTION__, cmd, cop->co_command);
-        if ((conew = co_new(cmd, cop)) == NULL) { 
-            cligen_parseerror1(cy, "Allocating cligen object"); 
+        if ((conew = co_new(cmd, cop)) == NULL) {
+            cligen_parseerror1(cy, "Allocating cligen object");
             return -1;
         }
         if ((co = co_insert(co_pt_get(cop), conew)) == NULL)  /* co_new may be deleted */
@@ -628,16 +638,16 @@ cgy_cmd(cligen_yacc *cy,
  * @see pt_expand_treeref()/pt_callback_reference() how it is expanded
  */
 static int
-cgy_reference(cligen_yacc *cy, 
+cgy_reference(cligen_yacc *cy,
               char        *name,
               int          pipetree)
 {
     int              retval = -1;
-    struct cgy_list *cl; 
+    struct cgy_list *cl;
     cg_obj          *cop;   /* parent */
     cg_obj          *cot;   /* tree */
     cbuf            *cb = NULL;
-    
+
     if ((cb = cbuf_new()) == NULL)
         goto done;
     if (pipetree)
@@ -646,8 +656,8 @@ cgy_reference(cligen_yacc *cy,
     for (cl=cy->cy_list; cl; cl = cl->cl_next){
         /* Add a treeref 'stub' which is expanded in pt_expand to a sub-tree */
         cop = cl->cl_obj;
-        if ((cot = co_new(cbuf_get(cb), cop)) == NULL) { 
-            cligen_parseerror1(cy, "Allocating cligen object"); 
+        if ((cot = co_new(cbuf_get(cb), cop)) == NULL) {
+            cligen_parseerror1(cy, "Allocating cligen object");
             goto done;
         }
         cot->co_type = CO_REFERENCE;
@@ -680,9 +690,9 @@ cgy_helpstring(cligen_yacc *cy,
                char        *helpstr)
 {
     int              retval = -1;
-    struct cgy_list *cl; 
+    struct cgy_list *cl;
     cg_obj          *co;
-    
+
     if (helpstr == NULL){
         errno = EINVAL;
         goto done;
@@ -712,7 +722,8 @@ cgy_helpstring(cligen_yacc *cy,
     return retval;
  }
 
-/*! Append a new choice option to a choice variable string 
+/*! Append a new choice option to a choice variable string
+ *
  * @param[in]  cy   CLIgen yacc parse struct
  * @param[in]  str  Accumulated choice string on the form: "a|..|z"
  * @param[in]  app  Choice option to append
@@ -739,6 +750,7 @@ cgy_var_choice_append(cligen_yacc *cy,
 }
 
 /*! Post-processing of commands, eg at ';':
+ *
  *  a cmd;<--
  * But only if parsing succesful.
  * 1. Add callback and args to every list
@@ -749,14 +761,14 @@ cgy_var_choice_append(cligen_yacc *cy,
 int
 cgy_terminal(cligen_yacc *cy)
 {
-    struct cgy_list *cl; 
-    cg_obj          *co; 
+    struct cgy_list *cl;
+    cg_obj          *co;
     int              i;
     cg_callback    **ccp;
     int              retval = -1;
     parse_tree      *ptc;
-    cg_obj          *coi; 
-    
+    cg_obj          *coi;
+
     for (cl = cy->cy_list; cl; cl = cl->cl_next){
         co  = cl->cl_obj;
         if (cy->cy_callbacks){ /* callbacks */
@@ -765,7 +777,7 @@ cgy_terminal(cligen_yacc *cy)
                 ccp = &((*ccp)->cc_next);
 #if 1 /* Optimization: dont copy the last element */
             if (cl->cl_next == NULL)
-                *ccp = cy->cy_callbacks;                
+                *ccp = cy->cy_callbacks;
             else
 #endif
             if (co_callback_copy(cy->cy_callbacks, ccp) < 0)
@@ -790,8 +802,8 @@ cgy_terminal(cligen_yacc *cy)
                     break;
             }
             if (i == pt_len_get(ptc)){ /* Insert empty child if ';' */
-                if ((coi = co_new(NULL, co)) == NULL) { 
-                    cligen_parseerror1(cy, "Allocating cligen object"); 
+                if ((coi = co_new(NULL, co)) == NULL) {
+                    cligen_parseerror1(cy, "Allocating cligen object");
                     return -1;
                 }
                 coi->co_type = CO_EMPTY;
@@ -816,10 +828,11 @@ cgy_terminal(cligen_yacc *cy)
     }
     retval = 0;
   done:
-    return retval;  
+    return retval;
 }
 
-/*! Take the whole cgy_list and push it to the stack 
+/*! Take the whole cgy_list and push it to the stack
+ *
  * @param[in]  cy  CLIgen yacc parse struct
  * @see ctx_pop
  */
@@ -829,7 +842,7 @@ ctx_push(cligen_yacc *cy,
 {
     struct cgy_list  *cl;
     struct cgy_stack *cs;
-    cg_obj           *co; 
+    cg_obj           *co;
 
     if (debug)
         fprintf(stderr, "%s\n", __FUNCTION__);
@@ -847,13 +860,14 @@ ctx_push(cligen_yacc *cy,
             co_flags_set(co, CO_FLAGS_HIDE);
         if (sets)
             co_sets_set(co, 1);
-        if (cgy_list_push(co, &cs->cs_list) < 0) 
+        if (cgy_list_push(co, &cs->cs_list) < 0)
             return -1;
     }
     return 0;
 }
 
 /*! Peek context from stack and replace the object list with it
+ *
  * Typically done in a command choice, eg "(c1|c2)" at c2.
  * Dont pop context
  * @param[in]  cy  CLIgen yacc parse struct
@@ -862,15 +876,15 @@ ctx_push(cligen_yacc *cy,
 static int
 ctx_peek_swap(cligen_yacc *cy)
 {
-    struct cgy_stack *cs; 
-    struct cgy_list  *cl; 
-    cg_obj           *co; 
+    struct cgy_stack *cs;
+    struct cgy_list  *cl;
+    cg_obj           *co;
 
     if (debug)
         fprintf(stderr, "%s\n", __FUNCTION__);
     if ((cs = cy->cy_stack) == NULL){
 #if 1
-        cligen_parseerror1(cy, "No surrounding () or []"); 
+        cligen_parseerror1(cy, "No surrounding () or []");
         return -1; /* e.g a|b instead of (a|b) */
 #else
         cgy_list_delete(&cy->cy_list);
@@ -892,6 +906,7 @@ ctx_peek_swap(cligen_yacc *cy)
 }
 
 /*! Peek context from stack and replace the object list with it
+ *
  * Typically done in a command choice, eg "(c1|c2)" at c2.
  * Dont pop context
  * @param[in]  cy  CLIgen yacc parse struct
@@ -900,15 +915,15 @@ ctx_peek_swap(cligen_yacc *cy)
 static int
 ctx_peek_swap2(cligen_yacc *cy)
 {
-    struct cgy_stack *cs; 
-    struct cgy_list  *cl; 
-    cg_obj           *co; 
+    struct cgy_stack *cs;
+    struct cgy_list  *cl;
+    cg_obj           *co;
 
     if (debug)
         fprintf(stderr, "%s\n", __FUNCTION__);
     if ((cs = cy->cy_stack) == NULL){
 #if 1
-        cligen_parseerror1(cy, "No surrounding () or []"); 
+        cligen_parseerror1(cy, "No surrounding () or []");
         return -1; /* e.g a|b instead of (a|b) */
 #else
         cgy_list_delete(&cy->cy_list);
@@ -935,6 +950,7 @@ delete_stack_element(struct cgy_stack *cs)
 }
 
 /*! Pop context from stack and add it to object list
+ *
  * Done after an option, eg "cmd [opt]"
  * "cmd <push> [opt] <pop>". At pop, all objects saved at push
  * are added to the object list.
@@ -943,9 +959,9 @@ delete_stack_element(struct cgy_stack *cs)
 static int
 ctx_pop_add(cligen_yacc *cy)
 {
-    struct cgy_stack *cs; 
-    struct cgy_list  *cl; 
-    cg_obj           *co; 
+    struct cgy_stack *cs;
+    struct cgy_list  *cl;
+    cg_obj           *co;
 
     if (debug)
         fprintf(stderr, "%s\n", __FUNCTION__);
@@ -970,6 +986,7 @@ ctx_pop_add(cligen_yacc *cy)
 }
 
 /*! Pop context from stack and discard it.
+ *
  * Typically done after a grouping, eg "cmd (opt1|opt2)"
  * @param[in]  cy  CLIgen yacc parse struct
  * @see ctx_push
@@ -977,9 +994,9 @@ ctx_pop_add(cligen_yacc *cy)
 static int
 ctx_pop(cligen_yacc *cy)
 {
-    struct cgy_stack *cs; 
-    struct cgy_list  *cl; 
-    cg_obj           *co; 
+    struct cgy_stack *cs;
+    struct cgy_list  *cl;
+    cg_obj           *co;
 
     if (debug)
         fprintf(stderr, "%s\n", __FUNCTION__);
@@ -1007,7 +1024,7 @@ cg_regexp(cligen_yacc *cy,
 {
     int     retval = -1;
     cg_var *cv;
-    
+
     if (cy->cy_var->co_regex == NULL &&
         (cy->cy_var->co_regex = cvec_new(0)) == NULL)
         goto done;
@@ -1031,14 +1048,14 @@ cg_regexp(cligen_yacc *cy,
  * @param[in]  yv      The CLIgen syntax object
  * @param[in]  cvtype  Type of variable
  * Supported for ints, decimal64 and strings.
- *  <x:int length[min:max]> or <x:int length[max]> 
+ *  <x:int length[min:max]> or <x:int length[max]>
  * @note: decimal64 fraction-digits must be given before range:
  *   <x:decimal64 fraction-digits:4 range[20.0]>
  * if you want any other fraction-digit than 2
  */
 static int
-cg_range_create(cligen_yacc *cy, 
-                char        *lowstr, 
+cg_range_create(cligen_yacc *cy,
+                char        *lowstr,
                 char        *uppstr,
                 cg_obj      *yv,
                 enum cv_type cvtype)
@@ -1069,7 +1086,7 @@ cg_range_create(cligen_yacc *cy,
             goto done;
         }
         if (cvret == 0){ /* parsing failed */
-            cligen_parseerror1(cy, reason); 
+            cligen_parseerror1(cy, reason);
             free(reason);
             goto done;
         }
@@ -1081,7 +1098,6 @@ cg_range_create(cligen_yacc *cy,
     }
     else if (cvec_append_var(yv->co_rangecvv_low, cv1) < 0)
         goto done;
-    
     /* Then create upper bound cv */
     if ((cv2 = cv_new(cvtype)) == NULL){
         fprintf(stderr, "cv_new %s\n", strerror(errno));
@@ -1098,7 +1114,7 @@ cg_range_create(cligen_yacc *cy,
         goto done;
     }
     if (cvret == 0){ /* parsing failed */
-        cligen_parseerror1(cy, reason); 
+        cligen_parseerror1(cy, reason);
         free(reason);
         goto done;
     }
@@ -1110,7 +1126,6 @@ cg_range_create(cligen_yacc *cy,
     }
     else if (cvec_append_var(yv->co_rangecvv_upp, cv2) < 0)
         goto done;
-    
     /* Then increment range vector length */
     yv->co_rangelen++;
     retval = 0;
@@ -1128,7 +1143,7 @@ cg_range_create(cligen_yacc *cy,
  * @param[in]  lowstr  low bound of interval (can be NULL)
  * @param[in]  uppstr  upper bound of interval
  * Examples:
- * <x:string length[min:max]>  <x:string length[max]> 
+ * <x:string length[min:max]>  <x:string length[max]>
  *  @note that the co_range structure fields are re-used for string length restrictions.
  *   but the range type is uint64, not depending on cv type as int:s
  * @see cg_range
@@ -1148,11 +1163,12 @@ cg_length(cligen_yacc *cy,
 }
 
 /*! A range statement has been parsed. Create range cv
+ *
  * @param[in]  cy      CLIgen yacc parse struct
  * @param[in]  lowstr  low bound of interval (can be NULL)
  * @param[in]  uppstr  upper bound of interval
  * Examples:
- * <x:int32 range[min:max]>  <x:int32 range[max]> 
+ * <x:int32 range[min:max]>  <x:int32 range[max]>
  * @see cg_length
  */
 static int
@@ -1184,7 +1200,7 @@ cg_dec64_n(cligen_yacc *cy,
         return -1;
     }
     if (parse_uint8(fraction_digits, &yv->co_dec64_n, NULL) != 1){
-        cligen_parseerror1(cy, reason); 
+        cligen_parseerror1(cy, reason);
         return -1;
     }
     return 0;
@@ -1213,7 +1229,7 @@ cgy_init(cligen_yacc *cy,
 int
 cgy_exit(cligen_yacc *cy)
 {
-    struct cgy_stack *cs; 
+    struct cgy_stack *cs;
 
     if (debug)
         fprintf(stderr, "%s\n", __FUNCTION__);
@@ -1223,7 +1239,7 @@ cgy_exit(cligen_yacc *cy)
     if((cs = cy->cy_stack) != NULL){
         delete_stack_element(cs);
 #if 0
-        fprintf(stderr, "%s:%d: error: lacking () or [] at or before: '%s'\n", 
+        fprintf(stderr, "%s:%d: error: lacking () or [] at or before: '%s'\n",
                 cy->cy_name,
                 cy->cy_linenum,
                 cy->cy_parse_string
@@ -1234,18 +1250,18 @@ cgy_exit(cligen_yacc *cy)
     return 0;
 }
 
-%} 
- 
+%}
+
 %%
 
-file        : lines MY_EOF{_PARSE_DEBUG("file->lines"); YYACCEPT;} 
+file        : lines MY_EOF{_PARSE_DEBUG("file->lines"); YYACCEPT;}
             ;
 
-lines       : lines line  { _PARSE_DEBUG("lines->lines line"); } 
-            |             { _PARSE_DEBUG("lines->"); } 
+lines       : lines line  { _PARSE_DEBUG("lines->lines line"); }
+            |             { _PARSE_DEBUG("lines->"); }
             ;
 
-line        : decltop line1  { _PARSE_DEBUG("line->decltop line1"); }   
+line        : decltop line1  { _PARSE_DEBUG("line->decltop line1"); }
             | assignment ';' { _PARSE_DEBUG("line->assignment ;"); }
             ;
 
@@ -1261,17 +1277,17 @@ line2       : ';' {
                     _PARSE_DEBUG("line2->';'");
                     if (cgy_terminal(_cy) < 0) _YYERROR("line2");
                     if (ctx_peek_swap2(_cy) < 0) _YYERROR("line2");
-                  } 
+                  }
             | preline {
                       if (ctx_push(_cy, $1) < 0) _YYERROR("line2");
-                  } 
+                  }
               lines
               '}' {
                     _PARSE_DEBUG("line2->'{' lines '}'");
                     if (ctx_pop(_cy) < 0) _YYERROR("line2");
                     if (ctx_peek_swap2(_cy) < 0) _YYERROR("line2");
                  }
-            | ';' 
+            | ';'
               preline {
                     if (cgy_terminal(_cy) < 0) _YYERROR("line2");
                     if (ctx_push(_cy, $2) < 0) _YYERROR("line2");
@@ -1282,13 +1298,13 @@ line2       : ';' {
                     if (ctx_peek_swap2(_cy) < 0) _YYERROR("line2"); }
             ;
 
-options     : options ',' option {_PARSE_DEBUG("options->options , option");} 
-            | option             {_PARSE_DEBUG("options->option");} 
+options     : options ',' option {_PARSE_DEBUG("options->options , option");}
+            | option             {_PARSE_DEBUG("options->option");}
             ;
 
-option      : callback           { _PARSE_DEBUG("option->callback");} 
-            | flag               { _PARSE_DEBUG("option->flag");} 
-            | assignment         { _PARSE_DEBUG("option->assignment");} 
+option      : callback           { _PARSE_DEBUG("option->callback");}
+            | flag               { _PARSE_DEBUG("option->flag");}
+            | assignment         { _PARSE_DEBUG("option->assignment");}
             ;
 
 assignment  : NAME '=' DQ charseq DQ
@@ -1297,11 +1313,11 @@ assignment  : NAME '=' DQ charseq DQ
             | NAME '=' DQ DQ
                                  { _PARSE_DEBUG("assignment->\" \"");
                                   cgy_assignment(_cy, $1,NULL);free($1);}
-            ; 
+            ;
 
 flag        : NAME               { _PARSE_DEBUG("flag->NAME");
                                    cgy_flag(_cy, $1);free($1);}
-            ; 
+            ;
 
 callback    : NAME               { _PARSE_DEBUG("callback->NAME ( arglist )");
                                    if (cgy_callback(_cy, $1) < 0) _YYERROR("callback");}
@@ -1309,7 +1325,7 @@ callback    : NAME               { _PARSE_DEBUG("callback->NAME ( arglist )");
             ;
 
 arglist     : arglist1
-            | 
+            |
             ;
 
 arglist1    : arglist1 ',' arg
@@ -1336,9 +1352,9 @@ decltop     : decllist  { _PARSE_DEBUG("decltop->decllist");}
             | declcomp  { _PARSE_DEBUG("decltop->declcomp");}
             ;
 
-decllist    : decltop 
+decllist    : decltop
               declcomp  { _PARSE_DEBUG("decllist->decltop declcomp");}
-            | decltop '|' { if (ctx_peek_swap(_cy) < 0) _YYERROR("decllist");} 
+            | decltop '|' { if (ctx_peek_swap(_cy) < 0) _YYERROR("decllist");}
               declcomp  { _PARSE_DEBUG("decllist->decltop | declcomp");}
             ;
 
@@ -1373,7 +1389,7 @@ helpstring1 : helpstring1 HELPSTR
                   size_t len = strlen($1);
                   _PARSE_DEBUG("helpstring1 -> helpstring1 HELPSTR");
                   if (($$ = realloc($1, len+strlen($2) +1)) == NULL) _YYERROR("cmd");
-                  sprintf($$+len, "%s", $2); 
+                  sprintf($$+len, "%s", $2);
               }
             | HELPSTR
                {
@@ -1384,11 +1400,11 @@ helpstring1 : helpstring1 HELPSTR
 
 
 cmd         : NAME           { _PARSE_DEBUG("cmd->NAME");
-                               if (cgy_cmd(_cy, $1) < 0) _YYERROR("cmd"); free($1); } 
+                               if (cgy_cmd(_cy, $1) < 0) _YYERROR("cmd"); free($1); }
             | '@' NAME       { _PARSE_DEBUG("cmd->@NAME");
-                               if (cgy_reference(_cy, $2, 0) < 0) _YYERROR("cmd"); free($2); } 
+                               if (cgy_reference(_cy, $2, 0) < 0) _YYERROR("cmd"); free($2); }
             | '@' '|' NAME   { _PARSE_DEBUG("cmd->@|NAME");
-                               if (cgy_reference(_cy, $3, 1) < 0) _YYERROR("cmd"); free($3); } 
+                               if (cgy_reference(_cy, $3, 1) < 0) _YYERROR("cmd"); free($3); }
             | '<'            { if ((_CY->cy_var = cgy_var_create(_CY)) == NULL) _YYERROR("cmd"); }
                variable '>'  { if (cgy_var_post(_cy) < 0) _YYERROR("cmd"); }
             ;
@@ -1410,7 +1426,7 @@ keypairs    : keypair {
             ;
 
 numdec      : NUMBER { $$ = $1; }
-            | DECIMAL 
+            | DECIMAL
             ;
 
 keypair     : NAME '(' ')' {
@@ -1420,42 +1436,42 @@ keypair     : NAME '(' ')' {
             | NAME '(' exparglist ')' {
                  _PARSE_DEBUG("keypair->name(exparglist)");
                  expand_fn(_cy, $1); }
-            | V_SHOW ':' NAME { 
+            | V_SHOW ':' NAME {
                  _PARSE_DEBUG("keypair->show:name");
-                 _CY->cy_var->co_show = $3; 
+                 _CY->cy_var->co_show = $3;
               }
             | V_SHOW ':' DQ charseq DQ {
                  _PARSE_DEBUG("keypair->show:DQ charseq DQ");
-                 _CY->cy_var->co_show = $4; 
+                 _CY->cy_var->co_show = $4;
               }
-            | V_RANGE '[' numdec ':' numdec ']' { 
+            | V_RANGE '[' numdec ':' numdec ']' {
                  _PARSE_DEBUG("keypair->range [<nr>:<nr>]");
-                if (cg_range(_cy, $3, $5) < 0) _YYERROR("keypair"); free($3); free($5); 
+                if (cg_range(_cy, $3, $5) < 0) _YYERROR("keypair"); free($3); free($5);
               }
             | V_RANGE '[' numdec ']' {
                  _PARSE_DEBUG("keypair->range [<nr>]");
-                 if (cg_range(_cy, NULL, $3) < 0) _YYERROR("keypair"); free($3); 
+                 if (cg_range(_cy, NULL, $3) < 0) _YYERROR("keypair"); free($3);
               }
-            | V_LENGTH '[' NUMBER ':' NUMBER ']' { 
+            | V_LENGTH '[' NUMBER ':' NUMBER ']' {
                  _PARSE_DEBUG("keypair->length[number:number]");
-                 if (cg_length(_cy, $3, $5) < 0) _YYERROR("keypair"); free($3); free($5); 
+                 if (cg_length(_cy, $3, $5) < 0) _YYERROR("keypair"); free($3); free($5);
               }
             | V_LENGTH '[' NUMBER ']' {
                  _PARSE_DEBUG("keypair->length[number]");
-                 if (cg_length(_cy, NULL, $3) < 0) _YYERROR("keypair"); free($3); 
+                 if (cg_length(_cy, NULL, $3) < 0) _YYERROR("keypair"); free($3);
               }
-            | V_FRACTION_DIGITS ':' NUMBER { 
+            | V_FRACTION_DIGITS ':' NUMBER {
                  _PARSE_DEBUG("keypair->fraction-digits:number");
-                if (cg_dec64_n(_cy, $3) < 0) _YYERROR("keypair"); free($3); 
+                if (cg_dec64_n(_cy, $3) < 0) _YYERROR("keypair"); free($3);
               }
             | V_CHOICE choices {
                  _PARSE_DEBUG("keypair->choice choices");
                  _CY->cy_var->co_choice = $2;
               }
-            | V_KEYWORD ':' NAME { 
+            | V_KEYWORD ':' NAME {
                  _PARSE_DEBUG("keypair->keyword name");
-                _CY->cy_var->co_keyword = $3;  
-                _CY->cy_var->co_vtype=CGV_STRING; 
+                _CY->cy_var->co_keyword = $3;
+                _CY->cy_var->co_vtype=CGV_STRING;
               }
             | V_REGEXP  ':' DQ charseq DQ {
                  _PARSE_DEBUG("keypair->regexp : DQ charseq DQ");
@@ -1503,8 +1519,8 @@ charseq    : charseq CHARS
               {
                   int len = strlen($1);
                   _PARSE_DEBUG("charseq->charseq CHARS");
-                  $$ = realloc($1, len+strlen($2) +1); 
-                  sprintf($$+len, "%s", $2); 
+                  $$ = realloc($1, len+strlen($2) +1);
+                  sprintf($$+len, "%s", $2);
                   free($2);
                  }
            | CHARS {_PARSE_DEBUG("charseq->CHARS");
