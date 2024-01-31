@@ -372,7 +372,7 @@ cvec_i_str(cvec *cvv,
            int   i)
 {
     cg_var *cv;
-    
+
     if ((cv = cvec_i(cvv, i)) == NULL)
         return NULL;
     return cv_string_get(cv);
@@ -692,7 +692,7 @@ cligen_txt2cvv(char  *str,
     cg_var *cv = NULL;
     int     whitespace = 1;
     size_t  len;
-    
+
     if ((cvv = cvec_new(0)) == NULL)
         goto done;
     len = strlen(str);
@@ -733,7 +733,7 @@ cligen_txt2cvv(char  *str,
     return retval;
 }
 
-/*! Given a string (s0), return the next token. 
+/*! Given a string (s0), return the next token.
  *
  * The string is modified to return
  * the remainder of the string after the identified token.
@@ -751,9 +751,9 @@ cligen_txt2cvv(char  *str,
  * results in token="foo", leading=1
  */
 static int
-next_token(char **s0, 
+next_token(char **s0,
            char **token0,
-           char **rest0, 
+           char **rest0,
            int   *leading0)
 {
     char  *s;
@@ -834,8 +834,8 @@ next_token(char **s0,
 /*! Split a CLIgen command string into a cligen variable vector using delimeters and escape quotes
  *
  * @param[in]  string String to split
- * @param[out] cvtp   CLIgen variable vector, containing all tokens. 
- * @param[out] cvrp   CLIgen variable vector, containing the remaining strings. 
+ * @param[out] cvtp   CLIgen variable vector, containing all tokens.
+ * @param[out] cvrp   CLIgen variable vector, containing the remaining strings.
  * @retval     0      OK
  * @retval    -1      Error
  * @code
@@ -853,7 +853,7 @@ next_token(char **s0,
  * @note both out cvv:s should be freed with cvec_free()
  */
 int
-cligen_str2cvv(char  *string, 
+cligen_str2cvv(char  *string,
                cvec **cvtp,
                cvec **cvrp)
 {
@@ -880,7 +880,7 @@ cligen_str2cvv(char  *string,
         t = NULL;
         if (next_token(&s, &t, &sr, &trail) < 0)
             goto done;
-        /* If there is no token, stop, 
+        /* If there is no token, stop,
          * unless it is the intial token (empty string) OR there are trailing whitespace
          * In these cases insert an empty "" token.
          */
@@ -935,7 +935,7 @@ cvec_expand_first(cvec *cvv)
     cbuf   *cb = NULL;
     cg_var *cv;
     int     i;
-    
+
     if ((cb = cbuf_new()) == NULL)
         goto done;
     for (i=1; i<cvec_len(cvv); i++){
@@ -969,7 +969,7 @@ cvec_exclude_keys(cvec *cvv)
         if ((cv = cvec_i(cvv, i)) != NULL &&
             cv_const_get(cv)){
             cv_reset(cv);
-            cvec_del_i(cvv, i);         
+            cvec_del_i(cvv, i);
             continue;
         }
         i++;

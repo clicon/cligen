@@ -2,7 +2,7 @@
   CLIgen application reading CLI specification from file
 
   ***** BEGIN LICENSE BLOCK *****
- 
+
   Copyright (C) 2001-2022 Olof Hagsand
 
   This file is part of CLIgen.
@@ -25,7 +25,7 @@
   of those above. If you wish to allow use of your version of this file only
   under the terms of the GPL, and not to allow others to
   use your version of this file under the terms of Apache License version 2, indicate
-  your decision by deleting the provisions above and replace them with the 
+  your decision by deleting the provisions above and replace them with the
   notice and other provisions required by the GPL. If you do not delete
   the provisions above, a recipient may use your version of this file under
   the terms of any one of the Apache License version 2 or the GPL.
@@ -47,14 +47,15 @@
 
 #include <cligen/cligen.h>
 
-/*! General callback for executing shells. 
+/*! General callback for executing shells.
+ *
  * The argument is a command followed by arguments as defined in the input syntax.
  * Simple example:
  *   CLIgen input syntax:     <a:str>, cligen_exec_cb("ls ${a}");
  *   CLI input:               > 42
  *   Shell command:           ls 42
  * More advanced example:
- *   CLIgen input syntax:     [<a type:int> | <b type:ipv4addr>], 
+ *   CLIgen input syntax:     [<a type:int> | <b type:ipv4addr>],
  *                                cligen_exec_cb("foo.sh ${a:-99} ${b:-1.2.3.4}");
  *   CLI input:               > 22
  *   Shell command:           foo.sh 22 1.2.3.4
@@ -103,14 +104,14 @@ callback(cligen_handle handle,
     int     i = 0;
     cg_var *cv;
     char    buf[256];
-    
+
     cligen_output(stderr, "function: %s\n", cligen_fn_str_get(handle));
     cligen_output(stderr, "variables:\n");
     cv = NULL;
     while ((cv = cvec_each(cvv, cv)) != NULL) {
         cv2str(cv, buf, sizeof(buf)-1);
-        cligen_output(stderr, "\t%d name:%s type:%s value:%s\n", 
-                i++, 
+        cligen_output(stderr, "\t%d name:%s type:%s value:%s\n",
+                i++,
                 cv_name_get(cv),
                 cv_type2str(cv_type_get(cv)),
                 buf
@@ -141,7 +142,7 @@ output_fn(cligen_handle handle,
           cvec         *argv)
 {
     cg_var *cv;
-    
+
     cv = NULL;
     while ((cv = cvec_each(argv, cv)) != NULL)
         cligen_output(stdout, "%s\n", cv_string_get(cv));
@@ -150,7 +151,7 @@ output_fn(cligen_handle handle,
 
 /*! Output pipe function
  *
- * First argv is a shell command, 
+ * First argv is a shell command,
  * the following argv:s are names of variables in cvv whose values are appended to the shell
  * @param[in]  h     CLIgen handle / user handle
  * @param[in]  cvv   Vector of variables: function parameters
@@ -214,7 +215,8 @@ str2fn(char  *name,
     else return callback; /* allow any function (for testing) */
 }
 
-/*! Example of expansion(completion) function. 
+/*! Example of expansion(completion) function.
+ *
  * It is called every time a variable of the form <expand> needs to be evaluated.
  * Note the mallocing of vectors which could probably be done in a
  * friendlier way.
@@ -222,10 +224,10 @@ str2fn(char  *name,
  * would have introduced som more dynamics.
  */
 static int
-cli_expand_cb(cligen_handle h, 
-              char         *fn_str, 
-              cvec         *cvv, 
-              cvec         *argv, 
+cli_expand_cb(cligen_handle h,
+              char         *fn_str,
+              cvec         *cvv,
+              cvec         *argv,
               cvec         *commands,     /* vector of function strings */
               cvec         *helptexts)   /* vector of help-texts */
 {
@@ -259,7 +261,7 @@ str2fn_exp(char  *name,
 /*
  * Global variables.
  */
-static void 
+static void
 usage(char *argv)
 {
     fprintf(stderr, "Usage:%s <option>*, where the options have the following meaning:\n"
@@ -304,9 +306,9 @@ main(int   argc,
     int         scrollmode = 0;
     int         exclude_keys = 0;
     int         expand_first = 0;
-    
+
     if ((h = cligen_init()) == NULL)
-        goto done;    
+        goto done;
     argv++;argc--;
     for (;(argc>0)&& *argv; argc--, argv++){
         if (**argv != '-')
@@ -340,7 +342,7 @@ main(int   argc,
             argc--;argv++;
             set_preference = atoi(*argv);
             break;
-        case 'f' : 
+        case 'f' :
             argc--;argv++;
             filename = *argv;
             if ((f = fopen(filename, "r")) == NULL){
@@ -378,7 +380,7 @@ main(int   argc,
     if (clispec_parse_file(h, f, filename?filename:"stdin", NULL, NULL, globals) < 0)
         goto done;
 
-    ph = NULL; 
+    ph = NULL;
     while ((ph = cligen_ph_each(h, ph)) != NULL){
         if ((pt = cligen_ph_parsetree_get(ph)) != NULL){     /* map functions */
             if (cligen_callbackv_str2fn(pt, str2fn, NULL) < 0)   /* callback */

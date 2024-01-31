@@ -2,7 +2,7 @@
   CLI generator. Take idl as input and generate a tree for use in cli.
 
   ***** BEGIN LICENSE BLOCK *****
- 
+
   Copyright (C) 2001-2022 Olof Hagsand
 
   This file is part of CLIgen.
@@ -25,7 +25,7 @@
   of those above. If you wish to allow use of your version of this file only
   under the terms of the GPL, and not to allow others to
   use your version of this file under the terms of Apache License version 2, indicate
-  your decision by deleting the provisions above and replace them with the 
+  your decision by deleting the provisions above and replace them with the
   notice and other provisions required by the GPL. If you do not delete
   the provisions above, a recipient may use your version of this file under
   the terms of any one of the Apache License version 2 or the GPL.
@@ -42,9 +42,10 @@
  */
 
 /*! Local flag beginning with this prefix can be used as filter statements in tree references
+ *
  * Example:
  * @subtree, @remove:local # Filter out all statements with flag "local"
- * treename="subtree";           
+ * treename="subtree";
  * xx;
  * yy, local; # Filter this
  */
@@ -58,13 +59,13 @@
 /*
  * Prototypes
  */
-int co_isfilter(cvec *cvv_filter, char *label);
+int   co_isfilter(cvec *cvv_filter, char *label);
 char *pt_local_pipe(parse_tree *pt);
-int pt_expand(cligen_handle h, cg_obj *co, parse_tree *pt, cvec *cvt, cvec *cvv,
+int   pt_expand(cligen_handle h, cg_obj *co, parse_tree *pt, cvec *cvt, cvec *cvv,
               int hide, int expandvar, cg_callback *callbacks,
               cg_obj *co_pipe, parse_tree *ptn);
-int pt_expand_cleanup(cligen_handle h, parse_tree *pt);
-int reference_path_match(cg_obj *co1, parse_tree *pt0, cg_obj **co0p);
+int   pt_expand_cleanup(cligen_handle h, parse_tree *pt);
+int   reference_path_match(cg_obj *co1, parse_tree *pt0, cg_obj **co0p);
 
 #endif /* _CLIGEN_EXPAND_H_ */
 

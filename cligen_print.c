@@ -1,6 +1,6 @@
 /*
   ***** BEGIN LICENSE BLOCK *****
- 
+
   Copyright (C) 2001-2022 Olof Hagsand
 
   This file is part of CLIgen.
@@ -23,7 +23,7 @@
   of those above. If you wish to allow use of your version of this file only
   under the terms of the GPL, and not to allow others to
   use your version of this file under the terms of Apache License version 2, indicate
-  your decision by deleting the provisions above and replace them with the 
+  your decision by deleting the provisions above and replace them with the
   notice and other provisions required by the GPL. If you do not delete
   the provisions above, a recipient may use your version of this file under
   the terms of any one of the Apache License version 2 or the GPL.
@@ -78,7 +78,7 @@ static int pt2cbuf(cbuf *cb, parse_tree *pt, int level, int brief);
  * brief=0:  a("help string") <x:int32>("variable"), cb();
  * brief=1:  a <x>;
  */
-int 
+int
 cov2cbuf(cbuf   *cb,
          cg_obj *co,
          int     brief)
@@ -96,8 +96,8 @@ cov2cbuf(cbuf   *cb,
     }
     else{
         if (brief){
-            cprintf(cb, "%c%s%c", VARIABLE_PRE, 
-                    co->co_show!=NULL ? co->co_show : co->co_command, 
+            cprintf(cb, "%c%s%c", VARIABLE_PRE,
+                    co->co_show!=NULL ? co->co_show : co->co_command,
                     VARIABLE_POST);
         }
         else{
@@ -117,7 +117,6 @@ cov2cbuf(cbuf   *cb,
                 cv2cbuf(cv2, cb);
                 cprintf(cb, "]");
             }
-            
             if (co->co_show)
                 cprintf(cb, " show:\"%s\"", co->co_show);
             if (co->co_expand_fn_str){
@@ -135,7 +134,7 @@ cov2cbuf(cbuf   *cb,
             }
             cv1 = NULL;
             while ((cv1 = cvec_each(co->co_regex, cv1)) != NULL)
-                cprintf(cb, " regexp:\"%s\"", cv_string_get(cv1));              
+                cprintf(cb, " regexp:\"%s\"", cv_string_get(cv1));
             if (co->co_translate_fn_str)
                 cprintf(cb, " translate:%s()", co->co_translate_fn_str);
             cprintf(cb, "%c", VARIABLE_POST);
@@ -147,7 +146,7 @@ cov2cbuf(cbuf   *cb,
 
 /*! Print a CLIgen object (cg object / co) to a CLIgen buffer
  */
-static int 
+static int
 co2cbuf(cbuf   *cb,
         cg_obj *co,
         int     marginal,
@@ -197,7 +196,7 @@ co2cbuf(cbuf   *cb,
         if (co_flags_get(co, CO_FLAGS_HIDE))
             cprintf(cb, ", hide");
         cv = NULL;
-        while ((cv = cvec_each(co->co_cvec, cv)) != NULL) 
+        while ((cv = cvec_each(co->co_cvec, cv)) != NULL)
             cprintf(cb, ", %s", cv_name_get(cv));
         for (cc = co->co_callbacks; cc; cc = co_callback_next(cc)){
             co_callback2cbuf(cb, cc);
@@ -227,7 +226,7 @@ co2cbuf(cbuf   *cb,
     if (pt2cbuf(cb, pt, marginal+3, brief) < 0)
         goto done;
     if (pt_len_get(pt)>1){
-        cprintf(cb, "%*s", marginal, ""); 
+        cprintf(cb, "%*s", marginal, "");
         cprintf(cb, "}\n");
     }
     retval = 0;
@@ -239,10 +238,10 @@ co2cbuf(cbuf   *cb,
  *
  * @param[in,out] cb     CLIgen buffer
  * @param[in]     pt     Cligen parse-tree consisting of cg objects and variables
- * @param[in]     marginal How many columns to print 
+ * @param[in]     marginal How many columns to print
  * @param[in]     brief  Print brief output, otherwise clispec parsable format
  */
-static int 
+static int
 pt2cbuf(cbuf       *cb,
         parse_tree *pt,
         int         marginal,
@@ -277,7 +276,7 @@ pt2cbuf(cbuf       *cb,
  * @param[in] pt     Cligen parse-tree consisting of cg objects and variables
  * @param[in] brief  Print brief output, otherwise clispec parsable format
  *
- * The output may not be identical to the input syntax. 
+ * The output may not be identical to the input syntax.
  * For example [dd|ee] is printed as:
  *   dd;
  *   ee:
@@ -286,7 +285,7 @@ pt2cbuf(cbuf       *cb,
  * brief=1:  a <x>;
  * @see co_print which prints an individual CLIgen syntax object, not vector
  */
-int 
+int
 pt_print1(FILE       *f,
           parse_tree *pt,
           int         brief)
@@ -308,7 +307,7 @@ pt_print1(FILE       *f,
     return retval;
 }
 
-int 
+int
 pt_print(FILE       *f,
          parse_tree *pt)
 {
@@ -323,7 +322,7 @@ pt_print(FILE       *f,
  *
  * @see pt_print  which prints a vector of cligen objects "parse-tree"
  */
-int 
+int
 co_print1(FILE    *f,
           cg_obj  *co,
           int      brief)
@@ -345,7 +344,7 @@ co_print1(FILE    *f,
     return retval;
 }
 
-int 
+int
 co_print(FILE    *f,
          cg_obj  *co)
 {
@@ -354,7 +353,7 @@ co_print(FILE    *f,
 
 static int co_dump1(FILE *f, cg_obj *co, int indent);
 
-static int 
+static int
 pt_dump1(FILE       *f,
          parse_tree *pt,
          int         indent)
@@ -389,8 +388,8 @@ callbacks_dump(FILE        *f,
     }
     return 0;
 }
-    
-static int 
+
+static int
 co_dump1(FILE    *f,
          cg_obj  *co,
          int      indent)
@@ -398,7 +397,7 @@ co_dump1(FILE    *f,
     parse_tree  *pt;
     cg_var      *cv;
     cg_callback *cc;
-    
+
     switch (co->co_type){
     case CO_COMMAND:
         fprintf(f, "%*s %p co %s", indent*3, "", co, co->co_command);
@@ -440,7 +439,7 @@ co_dump1(FILE    *f,
 
 /*! Debugging function for dumping a tree:s pointers
  */
-int 
+int
 co_dump(FILE    *f,
         cg_obj  *co)
 {
@@ -449,7 +448,7 @@ co_dump(FILE    *f,
 
 /*! Debugging function for dumping a tree:s pointers
  */
-int 
+int
 pt_dump(FILE       *f,
         parse_tree *pt)
 {
@@ -464,7 +463,7 @@ pt_dump(FILE       *f,
  *
  * @see pt_print  which prints a vector of cligen objects "parse-tree"
  */
-int 
+int
 cligen_print_trees(FILE         *f,
                    cligen_handle h,
                    int           brief)

@@ -2,7 +2,7 @@
   CLI generator regular expressions
 
   ***** BEGIN LICENSE BLOCK *****
- 
+
   Copyright (C) 2001-2022 Olof Hagsand
 
   This file is part of CLIgen.
@@ -25,7 +25,7 @@
   of those above. If you wish to allow use of your version of this file only
   under the terms of the GPL, and not to allow others to
   use your version of this file under the terms of Apache License version 2, indicate
-  your decision by deleting the provisions above and replace them with the 
+  your decision by deleting the provisions above and replace them with the
   notice and other provisions required by the GPL. If you do not delete
   the provisions above, a recipient may use your version of this file under
   the terms of any one of the Apache License version 2 or the GPL.
@@ -66,6 +66,7 @@
 /*-------------------------- POSIX -------------------------*/
 
 /*! Compile a regexp according to posix regexps
+ *
  * It is implicitly assumed that the match should be done at the beginning and
  * the end,
  * therefore, the pattern is prefixed with a ^, and postfixed with a $.
@@ -130,6 +131,7 @@ cligen_regex_posix_compile(char  *regexp,
 }
 
 /*! Exec a regexp according to posix regexp
+ *
  * @param[in]   recomp  Compiled regular expression (malloc:d, should be freed)
  * @param[in]   string  Content string to match
  * @retval  1   Match
@@ -144,10 +146,10 @@ cligen_regex_posix_exec(void *recomp,
     int      status;
     regex_t *re;
     char     errbuf[1024];
-    
+
     re = (regex_t*)recomp;
     status = regexec(re, string, (size_t) 0, NULL, 0);
-    if (status == 0) 
+    if (status == 0)
         retval = 1;
     else {
         regerror(status, re, errbuf, sizeof(errbuf)); /* XXX error is ignored */
@@ -157,7 +159,8 @@ cligen_regex_posix_exec(void *recomp,
 }
 
 /*! Free compiled regular expression i
- * @param[in]   recomp  Compiled regular expression 
+ *
+ * @param[in]   recomp  Compiled regular expression
  */
 int
 cligen_regex_posix_free(void *recomp)
@@ -170,6 +173,7 @@ cligen_regex_posix_free(void *recomp)
 
 /*-------------------------- Libxml2 -----------------------------------*/
 /*! Compile a regexp according to libxml regex
+ *
  * @param[in]   regexp  Regular expression string in XSD regex format
  * @param[out]  recomp  Compiled regular expression (malloc:d, should be freed)
  * @retval      1       OK
@@ -178,13 +182,13 @@ cligen_regex_posix_free(void *recomp)
  */
 int
 cligen_regex_libxml2_compile(char  *regexp0,
-                             void **recomp)    
+                             void **recomp)
 {
     int        retval = -1;
 #ifdef HAVE_LIBXML_XMLREGEXP_H
     xmlChar   *regexp  = (xmlChar*)regexp0;
     xmlRegexp *xrp = NULL;
-    
+
     if ((xrp = xmlRegexpCompile(regexp)) == NULL)
         goto fail;
     *recomp = xrp;
@@ -199,6 +203,7 @@ cligen_regex_libxml2_compile(char  *regexp0,
 }
 
 /*! Exec a regexp according to libxml2
+ *
  * @param[in]   recomp  Compiled regular expression (malloc:d, should be freed)
  * @param[in]   string  Content string to match
  * @retval  1   Match
@@ -213,7 +218,7 @@ cligen_regex_libxml2_exec(void *recomp,
 #ifdef HAVE_LIBXML_XMLREGEXP_H
     xmlChar   *content = (xmlChar*)string0;
     xmlRegexp *xrp = (xmlRegexp *)recomp;
-    
+
     /* Returns 1 if matches, 0 if not and a negative value in case of error */
     if ((retval = xmlRegexpExec(xrp, content)) < 0)
         goto done;
@@ -222,7 +227,8 @@ cligen_regex_libxml2_exec(void *recomp,
     return retval;
 }
 
-/*! Free compiled regular expression 
+/*! Free compiled regular expression
+ *
  * @param[in]   recomp  Compiled regular expression (malloc:d, should be freed)
  */
 int
@@ -237,6 +243,7 @@ cligen_regex_libxml2_free(void *recomp)
 
 /*-------------------------- Generic -----------------------------------*/
 /*! Compilation of regular expression / pattern
+ *
  * @param[in]   h       Clicon handle
  * @param[in]   regexp  Regular expression string in XSD regex format
  * @param[out]  recomp  Compiled regular expression (malloc:d, should be freed)
@@ -251,14 +258,15 @@ cligen_regex_compile(cligen_handle h,
 {
     int   retval = -1;
 
-    if (cligen_regex_xsd(h) == 0) 
+    if (cligen_regex_xsd(h) == 0)
         retval = cligen_regex_posix_compile(regexp, recomp);
-    else 
+    else
         retval = cligen_regex_libxml2_compile(regexp, recomp);
     return retval;
 }
 
 /*! Execution of (pre-compiled) regular expression / pattern
+ *
  * @param[in]  h   Clicon handle
  * @param[in]  recomp Compiled regexp
  */
@@ -269,16 +277,17 @@ cligen_regex_exec(cligen_handle h,
 {
     int   retval = -1;
 
-    if (cligen_regex_xsd(h) == 0) 
+    if (cligen_regex_xsd(h) == 0)
         retval = cligen_regex_posix_exec(recomp, string);
-    else 
+    else
         retval = cligen_regex_libxml2_exec(recomp, string);
     return retval;
 }
 
-/*! Free compiled regular expression 
+/*! Free compiled regular expression
+ *
  * @param[in]  h       Clicon handle
- * @param[in]  recomp  Compiled regular expression 
+ * @param[in]  recomp  Compiled regular expression
  */
 int
 cligen_regex_free(cligen_handle h,
@@ -290,7 +299,7 @@ cligen_regex_free(cligen_handle h,
         retval = cligen_regex_posix_free(recomp);
         free(recomp);
     }
-    else 
+    else
         retval = cligen_regex_libxml2_free(recomp);
     return retval;
 }
@@ -301,13 +310,13 @@ cligen_regex_free(cligen_handle h,
  * @param[in] string  Content string to match
  * @param[in] pattern Pattern string to match
  * @param[in] invert  Invert match
- * @retval   -1       Error, 
+ * @retval   -1       Error,
  * @retval    0       No match
  * @retval    1       Match
  */
-int 
+int
 match_regexp(cligen_handle h,
-             char         *string, 
+             char         *string,
              char         *pattern,
              int           invert)
 {

@@ -1,6 +1,6 @@
 /*
   ***** BEGIN LICENSE BLOCK *****
- 
+
   Copyright (C) 2001-2022 Olof Hagsand
 
   This file is part of CLIgen.
@@ -23,14 +23,14 @@
   of those above. If you wish to allow use of your version of this file only
   under the terms of the GPL, and not to allow others to
   use your version of this file under the terms of Apache License version 2, indicate
-  your decision by deleting the provisions above and replace them with the 
+  your decision by deleting the provisions above and replace them with the
   notice and other provisions required by the GPL. If you do not delete
   the provisions above, a recipient may use your version of this file under
   the terms of any one of the Apache License version 2 or the GPL.
 
   ***** END LICENSE BLOCK *****
 
- * CLIgen dynamic buffers 
+ * CLIgen dynamic buffers
  * @code
  *   cbuf *cb;
  *   if ((cb = cbuf_new()) == NULL)
@@ -46,7 +46,7 @@
  * Constants
  */
 /* Initial alloc mem length of a cbuf, then grows exponentially, with 2*, 4*, etc
- * 1K could be a bit much for large syntaxes and small entries 
+ * 1K could be a bit much for large syntaxes and small entries
  * @see cbuf_alloc_set
  */
 #define CBUFLEN_START 1024
@@ -59,13 +59,13 @@
 #include <errno.h>
 
 #include "cligen_buf.h"              /* External API */
-#include "cligen_buf_internal.h"            
+#include "cligen_buf_internal.h"
 
 /*
  * Variables
  */
-/* This is how large an initial cbuf is after calling cbuf_new. Note that the cbuf 
- * may grow after calls to cprintf or cbuf_alloc 
+/* This is how large an initial cbuf is after calling cbuf_new. Note that the cbuf
+ * may grow after calls to cprintf or cbuf_alloc
  */
 static size_t cbuflen_start     = CBUFLEN_START;
 
@@ -75,7 +75,8 @@ static size_t cbuflen_start     = CBUFLEN_START;
 static size_t cbuflen_threshold = CBUFLEN_THRESHOLD;
 
 /*! Get global cbuf initial memory allocation size
- * This is how large a cbuf is after calling cbuf_new. Note that the cbuf 
+ *
+ * This is how large a cbuf is after calling cbuf_new. Note that the cbuf
  * may grow after calls to cprintf or cbuf_alloc
  * @param[out]  default   Initial default cbuf size
  * @param[out]  threshold Threshold where cbuf grows linearly instead of exponentially
@@ -90,7 +91,8 @@ cbuf_alloc_get(size_t *start,
 }
 
 /*! Set global cbuf initial memory allocation size
- * This is how large a cbuf is after calling cbuf_new. Note that the cbuf 
+ *
+ * This is how large a cbuf is after calling cbuf_new. Note that the cbuf
  * may grow after calls to cprintf or cbuf_alloc
  * If 0 continue with exponential growth
  */
@@ -104,6 +106,7 @@ cbuf_alloc_set(size_t start,
 }
 
 /*! Allocate cligen buffer. Returned handle can be used in sprintf calls
+ *
  * which dynamically print a string.
  * The handle should be freed by cbuf_free()
  * @param[in]   How much buffer space for initial allocation
@@ -130,6 +133,7 @@ cbuf_new_alloc(size_t sz)
 }
 
 /*! Allocate cligen buffer with auto buffer allocation. Returned handle can be used in sprintf calls
+ *
  * which dynamically print a string.
  * The handle should be freed by cbuf_free()
  * @retval cb   The allocated objecyt handle on success.
@@ -143,6 +147,7 @@ cbuf_new(void)
 }
 
 /*! Free cligen buffer previously allocated with cbuf_new
+ *
  * @param[in]   cb  Cligen buffer
  */
 void
@@ -156,6 +161,7 @@ cbuf_free(cbuf *cb)
 }
 
 /*! Return actual byte buffer of cligen buffer
+ *
  * @param[in]   cb  Cligen buffer
  */
 char*
@@ -165,6 +171,7 @@ cbuf_get(cbuf *cb)
 }
 
 /*! Return length of string in cligen buffer (not buffer length itself)
+ *
  * @param[in]   cb  Cligen buffer
  * @see cbuf_buflen
  */
@@ -175,6 +182,7 @@ cbuf_len(cbuf *cb)
 }
 
 /*! Return length of buffer itself, ie allocated bytes
+ *
  * @param[in]   cb  Cligen buffer
  * @see cbuf_len
  */
@@ -185,16 +193,18 @@ cbuf_buflen(cbuf *cb)
 }
 
 /*! Reset a cligen buffer. That is, restart it from scratch.
+ *
  * @param[in]   cb  Cligen buffer
  */
 void
 cbuf_reset(cbuf *cb)
 {
-    cb->cb_strlen    = 0; 
-    cb->cb_buffer[0] = '\0'; 
+    cb->cb_strlen    = 0;
+    cb->cb_buffer[0] = '\0';
 }
 
 /*! Internal buffer reallocator, Ensure buffer is large enough
+ *
  * use quadratic expansion (2* size)
  * @param[in] cb   CLIgen buffer
  * @param[in] len  Extra length added
@@ -205,7 +215,7 @@ cbuf_realloc(cbuf  *cb,
 {
     int retval = -1;
     int diff;
-    
+
     diff = cb->cb_buflen - (cb->cb_strlen + sz + 1);
     if (diff <= 0){
         while (diff <= 0){
@@ -224,7 +234,7 @@ cbuf_realloc(cbuf  *cb,
 }
 
 /*! Append a cligen buf by printf like semantics
- * 
+ *
  * @param [in]  cb      cligen buffer allocated by cbuf_new(), may be reallocated.
  * @param [in]  format  arguments uses printf syntax.
  * @retval      See printf
@@ -232,7 +242,7 @@ cbuf_realloc(cbuf  *cb,
  * @note cprintf assume null-terminated string as %s, use cbuf_memcp for a raw interface
  */
 int
-cprintf(cbuf       *cb, 
+cprintf(cbuf       *cb,
         const char *format, ...)
 {
     int     retval = -1;
@@ -271,7 +281,7 @@ vcprintf(cbuf       *cb,
     int     len;
     int     ret;
     va_list ap1;
-    
+
     va_copy(ap1, ap);
     if (cb == NULL)
         goto ok;
@@ -373,10 +383,11 @@ cbuf_append_buf(cbuf  *cb,
 }
 
 /*! Truncate cligen buf to a shorther length
-  * @param [in]  cb  cligen buffer allocated by cbuf_new(), may be reallocated.
-  * @param [in]  i   Truncate string to this length
-  * @retval 0    OK
-  * @retval -1   Error
+ *
+ * @param [in]  cb  cligen buffer allocated by cbuf_new(), may be reallocated.
+ * @param [in]  i   Truncate string to this length
+ * @retval 0    OK
+ * @retval -1   Error
  */
 int
 cbuf_trunc(cbuf  *cb,

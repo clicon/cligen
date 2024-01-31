@@ -3,7 +3,7 @@
  *
  * Copyright (C) 1991, 1992, 1993 by Chris Thewalt (thewalt@ce.berkeley.edu)
  *
- * Permission to use, copy, modify, and distribute this software 
+ * Permission to use, copy, modify, and distribute this software
  * for any purpose and without fee is hereby granted, provided
  * that the above copyright notices appear in all copies and that both the
  * copyright notice and this permission notice appear in supporting
@@ -17,7 +17,7 @@
 
  * Modifications are under:
   ***** BEGIN LICENSE BLOCK *****
- 
+
   Copyright (C) 2001-2022 Olof Hagsand
 
   This file is part of CLIgen.
@@ -40,7 +40,7 @@
   of those above. If you wish to allow use of your version of this file only
   under the terms of the GPL, and not to allow others to
   use your version of this file under the terms of Apache License version 2, indicate
-  your decision by deleting the provisions above and replace them with the 
+  your decision by deleting the provisions above and replace them with the
   notice and other provisions required by the GPL. If you do not delete
   the provisions above, a recipient may use your version of this file under
   the terms of any one of the Apache License version 2 or the GPL.
@@ -72,11 +72,11 @@
 #include "cligen_handle.h"
 #include "cligen_getline.h"
 #include "cligen_handle_internal.h"
-
-#include "cligen_history_internal.h" 
+#include "cligen_history_internal.h"
 #include "cligen_history.h"
 
-/*! Makes a copy of the string 
+/*! Makes a copy of the string
+ *
  * @param[in] p     String input
  * @retval    str   Malloced copied string output
  * @retval    NULL  Error
@@ -102,7 +102,8 @@ hist_save(char *p)
     return s;
 }
 
-/*! Add a line to the CLIgen history 
+/*! Add a line to the CLIgen history
+ *
  * @param[in] h   CLIgen handle
  * @param[in] buf String to add to history
  * @retval    0   OK
@@ -120,13 +121,13 @@ hist_add(cligen_handle h,
     if (strlen(buf) >= cligen_buf_size(h))
         if (cligen_buf_increase(h, strlen(buf)) < 0)
             goto done;
-    while (*p == ' ' || *p == '\t' || *p == '\n') 
+    while (*p == ' ' || *p == '\t' || *p == '\n')
         p++;
     if (*p) {
         len = strlen(buf);
         if (strchr(p, '\n'))    /* previously line already has NL stripped */
             len--;
-        if (ch->ch_hist_pre == 0 || strlen(ch->ch_hist_pre) != len || 
+        if (ch->ch_hist_pre == 0 || strlen(ch->ch_hist_pre) != len ||
                             strncmp(ch->ch_hist_pre, buf, len) != 0) {
             if ((ch->ch_hist_buf[ch->ch_hist_last] = hist_save(buf)) == NULL)
                 goto done;
@@ -146,6 +147,7 @@ hist_add(cligen_handle h,
 
 
 /*! Clear the history and deallocate all memory of the history
+ *
  * @param[in] h     CLIgen handle
  */
 int
@@ -165,7 +167,8 @@ hist_exit(cligen_handle h)
     return 0;
 }
 
-/*! Loads previous hist entry into input buffer, sticks on first 
+/*! Loads previous hist entry into input buffer, sticks on first
+ *
  * @param[in] h     CLIgen handle
  */
 char *
@@ -178,7 +181,7 @@ hist_prev(cligen_handle h)
     if (ch->ch_hist_buf[ch->ch_hist_cur] != 0 && next != ch->ch_hist_last) {
         ch->ch_hist_cur = next;
         p = ch->ch_hist_buf[ch->ch_hist_cur];
-    } 
+    }
     if (p == 0) {
         p = "";
         gl_putc('\007');
@@ -186,7 +189,8 @@ hist_prev(cligen_handle h)
     return p;
 }
 
-/* Loads next hist entry into input buffer, clears on last 
+/* Loads next hist entry into input buffer, clears on last
+ *
  * @param[in] h     CLIgen handle
  */
 char *
@@ -198,7 +202,7 @@ hist_next(cligen_handle h)
     if (ch->ch_hist_cur != ch->ch_hist_last) {
         ch->ch_hist_cur = (ch->ch_hist_cur+1) % ch->ch_hist_size;
         p = ch->ch_hist_buf[ch->ch_hist_cur];
-    } 
+    }
     if (p == 0) {
         p = "";
         gl_putc('\007');
@@ -214,7 +218,7 @@ hist_pos_set(cligen_handle h,
              int           pos)
 {
     struct cligen_handle *ch = handle(h);
-    
+
     ch->ch_hist_cur = pos;
     return 0;
 }
@@ -226,7 +230,7 @@ int
 hist_pos(cligen_handle h)
 {
     struct cligen_handle *ch = handle(h);
-    
+
     return ch->ch_hist_cur;
 }
 
@@ -242,7 +246,8 @@ hist_last_get(cligen_handle h)
     return ch->ch_hist_last;
 }
 
-/*! Copy history line/pos to cligen buffer 
+/*! Copy history line/pos to cligen buffer
+ *
  * @param[in] h   CLIgen handle
  * @param[in] pos Line number to copy from history to cligen main buffer
  */
@@ -261,7 +266,7 @@ int
 hist_copy_prev(cligen_handle h)
 {
     char *ptr = hist_prev(h);
-    
+
     strncpy(cligen_buf(h), ptr, cligen_buf_size(h));
     return 0;
 }
@@ -287,14 +292,15 @@ int
 hist_copy_next(cligen_handle h)
 {
     char *ptr = hist_next(h);
-    
+
     strncpy(cligen_buf(h), ptr, cligen_buf_size(h));
     return 0;
 }
 
 /*---------------------------- Public API -----------------------------*/
 
-/*! Initialize CLIgen history. 
+/*! Initialize CLIgen history.
+ *
  * Getline assumes there is a history, so you need to call this at time of
  * init. But you can also call it later to resize, but that will erase all
  * existing entries.
@@ -336,16 +342,16 @@ cligen_hist_init(cligen_handle h,
 }
 
 /*! Read history entries from file
+ *
  * @param[in] h  CLIgen handle
  * @param[in] f  Open file for read
  * @see cligen_hist_init must be called before
- * @note open file f instead of filename so that caller can have better error 
+ * @note open file f instead of filename so that caller can have better error
  *       control if file not found or lacking permissions
  */
 int
 cligen_hist_file_load(cligen_handle h,
                       FILE         *f)
-            
 {
     int           retval = -1;
     int           ret;
@@ -376,6 +382,7 @@ cligen_hist_file_load(cligen_handle h,
 }
 
 /*! Write history entries back to file
+ *
  * @param[in] h         CLIgen handle
  * @param[in] filename  Name of history file (or NULL if no history file)
  * @see cligen_exit  Call before this function before cligen_exit
@@ -385,7 +392,7 @@ cligen_hist_file_save(cligen_handle h,
                       FILE         *f)
 {
     int                   retval = -1;
-    struct cligen_handle *ch = handle(h);    
+    struct cligen_handle *ch = handle(h);
     int                   i;
     char                 *line;
     int                   i1;

@@ -2,7 +2,7 @@
   CLI generator input/output support functions.
 
   ***** BEGIN LICENSE BLOCK *****
- 
+
   Copyright (C) 2001-2022 Olof Hagsand
 
   This file is part of CLIgen.
@@ -25,12 +25,12 @@
   of those above. If you wish to allow use of your version of this file only
   under the terms of the GPL, and not to allow others to
   use your version of this file under the terms of Apache License version 2, indicate
-  your decision by deleting the provisions above and replace them with the 
+  your decision by deleting the provisions above and replace them with the
   notice and other provisions required by the GPL. If you do not delete
   the provisions above, a recipient may use your version of this file under
   the terms of any one of the Apache License version 2 or the GPL.
 
-  * ***** END LICENSE BLOCK ***** 
+  * ***** END LICENSE BLOCK *****
  */
 
 #include "cligen_config.h"
@@ -73,7 +73,7 @@
  * > set ?
  *    foo   <--- number of spaces left of "foo"
  * @endcode
- * 
+ *
  */
 #define CLIGEN_HELP_LEFT_MARGIN 3
 
@@ -106,6 +106,7 @@ cli_pipe_output_socket_set(int s)
 }
 
 /*! Reset cligen_output to initial state
+ *
  * For new output or when 'q' is pressed that sets d_line to -1
  */
 int
@@ -126,7 +127,7 @@ cli_output_status(void)
  *
  * @param[in] f           Open stdio FILE pointer
  * @param[in] ibuf        Input buffer containing all chars to be printed including 0 or many \n
- * @param[in] linelen     Length of single printable line, less than or equal to width of 
+ * @param[in] linelen     Length of single printable line, less than or equal to width of
  *                        terminal window, unless the terminal window is 0
  * @param[in] term_rows   Height of terminal window
  * @see cligen_output
@@ -141,11 +142,11 @@ cligen_output_scroll(FILE   *f,
     char   *ibend;
     char   *ib0;  /* Moving window start */
     char   *ib1;  /* Moving window end */
-    char   *ibcr; 
+    char   *ibcr;
     char    c;
     char   *linebuf = NULL;
     ssize_t remain;
-    
+
     ib0 = ibuf;
     ib1 = ibuf;
     ibend = ibuf + strlen(ibuf);
@@ -160,7 +161,7 @@ cligen_output_scroll(FILE   *f,
          *   1b) less than or equal to remain: Only case where line has (terminating) CR
          * 2. No CR
          *   2a) greater than remain: (inc D_LINE)
-         *   2b) less than or equal to remain: 
+         *   2b) less than or equal to remain:
          */
         if ((ibcr = strstr(ib0, "\n")) != NULL){
             if ((ibcr - ib0) > remain){
@@ -191,7 +192,6 @@ cligen_output_scroll(FILE   *f,
         ib0 = ib1;
         if (D_LINES >= (term_rows -1)){
             gl_char_init();
-            
             fprintf(f, "--More--");
             fflush(f);
             c = fgetc(stdin);
@@ -203,8 +203,8 @@ cligen_output_scroll(FILE   *f,
                 D_LINES = -1;
             else if (c == '?')
                 fprintf(f, "Press CR for one more line, SPACE for next page, q to quit\n");
-            else 
-                D_LINES = 0;  
+            else
+                D_LINES = 0;
             fprintf(f, "        ");
             gl_char_cleanup();
         }
@@ -218,7 +218,7 @@ cligen_output_scroll(FILE   *f,
 }
 
 /*! CLIgen output function. All printf-style output should be made via this function.
- * 
+ *
  * Note only scrolling for stdout
  * It deals with formatting, page breaks, etc, (but only if f is stdout)
  * @param[in] f           Open stdio FILE pointer
@@ -235,13 +235,13 @@ cligen_output_scroll(FILE   *f,
  * to poll cli_output_status() < 0.
  *
  * @note: There has been a debate whether this function is the right solution to the
- * pageing problem of CLIgen or not. 
+ * pageing problem of CLIgen or not.
  * (1) On the one hand, a less/more like sub-process could be forked and stdout piped to this
  * sub-process. This would handle all prints to stdout, instead of relying on all output
  * functions using this function and not printf.
  * (2) On the other hand, this gives a slim and simple solution with smaller footprint (no forked
  * process), but all output functions need to pass though this code.
- * For now (2) is used and extended also for clixon functions. However (1) could still be 
+ * For now (2) is used and extended also for clixon functions. However (1) could still be
  * implemented as an option.
  *
  * Chop up input buffers as follows:
@@ -264,7 +264,7 @@ cligen_output(FILE       *f,
     int     term_width;
     ssize_t inbuflen;
     int     s = -1;
-    
+
     /* Get terminal width and height, note discussion regarding NULL handle */
     term_rows = cligen_terminal_rows(NULL);
     term_width = cligen_terminal_width(NULL);
@@ -303,7 +303,7 @@ cligen_output(FILE       *f,
         }
         else{
             fprintf(f, "%s", inbuf);
-        }  
+        }
         fflush(f);
     }
     retval = 0;
@@ -328,7 +328,7 @@ cligen_output_basic(FILE  *f,
     ssize_t linelen;
     int     term_rows;
     int     term_width;
-    
+
     /* Get terminal width and height, note discussion regarding NULL handle */
     term_rows = cligen_terminal_rows(NULL);
     term_width = cligen_terminal_width(NULL);
@@ -345,7 +345,7 @@ cligen_output_basic(FILE  *f,
     }
     else{
         fprintf(f, "%s", inbuf);
-    }  
+    }
     fflush(f);
     retval = 0;
  done:
@@ -376,29 +376,29 @@ cli_yesno(const char *fmt, ...)
 #if CLIGEN_REGFD
 /* The following three callback functions are just wrappers in order to
    not expose getline to external interface */
-int 
+int
 cligen_regfd(int fd, cligen_fd_cb_t *cb, void *arg)
 {
     return gl_regfd(fd, cb, arg);
 }
 
-int 
+int
 cligen_unregfd(int fd)
 {
     return gl_unregfd(fd);
 }
 #endif /* CLIGEN_REGFD */
 
-void 
+void
 cligen_redraw(cligen_handle h)
 {
     gl_redraw(h);
 }
 
-/*! Register a suspend (^Z) function hook 
+/*! Register a suspend (^Z) function hook
  */
 int
-cligen_susp_hook(cligen_handle     h, 
+cligen_susp_hook(cligen_handle     h,
                  cligen_susp_cb_t *fn)
 {
     gl_susp_hook = fn; /* XXX global */
@@ -408,23 +408,24 @@ cligen_susp_hook(cligen_handle     h,
 /*! Register an interrupt hook, called if read() interrupted with (some) SIG
  */
 int
-cligen_interrupt_hook(cligen_handle          h, 
+cligen_interrupt_hook(cligen_handle          h,
                       cligen_interrupt_cb_t *fn)
 {
-    gl_interrupt_hook = fn; 
+    gl_interrupt_hook = fn;
     return 0;
 }
 
 /*! Register extra exit characters (in addition to ctrl-c)
  */
-void 
-cligen_exitchar_add(cligen_handle h, 
+void
+cligen_exitchar_add(cligen_handle h,
                     char          c)
 {
     gl_exitchar_add(c); /* XXX global */
 }
 
 /*! Display multi help lines on query (?)
+ *
  * Function handles multiple options on how to display help strings at query (?)
  * This includes indentation, limit on lines, truncation, etc.
  * @param[in]  h             Cligen handle
@@ -447,7 +448,7 @@ print_help_line(cligen_handle    h,
     int     linesmax;
     int     termwidth;
     int     truncate;
-            
+
     /* First print command */
     fprintf(fout, "  %*s", -column_width, ch->ch_cmd);
     /* Then print help */
@@ -547,6 +548,7 @@ cligen_help_clear(struct cligen_help *ch)
 }
 
 /*! Print help lines for subset of a parsetree vector
+ *
  * @param[in] fout     File to print to, eg stdout
  * @param[in] ptvec    Cligen parse-node vector
  * @param[in] matchvec Array of indexes into ptvec to match (the subset)
@@ -555,7 +557,7 @@ cligen_help_clear(struct cligen_help *ch)
  */
 int
 print_help_lines(cligen_handle h,
-                 FILE         *fout, 
+                 FILE         *fout,
                  parse_tree   *ptmatch)
 {
     int              retval = -1;
@@ -629,12 +631,13 @@ print_help_lines(cligen_handle h,
 }
 
 /*! Print top-level help (all commands) of a parse-tree
+ *
  * @param[in] fout  File to print to, eg stdout
  * @param[in] pt    Cligen parse-tree
  */
 int
 cligen_help(cligen_handle h,
-            FILE         *fout, 
+            FILE         *fout,
             parse_tree   *pt)
 {
     return print_help_lines(h, fout, pt);

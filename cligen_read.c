@@ -2,7 +2,7 @@
   CLI generator readline. Do input processing and matching.
 
   ***** BEGIN LICENSE BLOCK *****
- 
+
   Copyright (C) 2001-2022 Olof Hagsand
 
   This file is part of CLIgen.
@@ -25,7 +25,7 @@
   of those above. If you wish to allow use of your version of this file only
   under the terms of the GPL, and not to allow others to
   use your version of this file under the terms of Apache License version 2, indicate
-  your decision by deleting the provisions above and replace them with the 
+  your decision by deleting the provisions above and replace them with the
   notice and other provisions required by the GPL. If you do not delete
   the provisions above, a recipient may use your version of this file under
   the terms of any one of the Apache License version 2 or the GPL.
@@ -86,7 +86,7 @@ static int show_help_columns(cligen_handle h, FILE *fout, char *s, parse_tree *p
 static int show_help_line(cligen_handle h, FILE *fout, char *s, parse_tree *pt, cvec *);
 static int cli_complete(cligen_handle h, int *lenp, parse_tree *pt, cvec *cvv);
 
-/*! Show help strings 
+/*! Show help strings
  *
  * @param[in]  h       CLIgen handle Input string to match
  * @param[in]  string  Input string
@@ -134,7 +134,8 @@ cli_show_help_commands(cligen_handle h,
 }
 
 /*! Callback from getline: '?' has been typed on command line
- * Just show help by calling long help show function. 
+ *
+ * Just show help by calling long help show function.
  * @param[in]  h            CLIgen handle
  * @param[in]  string Input string to match
  * @retval  0 OK: required by getline
@@ -150,8 +151,9 @@ cli_qmark_hook(cligen_handle h,
 }
 
 /*! Callback from getline: TAB has been typed on keyboard
+ *
  * First try to complete the string if the possibilities
- * allow that (at least one unique common character). 
+ * allow that (at least one unique common character).
  * If no completion was made, then show the command alternatives.
  * @param[in]     h            CLIgen handle
  * @param[in,out] cursorp      Pointer to location of cursor on entry and exit
@@ -160,7 +162,7 @@ cli_qmark_hook(cligen_handle h,
  * @note Flaw related to getline: Errors from sub-functions are ignored
  * @see cli_qmark_hook
  */
-static int 
+static int
 cli_tab_hook(cligen_handle h,
              int          *cursorp)
 {
@@ -175,7 +177,7 @@ cli_tab_hook(cligen_handle h,
     if ((pt = cligen_pt_active_get(h)) == NULL)
         goto ok;
     if ((cvv = cvec_start(cligen_buf(h))) == NULL)
-        goto done; 
+        goto done;
     if (pt_expand(h, NULL,
                   pt,
                   NULL,
@@ -194,7 +196,7 @@ cli_tab_hook(cligen_handle h,
     if (cvv){
         cvec_free(cvv);
         if ((cvv = cvec_start(cligen_buf(h))) == NULL)
-            goto done; 
+            goto done;
     }
     fputs("\n", stdout);
     if (cligen_tabmode(h) & CLIGEN_TABMODE_COLUMNS){
@@ -204,7 +206,7 @@ cli_tab_hook(cligen_handle h,
     else if (show_help_columns(h, stdout, cligen_buf(h), ptn, cvv) < 0)
             goto done;
  ok:
-    retval = 0; 
+    retval = 0;
  done:
     if (cvv)
         cvec_free(cvv);
@@ -212,7 +214,7 @@ cli_tab_hook(cligen_handle h,
         return -1;
     if (pt && pt_expand_cleanup(h, pt) < 0)
         return -1;
-    return retval;      
+    return retval;
 }
 
 /*! Initialize this module
@@ -225,17 +227,18 @@ cliread_init(cligen_handle h)
 }
 
 /*! Print columns
+ *
  * @param[in]  cnr  Number of columns.
  * @param[in]  cw   Width of column
  */
 static int
-column_print(FILE            *fout, 
-             int              cnr, 
+column_print(FILE            *fout,
+             int              cnr,
              int              cw,
              struct cligen_help *chvec,
              int              len,
              int              level)
-{ 
+{
     int              retval = -1;
     int              li; /* line number */
     int              ci; /* column number */
@@ -246,14 +249,14 @@ column_print(FILE            *fout,
     for (ci=0, li = 0; li < linenr; li++) {
         while ((ci < cnr) && (li*cnr+ci < len)) {
             ch = &chvec[li*cnr+ci];
-            fprintf(fout, " %*s", 
-                     -(cw-1), 
+            fprintf(fout, " %*s",
+                     -(cw-1),
                      ch->ch_cmd);
             ci++;
         }
         ci = 0;
-        fprintf(fout, "\n");  
-    }  
+        fprintf(fout, "\n");
+    }
     fflush(fout);
     retval = 0;
     // done:
@@ -261,6 +264,7 @@ column_print(FILE            *fout,
 }
 
 /*! Show briefly the commands available (show no help)
+ *
  * Typically called when TAB is pressed and there are multiple options.
  * @param[in]  fout    This is where the output (help text) is shown.
  * @param[in]  string  Input string to match
@@ -271,10 +275,10 @@ column_print(FILE            *fout,
  * @see print_help_lines
  */
 static int
-show_help_columns(cligen_handle h, 
-                  FILE         *fout, 
-                  char         *string, 
-                  parse_tree   *pt, 
+show_help_columns(cligen_handle h,
+                  FILE         *fout,
+                  char         *string,
+                  parse_tree   *pt,
                   cvec         *cvv)
 {
     int              retval = -1;
@@ -308,7 +312,7 @@ show_help_columns(cligen_handle h,
     if (match_pattern(h, cvt, cvr,
                       pt,
                       0, /* best: Return all options, not only best, exclude hidden */
-                      cvv, 
+                      cvv,
                       &mr) < 0)
         goto done;
     if ((level = cligen_cvv_levels(cvt)) < 0)
@@ -324,7 +328,7 @@ show_help_columns(cligen_handle h,
             if ((co = mr_pt_i_get(mr, i)) == NULL)
                 continue;
             if (co->co_command == NULL)
-                continue;               
+                continue;
             cmd = NULL;
             switch (co->co_type){
             case CO_VARIABLE:
@@ -362,10 +366,10 @@ show_help_columns(cligen_handle h,
             column_nr = 1;
         rest = cligen_terminal_width(h)%column_width;
         column_width += rest/column_nr;
-        if (column_print(fout, 
+        if (column_print(fout,
                          column_nr,
                          column_width,
-                         chvec, 
+                         chvec,
                          nrcmd,
                          level) < 0)
             goto done;
@@ -391,6 +395,7 @@ show_help_columns(cligen_handle h,
 }
 
 /*! Show one row per command with help text for each command
+ *
  * Typically called when a question mark is pressed
  * @param[in]   h       cligen handle
  * @param[in]   fout    This is where the output (help text) is shown.
@@ -412,10 +417,10 @@ Possible completions:
 
  */
 static int
-show_help_line(cligen_handle h, 
-               FILE         *fout, 
-               char         *string, 
-               parse_tree   *pt, 
+show_help_line(cligen_handle h,
+               FILE         *fout,
+               char         *string,
+               parse_tree   *pt,
                cvec         *cvv)
 {
     int           retval = -1;
@@ -438,23 +443,23 @@ show_help_line(cligen_handle h,
                       cvt, cvr, /* token string */
                       pt,       /* command vector */
                       0,        /* best: Return all options, not only best, exclude hidden */
-                      cvv, 
+                      cvv,
                       &mr) < 0)
         goto done;
     if ((level =  cligen_cvv_levels(cvt)) < 0)
         goto done;
 
-    /* If last char is blank, look for next level in parse-tree 
+    /* If last char is blank, look for next level in parse-tree
      * eg, syntax is x (y|z) and we have typed 'x ' then show
      * help for y and z, not x.
      */
-    /* See if string is not empty and last element is empty/blank 
+    /* See if string is not empty and last element is empty/blank
      * This means we need to peek in next level and if that provides a unique solution,
      * then add a <cr>
      */
     cvlastt = cvec_i(cvt, cvec_len(cvt)-1);
     if (cvec_len(cvt) > 2 && strcmp(cv_string_get(cvlastt), "")==0){
-        /* if it is ok to <cr> here (at end of one mode) 
+        /* if it is ok to <cr> here (at end of one mode)
            Example: x [y|z] and we have typed 'x ', then show
            help for y and z and a 'cr' for 'x'.
         */
@@ -485,7 +490,7 @@ show_help_line(cligen_handle h,
         goto done;
     }
     /* ptmatch points to expanded nodes from first match_pattern call */
-    if (print_help_lines(h, fout, mr_pt_get(mr)) < 0) 
+    if (print_help_lines(h, fout, mr_pt_get(mr)) < 0)
         goto done;
     retval = 0;
   done:
@@ -500,6 +505,7 @@ show_help_line(cligen_handle h,
 }
 
 /*! Try to complete a command as much as possible.
+ *
  * @param[in]  h       CLIgen handle
  * @param[in]  string  Input string to match
  * @param[in]  cursorp Pointer to the current cursor in string.
@@ -508,10 +514,10 @@ show_help_line(cligen_handle h,
  * @retval    -1       Error
  * @retval     0       Success
  */
-static int 
-cli_complete(cligen_handle h, 
-             int          *cursorp, 
-             parse_tree   *pt, 
+static int
+cli_complete(cligen_handle h,
+             int          *cursorp,
+             parse_tree   *pt,
              cvec         *cvv)
 {
     int     retval = -1;
@@ -556,14 +562,14 @@ cli_complete(cligen_handle h,
 }
 
 /*! Trim command line. Remove any leading, trailing and multiple whitespace, remove comments
- * 
+ *
  * comment is a character (eg '#'), using "bash" comment rule:
  #  Word beginning with # causes that word and all remaining characters on that line to be ignored
  * @param[out]  line
  * @param[in]   comment character
  */
 void
-cli_trim(char **line, 
+cli_trim(char **line,
          char   comment)
 {
     size_t  point;
@@ -572,7 +578,7 @@ cli_trim(char **line,
     char   *s1 = s;
     char    ch;
     size_t  len;
-    
+
     if (!isascii(comment))
         comment = 0;
 
@@ -600,23 +606,21 @@ cli_trim(char **line,
     /* strip heading whites */
     while ((strlen(s) > 0) && isblank(*s))
         s++;
-    
     /* strip trailing whites and newlines */
     while ((strlen(s) > 0) && (isblank(*(s+strlen(s)-1)) || *(s+strlen(s)-1) == '\n'))
         *(s + strlen(s) - 1) = '\0';
-    
-    *line = s;    
+    *line = s;
 }
 
 /*! Given an input string, return a parse-tree.
  *
  * Given an input string and a parse-tree, return a matching parse-tree node, a
- * CLIgen keyword and CLIgen variable record vector. 
+ * CLIgen keyword and CLIgen variable record vector.
  * Some complexity in this function is due to variable expansion: if there
  * are <expand:> variables, the parse-tree needs to be expanded with current
  * values by calling user-supplied callbacks and building a 'shadow' parse-tree
- * which is purged after use. 
- * Use this function if you already have a string but you want it syntax-checked 
+ * which is purged after use.
+ * Use this function if you already have a string but you want it syntax-checked
  * and parsed.
  *
  * @param[in]  h         Cligen handle
@@ -625,7 +629,7 @@ cli_trim(char **line,
  * @param[out] co_orig   Object that matches (if retval == 1). Free with co_free(co, 0)
  * @param[out] cvvp      Vector of cligen variables present in the input string. (if retval == 1).
  * @param[out] result    Result, < 0: errors, >=0 number of matches
- * @param[out] reason    Error reason if result is nomatch. Need to be free:d 
+ * @param[out] reason    Error reason if result is nomatch. Need to be free:d
  * @retval     0         OK
  * @retval    -1         Error
  *
@@ -636,8 +640,8 @@ cli_trim(char **line,
  *   1 : aa = "aa"   # string has keyword itself as value
  *   2 : bb = 22     # variable
  */
-int 
-cliread_parse(cligen_handle  h, 
+int
+cliread_parse(cligen_handle  h,
               char          *string,
               parse_tree    *pt,     /* Orig */
               cg_obj       **co_orig,
@@ -652,7 +656,7 @@ cliread_parse(cligen_handle  h,
     cvec       *cvr = NULL;      /* Rest variant,  eg remaining string in each step */
     cg_var     *cv;
     cvec       *cvv = NULL;
-    
+
     if (cvvp == NULL || *cvvp != NULL){
         errno = EINVAL;
         goto done;
@@ -671,7 +675,7 @@ cliread_parse(cligen_handle  h,
         goto done;
     cv_name_set(cv, "cmd"); /* the whole command string */
     /* The whole command string as user entered. */
-    cv_string_set(cv, string); 
+    cv_string_set(cv, string);
     if ((ptn = pt_new()) == NULL)
         goto done;
     if (pt_expand(h, NULL,
@@ -720,7 +724,7 @@ cliread(cligen_handle h,
 {
     int   retval = -1;
     char *buf = NULL;
-    
+
     if (stringp == NULL){
         errno = EINVAL;
         goto done;
@@ -753,7 +757,7 @@ cliread(cligen_handle h,
  * @param[out] line      Pointer to new string input from terminal
  * @param[out] cb_retval Retval of callback (only if functions return value is 1)
  * @param[out] result   Number of matches
- * @param[out] reason    Error reason if result is nomatch. Need to be free:d 
+ * @param[out] reason    Error reason if result is nomatch. Need to be free:d
  * @retval     0         OK
  * @retval    -1         Error
  */
@@ -796,8 +800,8 @@ cliread_eval(cligen_handle  h,
         cvec_free(cvv);
     return retval;
 }
-               
-/*! Poll socket for read 
+
+/*! Poll socket for read
  *
  * Select is called with timeout set so that the call returns immediately
  * @param[in] s  Read socket
@@ -831,7 +835,7 @@ signal_unblock(int sig)
     sigemptyset(&set);
     if (sig)
         sigaddset(&set, sig);
-    else 
+    else
         sigfillset(&set);
     sigprocmask(SIG_UNBLOCK, &set, NULL);
 }
@@ -858,7 +862,7 @@ cligen_eval_pipe_pre(cligen_handle h,
 
     if (socketpair(AF_UNIX, SOCK_STREAM, 0, spair) < 0)
         goto done;
-    if ((*pidp = fork()) < 0) 
+    if ((*pidp = fork()) < 0)
         goto done;
     if (*pidp == 0) {   /* Child */
         close(spair[0]);
@@ -893,7 +897,7 @@ cligen_eval_pipe_pre(cligen_handle h,
 
 /*! Poll for write socket, redirect to cligen-output basic and then close pipe
  *
- * Given socket to pipe function, close write side, poll/read and redirect to 
+ * Given socket to pipe function, close write side, poll/read and redirect to
  * basic output function, then wait for child completion
  * @param[in]  h        CLIgen handle
  * @param[in]  s0       Socket
@@ -976,8 +980,8 @@ cligen_eval_pipe_post(cligen_handle h,
  * @see pt_expand_fnv where expand callbacks are invoked
  */
 int
-cligen_eval(cligen_handle h, 
-            cg_obj       *co, 
+cligen_eval(cligen_handle h,
+            cg_obj       *co,
             cvec         *cvv)
 {
     int            retval = -1;
@@ -990,7 +994,7 @@ cligen_eval(cligen_handle h,
     void          *wh = NULL; /* eval wrap handle */
     int            spipe = -1;
     pid_t          childpid = 0;
-    
+
     /* Save matched object for plugin use */
     if (h)
         cligen_co_match_set(h, co);
@@ -998,7 +1002,7 @@ cligen_eval(cligen_handle h,
     if ((cvv1 = cvec_dup(cvv)) == NULL)
         goto done;
     /* Make modifications to cvv according to options:
-     * 1) expand-first: expand element 0 to a complete command, not a potentially abbreviated command, 
+     * 1) expand-first: expand element 0 to a complete command, not a potentially abbreviated command,
      *    eg: "co term" -> "configure terminal
      * 2) exclude-keys: remove all constant keywords, eg "conf <a> b" -> "conf b"
      */
@@ -1027,8 +1031,8 @@ cligen_eval(cligen_handle h,
             /* Eval wrapper function so upper layers can make checks before and after callback */
             if (wrapfn)
                 (*wrapfn)(wraparg, &wh, cc->cc_fn_str, __FUNCTION__);
-            if ((*fn)(cligen_userhandle(h)?cligen_userhandle(h):h, 
-                                cvv1, 
+            if ((*fn)(cligen_userhandle(h)?cligen_userhandle(h):h,
+                                cvv1,
                                 argv) < 0){
                 if (argv != NULL)
                     cvec_free(argv);
@@ -1059,7 +1063,7 @@ cligen_eval(cligen_handle h,
 }
 
 /*! Turn echo off */
-void 
+void
 cligen_echo_off(void)
 {
     struct termios settings;
@@ -1071,7 +1075,7 @@ cligen_echo_off(void)
 }
 
 /*! Turn echo on */
-void 
+void
 cligen_echo_on(void)
 {
     struct termios settings;

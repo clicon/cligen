@@ -1,6 +1,6 @@
 /*
   ***** BEGIN LICENSE BLOCK *****
- 
+
   Copyright (C) 2001-2022 Olof Hagsand
 
   This file is part of CLIgen.
@@ -23,7 +23,7 @@
   of those above. If you wish to allow use of your version of this file only
   under the terms of the GPL, and not to allow others to
   use your version of this file under the terms of Apache License version 2, indicate
-  your decision by deleting the provisions above and replace them with the 
+  your decision by deleting the provisions above and replace them with the
   notice and other provisions required by the GPL. If you do not delete
   the provisions above, a recipient may use your version of this file under
   the terms of any one of the Apache License version 2 or the GPL.
@@ -74,9 +74,10 @@
 #include "cligen_handle_internal.h"
 
 /*
- * Access functions 
+ * Access functions
  */
 /*! Access function to the get name of parsetree header
+ *
  * @param[in]  ph    Parse tree header
  * @retval     name  Name
  * @retval     NULL  Error
@@ -92,6 +93,7 @@ cligen_ph_name_get(pt_head *ph)
 }
 
 /*! Access function to set name of parsetree header
+ *
  * @param[in]  ph    Parse tree header
  * @param[in]  name  Name
  * @retval     0     OK
@@ -117,6 +119,7 @@ cligen_ph_name_set(pt_head *ph,
 }
 
 /*! Access function to the working point in a tree, shortcut to implement edit modes.
+ *
  * @param[in]  ph   Parse tree header
  * @retval     pt   Parse tree
  * @retval     NULL Error or no parse tree
@@ -132,6 +135,7 @@ cligen_ph_parsetree_get(pt_head *ph)
 }
 
 /*! Access function to set parsetree of parse-tree header, remove pt from its parents
+ *
  * @param[in]  ph    Parse-tree header
  * @param[in]  pt    parse-tree
  * @retval     0     OK
@@ -144,7 +148,7 @@ cligen_ph_parsetree_set(pt_head    *ph,
     int     retval = -1;
     int     i;
     cg_obj *co;
-    
+
     if (ph == NULL){
        errno = EINVAL;
        goto done;
@@ -160,6 +164,7 @@ cligen_ph_parsetree_set(pt_head    *ph,
 }
 
 /*! Access function to the working point in a tree, shortcut to implement edit modes.
+ *
  * @param[in] h     CLIgen handle
  * @param[in] name  Name of tree
  * @retval    wp    Working point cligen object (shortcut - a sub of this tree)
@@ -173,6 +178,7 @@ cligen_ph_workpoint_get(pt_head *ph)
 }
 
 /*! Access function to the working point in a tree, shortcut to implement edit modes.
+ *
  * @param[in]  pt   Parse tree
  * @param[in]  wp   Working point identified by a cligen object(actually its parse-tree sub vector)
  */
@@ -248,6 +254,7 @@ cligen_ph_pipe_set(pt_head *ph,
 }
 
 /*! Find a parsetree head by its name,
+ *
  * @param[in] h       CLIgen handle
  * @param[in] name    Name of tree
  * @retval    ph      Parse-tree header
@@ -272,6 +279,7 @@ cligen_ph_find(cligen_handle h,
 }
 
 /*! Free a  parsetree header
+ *
  * @param[in]   ph    Parse-tree header
  */
 int
@@ -294,8 +302,9 @@ cligen_ph_free(pt_head *ph)
 }
 
 /*! Append a new parsetree header
+ *
  * @param[in]  h     CLIgen handle
- * @param[in]  name  Name of this tree 
+ * @param[in]  name  Name of this tree
  * @retval     ph    The new parsetree header
  * @retval     NULL  Error
  * Note, if this is the first tree, it is activated by default
@@ -305,7 +314,7 @@ cligen_ph_add(cligen_handle h,
               char         *name)
 {
     pt_head *ph, *phlast;
-    
+
     if ((ph = (pt_head *)malloc(sizeof(*ph))) == NULL)
         goto done;
 
@@ -332,7 +341,7 @@ cligen_ph_add(cligen_handle h,
     return ph;
 }
 
-/*! Iterate through all parsed cligen trees 
+/*! Iterate through all parsed cligen trees
  *
  * @param[in] h   CLIgen handle
  * @param[in] pt  Cligen parse-tree iteration variable. Must be initialized to NULL
@@ -347,11 +356,11 @@ cligen_ph_add(cligen_handle h,
  * Note: you may not delete (or add) parse-tree-heads while iterating through them
  */
 pt_head *
-cligen_ph_each(cligen_handle h, 
+cligen_ph_each(cligen_handle h,
                pt_head      *ph0)
 {
     pt_head *ph = NULL;
-    
+
     if (ph0 == NULL)
         ph = cligen_pt_head_get(h);
     else
@@ -359,12 +368,13 @@ cligen_ph_each(cligen_handle h,
     return ph;
 }
 
-/*! Return i:th parse-tree of parsed cligen trees 
+/*! Return i:th parse-tree of parsed cligen trees
+ *
  * @param[in] h  CLIgen handle
  * @param[in] i  Order of element to get
  */
 pt_head *
-cligen_ph_i(cligen_handle h, 
+cligen_ph_i(cligen_handle h,
             int           i0)
 {
     pt_head *ph;
@@ -377,6 +387,7 @@ cligen_ph_i(cligen_handle h,
 }
 
 /*! Get currently active parsetree.
+ *
  * @param[in] h       CLIgen handle
  * @see cligen_ph_active_get  prefer to use that function instead
  */
@@ -389,6 +400,7 @@ cligen_pt_active_get(cligen_handle h)
 }
 
 /*! Get currently active parsetree head.
+ *
  * @param[in] h       CLIgen handle
  */
 pt_head *
@@ -398,6 +410,7 @@ cligen_ph_active_get(cligen_handle h)
 }
 
 /*! Set currently active parsetree by name
+ *
  * @param[in] h       CLIgen handle
  * @retval    0
  * If parse-tree not found all are inactivated.
@@ -415,7 +428,7 @@ cligen_ph_active_set_byname(cligen_handle h,
 /*
  * CLIgen parse-tree workpoint example:
  * @code
- *  edit,wpset("t");{ 
+ *  edit,wpset("t");{
  *    @working, wpset("t");
  *  }
  *  show, wpshow("t");
@@ -427,6 +440,7 @@ cligen_ph_active_set_byname(cligen_handle h,
  */
 
 /*! Callback: Working point tree set
+ *
  * Format of argv:
  *   <treename>
  */
@@ -437,7 +451,7 @@ cligen_wp_set(cligen_handle h,
 {
     cg_var   *cv;
     char     *treename;
-    pt_head  *ph;  
+    pt_head  *ph;
     cg_obj   *co;
 
     cv = cvec_i(argv, 0);
@@ -447,12 +461,13 @@ cligen_wp_set(cligen_handle h,
         if (co->co_treeref_orig != NULL)
             cligen_ph_workpoint_set(ph, co->co_treeref_orig);
         else if (co->co_ref != NULL)
-            cligen_ph_workpoint_set(ph, co->co_ref);        
+            cligen_ph_workpoint_set(ph, co->co_ref);
     }
     return 0;
 }
 
 /*! Callback: Working point tree show
+ *
  * Format of argv:
  *   <treename>
  */
@@ -464,7 +479,7 @@ cligen_wp_show(cligen_handle h,
     cg_var     *cv;
     char       *name;
     parse_tree *pt;
-    cg_obj     *cow;    
+    cg_obj     *cow;
     pt_head    *ph;
 
     cv = cvec_i(argv, 0);
@@ -480,6 +495,7 @@ cligen_wp_show(cligen_handle h,
 }
 
 /*! Callback: Working point tree up to parent
+ *
  * Format of argv:
  *   <treename>
  */
@@ -491,8 +507,8 @@ cligen_wp_up(cligen_handle h,
     cg_var  *cv;
     char    *treename;
     cg_obj  *co;
-    pt_head *ph;  
-    
+    pt_head *ph;
+
     cv = cvec_i(argv, 0);
     treename = cv_string_get(cv);
     if ((ph = cligen_ph_find(h, treename)) != NULL &&
@@ -502,6 +518,7 @@ cligen_wp_up(cligen_handle h,
 }
 
 /*! Callback: Working point tree reset to top level
+ *
  * Format of argv:
  *   <treename>
  */
@@ -513,7 +530,7 @@ cligen_wp_top(cligen_handle h,
     cg_var  *cv;
     char    *treename;
     pt_head *ph;
-    
+
     cv = cvec_i(argv, 0);
     treename = cv_string_get(cv);
     if ((ph = cligen_ph_find(h, treename)) != NULL)
