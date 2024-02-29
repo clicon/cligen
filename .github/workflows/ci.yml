@@ -2,12 +2,14 @@ name: CLIgen CI
 
 on:
   push:
-    branches: [ master ]
+    branches:
+       - master
+       - test-actions
   pull_request:
     branches: [ master ]
 
 jobs:
-  build:
+  ubuntu-build:
 
     runs-on: ubuntu-latest
 
@@ -25,4 +27,27 @@ jobs:
       run: sudo ldconfig
     - name: make test
       run: make test
-      
+
+  ubuntu-coverage:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: install expect
+      run: sudo apt install -y expect
+    - name: configure w coverage
+      run: ./configure CPPFLAGS="-fprofile-arcs -ftest-coverage -O0" CFLAGS="" LDFLAGS="-fprofile-arcs -lgcov
+    - name: make
+      run: make
+    - name: make install
+      run: sudo make install
+    - name: ldconfig
+      run: sudo ldconfig
+    - name: make test
+      run: make test
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+         gcov: true
+         gcov_include: *.c

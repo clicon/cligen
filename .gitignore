@@ -43,3 +43,8 @@ test/config.sh
 *.exe
 *.out
 *.app
+
+# Gcov
+*.gcno
+*.gcda
+*.gcov
