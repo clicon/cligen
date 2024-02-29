@@ -129,6 +129,9 @@ int cligen_fn_str_set(cligen_handle h, char *fn_str);
 int cligen_terminal_rows(cligen_handle h);
 int cligen_terminal_rows_set(cligen_handle h, int rows);
 
+int cligen_paging_get(cligen_handle h);
+int cligen_paging_set(cligen_handle h, int state);
+
 int cligen_terminal_width(cligen_handle h);
 int cligen_terminal_width_set(cligen_handle h, int length);
 
