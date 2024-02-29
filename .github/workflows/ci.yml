@@ -37,7 +37,7 @@ jobs:
     - name: install expect
       run: sudo apt install -y expect
     - name: configure w coverage
-      run: ./configure CPPFLAGS="-fprofile-arcs -ftest-coverage -O0" CFLAGS="" LDFLAGS="-fprofile-arcs -lgcov
+      run: ./configure CPPFLAGS="-fprofile-arcs -ftest-coverage -O0" CFLAGS="" LDFLAGS="-fprofile-arcs -lgcov"
     - name: make
       run: make
     - name: make install
@@ -47,7 +47,6 @@ jobs:
     - name: make test
       run: make test
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v4
       with:
-         gcov: true
-         gcov_include: *.c
+        verbose: true
