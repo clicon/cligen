@@ -13,6 +13,7 @@ Expected: February 2024
 
 ### Minor items
 
+* Added new cligen_paging_get/set for a direct way to disable/enable output paging/scrolling.
 * Made coverity analysis and fixed most of them
   * Some were ignored being for generated code (eg lex) or not applicable
 * Added vcprintf

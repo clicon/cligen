@@ -86,6 +86,11 @@ static int terminal_rows_set1(int rows);
  */
 static int _terminalrows = 0;
 
+/* Enable or disable output paging
+ * @see cligen_output
+ */
+static int _paging = 1;
+
 /* Truncate help string on right margin mode
  * This only applies if you have really long help strings, such as when generating them from a
  * spec.
@@ -545,6 +550,33 @@ cligen_terminal_rows_set(cligen_handle h,
     retval = 0;
  done:
     return retval;
+}
+
+/*! Get cligen_output paging state
+ *
+ * This is related setting terminal_rows to 0 or non-zero, but the latter has a
+ * dynamic dependence on winch, which this does not
+ * @param[in] h      CLIgen handle (not actually used)
+ * @retval    state  0 or 1
+ * @see cligen_output
+ */
+int
+cligen_paging_get(cligen_handle h)
+{
+    return _paging;
+}
+
+/*! Set cligen_output paging state
+ *
+ * @param[in] h      CLIgen handle (not actually used)
+ * @param[in] state  0 or 1
+ */
+int
+cligen_paging_set(cligen_handle h,
+                  int           state)
+{
+    _paging = state;
+    return 0;
 }
 
 /*! Get length of lines (number of 'columns' in a line)

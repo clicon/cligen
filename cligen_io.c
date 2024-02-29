@@ -250,6 +250,7 @@ cligen_output_scroll(FILE   *f,
  * line1: 012345678901
  * line2: 23456789
  * line3: 0123456
+ * @see cligen_output_basic  no pipe and no vararg
  */
 int
 cligen_output(FILE       *f,
@@ -264,10 +265,12 @@ cligen_output(FILE       *f,
     int     term_width;
     ssize_t inbuflen;
     int     s = -1;
+    int     paging;
 
     /* Get terminal width and height, note discussion regarding NULL handle */
     term_rows = cligen_terminal_rows(NULL);
     term_width = cligen_terminal_width(NULL);
+    paging = cligen_paging_get(NULL);
 
     /* form a string in inbuf from all args */
     va_start(args, template);
@@ -297,7 +300,7 @@ cligen_output(FILE       *f,
     else{
         /* if writing to stdout, format output
          */
-        if (term_rows && (f == stdout)){
+        if (paging && term_rows && (f == stdout)){
             if (cligen_output_scroll(f, inbuf, linelen, term_rows) < 0)
                 goto done;
         }
@@ -313,11 +316,11 @@ cligen_output(FILE       *f,
     return retval;
 }
 
-/*! Same as cligen_output, but no stdarg and no pipe-output
+/*! Same as cligen_output, but no vararg and no pipe-output
  *
  * @param[in] f           Open stdio FILE pointer
  * @param[in] template... See man printf(3)
- * @see cligen_output
+ * @see cligen_output  with vararg and pipe output
  */
 int
 cligen_output_basic(FILE  *f,
@@ -328,10 +331,12 @@ cligen_output_basic(FILE  *f,
     ssize_t linelen;
     int     term_rows;
     int     term_width;
+    int     paging;
 
     /* Get terminal width and height, note discussion regarding NULL handle */
     term_rows = cligen_terminal_rows(NULL);
     term_width = cligen_terminal_width(NULL);
+    paging = cligen_paging_get(NULL);
 
     if (term_width > 0)
         linelen = term_width;
@@ -339,7 +344,7 @@ cligen_output_basic(FILE  *f,
         linelen = inbuflen;
     /* if writing to stdout, format output
      */
-    if (term_rows && (f == stdout)){
+    if (paging && term_rows && (f == stdout)){
         if (cligen_output_scroll(f, inbuf, linelen, term_rows) < 0)
             goto done;
     }
