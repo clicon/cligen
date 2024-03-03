@@ -2376,14 +2376,14 @@ cv2cbuf(cg_var *cv,
                 cv->var_ipv4masklen);
         break;
     case CGV_IPV6ADDR:
-        if (inet_ntop(AF_INET6, &cv->var_ipv6addr, straddr, sizeof(straddr)) < 0){
+        if (inet_ntop(AF_INET6, &cv->var_ipv6addr, straddr, sizeof(straddr)) == NULL){
             fprintf(stderr, "inet_ntop: %s\n", strerror(errno));
             return -1;
         }
         cprintf(cb, "%s", straddr);
         break;
     case CGV_IPV6PFX:
-        if (inet_ntop(AF_INET6, &cv->var_ipv6addr, straddr, sizeof(straddr)) < 0){
+        if (inet_ntop(AF_INET6, &cv->var_ipv6addr, straddr, sizeof(straddr)) == NULL){
             fprintf(stderr, "inet_ntop: %s\n", strerror(errno));
             return -1;
         }
@@ -2658,14 +2658,14 @@ cv_print(FILE   *f,
         fprintf(f, "%s/%d", inet_ntoa(cv->var_ipv4addr), cv->var_ipv4masklen);
         break;
     case CGV_IPV6ADDR:
-        if (inet_ntop(AF_INET6, &cv->var_ipv6addr, straddr, sizeof(straddr)) < 0){
+        if (inet_ntop(AF_INET6, &cv->var_ipv6addr, straddr, sizeof(straddr)) == NULL){
             fprintf(stderr, "inet_ntop: %s\n", strerror(errno));
             return -1;
         }
         fprintf(f, "%s", straddr);
         break;
     case CGV_IPV6PFX:
-        if (inet_ntop(AF_INET6, &cv->var_ipv6addr, straddr, sizeof(straddr)) < 0){
+        if (inet_ntop(AF_INET6, &cv->var_ipv6addr, straddr, sizeof(straddr)) == NULL){
             fprintf(stderr, "inet_ntop: %s\n", strerror(errno));
             return -1;
         }
@@ -3184,10 +3184,10 @@ outofrange(cg_var     *cv0,
     }
     if (reason && (*reason = strdup(cbuf_get(cb))) == NULL)
         goto done;
-    if (cb)
-        cbuf_free(cb);
     retval = 0;
  done:
+    if (cb)
+        cbuf_free(cb);
     return retval;
 }
 
@@ -3217,10 +3217,10 @@ outoflength(uint64_t    u64,
     }
     if (reason && (*reason = strdup(cbuf_get(cb))) == NULL)
         goto done;
-    if (cb)
-        cbuf_free(cb);
     retval = 0;
  done:
+    if (cb)
+        cbuf_free(cb);
     return retval;
 }
 

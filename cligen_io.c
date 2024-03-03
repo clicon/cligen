@@ -143,7 +143,7 @@ cligen_output_scroll(FILE   *f,
     char   *ib0;  /* Moving window start */
     char   *ib1;  /* Moving window end */
     char   *ibcr;
-    char    c;
+    int     c;
     char   *linebuf = NULL;
     ssize_t remain;
 
@@ -531,10 +531,12 @@ cligen_help_eq(struct cligen_help *ch0,
     /* Get first line only as equality check */
     cv0 = cvec_i(help0, 0);
     cv1 = cvec_i(help1, 0);
+#if 0 // help0/1 cannot be NULL
     if (cv0 == NULL && help1 == NULL)
         return 1;
     if (cv0 == NULL || help1 == NULL)
         return 0;
+#endif
     return strcmp(cv_string_get(cv0), cv_string_get(cv1)) == 0;
 }
 
@@ -575,11 +577,13 @@ print_help_lines(cligen_handle h,
     int              maxlen = 0;
     int              nrcmd = 0;
     int              column_width;
+    unsigned int     len;
 
     if ((cb = cbuf_new()) == NULL)
         return -1;
     /* Go through match vector and collect commands and helps */
-    if ((chvec = calloc(pt_len_get(ptmatch), sizeof(struct cligen_help))) ==NULL){
+    len = pt_len_get(ptmatch);
+    if ((chvec = calloc(len, sizeof(struct cligen_help))) ==NULL){
         perror("calloc");
         goto done;
     }

@@ -161,8 +161,11 @@ co_expand_sub(cg_obj  *co0,
     } /* CO_VARIABLE */
     con->co_ref = co0; /* Backpointer to the original node */
     *conp = con;
+    con = NULL;
     retval = 0;
  done:
+    if (con)
+        co_free(con, 0);
     return retval;
 }
 
@@ -352,7 +355,7 @@ co_expand_treeref_copy_shallow(cligen_handle h,
     cg_obj     *coparent;
     int         i;
     cg_obj     *cot;            /* treeref object */
-    cg_obj     *con;
+    cg_obj     *con = NULL;
     parse_tree *ptref2 = NULL;   /* tree referenced by pt0 orig */
     cvec       *cvv = NULL;
     cg_var     *cv;
@@ -398,10 +401,13 @@ co_expand_treeref_copy_shallow(cligen_handle h,
                 goto done;
             if (co_insert(ptnew, con) == NULL)
                 goto done;
+            con = NULL;
         }
     } /* for i */
     retval = 0;
  done:
+    if (con)
+        co_free(con, 0);
     if (cvv)
         cvec_free(cvv);
     return retval;
@@ -491,8 +497,8 @@ pt_expand_fnv(cligen_handle h,
               parse_tree   *ptn)
 {
     int         retval = -1;
-    cvec       *commands;
-    cvec       *helptexts;
+    cvec       *commands = NULL;
+    cvec       *helptexts = NULL;
     cg_var     *cv = NULL;
     char       *helpstr = NULL;
     cg_obj     *con = NULL;
@@ -562,15 +568,14 @@ pt_expand_fnv(cligen_handle h,
         if (cmd != value)
             co_value_set(con, (char*)value);
     }
+    retval = 0;
+ done:
     if (commands)
         cvec_free(commands);
     if (helptexts)
         cvec_free(helptexts);
-    retval = 0;
- done:
-    if (callbacks && callbacks->cc_cvec){
+    if (callbacks && callbacks->cc_cvec)
         cligen_callback_arguments_set(h, NULL);
-    }
     if (cvv1)
         cvec_free(cvv1);
     if (helpstr)
@@ -601,7 +606,6 @@ pt_expand_choice(cg_obj       *co,
     if (co->co_choice){
         cp = ccmd = strdup(co->co_choice);
         while ((c = strsep(&ccmd, ",|")) != NULL){
-            con = NULL;
             if (co_expand_sub(co, NULL, &con) < 0)
                 goto done;
             if (transform_var_to_cmd(con, strdup(c), NULL) < 0)
@@ -609,13 +613,15 @@ pt_expand_choice(cg_obj       *co,
             if (cvv_filter && co_filter_set(con, cvv_filter) == NULL)
                 goto done;
             /* con may be deleted in the call and need to be replaced */
-            if ((con = co_insert1(ptn, con, 0)) == NULL)
+            if (co_insert1(ptn, con, 0) == NULL)
                 goto done;
-
+            con = NULL;
         }
     }
     retval = 0;
  done:
+    if (con)
+        co_free(con, 0);
     if (cp)
         free(cp);
     return retval;
@@ -806,7 +812,8 @@ pt_expand_reference(cligen_handle h,
     /* Copy the expand tree to the final tree.
      */
     for (i=0; i<pt_len_get(pttmp); i++){
-        cot = pt_vec_i_get(pttmp, i);
+        if ((cot = pt_vec_i_get(pttmp, i)) == NULL)
+            continue;
         if (pt_expand1_co(h, cot, hide, expandvar,
                           cvv_var,
                           cvv_filter,
