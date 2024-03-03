@@ -911,8 +911,8 @@ cligen_eval_pipe_post(cligen_handle h,
     int     retval = -1;
     int     ret;
     int     status;
-    char    buf[4096];
-    ssize_t len = 4096;
+    char    buf[4097];
+    ssize_t len;
     int     s;
 
     cli_pipe_output_socket_get(&s);
@@ -996,8 +996,11 @@ cligen_eval(cligen_handle h,
     pid_t          childpid = 0;
 
     /* Save matched object for plugin use */
-    if (h)
-        cligen_co_match_set(h, co);
+    if (h == NULL){
+        errno = EINVAL;
+        goto done;
+    }
+    cligen_co_match_set(h, co);
     /* Make a copy of var argument for modifications */
     if ((cvv1 = cvec_dup(cvv)) == NULL)
         goto done;

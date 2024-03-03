@@ -586,11 +586,13 @@ int
 gl_getline(cligen_handle h,
            char        **buf)
 {
-    int             c, loc, tmp;
-    char           *gl_prompt;
-    int             escape = 0;
+    int   c;
+    int   loc;
+    int   tmp;
+    char *gl_prompt;
+    int   escape = 0;
 #ifdef __unix__
-    int             sig;
+    int   sig;
 #endif
 
     gl_init1();
@@ -599,7 +601,7 @@ gl_getline(cligen_handle h,
     if (gl_in_hook)
         gl_in_hook(h, cligen_buf(h));
     gl_fixup(h, gl_prompt, -2, cligen_buf_size(h));
-    while ((c = gl_getc(h)) >= 0) {
+    while ((c = gl_getc(h)) >= 0) { /* tainted data needs to be sanitized */
         gl_extent = 0;          /* reset to full extent */
         if (isprint(c) || (escape && c=='\n')) {
             if (escape == 0 && c == '\\')

@@ -80,7 +80,7 @@
  */
 struct parse_tree{
     struct cg_obj     **pt_vec;    /* vector of pointers to parse-tree nodes */
-    int                 pt_len;    /* length of vector */
+    unsigned int        pt_len;    /* length of vector */
 #if 1 /* Would be nice to remove, but some functions use them */
     char               *pt_name;   /* Cache of ph_name */
 #endif
@@ -258,7 +258,7 @@ pt_vec_i_delete(parse_tree *pt,
  *
  * @param[in]  co  CLIgen parse object
  */
-int
+unsigned int
 pt_len_get(parse_tree *pt)
 {
     if (pt == NULL){
