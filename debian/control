@@ -1,0 +1,26 @@
+Source: cligen
+Section: devel
+Priority: optional
+Maintainer: Johannes Jeppsson <johannes@sunet.se>
+Build-Depends:
+ debhelper-compat (= 13),
+ flex,
+ bison,
+ libnghttp2-dev,
+ libssl-dev
+Standards-Version: 4.5.0
+
+Package: libcligen-dev
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends},
+         ${shlibs:Depends},
+         libcligen7
+Description: Cligen development package
+
+Package: libcligen7
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends},
+         ${shlibs:Depends}
+Description: Cligen library package
