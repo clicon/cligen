@@ -44,23 +44,26 @@
 /*! CLI callback that just prints the function argument
  */
 static int
-hello_cb(cligen_handle h, cvec *cvv, cvec *argv)
+hello_cb(cligen_handle h,
+         cvec         *cvv,
+         cvec         *argv)
 {
     cg_var *cv;
 
     cv = cvec_i(argv, 0);
-    printf("%s\n", cv_string_get(cv));
+    cligen_output(stdout, "%s\n", cv_string_get(cv));
     return 0;
 }
 
 /*! Trivial function translator/mapping function that just assigns same callback
  */
 cgv_fnstype_t *
-str2fn(char *name, void *arg, char **error)
+str2fn(char  *name,
+       void  *arg,
+       char **error)
 {
     return hello_cb;
 }
-
 
 /*! The command syntax specification */
 static char *hello_syntax = "prompt=\"hello> \";\n"
@@ -68,7 +71,8 @@ static char *hello_syntax = "prompt=\"hello> \";\n"
     ;
 
 int
-main(int argc, char *argv[])
+main(int   argc,
+     char *argv[])
 {
     int             retval = -1;
     parse_tree     *pt;            /* cligen parse tree */
