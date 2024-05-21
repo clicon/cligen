@@ -1,6 +1,6 @@
 # CLIgen
 
-[![Build Status](https://github.com/clicon/cligen/actions/workflows/ci.yml/badge.svg)](https://github.com/clicon/cligen/actions/workflows/ci.yml) [![codecov](https://codecov.io/gh/clicon/cligen/branch/master/graph/badge.svg?token=6HXN51SARU)](https://codecov.io/gh/clicon/cligen)
+[![Build Status](https://github.com/clicon/cligen/actions/workflows/ci.yml/badge.svg)](https://github.com/clicon/cligen/actions/workflows/ci.yml) [![codecov](https://codecov.io/gh/clicon/cligen/branch/master/graph/badge.svg?token=6HXN51SARU)](https://codecov.io/gh/clicon/cligen) <a href="https://scan.coverity.com/projects/cligen"><img alt="Coverity Scan Build Status" src="https://scan.coverity.com/projects/29565/badge.svg"/></a>
 
 CLIgen is a Command-Line Interface generator.
 

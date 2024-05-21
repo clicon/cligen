@@ -142,6 +142,7 @@ DATELEN = $(shell date +"%Y.%m.%d %H:%M by `whoami` on `hostname`XXXX"|wc -c)
 build.c:	
 	echo "/* This file is generated from the CLIgen Makefile */" > build.c;
 	date +"const char CLIGEN_BUILDSTR[$(DATELEN)]=\"%Y.%m.%d %H:%M by `whoami` on `hostname`"\"\; >> build.c;
+	echo "const char CLIGEN_GITHASH[64]=\"$(shell git log --pretty="format:%(describe) %ci" -n1)\""\; >> $@;
 	echo "const char CLIGEN_VERSION[64]=\"$(CLIGEN_VERSION)\""\; >> build.c;
 
 # install-bin install-include

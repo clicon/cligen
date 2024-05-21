@@ -2506,9 +2506,10 @@ ac_config_headers="$ac_config_headers cligen_config.h"
 
 
 CLIGEN_VERSION_MAJOR="7"
-CLIGEN_VERSION_MINOR="0"
+CLIGEN_VERSION_MINOR="1"
 CLIGEN_VERSION_PATCH="0"
-CLIGEN_VERSION="${CLIGEN_VERSION_MAJOR}.${CLIGEN_VERSION_MINOR}.${CLIGEN_VERSION_PATCH}"
+# Use GIT, if this does not work, need a fallback mechanism
+CLIXON_VERSION="$(git log --pretty="format:%(describe) %ci" -n1)"
 
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: CLIGEN version is $CLIGEN_VERSION" >&5
 printf "%s\n" "CLIGEN version is $CLIGEN_VERSION" >&6; }
