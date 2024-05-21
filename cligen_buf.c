@@ -109,9 +109,9 @@ cbuf_alloc_set(size_t start,
  *
  * which dynamically print a string.
  * The handle should be freed by cbuf_free()
- * @param[in]   How much buffer space for initial allocation
- * @retval cb   The allocated object handle on success.
- * @retval NULL Error.
+ * @param[in] sz   How much buffer space for initial allocation
+ * @retval    cb   The allocated object handle on success.
+ * @retval    NULL Error.
  * @see cbuf_new  with auto buffer allocation
  */
 cbuf *
@@ -306,8 +306,8 @@ vcprintf(cbuf       *cb,
   * An optimized special case of cprintf
   * @param [in]  cb  cligen buffer allocated by cbuf_new(), may be reallocated.
   * @param [in]  str NULL terminated string
-  * @retval 0    OK
-  * @retval -1   Error
+  * @retval      0   OK
+  * @retval     -1   Error
   * @see cprintf for the generic function
   */
 int
@@ -335,8 +335,8 @@ cbuf_append_str(cbuf       *cb,
   *
   * @param [in]  cb  cligen buffer allocated by cbuf_new(), may be reallocated.
   * @param [in]  c   character to append
-  * @retval 0    OK
-  * @retval -1   Error
+  * @retval      0   OK
+  * @retval     -1   Error
   * @see cbuf_append_str, use that function instead
   */
 int
@@ -355,8 +355,8 @@ cbuf_append(cbuf       *cb,
   * @param [in]  cb  cligen buffer allocated by cbuf_new(), may be reallocated.
   * @param [in]  src Source buffer
   * @param [in]  n   Number of bytes to copy, add a null
-  * @retval 0    OK
-  * @retval -1   Error
+  * @retval      0   OK
+  * @retval     -1   Error
   * @see cprintf for the generic function
   */
 int
@@ -386,8 +386,8 @@ cbuf_append_buf(cbuf  *cb,
  *
  * @param [in]  cb  cligen buffer allocated by cbuf_new(), may be reallocated.
  * @param [in]  i   Truncate string to this length
- * @retval 0    OK
- * @retval -1   Error
+ * @retval      0   OK
+ * @retval     -1   Error
  */
 int
 cbuf_trunc(cbuf  *cb,
