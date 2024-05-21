@@ -12,6 +12,10 @@
 ## 7.1.0
 Expected: June 2024
 
+### Features
+
+* Changed intermediate version numbers to be git-style, eg `7.0.0-39` instead of `7.1.0-PRE`
+
 ## 7.0.0
 8 March 2024
 
