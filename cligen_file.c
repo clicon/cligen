@@ -111,21 +111,21 @@ callback(cligen_handle handle,
     while ((cv = cvec_each(cvv, cv)) != NULL) {
         cv2str(cv, buf, sizeof(buf)-1);
         cligen_output(stderr, "\t%d name:%s type:%s value:%s\n",
-                i++,
-                cv_name_get(cv),
-                cv_type2str(cv_type_get(cv)),
-                buf
-            );
+                      i++,
+                      cv_name_get(cv),
+                      cv_type2str(cv_type_get(cv)),
+                      buf
+                      );
     }
     if (argv){
-            cv = NULL;
-            i=0;
-            while ((cv = cvec_each(argv, cv)) != NULL) {
-                cv2str(cv, buf, sizeof(buf)-1);
-                cligen_output(stdout, "arg %d:", i++);
-                cligen_output(stdout, " %s\n", buf); /* Separaration for test/test_more.sh */
-            }
+        cv = NULL;
+        i=0;
+        while ((cv = cvec_each(argv, cv)) != NULL) {
+            cv2str(cv, buf, sizeof(buf)-1);
+            cligen_output(stdout, "arg %d:", i++);
+            cligen_output(stdout, " %s\n", buf); /* Separaration for test/test_more.sh */
         }
+    }
     cli_output_reset();
     return 0;
 }
@@ -266,6 +266,7 @@ usage(char *argv)
 {
     fprintf(stderr, "Usage:%s <option>*, where the options have the following meaning:\n"
             "\t-h \t\tHelp\n"
+            "\t-V \t\tPrint version and exit\n"
             "\t-f <file> \tConfig-file (or stdin)\n"
             "\t-1 \t\tOnce only. Do not enter interactive mode\n"
             "\t-p \t\tPrint syntax\n"
@@ -319,6 +320,10 @@ main(int   argc,
         switch(**argv) {
         case 'h': /* help */
             usage(argv0); /* usage exits */
+            break;
+        case 'V': /* version */
+            cligen_output(stdout, "CLIgen version: %s\n", CLIGEN_VERSION);
+            goto ok;
             break;
         case '1': /* quit directly */
             once++;
@@ -417,8 +422,9 @@ main(int   argc,
     }
     if (!once && cligen_loop(h) < 0)
         goto done;
+ ok:
     retval = 0;
-  done:
+ done:
     fclose(f);
     if (h)
         cligen_exit(h);

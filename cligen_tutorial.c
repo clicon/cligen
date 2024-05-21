@@ -295,6 +295,7 @@ usage(char *argv)
 {
     fprintf(stderr, "Usage:%s [-h][-f <filename>][-q], where the options have the following meaning:\n"
             "\t-h \t\tHelp\n"
+            "\t-V \t\tPrint version and exit\n"
             "\t-f <file> \tConfig-file (or stdin) Example use: tutorial.cli for \n"
             "\t-q \t\tQuiet\n"
             "\t-C \t\tDont copy treeref mode\n"
@@ -331,6 +332,10 @@ main(int   argc,
         switch(**argv) {
         case 'h': /* help */
             usage(argv0); /* usage exits */
+            break;
+        case 'V': /* version */
+            cligen_output(stdout, "CLIgen version: %s\n", CLIGEN_VERSION);
+            goto ok;
             break;
         case 'q': /* quiet */
             quiet++;
@@ -381,6 +386,7 @@ main(int   argc,
     }
     if (cligen_loop(h) < 0)
         goto done;
+ ok:
     retval = 0;
  done:
     fclose(f);

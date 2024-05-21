@@ -74,7 +74,7 @@ CLIGEN_VERSION_MAJOR="7"
 CLIGEN_VERSION_MINOR="1"
 CLIGEN_VERSION_PATCH="0"
 # Use GIT, if this does not work, need a fallback mechanism
-CLIXON_VERSION="$(git log --pretty="format:%(describe) %ci" -n1)"
+CLIGEN_VERSION="$(git log --pretty="format:%(describe) %ci" -n1)"
 
 AC_MSG_RESULT(CLIGEN version is $CLIGEN_VERSION)
 
