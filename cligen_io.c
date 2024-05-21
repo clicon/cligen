@@ -164,7 +164,7 @@ cligen_output_scroll(FILE   *f,
          *   2b) less than or equal to remain:
          */
         if ((ibcr = strstr(ib0, "\n")) != NULL){
-            if ((ibcr - ib0) > remain){
+            if ((ibcr - ib0) >= remain){
                 ib1 = ib0 + remain; /* 1a */
                 D_LINES++;
                 remain = linelen;
