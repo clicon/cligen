@@ -1481,6 +1481,30 @@ In the function, the CLIgen variable {\tt cv} assumed to be a string, every char
 
 In the same way as expand functions, the translator functions must be registered using {\tt cligen\_translate\_str2fn()}. See the tutorial example and code for more details.
 
+\subsection{History}
+
+CLIgen has a command-history API.
+
+Example, initialize a command history with 100 lines, load existing history from a file called ".cli\_history" and register history callback {\tt history\_cb}:
+
+\begin{verbatim}
+   FILE *f;
+   cligen_hist_init(h, 100);
+   f = fopen(".cli_history", "r");
+   cligen_hist_file_load(h, f);
+   cligen_hist_fn_set(h, history_cb, NULL);
+\end{verbatim}
+
+The history callback may be used to log CLI commands or in other ways mirror commands. Example of a history callback making syslog calls at LOG\_INFO:
+
+\begin{verbatim}
+   int
+   history_cb(cligen_handle h, char *cmd, void *arg)
+   {
+      return syslog(LOG_MAKEPRI(LOG_USER, LOG_INFO), "CLI command:%s", cmd);
+   }
+\end{verbatim}
+
 \section{Installation}
 
 CLIgen is easiest installed from github. Just clone the source,

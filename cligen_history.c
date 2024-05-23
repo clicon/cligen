@@ -114,9 +114,9 @@ hist_add(cligen_handle h,
          char         *buf)
 {
     struct cligen_handle *ch = handle(h);
-    int   retval = -1;
-    char *p = buf;
-    int   len;
+    int                   retval = -1;
+    char                 *p = buf;
+    int                   len;
 
     if (strlen(buf) >= cligen_buf_size(h))
         if (cligen_buf_increase(h, strlen(buf)) < 0)
@@ -125,7 +125,7 @@ hist_add(cligen_handle h,
         p++;
     if (*p) {
         len = strlen(buf);
-        if (strchr(p, '\n'))    /* previously line already has NL stripped */
+        if (strchr(p, '\n'))    /* previous line already has NL stripped */
             len--;
         if (ch->ch_hist_pre == 0 || strlen(ch->ch_hist_pre) != len ||
                             strncmp(ch->ch_hist_pre, buf, len) != 0) {
@@ -144,7 +144,6 @@ hist_add(cligen_handle h,
  done:
     return retval;
 }
-
 
 /*! Clear the history and deallocate all memory of the history
  *
@@ -237,7 +236,6 @@ hist_pos(cligen_handle h)
 /*!
  * @param[in] h     CLIgen handle
  */
-
 int
 hist_last_get(cligen_handle h)
 {
@@ -385,7 +383,7 @@ cligen_hist_file_load(cligen_handle h,
  *
  * @param[in] h         CLIgen handle
  * @param[in] filename  Name of history file (or NULL if no history file)
- * @see cligen_exit  Call before this function before cligen_exit
+ * @see cligen_exit     Call before this function before cligen_exit
  */
 int
 cligen_hist_file_save(cligen_handle h,
@@ -411,4 +409,3 @@ cligen_hist_file_save(cligen_handle h,
     retval = 0;
     return retval;
 }
-

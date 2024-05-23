@@ -14,6 +14,8 @@ Expected: June 2024
 
 ### Features
 
+* Added history callbacks API
+  * Added history subsection in tutorial
 * Changed intermediate version numbers to be git-style, eg `7.0.0-39` instead of `7.1.0-PRE`
 
 ## 7.0.0
