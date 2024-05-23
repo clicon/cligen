@@ -893,6 +893,46 @@ cligen_logsyntax_set(cligen_handle h,
     return 0;
 }
 
+/*! Set CLIgen history callback function
+ *
+ * @param[in] h     CLIgen handle
+ * @param[in] fn    Register function to call each CLI command
+ * @param[in] arg   Call function with this argument
+ * @retval    0     OK
+ */
+int
+cligen_hist_fn_set(cligen_handle   h,
+                   cligen_hist_fn *fn,
+                   void           *arg)
+{
+    struct cligen_handle *ch = handle(h);
+
+    ch->ch_hist_fn = fn;
+    ch->ch_hist_arg = arg;
+    return 0;
+}
+
+/*! Get CLIgen history callback function
+ *
+ * @param[in]  h     CLIgen handle
+ * @param[out] fn    Register function to call each CLI command
+ * @param[out] arg   Call function with this argument
+ * @retval     0     OK
+ */
+int
+cligen_hist_fn_get(cligen_handle    h,
+                   cligen_hist_fn **fn,
+                   void           **arg)
+{
+    struct cligen_handle *ch = handle(h);
+
+    if (fn)
+        *fn = ch->ch_hist_fn;
+    if (arg)
+        *arg = ch->ch_hist_arg;
+    return 0;
+}
+
 /*! Get app-specific handle for callbacks instead of cligen handle.
  *
  * An application may choose to use another handle than cligen_handle in callbacks

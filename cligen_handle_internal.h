@@ -102,6 +102,8 @@ struct cligen_handle{
     int         ch_hist_cur;     /* Current position (line) in history */
     int         ch_hist_last;    /* Last position in history */
     char       *ch_hist_pre;     /* Previous position in history */
+    cligen_hist_fn *ch_hist_fn;  /* Callback for mirroring command history, e.g. logging */
+    void       *ch_hist_arg;     /* Argument to history callback */
     void       *ch_userhandle;   /* Use this as app-specific callback handle */
     void       *ch_userdata;     /* application-specific data (any data) */
     int         ch_regex_xsd;    /* 0: POSIX / REGEX(3); 1: LIBXML2 XSD */

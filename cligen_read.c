@@ -374,7 +374,6 @@ show_help_columns(cligen_handle h,
                          level) < 0)
             goto done;
     } /* nr>0 */
-
     retval = 0;
   done:
     if (chvec){
@@ -406,15 +405,14 @@ show_help_columns(cligen_handle h,
  * @retval      -1      Error
  *
  * Example from JunOS
-# set interfaces ?
-Possible completions:
-  <interface_name>     Interface name
-+ apply-groups         Groups from which to inherit configuration data
-+ apply-groups-except  Don't inherit configuration data from these groups
-  fe-0/0/1             Interface name
-> interface-set        Logical interface set configuration
-> traceoptions         Interface trace options
-
+ # set interfaces ?
+ Possible completions:
+    <interface_name>     Interface name
+ + apply-groups         Groups from which to inherit configuration data
+ + apply-groups-except  Don't inherit configuration data from these groups
+    fe-0/0/1             Interface name
+ > interface-set        Logical interface set configuration
+ > traceoptions         Interface trace options
  */
 static int
 show_help_line(cligen_handle h,
@@ -722,8 +720,10 @@ int
 cliread(cligen_handle h,
         char        **stringp)
 {
-    int   retval = -1;
-    char *buf = NULL;
+    int             retval = -1;
+    char           *buf = NULL;
+    cligen_hist_fn *fn = NULL;
+    void           *arg = NULL;
 
     if (stringp == NULL){
         errno = EINVAL;
@@ -740,6 +740,13 @@ cliread(cligen_handle h,
         goto eof;
     if (hist_add(h, buf) < 0)
         goto done;
+    /* Check callback: the reason it is separated from hist_add, is that the latter filters
+     * some commands and is also used in file load
+     */
+    cligen_hist_fn_get(h, &fn, &arg);
+    if (fn && (*fn)(h, buf, arg) < 0) {
+        goto done;
+    }
     *stringp = buf;
  eof:
     retval = 0;
