@@ -55,7 +55,7 @@ static void     gl_init1(void);         /* prepare to edit a line */
 static void     gl_cleanup(void);       /* to undo gl_init1 */
 void            gl_char_init(void);     /* get ready for no echo input */
 void            gl_char_cleanup(void);  /* undo gl_char_init */
-static size_t   (*gl_strlen)() = (size_t(*)())strlen;
+static size_t   (*gl_strlen)(const char *) = (size_t(*)())strlen;
                                         /* returns printable prompt width */
 
 static int      gl_addchar(cligen_handle h, int c);     /* install specified char */
