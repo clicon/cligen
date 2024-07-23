@@ -59,12 +59,12 @@
  * The string contains a hierarchy of syntax specs bounded by {} and semi-colon. Comma is used
  * to tag a syntax-spec with assignments or callbacks. Help strings are delimited with ("").
  * '#' anywhere on the line means the rest is comment.
- * @param[in]     h    CLIgen handle
- * @param[in]     str  String to parse containing CLIgen specification statements
- * @param[in]     name Debug string identifying the spec, typically a filename
+ * @param[in]     h        CLIgen handle
+ * @param[in]     str      String to parse containing CLIgen specification statements
+ * @param[in]     name     Debug string identifying the spec, typically a filename
  * @param[in]     treename Initial treename, overriden by treename= in the clispec (or NULL)
- * @param[in,out] pt   Parse-tree, if set, add commands to this. Can be NULL
- * @param[out]    cvv  Global variables
+ * @param[in,out] pt       Parse-tree, if set, add commands to this. Can be NULL
+ * @param[out]    cvv      Global variables
  * @see cligen_parse_file
  * @note parse-trees can be added as side-effect:s using the treename clispec:s. The tree returned
  * in pt is only the "latest" one.
