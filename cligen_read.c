@@ -763,7 +763,7 @@ cliread(cligen_handle h,
  * @param[in]  h         CLIgen handle
  * @param[out] line      Pointer to new string input from terminal
  * @param[out] cb_retval Retval of callback (only if functions return value is 1)
- * @param[out] result   Number of matches
+ * @param[out] result    Number of matches
  * @param[out] reason    Error reason if result is nomatch. Need to be free:d
  * @retval     0         OK
  * @retval    -1         Error
@@ -983,7 +983,6 @@ cligen_eval_pipe_post(cligen_handle h,
  *   @fn, foo();
  * fn:
  *    a, bar();
- * callbacks0 is foo()
  * @see pt_expand_fnv where expand callbacks are invoked
  */
 int

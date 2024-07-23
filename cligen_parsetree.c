@@ -81,9 +81,6 @@
 struct parse_tree{
     struct cg_obj     **pt_vec;    /* vector of pointers to parse-tree nodes */
     unsigned int        pt_len;    /* length of vector */
-#if 1 /* Would be nice to remove, but some functions use them */
-    char               *pt_name;   /* Cache of ph_name */
-#endif
     char                pt_set;    /* Parse-tree is a SET */
 };
 
@@ -95,8 +92,6 @@ pt_stats_one(parse_tree *pt,
 
     sz += sizeof(struct parse_tree);
     sz += pt->pt_len*sizeof(struct cg_obj*);
-    if (pt->pt_name)
-        sz += strlen(pt->pt_name) + 1;
     if (szp)
         *szp = sz;
     return 0;
@@ -565,10 +560,6 @@ pt_free(parse_tree *pt,
         free(pt->pt_vec);
     }
     pt->pt_len = 0;
-    if (pt->pt_name){
-        free(pt->pt_name);
-        pt->pt_name = NULL;
-    }
     free(pt);
     return 0;
 }
