@@ -369,3 +369,137 @@ cligen_translate_str2fn(parse_tree         *pt,
   done:
     return retval;
 }
+
+/*! Alias function
+ *
+ * @param[in]  h     CLIgen handle
+ * @param[in]  cvv   Vector of variables: function parameters
+ * @param[in]  argv  Arguments given at the callback: this is the command to be executed
+ * @retval     0     OK
+ * @retval    -1     Error
+ * @see cliread_eval  original fn
+ */
+int
+cligen_alias_call(cligen_handle h,
+                  cvec         *cvv,
+                  cvec         *argv)
+{
+    int           retval = -1;
+    parse_tree   *pt;
+    cg_obj       *matchobj = NULL;
+    cvec         *cvv2 = NULL;
+    cligen_result result;
+    char         *reason = NULL;
+
+    if (argv == NULL || cvec_len(argv) != 1){
+        errno = EINVAL;
+        goto done;
+    }
+    if ((pt = cligen_pt_active_get(h)) == NULL){
+        errno = ENOENT;
+        goto done;
+    }
+    if (cliread_parse(h, cvec_i_str(argv, 0), pt, &matchobj, &cvv2, &result, &reason) < 0)
+        goto done;
+    if (result == CG_MATCH)
+        if (cligen_eval(h, matchobj, cvv2) < 0)
+            goto done;
+    retval = 0;
+ done:
+    if (matchobj)
+        co_free(matchobj, 0);
+    if (cvv2)
+        cvec_free(cvv2);
+    if (reason)
+        free(reason);
+    return retval;
+}
+
+/*! Add cli alias given treename (or default), alias name, helpstring and command
+ *
+ * Check if old alias exists, if so replace it, parse new syntax and insert into
+ * top-level parse-tree, and mark as alias.
+ * @param[in]  h       CLIgen handle
+ * @param[in]  phname  CLIgen parse-tree header / tree name
+ * @param[in]  name    Alias name
+ * @param[in]  helpstr Help string of alias
+ * @param[in]  command Alias expanded command
+ * @param[in]  callback Alias callback (default cligen_alias_call)
+ * @retval     0       OK
+ * @retval    -1       Error
+ */
+int
+cligen_alias_add(cligen_handle  h,
+                 char          *phname,
+                 char          *name,
+                 char          *helpstr,
+                 char          *command,
+                 cgv_fnstype_t *callback)
+{
+    int          retval = -1;
+    cbuf        *cb = NULL;
+    pt_head     *ph;
+    parse_tree  *pt;
+    cg_obj      *co;
+    int          i;
+    cg_callback *cc;
+
+    if (phname == NULL) {
+        if ((ph = cligen_ph_active_get(h)) == NULL){
+            errno = ENOENT;
+            goto done;
+        }
+    }
+    else {
+        if ((ph = cligen_ph_find(h, phname)) == NULL) {
+            errno = ENOENT;
+            goto done;
+        }
+    }
+    if ((pt = cligen_ph_parsetree_get(ph)) == NULL){
+        errno = ENOENT;
+        goto done;
+    }
+    /* Remove old alias, cant use search since need i for delete */
+    for (i=0; i<pt_len_get(pt); i++){
+        if ((co = pt_vec_i_get(pt, i)) == NULL)
+            continue;
+        if (strcmp(co->co_command, name) != 0)
+            continue;
+        if (co_flags_get(co, CO_FLAGS_ALIAS) == 0){
+            errno = EEXIST;
+            goto done;
+        }
+        pt_vec_i_delete(pt, i, 1);
+        break;
+    }
+    if ((cb = cbuf_new()) == NULL)
+        goto done;
+    cprintf(cb, "%s", name);
+    if (helpstr)
+        cprintf(cb, "(\"%s\")", helpstr);
+    cprintf(cb, ", cligen_alias_fn(\"%s\");", command);
+    if (clispec_parse_str(h, cbuf_get(cb), "Parsing alias command", NULL, pt, NULL) < 0){
+        goto done;
+    }
+    /* Sanity check and add alias flag */
+    if ((co = co_find_one(pt, name)) == NULL){
+        errno = ENOENT;
+        goto done;
+    }
+    co_flags_set(co, CO_FLAGS_ALIAS);
+    {
+
+
+        if ((cc = co->co_callbacks) == NULL){
+            fprintf(stderr, "No callback found\n");
+            goto done;
+        }
+        co_callback_fn_set(cc, callback?callback:cligen_alias_call);
+    }
+    retval = 0;
+ done:
+    if (cb)
+        cbuf_free(cb);
+    return retval;
+}

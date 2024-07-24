@@ -12,6 +12,11 @@
 
 ## 7.2.0
 Expected: October 2024
+
+### Features
+
+* New: [CLI simple alias](https://github.com/clicon/cligen/issues/112)
+
 ## 7.1.0
 3 July 2024
 

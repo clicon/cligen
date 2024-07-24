@@ -122,6 +122,7 @@ typedef struct cg_varspec cg_varspec;
 #define CO_FLAGS_TOPOFTREE 0x04  /* This node is top of expanded sub-tree */
 #define CO_FLAGS_OPTION    0x08  /* Generated from optional [] */
 #define CO_FLAGS_MATCH     0x10  /* For sets: avoid selecting same more than once */
+#define CO_FLAGS_ALIAS     0x20  /* Added as an alias (see cligen_alias_cb) */
 
 /* Flags for pt_copy and co_copy
  */
@@ -208,7 +209,6 @@ typedef struct cg_obj cg_obj;
 #define co_ref           co_common.coc_ref
 #define co_treeref_orig  co_common.coc_treeref_orig
 #define co_value         co_common.coc_value
-
 
 /* Access fields for code traversing parse tree */
 #define co_vtype         u.cou_var.cgs_vtype
