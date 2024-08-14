@@ -73,14 +73,20 @@ jobs:
         run: sudo make install DESTDIR=${{ github.workspace }}/build
       - name: copy file for build deb packet dev
         run: cp -r ${{ github.workspace }}/build_packet_dev/debian ${{ github.workspace }}/build
+      - name: replace version
+        run: sed -i 's/\(cligen-dev ([^)]\+)\)\(.*\)/cligen-dev ('"7.1.0-${{ github.run_number }}"')\2/' changelog
       - name: run build packet dev
         run: cd ${{ github.workspace }}/build && dpkg-buildpackage -us -uc
       - name: delete dev directory
         run: rm -r ${{ github.workspace }}/build/debian
       - name: copy file for build deb packet
         run: cp -r ${{ github.workspace }}/build_packet/debian ${{ github.workspace }}/build
+      - name: replace version
+        run: sed -i 's/\(cligen-dev ([^)]\+)\)\(.*\)/cligen-dev ('"7.1.0-${{ github.run_number }}"')\2/' changelog
       - name: run build packet
         run: cd ${{ github.workspace }}/build && dpkg-buildpackage -us -uc
+      - name: show directory
+        run: ls -l ${{ github.workspace }}
       - name: Create deb packet
         id: create_release
         uses: actions/create-release@v1
@@ -98,7 +104,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./cligen-dev_7.1.0-${{ github.run_number }}_amd64.deb
+          asset_path: ${{ github.workspace }}/cligen-dev_7.1.0-${{ github.run_number }}_amd64.deb
           asset_name: cligen-dev_7.1.0-${{ github.run_number }}_amd64.deb
           asset_content_type: application/vnd.debian.binary-package
       - name: Upload Release Asset (cligen)
@@ -108,6 +114,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./cligen_7.1.0-${{ github.run_number }}_amd64.deb
+          asset_path: ${{ github.workspace }}/cligen_7.1.0-${{ github.run_number }}_amd64.deb
           asset_name: cligen_7.1.0-${{ github.run_number }}_amd64.deb
           asset_content_type: application/vnd.debian.binary-package
