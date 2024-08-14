@@ -63,12 +63,14 @@ jobs:
         with:
           submodules: true
       - run: sudo apt update && sudo apt install build-essential flex fakeroot bison lsb-release make -y
+      - name: create dir for build
+        run: mkdir ${{ github.workspace }}/build
       - name: configure
         run: ./configure
       - name: make
         run: make
       - name: make install
-        run: sudo make install
+        run: sudo make install DESTDIR=${{ github.workspace }}/build
 #      - name: Create deb packet
 #        id: create_release
 #        uses: actions/create-release@v1
