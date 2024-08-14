@@ -71,12 +71,16 @@ jobs:
         run: make
       - name: make install
         run: sudo make install DESTDIR=${{ github.workspace }}/build
+      - name: copy file for build deb packet dev
+        run: cp -r ${{ github.workspace }}/build_packet_dev/debian ${{ github.workspace }}/build
+      - name: run build packet dev
+        run: cd ${{ github.workspace }}/build && dpkg-buildpackage -us -uc
+      - name: delete dev directory
+        run: rm -r ${{ github.workspace }}/build/debian
       - name: copy file for build deb packet
         run: cp -r ${{ github.workspace }}/build_packet/debian ${{ github.workspace }}/build
       - name: run build packet
         run: cd ${{ github.workspace }}/build && dpkg-buildpackage -us -uc
-      - name: show directory
-        run: ls -l ${{ github.workspace }}
 #      - name: Create deb packet
 #        id: create_release
 #        uses: actions/create-release@v1
