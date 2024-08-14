@@ -74,7 +74,7 @@ jobs:
       - name: copy file for build deb packet dev
         run: cp -r ${{ github.workspace }}/build_packet_dev/debian ${{ github.workspace }}/build
       - name: replace version
-        run: sed -i 's/\(cligen-dev ([^)]\+\))\(.*\)/cligen-dev ('"7.1.0-${{ github.run_number }}"')\2/' changelog
+        run: cd ${{ github.workspace }}/build && sed -i 's/\(cligen-dev ([^)]\+\))\(.*\)/cligen-dev ('"7.1.0-${{ github.run_number }}"')\2/' changelog
       - name: run build packet dev
         run: cd ${{ github.workspace }}/build && dpkg-buildpackage -us -uc
       - name: delete dev directory
@@ -82,7 +82,7 @@ jobs:
       - name: copy file for build deb packet
         run: cp -r ${{ github.workspace }}/build_packet/debian ${{ github.workspace }}/build
       - name: replace version
-        run: sed -i 's/\(cligen ([^)]\+\))\(.*\)/cligen ('"7.1.0-${{ github.run_number }}"')\2/' changelog
+        run: cd ${{ github.workspace }}/build && sed -i 's/\(cligen ([^)]\+\))\(.*\)/cligen ('"7.1.0-${{ github.run_number }}"')\2/' changelog
       - name: run build packet
         run: cd ${{ github.workspace }}/build && dpkg-buildpackage -us -uc
       - name: show directory
