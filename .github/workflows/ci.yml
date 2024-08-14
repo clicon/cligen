@@ -1,12 +1,17 @@
 name: CLIgen CI
 
 on:
+
   push:
     branches:
-       - master
-       - test-actions
+      - master
+      - test-actions
   pull_request:
     branches: [ master ]
+
+permissions:
+  contents: write
+  pull-requests: write
 
 jobs:
   ubuntu-build:
@@ -14,40 +19,113 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
-    - name: install expect
-      run: sudo apt install -y expect
-    - name: configure
-      run: ./configure
-    - name: make
-      run: make
-    - name: make install
-      run: sudo make install
-    - name: ldconfig
-      run: sudo ldconfig
-    - name: make test
-      run: make test
+      - uses: actions/checkout@v4
+      - name: install expect
+        run: sudo apt install -y expect
+      - name: configure
+        run: ./configure
+      - name: make
+        run: make
+      - name: make install
+        run: sudo make install
+      - name: ldconfig
+        run: sudo ldconfig
+      - name: make test
+        run: make test
 
   ubuntu-coverage:
-
+    needs: ubuntu-build
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
-    - name: install expect
-      run: sudo apt install -y expect
-    - name: configure w coverage
-      run: ./configure CPPFLAGS="-fprofile-arcs -ftest-coverage -O0" CFLAGS="" LDFLAGS="-fprofile-arcs -lgcov"
-    - name: make
-      run: make
-    - name: make install
-      run: sudo make install
-    - name: ldconfig
-      run: sudo ldconfig
-    - name: make test
-      run: make test
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v4
-      with:
-        verbose: true
-        token: ${{ secrets.CODECOV_TOKEN }}
+      - uses: actions/checkout@v4
+      - name: install expect
+        run: sudo apt install -y expect
+      - name: configure w coverage
+        run: ./configure CPPFLAGS="-fprofile-arcs -ftest-coverage -O0" CFLAGS="" LDFLAGS="-fprofile-arcs -lgcov"
+      - name: make
+        run: make
+      - name: make install
+        run: sudo make install
+      - name: ldconfig
+        run: sudo ldconfig
+      - name: make test
+        run: make test
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          verbose: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  reset-run-number:
+    needs: ubuntu-coverage
+    runs-on: ubuntu-latest
+    outputs:
+      run-number: ${{ steps.get-build.outputs.build-number }}
+    steps:
+      - name: Get build number and reset it
+        id: get-build
+        uses: mlilback/build-number@v1
+        with:
+          base: 0 # Update this number to reset counter
+          run-id: ${{ github.run_number }}
+
+  create_deb_packet:
+    needs: reset-run-number
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-20.04
+    env:
+      VERSION: "7.1.0"
+      RUN_NUMBER: ${{ needs.reset-run-number.outputs.run-number }}
+    permissions: write-all
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - run: sudo apt update && sudo apt install build-essential flex fakeroot bison lsb-release make debhelper libnghttp2-dev libssl-dev -y
+      - name: create dir for build
+        run: mkdir ${{ github.workspace }}/build
+      - name: configure
+        run: ./configure
+      - name: make
+        run: make
+      - name: install
+        run: sudo make install DESTDIR=${{ github.workspace }}/build
+      - name: copy file for build deb packet dev
+        run: cp -r ${{ github.workspace }}/debian ${{ github.workspace }}/build
+      - name: add change log
+        run: cd ${{ github.workspace }}/build/debian && export NAME_VERSION="cligen (${{env.VERSION}}-${{env.RUN_NUMBER}})" && git --no-pager log --no-walk --encoding=utf-8 --expand-tabs=4 --pretty=format:"${NAME_VERSION} stable; urgency=medium%n%n  * %w(,,2)%B%w()%n -- %an <%ae>  %aD%n" > changelog && cat changelog
+      - name: run build packet lib and dev
+        run: cd ${{ github.workspace }}/build && dpkg-buildpackage -us -uc
+      - name: show directory
+        run: ls -l ${{ github.workspace }}
+      - name: Create deb packet
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{env.VERSION}}_${{env.RUN_NUMBER}}
+          release_name: cligen_${{env.VERSION}}-${{env.RUN_NUMBER}}
+          draft: false
+          prerelease: false
+      - name: Upload Release Asset (cligen-dev)
+        id: upload-release-asset-dev
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ github.workspace }}/libcligen-dev_${{env.VERSION}}-${{env.RUN_NUMBER}}_amd64.deb
+          asset_name: libcligen-dev_${{env.VERSION}}-${{env.RUN_NUMBER}}_amd64.deb
+          asset_content_type: application/vnd.debian.binary-package
+      - name: Upload Release Asset (cligen)
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ github.workspace }}/libcligen7_${{env.VERSION}}-${{env.RUN_NUMBER}}_amd64.deb
+          asset_name: libcligen7_${{env.VERSION}}-${{env.RUN_NUMBER}}_amd64.deb
+          asset_content_type: application/vnd.debian.binary-package
