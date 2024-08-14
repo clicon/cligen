@@ -5,6 +5,7 @@ on:
     branches:
        - master
        - test-actions
+       - add_create_deb_packet
   pull_request:
     branches: [ master ]
 
@@ -51,3 +52,30 @@ jobs:
       with:
         verbose: true
         token: ${{ secrets.CODECOV_TOKEN }}
+
+  create_deb_packet:
+
+    runs-on: ubuntu-20.04
+
+    permissions: write-all
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+      - run: sudo apt update && sudo apt install build-essential flex fakeroot bison lsb-release make -y
+      - name: configure
+        run: ./configure
+      - name: make
+        run: make
+      - name: make install
+        run: sudo make install
+#      - name: Create deb packet
+#        id: create_release
+#        uses: actions/create-release@v1
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#        with:
+#          tag_name: ${{ github.run_number }}
+#          release_name: cligen_7.1.0-${{ github.run_number }}
+#          draft: false
+#          prerelease: false
