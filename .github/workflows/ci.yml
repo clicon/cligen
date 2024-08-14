@@ -72,7 +72,7 @@ jobs:
       - name: make install
         run: sudo make install DESTDIR=${{ github.workspace }}/build
       - name: copy file for build deb packet
-        run: cp ${{ github.workspace }}/build_packet/debian ${{ github.workspace }}/build
+        run: cp -r ${{ github.workspace }}/build_packet/debian ${{ github.workspace }}/build
       - name: run build packet
         run: cd ${{ github.workspace }}/build && dpkg-buildpackage -us -uc
       - name: show directory
