@@ -81,13 +81,33 @@ jobs:
         run: cp -r ${{ github.workspace }}/build_packet/debian ${{ github.workspace }}/build
       - name: run build packet
         run: cd ${{ github.workspace }}/build && dpkg-buildpackage -us -uc
-#      - name: Create deb packet
-#        id: create_release
-#        uses: actions/create-release@v1
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#        with:
-#          tag_name: ${{ github.run_number }}
-#          release_name: cligen_7.1.0-${{ github.run_number }}
-#          draft: false
-#          prerelease: false
+      - name: Create deb packet
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.run_number }}
+          release_name: cligen_7.1.0-${{ github.run_number }}
+          draft: false
+          prerelease: false
+      - name: Upload Release Asset (cligen-dev)
+        id: upload-release-asset-dev
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./cligen-dev_7.1.0-${{ github.run_number }}_amd64.deb
+          asset_name: cligen-dev_7.1.0-${{ github.run_number }}_amd64.deb
+          asset_content_type: application/vnd.debian.binary-package
+      - name: Upload Release Asset (cligen)
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./cligen_7.1.0-${{ github.run_number }}_amd64.deb
+          asset_name: cligen_7.1.0-${{ github.run_number }}_amd64.deb
+          asset_content_type: application/vnd.debian.binary-package
