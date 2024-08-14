@@ -62,7 +62,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           submodules: true
-      - run: sudo apt update && sudo apt install build-essential flex fakeroot bison lsb-release make -y
+      - run: sudo apt update && sudo apt install build-essential flex fakeroot bison lsb-release make debhelper -y
       - name: create dir for build
         run: mkdir ${{ github.workspace }}/build
       - name: configure
