@@ -87,6 +87,7 @@ cligen_regex_posix_compile(char  *regexp,
     cbuf    *cb = NULL;
     regex_t *re = NULL;
     int      len0;
+    int      err;
 
     len0 = strlen(regexp);
     if ((cb = cbuf_new()) == NULL)
@@ -113,7 +114,12 @@ cligen_regex_posix_compile(char  *regexp,
     if ((re = malloc(sizeof(regex_t))) == NULL)
         goto done;
     memset(re, 0, sizeof(regex_t));
-    if (regcomp(re, cbuf_get(cb), REG_NOSUB|REG_EXTENDED) != 0) {
+    if ((err = regcomp(re, cbuf_get(cb), REG_NOSUB|REG_EXTENDED)) != 0) {
+        char errbuf[1024] = {0,};
+        if (regerror(err, re, errbuf, 1000) < 0){
+            perror("regerror");
+            goto done;
+        }
         goto fail;
     }
     *recomp = re;

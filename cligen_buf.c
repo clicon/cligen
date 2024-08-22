@@ -311,8 +311,8 @@ vcprintf(cbuf       *cb,
   * @see cprintf for the generic function
   */
 int
-cbuf_append_str(cbuf       *cb,
-                char       *str)
+cbuf_append_str(cbuf *cb,
+                char *str)
 {
     size_t  len0;
     size_t  len;
@@ -340,8 +340,8 @@ cbuf_append_str(cbuf       *cb,
   * @see cbuf_append_str, use that function instead
   */
 int
-cbuf_append(cbuf       *cb,
-            int        c)
+cbuf_append(cbuf *cb,
+            int   c)
 {
     char str[2] = {0,};
 

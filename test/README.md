@@ -7,6 +7,10 @@ automatically run as part of `all.sh` and `sum.sh` tests. The scripts
 need to follow some rules to work properly, please look at one or two
 to get the idea.
 
+## Prereqs
+
+expect, valgrind
+
 ## Run tests
 
 You can run an individual test by itself, or run through all tests matching 'test_*.sh' in the directory. Prints test output and stops on first error:

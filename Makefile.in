@@ -116,7 +116,7 @@ endif
 
 .PHONY: TAGS test
 TAGS:
-	find . -name '*.[chyl]' -print | etags -
+	find . -name '*.[chyl]' -print | xargs etags
 
 # Run a clixon test container.
 # Alt: cd test; ./all.sh
