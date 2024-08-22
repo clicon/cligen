@@ -106,6 +106,7 @@ stripdup(char *s0)
 <INITIAL>,                { BEGIN(OPTION); return *yytext; }
 <INITIAL>#                { _CY->cy_lex_state =INITIAL; BEGIN(COMMENT); }
 <INITIAL>\n               { _CY->cy_linenum++; }
+<INITIAL>\r
 <INITIAL>=                { BEGIN(OPTION); return *yytext; }
 <INITIAL>;                { return *yytext; }
 <INITIAL><<EOF>>          { return MY_EOF; }
@@ -120,17 +121,18 @@ stripdup(char *s0)
 <INITIAL>\{               { return *yytext; }
 <INITIAL>\}               { return *yytext; }
 <INITIAL>\@               { return *yytext; }
-<INITIAL>([^@ \t,#\n=;\\<\(\)\[\]\|\{\}]|\\.)+  {
+<INITIAL>([^@ \t,#\n\r=;\\<\(\)\[\]\|\{\}]|\\.)+  {
                             cligen_parselval.string = stripdup(yytext);
                             return NAME; }
 <INITIAL>.                { return -1; }
 
 <HELP>\n                  { _CY->cy_linenum++;
                             return *yytext; }
+<HELP>\r
 <HELP><<EOF>>             { return MY_EOF; }
 <HELP>\"\)                { BEGIN(INITIAL); return DQP; /* double-quote parenthes */}
 <HELP>\\                  { _CY->cy_lex_state = HELP; BEGIN(ESCAPE); }
-<HELP>[^\\"\n]+           {
+<HELP>[^\\"\n\r]+         {
                              int i;
                              for (i=0;i<strlen(yytext);i++){
                                 if (!isblank(yytext[i]))

@@ -17,6 +17,10 @@ Expected: October 2024
 
 * New: [CLI simple alias](https://github.com/clicon/cligen/issues/112)
 
+### Corrected Bugs
+
+* Fixed: [CLI help text for YANG data model with multi-line description field is misformatted](https://github.com/clicon/clixon/issues/543)
+
 ## 7.1.0
 3 July 2024
 
