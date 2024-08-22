@@ -1372,7 +1372,7 @@ decl        : cmd                 { _PARSE_DEBUG("decl->cmd");}
             | cmd PDQ DQP         { _PARSE_DEBUG("decl->cmd (\"\")");}
             ;
 
-helpstring : helpstring '\n' helpstring1
+helpstring : helpstring linefeeds helpstring1
               {
                   _PARSE_DEBUG("helpstring -> helpstring helpstring1");
                   if (cgy_helpstring(_cy, 1, $3) < 0) _YYERROR("helpstring");
@@ -1382,6 +1382,10 @@ helpstring : helpstring '\n' helpstring1
                    _PARSE_DEBUG("helpstring -> helpstring1");
                    if (cgy_helpstring(_cy, 0, $1) < 0) _YYERROR("helpstring");
                }
+            ;
+
+linefeeds   : linefeeds '\n'
+            | '\n'
             ;
 
 helpstring1 : helpstring1 HELPSTR
@@ -1397,7 +1401,6 @@ helpstring1 : helpstring1 HELPSTR
                    if (($$=strdup($1)) == NULL) _YYERROR("helpstring1");
                }
             ;
-
 
 cmd         : NAME           { _PARSE_DEBUG("cmd->NAME");
                                if (cgy_cmd(_cy, $1) < 0) _YYERROR("cmd"); free($1); }
