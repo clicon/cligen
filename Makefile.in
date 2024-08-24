@@ -106,7 +106,7 @@ APPS		= cligen_hello cligen_file cligen_tutorial
 YACC		= @YACC@
 LEX		= @LEX@
 
-all:	cligen $(APPS)
+all:	cligen $(APPS) write_version
 
 ifeq ($(LINKAGE),dynamic)
 all:	 $(MYLIBDYNAMIC)
@@ -123,6 +123,14 @@ TAGS:
 # CFLAGS/LINKAGE is for test_compile.sh for coverage
 test:
 	(cd test && SKIPLIST="$(SKIPLIST)" CFLAGS="$(CFLAGS)" LINKAGE="$(LINKAGE)" ./all.sh)
+
+write_version:
+	$(eval CI_VERSION_FULL=$(shell git describe --tags $(git rev-list --tags --max-count=1)))
+	$(eval CI_VERSION_MAJOR=$(shell echo $(CI_VERSION_FULL) | cut -d . -f1))
+	$(eval CI_VERSION_MINOR=$(shell echo $(CI_VERSION_FULL) | cut -d . -f2))
+	$(eval CI_VERSION_FIX=$(shell echo $(CI_VERSION_FULL) | cut -d . -f3 | cut -d '_' -f1))
+	@echo version: ${CI_VERSION_MAJOR}.${CI_VERSION_MINOR}.${CI_VERSION_FIX}
+	@echo "${CI_VERSION_MAJOR}.${CI_VERSION_MINOR}.${CI_VERSION_FIX}" > version
 
 distclean: clean
 	rm -f Makefile config.log config.status config.h TAGS .depend
@@ -187,6 +195,7 @@ clean:
 	rm -f *.tab.c *.tab.h *.tab.o 
 	rm -f lex.*.c lex.*.o *.core cligen
 	rm -f *.gcda *.gcno *.gcov # coverage
+	rm version
 
 %.c : %.y  # cancel implicit yacc rule
 %.c : %.l  # cancel implicit lex rule
