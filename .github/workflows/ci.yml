@@ -114,23 +114,13 @@ jobs:
           release_name: cligen_${{env.VERSION}}-${{env.RUN_NUMBER}}
           draft: false
           prerelease: false
-      - name: Upload Release Asset (cligen-dev)
-        id: upload-release-asset-dev
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload artefact
+        uses: actions/upload-artifact@v4
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ github.workspace }}/libcligen-dev_${{env.VERSION}}-${{env.RUN_NUMBER}}_amd64.deb
-          asset_name: libcligen-dev_${{env.VERSION}}-${{env.RUN_NUMBER}}_amd64.deb
-          asset_content_type: application/vnd.debian.binary-package
-      - name: Upload Release Asset (cligen)
-        id: upload-release-asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          name: libcligen-dev_${{env.VERSION}}-${{env.RUN_NUMBER}}_amd64.deb
+          path: ${{ github.workspace }}/libcligen-dev_${{env.VERSION}}-${{env.RUN_NUMBER}}_amd64.deb
+      - name: Upload artefact (cligen)
+        uses: actions/upload-artifact@v4
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ github.workspace }}/libcligen7_${{env.VERSION}}-${{env.RUN_NUMBER}}_amd64.deb
-          asset_name: libcligen7_${{env.VERSION}}-${{env.RUN_NUMBER}}_amd64.deb
-          asset_content_type: application/vnd.debian.binary-package
+          name: ${{ github.workspace }}/libcligen7_${{env.VERSION}}-${{env.RUN_NUMBER}}_amd64.deb
+          path: libcligen7_${{env.VERSION}}-${{env.RUN_NUMBER}}_amd64.deb
