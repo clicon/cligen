@@ -77,7 +77,7 @@ jobs:
   create_deb_packet:
     needs: reset-run-number
     if: github.ref == 'refs/heads/master'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     env:
       VERSION: "7.1.0"
       RUN_NUMBER: ${{ needs.reset-run-number.outputs.run-number }}
