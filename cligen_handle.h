@@ -91,6 +91,18 @@ typedef int (cligen_eval_wrap_fn)(void *arg, void **wh, const char *name, const 
  */
 typedef int (cligen_tree_resolve_wrapper_fn)(cligen_handle h, char *name, cvec *cvt, void *arg, char **namep);
 
+/*! CLIgen history callback function, each added command makes a callback
+ *
+ * Could be used for logging all CLI commands for example, or just mirroring the history file
+ * Note this is not exactly the same as the history command file, which filters equal commands.
+ * @param[in]  h     CLIgen handle
+ * @param[in]  cmd   CLI command. Do not modify or free
+ * @param[in]  arg   Argument given when registering
+ * @retval     0     OK
+ * @retval    -1     Error
+ */
+typedef int (cligen_hist_fn)(cligen_handle h, char *cmd, void *arg);
+
 /*
  * Prototypes
  */
@@ -171,6 +183,9 @@ int   cligen_ignorecase_set(cligen_handle h, int n);
 int   cligen_logsyntax(cligen_handle h);
 int   cligen_logsyntax_set(cligen_handle h, int n);
 
+int   cligen_hist_fn_set(cligen_handle h, cligen_hist_fn *fn, void *arg);
+int   cligen_hist_fn_get(cligen_handle h, cligen_hist_fn **fn, void **arg);
+
 void *cligen_userhandle(cligen_handle h);
 int   cligen_userhandle_set(cligen_handle h, void *userhandle);
 
@@ -191,10 +206,6 @@ int   cligen_expand_first_set(cligen_handle h, int cvv0expand);
 
 int   cligen_exclude_keys_set(cligen_handle h, int status);
 int   cligen_exclude_keys_get(cligen_handle h);
-
-/* XXX backward compatible, use cligen_ variant below instead */
-int   cv_exclude_keys(int status);
-int   cv_exclude_keys_get(void);
 
 int   cligen_eval_wrap_fn_set(cligen_handle h, cligen_eval_wrap_fn *fn, void *arg);
 int   cligen_eval_wrap_fn_get(cligen_handle h, cligen_eval_wrap_fn **fn, void **arg);

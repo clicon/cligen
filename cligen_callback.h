@@ -55,11 +55,11 @@ typedef struct cg_callback cg_callback; /* struct defined in cligen_callback.c.c
 /*! A CLIgen object may have one or several callbacks. This type defines one callback
  */
 struct cg_callback  { /* Linked list of command callbacks */
-    struct cg_callback *cc_next;    /**< Next callback in list.  */
-    cgv_fnstype_t       *cc_fn_vec;  /**< callback/function pointer using cvec.  */
-    char                *cc_fn_str;  /**< callback/function name. malloced */
-    cvec                *cc_cvec;    /**< callback/function arguments */
-    int                  cc_flags;   /**< Callback flags, see CC_FLAGS_* above */
+    struct cg_callback *cc_next;    /* Next callback in list.  */
+    cgv_fnstype_t      *cc_fn_vec;  /* callback/function pointer using cvec.  */
+    char               *cc_fn_str;  /* callback/function name. malloced */
+    cvec               *cc_cvec;    /* callback/function arguments */
+    int                 cc_flags;   /* Callback flags, see CC_FLAGS_* above */
 };
 
 /*

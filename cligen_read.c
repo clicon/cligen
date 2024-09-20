@@ -374,7 +374,6 @@ show_help_columns(cligen_handle h,
                          level) < 0)
             goto done;
     } /* nr>0 */
-
     retval = 0;
   done:
     if (chvec){
@@ -406,15 +405,14 @@ show_help_columns(cligen_handle h,
  * @retval      -1      Error
  *
  * Example from JunOS
-# set interfaces ?
-Possible completions:
-  <interface_name>     Interface name
-+ apply-groups         Groups from which to inherit configuration data
-+ apply-groups-except  Don't inherit configuration data from these groups
-  fe-0/0/1             Interface name
-> interface-set        Logical interface set configuration
-> traceoptions         Interface trace options
-
+ # set interfaces ?
+ Possible completions:
+    <interface_name>     Interface name
+ + apply-groups         Groups from which to inherit configuration data
+ + apply-groups-except  Don't inherit configuration data from these groups
+    fe-0/0/1             Interface name
+ > interface-set        Logical interface set configuration
+ > traceoptions         Interface trace options
  */
 static int
 show_help_line(cligen_handle h,
@@ -722,8 +720,10 @@ int
 cliread(cligen_handle h,
         char        **stringp)
 {
-    int   retval = -1;
-    char *buf = NULL;
+    int             retval = -1;
+    char           *buf = NULL;
+    cligen_hist_fn *fn = NULL;
+    void           *arg = NULL;
 
     if (stringp == NULL){
         errno = EINVAL;
@@ -740,6 +740,13 @@ cliread(cligen_handle h,
         goto eof;
     if (hist_add(h, buf) < 0)
         goto done;
+    /* Check callback: the reason it is separated from hist_add, is that the latter filters
+     * some commands and is also used in file load
+     */
+    cligen_hist_fn_get(h, &fn, &arg);
+    if (fn && (*fn)(h, buf, arg) < 0) {
+        goto done;
+    }
     *stringp = buf;
  eof:
     retval = 0;
@@ -756,7 +763,7 @@ cliread(cligen_handle h,
  * @param[in]  h         CLIgen handle
  * @param[out] line      Pointer to new string input from terminal
  * @param[out] cb_retval Retval of callback (only if functions return value is 1)
- * @param[out] result   Number of matches
+ * @param[out] result    Number of matches
  * @param[out] reason    Error reason if result is nomatch. Need to be free:d
  * @retval     0         OK
  * @retval    -1         Error
@@ -911,8 +918,8 @@ cligen_eval_pipe_post(cligen_handle h,
     int     retval = -1;
     int     ret;
     int     status;
-    char    buf[4096];
-    ssize_t len = 4096;
+    char    buf[4097];
+    ssize_t len;
     int     s;
 
     cli_pipe_output_socket_get(&s);
@@ -976,7 +983,6 @@ cligen_eval_pipe_post(cligen_handle h,
  *   @fn, foo();
  * fn:
  *    a, bar();
- * callbacks0 is foo()
  * @see pt_expand_fnv where expand callbacks are invoked
  */
 int
@@ -996,8 +1002,11 @@ cligen_eval(cligen_handle h,
     pid_t          childpid = 0;
 
     /* Save matched object for plugin use */
-    if (h)
-        cligen_co_match_set(h, co);
+    if (h == NULL){
+        errno = EINVAL;
+        goto done;
+    }
+    cligen_co_match_set(h, co);
     /* Make a copy of var argument for modifications */
     if ((cvv1 = cvec_dup(cvv)) == NULL)
         goto done;

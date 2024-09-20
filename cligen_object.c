@@ -725,8 +725,11 @@ co_copy(cg_obj  *co,
         }
     } /* VARIABLE */
     *conp = con;
+    con = NULL;
     retval = 0;
  done:
+    if (con)
+        co_free(con, 0);
     return retval;
 }
 
@@ -834,8 +837,11 @@ co_copy1(cg_obj  *co,
         }
     } /* VARIABLE */
     *conp = con;
+    con = NULL;
     retval = 0;
  done:
+    if (con)
+        co_free(con, 0);
     return retval;
 }
 
@@ -1165,7 +1171,7 @@ co_insert1(parse_tree *pt,
     /* check if exists */
     if (pos < pt_len_get(pt)){
         co2 = pt_vec_i_get(pt, pos); /* insert after co2 */
-        if (co1 == NULL && co2==NULL)
+        if (co1 == NULL && co2 == NULL)
             return NULL;
         if (co1 && co2 && co_eq(co1, co2)==0){
             cligen_parsetree_merge(co_pt_get(co2), co2, co_pt_get(co1));

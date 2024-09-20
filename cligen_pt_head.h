@@ -64,9 +64,6 @@ char       *cligen_ph_pipe_get(pt_head *ph);
 int         cligen_ph_pipe_set(pt_head *ph, char *pipe);
 pt_head    *cligen_ph_find(cligen_handle h, char *name);
 int         cligen_ph_free(pt_head *ph);
-#ifdef NOTUSED
-int         cligen_ph_del(cligen_handle h, char *name);
-#endif
 pt_head    *cligen_ph_add(cligen_handle h, char *name);
 pt_head    *cligen_ph_each(cligen_handle h, pt_head *ph);
 pt_head    *cligen_ph_i(cligen_handle h, int i);

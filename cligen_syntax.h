@@ -77,6 +77,8 @@ int cligen_callbackv_str2fn(parse_tree *pt, cgv_str2fn_t *str2fn, void *arg);
 int cligen_expandv_str2fn(parse_tree *pt, expandv_str2fn_t *str2fn, void *arg);
 int cligen_translate_str2fn(parse_tree *pt, translate_str2fn_t *str2fn, void *arg);
 int cligen_parse_debug(int d);
+int cligen_alias_call(cligen_handle h, cvec *cvv, cvec *argv);
+int cligen_alias_add(cligen_handle h, char *phname, char *name, char *helpstr, char *command, cgv_fnstype_t *callback);
 
 #endif /* _CLIGEN_SYNTAX_H_ */
 

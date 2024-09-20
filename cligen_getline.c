@@ -55,7 +55,7 @@ static void     gl_init1(void);         /* prepare to edit a line */
 static void     gl_cleanup(void);       /* to undo gl_init1 */
 void            gl_char_init(void);     /* get ready for no echo input */
 void            gl_char_cleanup(void);  /* undo gl_char_init */
-static size_t   (*gl_strlen)() = (size_t(*)())strlen;
+static size_t   (*gl_strlen)(const char *) = (size_t(*)())strlen;
                                         /* returns printable prompt width */
 
 static int      gl_addchar(cligen_handle h, int c);     /* install specified char */
@@ -586,11 +586,13 @@ int
 gl_getline(cligen_handle h,
            char        **buf)
 {
-    int             c, loc, tmp;
-    char           *gl_prompt;
-    int             escape = 0;
+    int   c;
+    int   loc;
+    int   tmp;
+    char *gl_prompt;
+    int   escape = 0;
 #ifdef __unix__
-    int             sig;
+    int   sig;
 #endif
 
     gl_init1();
@@ -599,7 +601,7 @@ gl_getline(cligen_handle h,
     if (gl_in_hook)
         gl_in_hook(h, cligen_buf(h));
     gl_fixup(h, gl_prompt, -2, cligen_buf_size(h));
-    while ((c = gl_getc(h)) >= 0) {
+    while ((c = gl_getc(h)) >= 0) { /* tainted data needs to be sanitized */
         gl_extent = 0;          /* reset to full extent */
         if (isprint(c) || (escape && c=='\n')) {
             if (escape == 0 && c == '\\')

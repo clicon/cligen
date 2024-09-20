@@ -52,6 +52,7 @@
 #include "cligen_callback.h"
 #include "cligen_object.h"
 #include "cligen_handle.h"
+#include "cligen_io.h"
 #include "cligen_print.h"
 
 #define VARIABLE_PRE  '<'
@@ -299,7 +300,7 @@ pt_print1(FILE       *f,
     }
     if (pt2cbuf(cb, pt, 0, brief) < 0)
         goto done;
-    fprintf(f, "%s", cbuf_get(cb));
+    cligen_output(f, "%s", cbuf_get(cb));
     retval = 0;
   done:
     if (cb)
@@ -336,7 +337,7 @@ co_print1(FILE    *f,
     }
     if (co2cbuf(cb, co, 0, brief) < 0)
         goto done;
-    fprintf(f, "%s", cbuf_get(cb));
+    cligen_output(f, "%s", cbuf_get(cb));
     retval = 0;
   done:
     if (cb)
@@ -361,12 +362,12 @@ pt_dump1(FILE       *f,
     int     i;
     cg_obj *co;
 
-    fprintf(f, "%*s %p pt", indent*3, "", pt);
-    fprintf(f, " [%d]", pt_len_get(pt));
-    fprintf(f, "\n");
+    cligen_output(f, "%*s %p pt", indent*3, "", pt);
+    cligen_output(f, " [%d]", pt_len_get(pt));
+    cligen_output(f, "\n");
     for (i=0; i<pt_len_get(pt); i++){
         if ((co = pt_vec_i_get(pt, i)) == NULL)
-            fprintf(f, "%*s NULL\n", (indent+1)*3, "");
+            cligen_output(f, "%*s NULL\n", (indent+1)*3, "");
         else
             co_dump1(f, co, indent+1);
     }
@@ -382,9 +383,9 @@ callbacks_dump(FILE        *f,
     cg_callback *cc;
 
     for (cc = cc0; cc; cc = co_callback_next(cc)){
-        fprintf(f, "%s(\n", cc->cc_fn_str);
+        cligen_output(f, "%s(\n", cc->cc_fn_str);
         cvec_print(f, cc->cc_cvec);
-        fprintf(f, ")\n");
+        cligen_output(f, ")\n");
     }
     return 0;
 }
@@ -400,38 +401,38 @@ co_dump1(FILE    *f,
 
     switch (co->co_type){
     case CO_COMMAND:
-        fprintf(f, "%*s %p co %s", indent*3, "", co, co->co_command);
+        cligen_output(f, "%*s %p co %s", indent*3, "", co, co->co_command);
         if (co_sets_get(co))
-            fprintf(f, " SETS");
+            cligen_output(f, " SETS");
         if (co->co_ref)
-            fprintf(f, " ref:%p", co->co_ref);
+            cligen_output(f, " ref:%p", co->co_ref);
         break;
     case CO_REFERENCE:
-        fprintf(f, "%*s %p co @%s", indent*3, "", co, co->co_command);
+        cligen_output(f, "%*s %p co @%s", indent*3, "", co, co->co_command);
         break;
     case CO_VARIABLE:
-        fprintf(f, "%*s %p co <%s> ", indent*3, "", co, co->co_command);
+        cligen_output(f, "%*s %p co <%s> ", indent*3, "", co, co->co_command);
         if (co->co_ref)
-            fprintf(f, " ref:%p", co->co_ref);
+            cligen_output(f, " ref:%p", co->co_ref);
         if (co->co_treeref_orig)
-            fprintf(f, " treeref:%p", co->co_treeref_orig);
+            cligen_output(f, " treeref:%p", co->co_treeref_orig);
         break;
     case CO_EMPTY:
-        fprintf(f, "%*s %p empty", indent*3, "", co);
+        cligen_output(f, "%*s %p empty", indent*3, "", co);
         break;
     }
     if (co->co_flags & CO_FLAGS_TOPOFTREE)
-        fprintf(f, ", top-of-tree");
+        cligen_output(f, ", top-of-tree");
     cv = NULL;
     while ((cv = cvec_each(co->co_cvec, cv)) != NULL)
-        fprintf(f, ", label=%s", cv_name_get(cv));
+        cligen_output(f, ", label=%s", cv_name_get(cv));
     if (co->co_callbacks){
-        fprintf(f, ", callbacks:");
+        cligen_output(f, ", callbacks:");
         for (cc = co->co_callbacks; cc; cc = co_callback_next(cc)){
-            fprintf(f, " %s", cc->cc_fn_str);
+            cligen_output(f, " %s", cc->cc_fn_str);
         }
     }
-    fprintf(f, "\n");
+    cligen_output(f, "\n");
     if ((pt = co_pt_get(co)) != NULL)
         pt_dump1(f, pt, indent);
     return 0;

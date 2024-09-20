@@ -893,6 +893,46 @@ cligen_logsyntax_set(cligen_handle h,
     return 0;
 }
 
+/*! Set CLIgen history callback function
+ *
+ * @param[in] h     CLIgen handle
+ * @param[in] fn    Register function to call each CLI command
+ * @param[in] arg   Call function with this argument
+ * @retval    0     OK
+ */
+int
+cligen_hist_fn_set(cligen_handle   h,
+                   cligen_hist_fn *fn,
+                   void           *arg)
+{
+    struct cligen_handle *ch = handle(h);
+
+    ch->ch_hist_fn = fn;
+    ch->ch_hist_arg = arg;
+    return 0;
+}
+
+/*! Get CLIgen history callback function
+ *
+ * @param[in]  h     CLIgen handle
+ * @param[out] fn    Register function to call each CLI command
+ * @param[out] arg   Call function with this argument
+ * @retval     0     OK
+ */
+int
+cligen_hist_fn_get(cligen_handle    h,
+                   cligen_hist_fn **fn,
+                   void           **arg)
+{
+    struct cligen_handle *ch = handle(h);
+
+    if (fn)
+        *fn = ch->ch_hist_fn;
+    if (arg)
+        *arg = ch->ch_hist_arg;
+    return 0;
+}
+
 /*! Get app-specific handle for callbacks instead of cligen handle.
  *
  * An application may choose to use another handle than cligen_handle in callbacks
@@ -1286,41 +1326,12 @@ cligen_exclude_keys_get(cligen_handle h)
     return ch->ch_exclude_keys;
 }
 
-#if 1 // XXX backward compatible
-/*
- * cv_exclude_keys
- * set if you want to backward compliant: dont include keys in cgv vec to callback
- * that is, regular 'keys' and keys like: '<string keyword=foo>'
- */
-static int excludekeys = 0;
-
-/*! Changes cvec find function behaviour, exclude keywords or include them.
- *
- * @param[in] status
- */
-int
-cv_exclude_keys(int status)
-{
-    excludekeys = status;
-    return 0;
-}
-
-/*! Changes cvec find function behaviour, exclude keywords or include them.
- *
- * @param[in] status
- */
-int
-cv_exclude_keys_get(void)
-{
-    return excludekeys;
-}
-#endif
-
 /*! Set CLIgen eval wrap function to check state before and after a callback function
  *
  * @param[in] h     CLIgen handle
  * @param[in] fn    Register function to call before and after each callback
  * @param[in] arg   Call function with this argument
+ * @retval    0     OK
  */
 int
 cligen_eval_wrap_fn_set(cligen_handle        h,
@@ -1339,6 +1350,7 @@ cligen_eval_wrap_fn_set(cligen_handle        h,
  * @param[in]  h     CLIgen handle
  * @param[out] fn    Register function to call before and after each callback
  * @param[out] arg   Call function with this argument
+ * @retval     0     OK
  */
 int
 cligen_eval_wrap_fn_get(cligen_handle         h,
@@ -1359,11 +1371,12 @@ cligen_eval_wrap_fn_get(cligen_handle         h,
  * @param[in] h     CLIgen handle
  * @param[in] fn    Register function to call when looking for a tree ref
  * @param[in] arg   Call function with this argument
+ * @retval    0     OK
  */
 int
-cligen_tree_resolve_wrapper_set(cligen_handle          h,
+cligen_tree_resolve_wrapper_set(cligen_handle                   h,
                                 cligen_tree_resolve_wrapper_fn *fn,
-                                void                   *arg)
+                                void                           *arg)
 {
     struct cligen_handle *ch = handle(h);
 
@@ -1377,6 +1390,7 @@ cligen_tree_resolve_wrapper_set(cligen_handle          h,
  * @param[in]  h     CLIgen handle
  * @param[out] fn    Register function to call when looking for a tree ref
  * @param[out] arg   Call function with this argument
+ * @retval     0     OK
  */
 int
 cligen_tree_resolve_wrapper_get(cligen_handle            h,

@@ -573,7 +573,7 @@ cvec_find(cvec       *cvv,
  * @see cvec_find
  */
 cg_var *
-cvec_find_keyword(cvec *cvv,
+cvec_find_keyword(cvec       *cvv,
                   const char *name)
 {
     cg_var *cv = NULL;
@@ -593,7 +593,7 @@ cvec_find_keyword(cvec *cvv,
  * @see cvec_find
  */
 cg_var *
-cvec_find_var(cvec *cvv,
+cvec_find_var(cvec       *cvv,
               const char *name)
 {
     cg_var *cv = NULL;
@@ -646,7 +646,7 @@ cvec_name_get(cvec *cvv)
  * The existing name, if any, is freed
  */
 char *
-cvec_name_set(cvec *cvv,
+cvec_name_set(cvec       *cvv,
               const char *name)
 {
     char *s1 = NULL;

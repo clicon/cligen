@@ -438,13 +438,15 @@ match_vec(cligen_handle h,
                         co->co_type == CO_VARIABLE) /* Skip terminal pref if preference mode */
                         ;
                     else if (cligen_preference_mode(h) == 2 &&
-                        !lasttoken &&
-                        cop->co_type == CO_VARIABLE &&
-                        co->co_type == CO_VARIABLE) /* Skip same pref if preference mode */
+                             !lasttoken &&
+                             cop &&
+                             cop->co_type == CO_VARIABLE &&
+                             co->co_type == CO_VARIABLE) /* Skip same pref if preference mode */
                         ;
                     else if (cligen_preference_mode(h) == 3 &&
-                        cop->co_type == CO_VARIABLE &&
-                        co->co_type == CO_VARIABLE) /* Skip same pref if preference mode */
+                             cop &&
+                             cop->co_type == CO_VARIABLE &&
+                             co->co_type == CO_VARIABLE) /* Skip same pref if preference mode */
                         ;
                     else{
                         /* Copy co and append it to mr parse-tree */
@@ -748,6 +750,7 @@ callbacks_merge(cg_obj       *coref,
                 cg_callback **callbacksp)
 {
     int     retval = -1;
+    cvec   *cvv = NULL;
     cg_var *cv;
 
     if (coref){
@@ -757,7 +760,6 @@ callbacks_merge(cg_obj       *coref,
          */
         if (callbacks0 &&
             strcmp(coref->co_callbacks->cc_fn_str, "prepend_me") == 0){
-            cvec   *cvv;
             /* Assume only single coref parameter */
             if ((cv = cvec_i(coref->co_callbacks->cc_cvec, 0)) == NULL){
                 fprintf(stderr, "%s no first element in coref cvec\n", __FUNCTION__);
@@ -772,6 +774,7 @@ callbacks_merge(cg_obj       *coref,
             if (callbacks0->cc_cvec)
                 cvec_free(callbacks0->cc_cvec);
             callbacks0->cc_cvec = cvv; // XXX destructively change
+            cvv = NULL;
             *callbacksp = callbacks0;
         }
         else{
@@ -784,6 +787,8 @@ callbacks_merge(cg_obj       *coref,
         *callbacksp = callbacks0;
     retval = 0;
  done:
+    if (cvv)
+        cvec_free(cvv);
     return retval;
 }
 
@@ -830,6 +835,7 @@ match_pattern_sets(cligen_handle  h,
     cg_obj       *coref = NULL;
     char         *pipe_local;
     cg_obj       *co_pipe = NULL;
+    cbuf         *cb = NULL;
 
     token = cvec_i_str(cvt, level+1); /* for debugging */
 #ifdef _DEBUG_SETS
@@ -889,14 +895,11 @@ match_pattern_sets(cligen_handle  h,
     /* Local, explicit pipetree in pt overrides default */
     if ((pipe_local = pt_local_pipe(co_pt_get(co_match))) == NULL &&
         pipe_default != NULL) {
-        cbuf *cb = NULL;
-
         if ((cb = cbuf_new()) == NULL)
             goto done;
         cprintf(cb, "|%s", pipe_default);
         if ((co_pipe = co_new(pipe_default, NULL)) == NULL)
             goto done;
-        cbuf_free(cb);
         co_pipe->co_type = CO_REFERENCE;
     }
     if ((ptn = pt_new()) == NULL)
@@ -953,10 +956,8 @@ match_pattern_sets(cligen_handle  h,
             fprintf(stderr, "%s %*s sets match co: %s\n", __FUNCTION__, level*3,"",
                     mr_pt_i_get(mrc, 0)->co_command);
 #endif
-            if (mrcprev != NULL){
+            if (mrcprev != NULL)
                 mr_free(mrcprev);
-                mrcprev = NULL;
-            }
             mrcprev = mrc;
             level = mr_level_get(mrc); /* XXX level always 0 */
         } /* while */
@@ -1012,6 +1013,8 @@ match_pattern_sets(cligen_handle  h,
  ok:
     retval = 0;
  done:
+    if (cb)
+        cbuf_free(cb);
     if (co_pipe)
         co_free(co_pipe, 1);
     if (callbacks0 != callbacks)
@@ -1203,8 +1206,11 @@ match_pattern(cligen_handle h,
         break;
     } /* switch */
     *mrp = mr;
+    mr = NULL;
     retval = 0;
  done:
+    if (mr)
+        mr_free(mr);
     if (cvv1)
         cvec_free(cvv1);
     if (ptn)

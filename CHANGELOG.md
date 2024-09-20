@@ -1,6 +1,8 @@
 # Cligen Changelog
 
-* [6.6.0](#660) Expected: February 2024
+* [7.2.0](#720) Expected: October 2024
+* [7.1.0](#710) 3 July 2024
+* [7.0.0](#770) 8 March 2024
 * [6.5.0](#650) 5 December 2023
 * [6.4.0](#640) 30 September 2023
 * [6.3.0](#630) 29 July 2023
@@ -8,8 +10,28 @@
 * [6.1.0](#610) 19 Feb 2023
 * [6.0.0](#600) 29 Nov 2022
 
-## 6.6.0
-Expected: February 2024
+## 7.2.0
+Expected: October 2024
+
+### Features
+
+* New: [CLI simple alias](https://github.com/clicon/cligen/issues/112)
+
+### Corrected Bugs
+
+* Fixed: [CLI help text for YANG data model with multi-line description field is misformatted](https://github.com/clicon/clixon/issues/543)
+
+## 7.1.0
+3 July 2024
+
+### Features
+
+* Added history callbacks API: `cligen_hist_fn_set`
+  * Added history subsection in tutorial
+* Changed intermediate version numbers to be git-style, eg `7.0.0-39` instead of `7.1.0-PRE`
+
+## 7.0.0
+8 March 2024
 
 ### Minor items
 

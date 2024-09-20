@@ -513,8 +513,8 @@ cv_string_get(cg_var *cv)
  * @retval    NULL   Error
  */
 char *
-cv_string_set(cg_var *cv,
-              const char   *s0)
+cv_string_set(cg_var     *cv,
+              const char *s0)
 {
     char *s1 = NULL;
 
@@ -612,7 +612,7 @@ cv_ipv4addr_get(cg_var *cv)
  * @param[in] addr   storage space for address
  */
 struct in_addr *
-cv_ipv4addr_set(cg_var *cv,
+cv_ipv4addr_set(cg_var         *cv,
                 struct in_addr *addr)
 {
     if (cv && addr)
@@ -638,7 +638,8 @@ cv_ipv4masklen_get(cg_var *cv)
  * @param[in] masklen storage spave for masklen
  */
 uint8_t
-cv_ipv4masklen_set(cg_var *cv, uint8_t masklen)
+cv_ipv4masklen_set(cg_var *cv,
+                   uint8_t masklen)
 {
     if (cv == NULL)
         return 0;
@@ -758,8 +759,8 @@ cv_void_get(cg_var *cv)
  * @param[in] cv     CLIgen variable
  */
 int
-cv_void_set(cg_var   *cv,
-            void     *p)
+cv_void_set(cg_var *cv,
+            void   *p)
 {
     if (cv)
         cv->var_void = p;
@@ -785,8 +786,8 @@ cv_urlproto_get(cg_var *cv)
  * @param[in] cv     CLIgen variable
  */
 char *
-cv_urlproto_set(cg_var *cv,
-                const char   *s0)
+cv_urlproto_set(cg_var     *cv,
+                const char *s0)
 {
     char *s1 = NULL;
 
@@ -825,8 +826,8 @@ cv_urladdr_get(cg_var *cv)
  * malloc new string from original. Free previous string if existing.
  */
 char *
-cv_urladdr_set(cg_var *cv,
-               const char   *s0)
+cv_urladdr_set(cg_var     *cv,
+               const char *s0)
 {
     char *s1 = NULL;
 
@@ -866,8 +867,8 @@ cv_urlpath_get(cg_var *cv)
  * malloc new string from original. Free previous string if existing.
  */
 char *
-cv_urlpath_set(cg_var *cv,
-               const char   *s0)
+cv_urlpath_set(cg_var     *cv,
+               const char *s0)
 {
     char *s1 = NULL;
 
@@ -906,8 +907,8 @@ cv_urluser_get(cg_var *cv)
  * @param[in] cv     CLIgen variable
  */
 char *
-cv_urluser_set(cg_var *cv,
-               const char   *s0)
+cv_urluser_set(cg_var     *cv,
+               const char *s0)
 {
     char *s1 = NULL;
 
@@ -946,8 +947,8 @@ cv_urlpasswd_get(cg_var *cv)
  * malloc new string from original. Free previous string if existing.
  */
 char *
-cv_urlpasswd_set(cg_var *cv,
-                 const char   *s0)
+cv_urlpasswd_set(cg_var     *cv,
+                 const char *s0)
 {
     char *s1 = NULL;
 
@@ -1724,8 +1725,8 @@ toint(char c)
  * @retval    -1     Error
  */
 int
-str2uuid(const char  *in,
-         uuid_t u)
+str2uuid(const char *in,
+         uuid_t      u)
 {
     int i = 0, j = 0, k;
     int a, b;
@@ -1799,7 +1800,7 @@ todig(char c)
  * @note works for positive numbers and up to 2^31
  */
 int
-cligen_tonum(int   n,
+cligen_tonum(int         n,
              const char *s)
 {
     int      i;
@@ -1841,7 +1842,7 @@ cligen_tonum(int   n,
  * @see time2str
  */
 int
-str2time(const char           *in,
+str2time(const char     *in,
          struct timeval *tv)
 {
     int        retval = -1;
@@ -2008,8 +2009,8 @@ done:
  */
 int
 time2str(const struct timeval *tv,
-         char          *fmt,
-         unsigned       len)
+         char                 *fmt,
+         unsigned              len)
 {
     int        retval = -1;
     struct tm *tm;
@@ -2309,7 +2310,7 @@ cv_dec64_print(cg_var *cv,
 
 /*! Print value of CLIgen variable to CLIgen buf using printf style formats.
  *
- * @param[in]   cv   CLIgen variable
+ * @param[in]   cv   CLIgen variable (created on entry)
  * @param[out]  cb   Value printed
  * The params shuld be switched cb<->cv
 */
@@ -2376,14 +2377,14 @@ cv2cbuf(cg_var *cv,
                 cv->var_ipv4masklen);
         break;
     case CGV_IPV6ADDR:
-        if (inet_ntop(AF_INET6, &cv->var_ipv6addr, straddr, sizeof(straddr)) < 0){
+        if (inet_ntop(AF_INET6, &cv->var_ipv6addr, straddr, sizeof(straddr)) == NULL){
             fprintf(stderr, "inet_ntop: %s\n", strerror(errno));
             return -1;
         }
         cprintf(cb, "%s", straddr);
         break;
     case CGV_IPV6PFX:
-        if (inet_ntop(AF_INET6, &cv->var_ipv6addr, straddr, sizeof(straddr)) < 0){
+        if (inet_ntop(AF_INET6, &cv->var_ipv6addr, straddr, sizeof(straddr)) == NULL){
             fprintf(stderr, "inet_ntop: %s\n", strerror(errno));
             return -1;
         }
@@ -2658,14 +2659,14 @@ cv_print(FILE   *f,
         fprintf(f, "%s/%d", inet_ntoa(cv->var_ipv4addr), cv->var_ipv4masklen);
         break;
     case CGV_IPV6ADDR:
-        if (inet_ntop(AF_INET6, &cv->var_ipv6addr, straddr, sizeof(straddr)) < 0){
+        if (inet_ntop(AF_INET6, &cv->var_ipv6addr, straddr, sizeof(straddr)) == NULL){
             fprintf(stderr, "inet_ntop: %s\n", strerror(errno));
             return -1;
         }
         fprintf(f, "%s", straddr);
         break;
     case CGV_IPV6PFX:
-        if (inet_ntop(AF_INET6, &cv->var_ipv6addr, straddr, sizeof(straddr)) < 0){
+        if (inet_ntop(AF_INET6, &cv->var_ipv6addr, straddr, sizeof(straddr)) == NULL){
             fprintf(stderr, "inet_ntop: %s\n", strerror(errno));
             return -1;
         }
@@ -2934,8 +2935,8 @@ string_remove_backslash(char *str)
  */
 int
 cv_parse1(const char   *str0,
-          cg_var *cv,
-          char  **reason)
+          cg_var       *cv,
+          char        **reason)
 {
     int    retval = -1;
     char  *str;
@@ -3125,8 +3126,8 @@ cv_parse1(const char   *str0,
  * @endcode
  */
 int
-cv_parse(const char   *str,
-         cg_var *cv)
+cv_parse(const char *str,
+         cg_var     *cv)
 {
     int retval;
     char *reason = NULL;
@@ -3184,10 +3185,10 @@ outofrange(cg_var     *cv0,
     }
     if (reason && (*reason = strdup(cbuf_get(cb))) == NULL)
         goto done;
-    if (cb)
-        cbuf_free(cb);
     retval = 0;
  done:
+    if (cb)
+        cbuf_free(cb);
     return retval;
 }
 
@@ -3217,10 +3218,10 @@ outoflength(uint64_t    u64,
     }
     if (reason && (*reason = strdup(cbuf_get(cb))) == NULL)
         goto done;
-    if (cb)
-        cbuf_free(cb);
     retval = 0;
  done:
+    if (cb)
+        cbuf_free(cb);
     return retval;
 }
 
