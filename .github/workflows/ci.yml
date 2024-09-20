@@ -77,7 +77,7 @@ jobs:
   create_deb_packet:
     needs: reset-run-number
     if: github.ref == 'refs/heads/master'
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     env:
       VERSION: "7.1.0"
       RUN_NUMBER: ${{ needs.reset-run-number.outputs.run-number }}
@@ -122,5 +122,5 @@ jobs:
       - name: Upload artefact (cligen)
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ github.workspace }}/libcligen7_${{env.VERSION}}-${{env.RUN_NUMBER}}_amd64.deb
-          path: libcligen7_${{env.VERSION}}-${{env.RUN_NUMBER}}_amd64.deb
+          name: libcligen7_${{env.VERSION}}-${{env.RUN_NUMBER}}_amd64.deb
+          path: ${{ github.workspace }}/libcligen7_${{env.VERSION}}-${{env.RUN_NUMBER}}_amd64.deb
