@@ -131,6 +131,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ github.workspace }}/libcligen7_${{env.VERSION}}-${{env.RUN_NUMBER}}_amd64.deb
-          asset_name: libcligen7_${{env.VERSION}}-${{env.RUN_NUMBER}}_amd64.deb
+          asset_path: ${{ github.workspace }}/libcligen_${{env.VERSION}}-${{env.RUN_NUMBER}}_amd64.deb
+          asset_name: libcligen_${{env.VERSION}}-${{env.RUN_NUMBER}}_amd64.deb
           asset_content_type: application/vnd.debian.binary-package

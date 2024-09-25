@@ -18,7 +18,7 @@ Depends: ${misc:Depends},
          libcligen7
 Description: Cligen development package
 
-Package: libcligen7
+Package: libcligen
 Architecture: any
 Multi-Arch: foreign
 Depends: ${misc:Depends},
