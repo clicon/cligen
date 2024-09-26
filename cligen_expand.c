@@ -266,14 +266,9 @@ tree_resolve(cligen_handle h,
             treename = treename2;
     }
     /* Get parse tree header */
-    if ((ph = cligen_ph_find(h, treename)) == NULL){
-        if (fn && treename2==NULL){
-            goto ok;
-        }
-        else{
-            fprintf(stderr, "CLIgen tree '%s' not found\n", treename);
-            goto done;
-        }
+    if ((ph = cligen_ph_find(h, treename)) == NULL) {
+        fprintf(stderr, "CLIgen tree '%s' not found\n", treename);
+        goto done;
     }
     /* Get working point of tree, if any,
      * and thereby the original tree (ptref)
@@ -282,7 +277,6 @@ tree_resolve(cligen_handle h,
         *ptrefp = co_pt_get(cow);
     else
         *ptrefp = cligen_ph_parsetree_get(ph);
- ok:
     retval = 0;
  done:
     if (treename2)
@@ -360,6 +354,10 @@ co_expand_treeref_copy_shallow(cligen_handle h,
     cvec       *cvv = NULL;
     cg_var     *cv;
 
+    if (ptorig == NULL){
+        errno = EINVAL;
+        goto done;
+    }
     coparent = co_up(co0);
     for (i=0; i<pt_len_get(ptorig); i++){
         if ((cot = pt_vec_i_get(ptorig, i)) == NULL)
