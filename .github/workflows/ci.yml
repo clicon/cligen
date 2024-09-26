@@ -122,5 +122,5 @@ jobs:
       - name: Upload artefact (cligen)
         uses: actions/upload-artifact@v4
         with:
-          name: libcligen7_${{env.VERSION}}-${{env.RUN_NUMBER}}_amd64.deb
-          path: ${{ github.workspace }}/libcligen7_${{env.VERSION}}-${{env.RUN_NUMBER}}_amd64.deb
+          name: libcligen_${{env.VERSION}}-${{env.RUN_NUMBER}}_amd64.deb
+          path: ${{ github.workspace }}/libcligen_${{env.VERSION}}-${{env.RUN_NUMBER}}_amd64.deb
