@@ -69,14 +69,14 @@ jobs:
     steps:
       - name: Get build number and reset it
         id: get-build
-        uses: mlilback/build-number@v1
+        uses: citypaul/build-number@1.0.3
         with:
           base: 0 # Update this number to reset counter
           run-id: ${{ github.run_number }}
 
   create_deb_packet:
     needs: reset-run-number
-    if: github.ref == 'refs/heads/master'
+    # if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-20.04
     env:
       VERSION: "7.1.0"
@@ -104,16 +104,6 @@ jobs:
         run: cd ${{ github.workspace }}/build && dpkg-buildpackage -us -uc
       - name: show directory
         run: ls -l ${{ github.workspace }}
-      - name: Create deb packet
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{env.VERSION}}_${{env.RUN_NUMBER}}
-          release_name: cligen_${{env.VERSION}}-${{env.RUN_NUMBER}}
-          draft: false
-          prerelease: false
       - name: Upload artefact
         uses: actions/upload-artifact@v4
         with:
