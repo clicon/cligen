@@ -114,7 +114,7 @@ else
 all:	 $(MYSTATIC)
 endif
 
-.PHONY: TAGS test
+.PHONY: TAGS test write_version
 TAGS:
 	find . -name '*.[chyl]' -print | xargs etags
 
@@ -125,12 +125,7 @@ test:
 	(cd test && SKIPLIST="$(SKIPLIST)" CFLAGS="$(CFLAGS)" LINKAGE="$(LINKAGE)" ./all.sh)
 
 write_version:
-	$(eval CI_VERSION_FULL=$(shell git describe --tags $(git rev-list --tags --max-count=1)))
-	$(eval CI_VERSION_MAJOR=$(shell echo $(CI_VERSION_FULL) | cut -d . -f1))
-	$(eval CI_VERSION_MINOR=$(shell echo $(CI_VERSION_FULL) | cut -d . -f2))
-	$(eval CI_VERSION_FIX=$(shell echo $(CI_VERSION_FULL) | cut -d . -f3 | cut -d '_' -f1))
-	@echo version: ${CI_VERSION_MAJOR}.${CI_VERSION_MINOR}.${CI_VERSION_FIX}
-	@echo "${CI_VERSION_MAJOR}.${CI_VERSION_MINOR}.${CI_VERSION_FIX}" > version
+	@echo $(shell PREFIX=cligen ./version.sh)
 
 distclean: clean
 	rm -f Makefile config.log config.status config.h TAGS .depend
