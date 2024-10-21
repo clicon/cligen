@@ -2506,7 +2506,7 @@ ac_config_headers="$ac_config_headers cligen_config.h"
 
 
 # Use GIT version (what if no git?)
-CLIGEN_VERSION="$(./version.sh)"
+CLIGEN_VERSION="$(./scripts/version.sh)"
 CLIGEN_VERSION2=$(echo ${CLIGEN_VERSION} | awk -F- '{print $1}')
 CLIGEN_VERSION_MAJOR=$(echo ${CLIGEN_VERSION2} | awk -F. '{print $1}')
 CLIGEN_VERSION_MINOR=$(echo ${CLIGEN_VERSION2} | awk -F. '{print $2}')

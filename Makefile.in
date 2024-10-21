@@ -106,7 +106,7 @@ APPS		= cligen_hello cligen_file cligen_tutorial
 YACC		= @YACC@
 LEX		= @LEX@
 
-all:	cligen $(APPS) write_version
+all:	cligen $(APPS)
 
 ifeq ($(LINKAGE),dynamic)
 all:	 $(MYLIBDYNAMIC)
@@ -114,7 +114,7 @@ else
 all:	 $(MYSTATIC)
 endif
 
-.PHONY: TAGS test write_version
+.PHONY: TAGS test
 TAGS:
 	find . -name '*.[chyl]' -print | xargs etags
 
@@ -123,9 +123,6 @@ TAGS:
 # CFLAGS/LINKAGE is for test_compile.sh for coverage
 test:
 	(cd test && SKIPLIST="$(SKIPLIST)" CFLAGS="$(CFLAGS)" LINKAGE="$(LINKAGE)" ./all.sh)
-
-write_version:
-	@echo $(shell PREFIX=cligen ./version.sh)
 
 distclean: clean
 	rm -f Makefile config.log config.status config.h TAGS .depend
