@@ -9,10 +9,6 @@ on:
   pull_request:
     branches: [ master ]
 
-permissions:
-  contents: write
-  pull-requests: write
-
 jobs:
   ubuntu-build:
 
@@ -60,57 +56,3 @@ jobs:
         with:
           verbose: true
           token: ${{ secrets.CODECOV_TOKEN }}
-
-  reset-run-number:
-    needs: ubuntu-coverage
-    runs-on: ubuntu-latest
-    outputs:
-      run-number: ${{ steps.get-build.outputs.build-number }}
-    steps:
-      - name: Get build number and reset it
-        id: get-build
-        uses: citypaul/build-number@1.0.3
-        with:
-          base: 0 # Update this number to reset counter
-          run-id: ${{ github.run_number }}
-
-  create_deb_packet:
-    needs: reset-run-number
-    # if: github.ref == 'refs/heads/master'
-    runs-on: ubuntu-20.04
-    env:
-      VERSION: "7.1.0"
-      RUN_NUMBER: ${{ needs.reset-run-number.outputs.run-number }}
-    permissions: write-all
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: true
-          fetch-depth: 0
-      - run: sudo apt update && sudo apt install build-essential flex fakeroot bison lsb-release make debhelper libnghttp2-dev libssl-dev -y
-      - name: create dir for build
-        run: mkdir ${{ github.workspace }}/build
-      - name: configure
-        run: ./configure
-      - name: make
-        run: make
-      - name: install
-        run: sudo make install DESTDIR=${{ github.workspace }}/build
-      - name: copy file for build deb packet dev
-        run: cp -r ${{ github.workspace }}/debian ${{ github.workspace }}/build
-      - name: add change log
-        run: cd ${{ github.workspace }}/build/debian && export NAME_VERSION="cligen (${{env.VERSION}}-${{env.RUN_NUMBER}})" && git --no-pager log --no-walk --encoding=utf-8 --expand-tabs=4 --pretty=format:"${NAME_VERSION} stable; urgency=medium%n%n  * %w(,,2)%B%w()%n -- %an <%ae>  %aD%n" > changelog && cat changelog
-      - name: run build packet lib and dev
-        run: cd ${{ github.workspace }}/build && dpkg-buildpackage -us -uc
-      - name: show directory
-        run: ls -l ${{ github.workspace }}
-      - name: Upload artefact
-        uses: actions/upload-artifact@v4
-        with:
-          name: libcligen-dev_${{env.VERSION}}-${{env.RUN_NUMBER}}_amd64.deb
-          path: ${{ github.workspace }}/libcligen-dev_${{env.VERSION}}-${{env.RUN_NUMBER}}_amd64.deb
-      - name: Upload artefact (cligen)
-        uses: actions/upload-artifact@v4
-        with:
-          name: libcligen_${{env.VERSION}}-${{env.RUN_NUMBER}}_amd64.deb
-          path: ${{ github.workspace }}/libcligen_${{env.VERSION}}-${{env.RUN_NUMBER}}_amd64.deb

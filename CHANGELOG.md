@@ -15,9 +15,8 @@ Expected: October 2024
 
 ### Features
 
-* Packaging
-  * New version string on the form: '7.1.0-1+11+g2b25294`
-  * Deb packages as artifacts in github actions
+* New version string on the form: `7.1.0-1+11+g2b25294`
+* Deb build script
 * New: [CLI simple alias](https://github.com/clicon/cligen/issues/112)
 
 ### Corrected Bugs
