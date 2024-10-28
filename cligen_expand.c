@@ -627,8 +627,8 @@ pt_expand_choice(cg_obj       *co,
 
 /*! Check if label is filtered in co
  *
- * @retval    0   No, label is not in co_filter, keep it
  * @retval    1   Yes, it is filtered, remove it
+ * @retval    0   No, label is not in co_filter, keep it
  */
 int
 co_isfilter(cvec *cvv_filter,

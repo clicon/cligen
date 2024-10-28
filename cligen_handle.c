@@ -625,8 +625,8 @@ cligen_terminal_width_set(cligen_handle h,
 /*! Get cligen/getline UTF-8 experimental mode
  *
  * @param[in] h       CLIgen handle
- * @retval    0       UTF-8 mode disabled
  * @retval    1       UTF-8 mode enabled
+ * @retval    0       UTF-8 mode disabled
  */
 int
 cligen_utf8_get(cligen_handle h)
@@ -637,8 +637,8 @@ cligen_utf8_get(cligen_handle h)
 /*! Set cligen/getline UTF-8 experimental mode
  *
  * @param[in] h       CLIgen handle
- * @retval    0       UTF-8 mode disabled
  * @retval    1       UTF-8 mode enabled
+ * @retval    0       UTF-8 mode disabled
  */
 int
 cligen_utf8_set(cligen_handle h,
@@ -650,8 +650,8 @@ cligen_utf8_set(cligen_handle h,
 /*! Get line scrolling mode
  *
  * @param[in] h       CLIgen handle
- * @retval    0       Line scrolling off
  * @retval    1       Line scrolling on
+ * @retval    0       Line scrolling off
  */
 int
 cligen_line_scrolling(cligen_handle h)
@@ -681,8 +681,8 @@ cligen_line_scrolling_set(cligen_handle h,
  * This only applies if you have really long help strings, such as when generating them from a
  * spec.
  * @param[in] h       CLIgen handle (dummy, need to be called where h is NULL)
- * @retval    0       Do not truncate help string on right margin (wrap long help lines)
  * @retval    1       Truncate help string on right margin (do not wrap long help lines)
+ * @retval    0       Do not truncate help string on right margin (wrap long help lines)
  * @see print_help_line
  */
 int
@@ -990,8 +990,8 @@ cligen_userdata_set(cligen_handle h,
 /*! Get regex engine / method
  *
  * @param[in] h   CLIgen handle
- * @retval    0   Posix regex
  * @retval    1   XSD Libxml2 regex
+ * @retval    0   Posix regex
  */
 int
 cligen_regex_xsd(cligen_handle h)
@@ -1232,8 +1232,8 @@ cligen_preference_mode_set(cligen_handle h,
 /*! Get status of string case compare
  *
  * @param[in] h   CLIgen handle
- * @retval    0   Case-sensitive, ie aA != aa
  * @retval    1   Ignore case, ie aA == aa
+ * @retval    0   Case-sensitive, ie aA != aa
  */
 int
 cligen_caseignore_get(cligen_handle h)
@@ -1266,8 +1266,8 @@ cligen_caseignore_set(cligen_handle h,
  * If 1, expanded string matching keywords
  *
  * @param[in] h   CLIgen handle
- * @retval    0   cvv0 is original
  * @retval    1   cvv0 is expanded
+ * @retval    0   cvv0 is original
  * @see cvec_cvv0expand
  */
 int

@@ -500,8 +500,8 @@ print_help_line(cligen_handle    h,
  * @param[in] ch0   First CLIgen help struct
  * @param[in] ch1   Second CLIgen help struct
  * @param[in] help  If 0, only compare commands, if 1, also compare helstrings (first row)
- * @retval    0     Not equal
  * @retval    1     Equal
+ * @retval    0     Not equal
  */
 int
 cligen_help_eq(struct cligen_help *ch0,

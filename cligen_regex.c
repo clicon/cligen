@@ -316,9 +316,9 @@ cligen_regex_free(cligen_handle h,
  * @param[in] string  Content string to match
  * @param[in] pattern Pattern string to match
  * @param[in] invert  Invert match
- * @retval   -1       Error,
- * @retval    0       No match
  * @retval    1       Match
+ * @retval    0       No match
+ * @retval   -1       Error,
  */
 int
 match_regexp(cligen_handle h,

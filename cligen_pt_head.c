@@ -343,10 +343,10 @@ cligen_ph_add(cligen_handle h,
 
 /*! Iterate through all parsed cligen trees
  *
- * @param[in] h   CLIgen handle
- * @param[in] pt  Cligen parse-tree iteration variable. Must be initialized to NULL
- * @retval pt     Next parse-tree structure.
- * @retval NULL   When end of list reached.
+ * @param[in] h    CLIgen handle
+ * @param[in] pt   Cligen parse-tree iteration variable. Must be initialized to NULL
+ * @retval    pt   Next parse-tree structure.
+ * @retval    NULL When end of list reached.
  * @code
  *    pt_head *ph = NULL;
  *    while ((ph = cligen_ph_each(h, ph)) != NULL) {

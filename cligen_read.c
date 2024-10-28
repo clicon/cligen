@@ -136,10 +136,10 @@ cli_show_help_commands(cligen_handle h,
 /*! Callback from getline: '?' has been typed on command line
  *
  * Just show help by calling long help show function.
- * @param[in]  h            CLIgen handle
- * @param[in]  string Input string to match
- * @retval  0 OK: required by getline
- * @retval -1 Error
+ * @param[in]  h       CLIgen handle
+ * @param[in]  string  Input string to match
+ * @retval     0       OK: required by getline
+ * @retval    -1       Error
  * @note Flaw related to getline: Errors from sub-functions are ignored
  * @see cli_tab_hook
  */
@@ -155,10 +155,11 @@ cli_qmark_hook(cligen_handle h,
  * First try to complete the string if the possibilities
  * allow that (at least one unique common character).
  * If no completion was made, then show the command alternatives.
- * @param[in]     h            CLIgen handle
- * @param[in,out] cursorp      Pointer to location of cursor on entry and exit
- * @retval  -1    Error
- * @retval  -2    (value != -1 required by getline)
+ * @param[in]     h         CLIgen handle
+ * @param[in,out] cursorp   Pointer to location of cursor on entry and exit
+ * @retval        0         OK
+ * @retval       -1         Error
+ * @retval       -2         (value != -1 required by getline)
  * @note Flaw related to getline: Errors from sub-functions are ignored
  * @see cli_qmark_hook
  */
@@ -271,7 +272,7 @@ column_print(FILE            *fout,
  * @param[in]  pt      Vector of commands (array of cligen object pointers (cg_obj)
  * @param[out] cvv     Cligen variable vector containing vars/values pair for completion
  * @retval     0       OK
- * @retval     -1      Error
+ * @retval    -1       Error
  * @see print_help_lines
  */
 static int
@@ -402,7 +403,7 @@ show_help_columns(cligen_handle h,
  * @param[in]   pt      Parse tree
  * @param[out]  cvv     Cligen variable vector containing vars/values pair for completion
  * @retval      0       OK
- * @retval      -1      Error
+ * @retval     -1       Error
  *
  * Example from JunOS
  # set interfaces ?
@@ -509,8 +510,8 @@ show_help_line(cligen_handle h,
  * @param[in]  cursorp Pointer to the current cursor in string.
  * @param[in]  pt      Vector of commands (array of cligen object pointers)
  * @param[out] cvv     cligen variable vector containing vars/values pair for completion
- * @retval    -1       Error
  * @retval     0       Success
+ * @retval    -1       Error
  */
 static int
 cli_complete(cligen_handle h,

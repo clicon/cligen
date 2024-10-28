@@ -2085,8 +2085,8 @@ cv_str2type(const char *str)
 /*! Translate (print) a cv type to a static string.
  *
  * @param[in] tpe    CLIgen variable type
- * @retval    NULL   Error
  * @retval    str    Static string containing name of type as ASCII string
+ * @retval    NULL   Error
  */
 const char *
 cv_type2str(enum cv_type type)
@@ -2953,7 +2953,7 @@ cv_parse1(const char   *str0,
     }
     else
         if ((str = strdup(str0)) == NULL)
-        goto done;
+            goto done;
     switch (cv->var_type) {
     case CGV_INT8:
         retval = parse_int8(str, &cv->var_int8, reason);
@@ -3094,7 +3094,7 @@ cv_parse1(const char   *str0,
             *reason = cligen_reason("Invalid variable");
         break;
     } /* switch */
-  done:
+ done:
     if (str)
         free (str);
     if (reason && *reason)
@@ -3149,8 +3149,8 @@ cv_parse(const char *str,
  * @param[in] cvlow  cv containing lower bound
  * @param[in] cvupp  cv containing upper bound
  * @param[in] type   Numeric type string, eg "int32"
- * @retval    0      i is outside [low,upper]
  * @retval    1      i is in [low,upper]
+ * @retval    0      i is outside [low,upper]
  * @note need to use macro trick ## to fix different types
 */
 #define range_check(i, cvlow, cvupp, type)       \
@@ -3670,8 +3670,8 @@ cv_dup(cg_var *old)
 
 /*! Create new cligen variable.
  *
- * @retval NULL  on error, error printed on stder
  * @retval cv    on success the malloc:ed cligen variable. Needs to be freed w cv_free()
+ * @retval NULL  on error, error printed on stder
  * @note returned cv needs to be freed with cv_free()
  * @note if type is CGV_DEC64, cv_dec64_n_set needs also be called
  * @see cvec_add  which adds a cv to an existing cvec
@@ -3688,7 +3688,6 @@ cv_new(enum cv_type type)
     cv->var_type = type;
   done:
     return cv;
-
 }
 
 /*! Free pointers and resets a single CLIgen variable cv

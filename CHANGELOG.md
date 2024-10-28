@@ -1,6 +1,6 @@
 # Cligen Changelog
 
-* [7.2.0](#720) Expected: October 2024
+* [7.2.0](#720) 28 October 2024
 * [7.1.0](#710) 3 July 2024
 * [7.0.0](#770) 8 March 2024
 * [6.5.0](#650) 5 December 2023
@@ -11,7 +11,7 @@
 * [6.0.0](#600) 29 Nov 2022
 
 ## 7.2.0
-Expected: October 2024
+28 October 2024
 
 ### Features
 

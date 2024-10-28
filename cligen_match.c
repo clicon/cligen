@@ -81,9 +81,9 @@
  * @param[in]  co      cligen object
  * @param[in]  str     Input string to match
  * @param[out] reason  if not match and co type is 0, reason points to a (malloced) err string
- * @retval     -1      Error (print msg on stderr)
- * @retval     0       Not match and reason returned as malloced string.
  * @retval     1       Match
+ * @retval     0       Not match and reason returned as malloced string.
+ * @retval    -1       Error (print msg on stderr)
  * Who prints errors?
  * @see cvec_match where actual allocation of variables is made not only sanity
  * For ints a double parse for most specific error, see https://github.com/clicon/clixon/issues/319
@@ -141,9 +141,9 @@ match_variable(cligen_handle h,
  *                     string containing an error explanation string. If reason is
  *                     NULL no such string will be malloced. This string needs to
  *                     be freed.
- * @retval  -1         Error
- * @retval   0         Not match
  * @retval   1         Match
+ * @retval   0         Not match
+ * @retval  -1         Error
  */
 static int
 match_object(cligen_handle h,
@@ -546,7 +546,7 @@ co_clearflag(cg_obj *co,
  * @param[out]    mrp       Match result including how many matches, level, reason for nomatc, etc
  * @param[in,out] cvv       cligen variable vector containing vars/values pair for completion
  * @retval        0         OK. result returned in mrp
- * @retval        -1        Error
+ * @retval       -1         Error
  */
 static int
 match_pattern_sets_local(cligen_handle  h,
@@ -1042,8 +1042,8 @@ match_pattern_sets(cligen_handle  h,
  *                       If not set, return all possible matches, do not return hidden options
  * @param[out] cvv       cligen variable vector containing vars/values pair for completion
  * @param[out] mrp       CLIgen match result struct encapsulating several return parameters
- * @retval    -1         Error
  * @retval     0         OK
+ * @retval    -1         Error
  *
  * All options are ordered by PREFERENCE, where
  *       command > ipv4,mac > string > rest
@@ -1230,8 +1230,8 @@ match_pattern(cligen_handle h,
  * @param[out] resultp   Result, < 0: errors, >=0 number of matches (only if retval == 0)
  * @param[out] reason    If retval is 0 and matchlen != 1, contains reason
  *                       for not matching variables, if given. Need to be free:d
- * @retval  -1           Error
  * @retval   0           OK, resultp contains more info.
+ * @retval  -1           Error
  */
 int
 match_pattern_exact(cligen_handle  h,
@@ -1289,9 +1289,9 @@ match_pattern_exact(cligen_handle  h,
  * @param[in,out] stringp Input string to match and to complete (append to)
  * @param[in,out] slen    Current string length
  * @param[out]    cvv     cligen variable vector containing vars/values pair for completion
- * @retval       -1       Error
- * @retval        0       No matches, no completions made
  * @retval        1       Function completed by adding characters at the end of "string"
+ * @retval        0       No matches, no completions made
+ * @retval       -1       Error
  */
 int
 match_complete(cligen_handle h,

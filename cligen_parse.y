@@ -540,8 +540,8 @@ cgy_var_name_type(cligen_yacc *cy,
  * And insert it into object hierarchies.
  * That is, insert a variable in each hieracrhy.
  * @param[in]  cy  CLIgen yacc parse struct
- * @retval 0 on OK
- * @retval -1 on error
+ * @retval     0   OK
+ * @retval    -1   Error
  */
 static int
 cgy_var_post(cligen_yacc *cy)

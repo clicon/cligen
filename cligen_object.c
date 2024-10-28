@@ -1214,10 +1214,10 @@ co_find_one(parse_tree *pt,
 /*! Set CLIgen object value
  *
  * Allocate new string, remove old if already set.
- * @param[in]  co      CLIgen object
- * @param[in]  str     Value to set
- * @retval     0       OK
- * @retval     -1      Error
+ * @param[in]  co    CLIgen object
+ * @param[in]  str   Value to set
+ * @retval     0     OK
+ * @retval    -1     Error
  */
 int
 co_value_set(cg_obj *co,
@@ -1241,8 +1241,8 @@ co_value_set(cg_obj *co,
  * Parsingwise, it means it is printed with a ';'
  * @param[in]  co   CLIgen object
  * @param[out] cot  CLIgen object of empty statement, if any
- * @retval     0    No, it is not a terminal command
  * @retval     1    Yes, is a terminal command, cot may be returned if exists
+ * @retval     0    No, it is not a terminal command
  */
 int
 co_terminal(cg_obj  *co,

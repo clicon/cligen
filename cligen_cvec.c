@@ -87,8 +87,8 @@ static inline char * strdup4(const char *str)
  * Each individual cv initialized with CGV_ERR and no value.
  * Returned cvec needs to be freed with cvec_free().
  * @param[in] len    Number of cv elements. Can be zero and elements added incrementally.
- * @retval    NULL   errno set
  * @retval    cvv    allocated cligen var vector
+ * @retval    NULL   errno set
  * @see cvec_init
  */
 cvec *
@@ -184,9 +184,9 @@ cvec_reset(cvec *cvv)
 
 /*! Given an element (cv0) in a cligen variable vector (cvec) return the next element.
  *
- * @param[in]  cvv    The cligen variable vector
- * @param[in]  cv0    Return element after this, or first element if this is NULL
- * @retval cv  Next element
+ * @param[in]  cvv  The cligen variable vector
+ * @param[in]  cv0  Return element after this, or first element if this is NULL
+ * @retval     cv   Next element
  */
 cg_var *
 cvec_next(cvec   *cvv,
@@ -211,8 +211,8 @@ cvec_next(cvec   *cvv,
  *
  * @param[in] cvv   Cligen variable vector
  * @param[in] type  Append a new cv to the vector with this type
- * @retval    NULL  Error
  * @retval    cv    The new cligen variable
+ * @retval    NULL  Error
  * @see cv_new   but this is allocated contiguosly as a part of a cvec.
  * @see cvec_append_var
  * @see cvec_add_string  utility function for appending a string cv
