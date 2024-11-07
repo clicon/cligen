@@ -116,8 +116,6 @@ co_stats_one(cg_obj   *co,
         sz += cvec_size(co->co_filter);
     if (co->co_helpstring)
         sz += strlen(co->co_helpstring) + 1;
-    if (co->co_value)
-        sz += strlen(co->co_value) + 1;
     /* XXX union */
     if (co->co_type == CO_VARIABLE){
         cgs = &co->u.cou_var;
@@ -693,9 +691,6 @@ co_copy(cg_obj  *co,
     if (co->co_helpstring)
         if ((con->co_helpstring = strdup(co->co_helpstring)) == NULL)
             goto done;
-    con->co_value = NULL;
-    if (co_value_set(con, co->co_value) < 0)
-        goto done;
     if (co->co_type == CO_VARIABLE){
         if (co->co_expand_fn_str)
             if ((con->co_expand_fn_str = strdup(co->co_expand_fn_str)) == NULL)
@@ -805,9 +800,6 @@ co_copy1(cg_obj  *co,
     if (co->co_helpstring)
         if ((con->co_helpstring = strdup(co->co_helpstring)) == NULL)
             goto done;
-    con->co_value = NULL;
-    if (co_value_set(con, co->co_value) < 0)
-        goto done;
     if (co->co_type == CO_VARIABLE){
         if (co->co_expand_fn_str)
             if ((con->co_expand_fn_str = strdup(co->co_expand_fn_str)) == NULL)
@@ -1032,8 +1024,6 @@ co_free(cg_obj *co,
         free(co->co_command);
     if (co->co_prefix)
         free(co->co_prefix);
-    if (co->co_value)
-        free(co->co_value);
     if (co->co_cvec)
         cvec_free(co->co_cvec);
     if (co->co_filter)
@@ -1209,30 +1199,6 @@ co_find_one(parse_tree *pt,
             char       *name)
 {
     return co_search1(pt, name, 0, pt_len_get(pt));
-}
-
-/*! Set CLIgen object value
- *
- * Allocate new string, remove old if already set.
- * @param[in]  co    CLIgen object
- * @param[in]  str   Value to set
- * @retval     0     OK
- * @retval    -1     Error
- */
-int
-co_value_set(cg_obj *co,
-             char   *str)
-{
-    if (co->co_value){ /* This can happen in '?/TAB' since we call match twice */
-        free(co->co_value);
-        co->co_value = NULL;
-    }
-    if (str != NULL)
-        if ((co->co_value = strdup(str)) == NULL){
-            fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
-            return -1;
-        }
-    return 0;
 }
 
 /*! co is a "terminal" command

@@ -411,61 +411,90 @@ co_expand_treeref_copy_shallow(cligen_handle h,
     return retval;
 }
 
-/*! Escape special characters in a string for its usage as CLI keyword.
+/*! Count length of escaped string
  *
- * If no escaping is required, return original string.
- * Otherwise, allocate a new string for escaped result.
- * @param[in]   s    Original string.
- * @retval      e    Escaped string, malloced, must be freed
- * @retval      NULL Error
- *
- **/
-static const char*
-cligen_escape(const char* s)
+ * @param[in]  s    Original string.
+ * @retval     len  Length of string after escaping
+ */
+static int
+cligen_escape_nr(const char *s)
 {
-    char       *copy;
+    int         nr = 0;
+    const char *sp;
+
+    sp = s;
+    while ((sp = strpbrk(sp, "?\\ \t"))) {
+        if (nr == 0)
+            nr = 2; /* escapes */
+        if (!isspace(*sp)) {
+            nr++;
+        }
+        sp++;
+    }
+    return nr;
+}
+
+/*! Check if string needs escaping
+ *
+ * @param[in]  s    Original string.
+ * @retval     1    Yes needs escaping
+ * @retval     0    No does not need escaping
+ * @retval    -1    Error
+ */
+int
+cligen_escape_need(const char *s)
+{
     size_t      len;
-    int         chars_to_escape = 0;
-    const char *spec;
-    int         i, j;
+    int         nr = 0;
 
     if (s == NULL){
         errno = EINVAL;
-        return NULL;
+        return -1;
     }
-    spec = s;
-    //      while ((spec = strpbrk(spec, "?\\"))) {
-    while ((spec = strpbrk(spec, "?\\ \t"))) {
-        if (chars_to_escape == 0) {
-            chars_to_escape = 2; /* escapes */
-        }
-        if (!isspace(*spec)) {
-            chars_to_escape++;
-        }
-        spec++;
-    }
-
-    if (!chars_to_escape) {
-        return s;
-    }
-
+    nr = cligen_escape_nr(s);
+    if (nr == 0)
+        return 0;
     len = strlen(s);
+    if (len > 1 && s[0] == '"' && s[len-1] == '"')
+        return 0;
+    return 1;
+}
 
-    if ((copy = (char*)malloc(len + 1 + chars_to_escape)) == NULL){
+/*! Escape string
+ *
+ * @param[in]  s0   Original string.
+ * @retval     s1   New malloced string
+ * @retval     NULL Error does not need escaping
+ */
+char *
+cligen_escape_do(const char *s0)
+{
+    char  *s1 = NULL;
+    size_t len;
+    int    nr = 0;
+    int    i;
+    int    j;
+
+    if (s0 == NULL){
+        errno = EINVAL;
         return NULL;
     }
-
-    copy[0] = '"';
-    for (i = 0, j = 1; i < len; i++, j++) {
-        if ((s[i] == '?') || (s[i] == '\\')) {
-            copy[j++] = '\\';
-        }
-        copy[j] = s[i];
+    len = strlen(s0);
+    nr = cligen_escape_nr(s0);
+    if ((s1 = (char*)malloc(len + 1 + nr)) == NULL){
+        return NULL;
     }
-    copy[j++] = '"';
-    copy[j] = '\0';
-
-    return copy;
+    j = 0;
+    s1[j++] = '"';
+    for (i = 0; i < len; i++, j++) {
+        if ((s0[i] == '?') || (s0[i] == '\\')) {
+            s1[j++] = '\\';
+        }
+        s1[j] = s0[i];
+    }
+    s1[j++] = '"';
+    s1[j] = '\0';
+    return s1;
 }
 
 /*! Call expand callback and insert expanded commands in place of variable
@@ -485,14 +514,14 @@ cligen_escape(const char* s)
  * @see cligen_eval where cligen callbacks are invoked
  */
 static int
-pt_expand_fnv(cligen_handle h,
-              cg_obj       *co,
-              cg_obj       *co_parent,
-              cvec         *cvv_var,
-              cvec         *cvv_filter,
-              cg_callback  *callbacks,
-              int           transient,
-              parse_tree   *ptn)
+pt_expand_fn(cligen_handle h,
+             cg_obj       *co,
+             cg_obj       *co_parent,
+             cvec         *cvv_var,
+             cvec         *cvv_filter,
+             cg_callback  *callbacks,
+             int           transient,
+             parse_tree   *ptn)
 {
     int         retval = -1;
     cvec       *commands = NULL;
@@ -522,6 +551,7 @@ pt_expand_fnv(cligen_handle h,
     if (callbacks && callbacks->cc_cvec){
         cligen_callback_arguments_set(h, callbacks->cc_cvec);
     }
+    cligen_co_match_set(h, co);     /* For eventual use in callback */
     if ((*co->co_expandv_fn)(cligen_userhandle(h)?cligen_userhandle(h):h,
                              co->co_expand_fn_str,
                              cvv1,
@@ -550,21 +580,14 @@ pt_expand_fnv(cligen_handle h,
             if (co_filter_set(con, cvv_filter) == NULL)
                 goto done;
         value = cv_string_get(cv);
-        if ((cmd = cligen_escape(value)) == NULL)
+        if ((cmd = strdup(value)) == NULL)
             goto done;
-        if (cmd == value) {
-            if ((cmd = strdup(cmd)) == NULL)
-                goto done;
-        }
         /* 'cmd' always points to mutable string, helpstr is consumed */
         if (transform_var_to_cmd(con, (char*)cmd, helpstr) < 0){
             helpstr = NULL;
             goto done;
         }
         helpstr = NULL;
-        /* Save the unescaped string */
-        if (cmd != value)
-            co_value_set(con, (char*)value);
     }
     retval = 0;
  done:
@@ -676,8 +699,6 @@ pt_expand1_co(cligen_handle h,
     cg_obj *con = NULL;
     char   *label;
 
-    if (co_value_set(co, NULL) < 0)
-        goto done;
     if (hide && co_flags_get(co, CO_FLAGS_HIDE))
         goto ok;
     /* Loop labels from object itself and see if any of the elements are filtered, if so skip it
@@ -714,12 +735,12 @@ pt_expand1_co(cligen_handle h,
          * this iteration and if not add it?
          */
         if (expandvar){
-            if (pt_expand_fnv(h, co, NULL,
-                              cvv_var,
-                              cvv_filter,
-                              callbacks,
-                              transient,
-                              ptn) < 0)
+            if (pt_expand_fn(h, co, NULL,
+                             cvv_var,
+                             cvv_filter,
+                             callbacks,
+                             transient,
+                             ptn) < 0)
                 goto done;
         }
     }
@@ -947,7 +968,6 @@ pt_expand(cligen_handle h,
 
 /*! Go through tree and clean & delete all extra memory from pt_expand and pt_expand_treeref
  *
- * More specifically, delete all co_values and co_pt_exp and expanded subtrees co_ref
  * @param[in] h    CLIgen handle
  * @param[in] pt   Parsetree
  * @retval    0    OK
@@ -958,19 +978,7 @@ int
 pt_expand_cleanup(cligen_handle h,
                   parse_tree *pt)
 {
-    int         retval = -1;
-    int         i;
-    cg_obj     *co;
-
-    for (i=0; i<pt_len_get(pt); i++){
-        if ((co = pt_vec_i_get(pt, i)) != NULL){
-            if (co_value_set(co, NULL) < 0)
-                goto done;
-        }
-    }
-    retval = 0;
- done:
-    return retval;
+    return 0;
 }
 
 /*! Return object in original tree from  object in a referenced tree

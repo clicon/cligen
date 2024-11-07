@@ -401,8 +401,8 @@ cligen_treename_keyword_set(cligen_handle h,
 
 /*! Return CLIgen object that matched in the current callback.
  *
- *  After an evaluation when calling a callback, a node has been matched in the
- * current parse-tree. This matching node is returned (and set) here.
+ * After an evaluation when calling a callback, a node has been matched in the
+ * current parse-tree. This matching node is returned here.
  * @param[in] h       CLIgen handle
  */
 cg_obj *
@@ -413,7 +413,9 @@ cligen_co_match(cligen_handle h)
     return ch->ch_co_match;
 }
 
-/*!
+/*! Set CLIgen object to use in the current callback.
+ *
+ * It can be useful for callbacks to know which cligen-object is matched
  * @param[in] h       CLIgen handle
  */
 int

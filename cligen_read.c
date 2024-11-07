@@ -1007,7 +1007,7 @@ cligen_eval(cligen_handle h,
         errno = EINVAL;
         goto done;
     }
-    cligen_co_match_set(h, co);
+    cligen_co_match_set(h, co); /* For eventual use in callback */
     /* Make a copy of var argument for modifications */
     if ((cvv1 = cvec_dup(cvv)) == NULL)
         goto done;

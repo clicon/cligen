@@ -59,6 +59,8 @@
 /*
  * Prototypes
  */
+int   cligen_escape_need(const char *s);
+char *cligen_escape_do(const char *s);
 int   co_isfilter(cvec *cvv_filter, char *label);
 char *pt_local_pipe(parse_tree *pt);
 int   pt_expand(cligen_handle h, cg_obj *co, parse_tree *pt, cvec *cvt, cvec *cvv,
