@@ -30,7 +30,6 @@
 
   ***** END LICENSE BLOCK *****
 
-
   CLIgen variable vectors - cvec
 */
 
@@ -43,7 +42,6 @@
  * Defined internally in cligen_cvec.c
  */
 typedef struct cvec cvec;
-
 
 /*
  * Prototypes
@@ -80,4 +78,3 @@ int     cvec_expand_first(cvec *cvv);
 int     cvec_exclude_keys(cvec *cvv);
 
 #endif /* _CLIGEN_CVEC_H_ */
-

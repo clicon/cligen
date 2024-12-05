@@ -1377,4 +1377,3 @@ match_complete(cligen_handle h,
     }
     return retval;
 }
-

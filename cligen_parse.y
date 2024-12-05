@@ -32,8 +32,6 @@
 
   ***** END LICENSE BLOCK *****
 
-
-  Choice:
 */
 %start file
 
@@ -1530,6 +1528,4 @@ charseq    : charseq CHARS
                     $$=$1;}
            ;
 
-
 %%
-

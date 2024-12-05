@@ -230,7 +230,7 @@ transform_var_to_cmd(cg_obj *co,
     return 0;
 }
 
-/*! Look up treeref from @<treefer> and return expanded parse-tree
+/*! Look up treeref from @<treeref> and return expanded parse-tree
  *
  * @param[in]  h       Cligen handle
  * @param[in]  co      Cligen treeref object
@@ -260,7 +260,7 @@ tree_resolve(cligen_handle h,
     if (fn){
         if ((ret = fn(h, treename, cvt, arg, &treename2)) < 0)
             goto done;
-        if (ret == 0) /* No wrapper use existing */
+        if (ret == 0) /* No wrapper use existing */ // XXX empty tree
             ;
         else          /* New malloced name */
             treename = treename2;

@@ -34,7 +34,6 @@
 
 %{
 
-
 #include "cligen_config.h"
 
 #include <stdio.h>
@@ -250,5 +249,3 @@ cgl_exit(cligen_yacc *cy)
     cligen_parselex_destroy();  /* modern */
     return 0;
 }
-
-

@@ -29,7 +29,6 @@
 
   ***** END LICENSE BLOCK *****
 
-
   CLIgen variables - cgv
   cgv:s are created when parsing an input string as instances of cg_obj variable
   when matching.
@@ -1500,7 +1499,6 @@ parse_ipv6addr(char            *str,
   done:
     return retval;
 }
-
 
 /*! Own version of ether_aton():
  *

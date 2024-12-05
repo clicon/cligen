@@ -30,7 +30,6 @@
 
   ***** END LICENSE BLOCK *****
 
-
   Custom file as boilerplate appended by cligen_config.h
 */
 

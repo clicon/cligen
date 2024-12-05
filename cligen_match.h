@@ -34,7 +34,6 @@
 
 */
 
-
 #ifndef _CLIGEN_MATCH_H
 #define _CLIGEN_MATCH_H
 
@@ -61,6 +60,3 @@ int match_complete(cligen_handle h, parse_tree *pt,
                    char **stringp, size_t *slen, cvec *cvec);
 
 #endif /* _CLIGEN_MATCH_H */
-
-
-

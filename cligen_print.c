@@ -58,7 +58,6 @@
 #define VARIABLE_PRE  '<'
 #define VARIABLE_POST '>'
 
-
 /* Static prototypes */
 static int pt2cbuf(cbuf *cb, parse_tree *pt, int level, int brief);
 

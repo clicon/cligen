@@ -30,7 +30,6 @@
 
   ***** END LICENSE BLOCK *****
 
-
   CLIgen variables - cgv
   cgv:s are created when parsing an input string as instances of cg_obj variable
   when matching.
@@ -234,4 +233,3 @@ cg_var *cv_new(enum cv_type type);
 size_t  cv_size(cg_var *cv);
 
 #endif /* _CLIGEN_CV_H_ */
-

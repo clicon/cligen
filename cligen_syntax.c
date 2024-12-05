@@ -489,8 +489,6 @@ cligen_alias_add(cligen_handle  h,
     }
     co_flags_set(co, CO_FLAGS_ALIAS);
     {
-
-
         if ((cc = co->co_callbacks) == NULL){
             fprintf(stderr, "No callback found\n");
             goto done;

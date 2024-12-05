@@ -38,7 +38,6 @@
 #ifndef _CLIGEN_REGEX_H_
 #define _CLIGEN_REGEX_H_
 
-
 int cligen_regex_posix_compile(char *regexp, void **recomp);
 int cligen_regex_posix_exec(void *recomp, char *string);
 int cligen_regex_posix_free(void *recomp);
@@ -51,4 +50,3 @@ int cligen_regex_free(cligen_handle h, void *recomp);
 int match_regexp(cligen_handle h, char *string, char *pattern, int invert);
 
 #endif /* _CLIGEN_REGEX_H_ */
-

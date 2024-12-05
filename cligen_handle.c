@@ -1018,7 +1018,6 @@ cligen_regex_xsd_set(cligen_handle h,
     return 0;
 }
 
-
 static int _getline_bufsize = GETLINE_BUFLEN_DEFAULT;
 static int _getline_killbufsize = GETLINE_BUFLEN_DEFAULT;
 

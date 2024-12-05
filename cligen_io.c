@@ -651,4 +651,3 @@ cligen_help(cligen_handle h,
 {
     return print_help_lines(h, fout, pt);
 }
-

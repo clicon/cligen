@@ -102,4 +102,3 @@ main(int   argc,
         cligen_exit(h);
     return retval;
 }
-

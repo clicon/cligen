@@ -525,7 +525,6 @@ co_pref(cg_obj *co,
     return pref;
 }
 
-
 /*! Return size of cligen object
  */
 size_t
@@ -1261,4 +1260,3 @@ cligen_reason(const char *fmt, ...)
     va_end(ap);
     return reason;
 }
-

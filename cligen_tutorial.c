@@ -127,7 +127,6 @@ secret(cligen_handle h,
     return 0;
 }
 
-
 /*! This callback changes the prompt to the variable setting
  */
 int

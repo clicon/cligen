@@ -30,7 +30,6 @@
 
   ***** END LICENSE BLOCK *****
 
-
   CLIgen variable vectors - cvec
 */
 
@@ -661,7 +660,6 @@ cvec_name_set(cvec       *cvv,
     cvv->vr_name = s1;
     return s1;
 }
-
 
 /*! Return the alloced memory of a CLIgen variable vector
  */

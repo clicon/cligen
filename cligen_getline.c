@@ -112,7 +112,6 @@ static int   search_last = 0;     /* last match found */
 
 /* end global variables */
 
-
 /************************ nonportable part *********************************/
 
 #ifdef unix
@@ -274,7 +273,6 @@ int pc_keymap(int c)
 }
 #endif /* MSDOS || __EMX__ || __GO32__ */
 
-
 #if CLIGEN_REGFD
 struct regfd {
     int fd;
@@ -353,7 +351,6 @@ gl_select()
     return 0;
 }
 #endif
-
 
 int
 gl_eof()
@@ -1275,7 +1272,6 @@ gl_fixup_noscroll(cligen_handle h,
     gl_pos = cursor;
 }
 
-
 /*! Redrawing or moving within line
  *
  * This function is used both for redrawing when input changes or for
@@ -1420,9 +1416,7 @@ gl_strwidth(size_t (*func)())
     }
 }
 
-
 /******************* Search stuff **************************************/
-
 
 static void
 search_update(cligen_handle h,
@@ -1587,4 +1581,3 @@ search_forw(cligen_handle h,
         gl_putc('\007');
     }
 }
-

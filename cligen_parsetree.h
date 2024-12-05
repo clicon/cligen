@@ -87,4 +87,3 @@ parse_tree *pt_new(void);
 int         pt_apply(parse_tree *pt, cg_applyfn_t fn, int depth, void *arg);
 
 #endif /* _CLIGEN_PARSETREE_H_ */
-
