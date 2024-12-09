@@ -162,6 +162,7 @@ cligen_init(void)
     ch->ch_magic = CLIGEN_MAGIC;
     ch->ch_tabmode = 0x0; /* see CLIGEN_TABMODE_* */
     ch->ch_delimiter = ' ';
+    ch->ch_spipe = -1;
     h = (cligen_handle)ch;
     cligen_prompt_set(h, CLIGEN_PROMPT_DEFAULT);
     /* Only if stdin and stdout refers to a terminal make win size check */
@@ -465,7 +466,8 @@ cligen_callback_arguments_set(cligen_handle h,
  *   return 0;
  * }
  * @endcode
- * @param[in] h       CLIgen handle
+ * @param[in] h   CLIgen handle
+ * @retval    fn  Name of function that was called in currently active callback
  */
 char *
 cligen_fn_str_get(cligen_handle h)
@@ -478,7 +480,9 @@ cligen_fn_str_get(cligen_handle h)
 /*! Set callback function name string
  *
  * @param[in] h       CLIgen handle
- * @param[in] fn_str  Name of function that was called in this callback
+ * @param[in] fn_str  Name of function that was called in currently active callback
+ * @retval    0       OK
+ * @retval   -1       Error
  */
 int
 cligen_fn_str_set(cligen_handle h,
@@ -494,6 +498,35 @@ cligen_fn_str_set(cligen_handle h,
         if ((ch->ch_fn_str = strdup(fn_str)) == NULL)
             return -1;
     }
+    return 0;
+}
+
+/*! Get socket of active output pipe
+ *
+ * @param[in] h   CLIgen handle
+ * @retval    s   Socket, -1 means not set
+ */
+int
+cligen_spipe_get(cligen_handle h)
+{
+    struct cligen_handle *ch = handle(h);
+
+    return ch->ch_spipe;
+}
+
+/*! Set socket of active output pipe
+ *
+ * @param[in]  h  CLIgen handle
+ * @param[in]  s  Socket, -1 means not set
+ * @retval     0  OK
+ */
+int
+cligen_spipe_set(cligen_handle h,
+                 int           s)
+{
+    struct cligen_handle *ch = handle(h);
+
+    ch->ch_spipe = s;
     return 0;
 }
 

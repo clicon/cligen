@@ -1029,6 +1029,8 @@ cligen_eval(cligen_handle h,
             continue;
         if (cligen_eval_pipe_pre(h, cc, cvv1, &spipe, &childpid) < 0)
             goto done;
+        cligen_spipe_set(h, spipe);
+        break; /* Just one pipe for now */
     }
     /* Second round, call regular callbacks */
     for (cc = co->co_callbacks; cc; cc=co_callback_next(cc)){
@@ -1063,8 +1065,10 @@ cligen_eval(cligen_handle h,
     }
     retval = 0;
  done:
-    if (spipe != -1)
+    if (spipe != -1){
+        cligen_spipe_set(h, -1);
         close(spipe);
+    }
     if (wh)
         free(wh);
     if (cvv1)

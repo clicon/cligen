@@ -138,6 +138,9 @@ int cligen_callback_arguments_set(cligen_handle h, cvec *args);
 char *cligen_fn_str_get(cligen_handle h);
 int cligen_fn_str_set(cligen_handle h, char *fn_str);
 
+int   cligen_spipe_get(cligen_handle h);
+int   cligen_spipe_set(cligen_handle h, int s);
+
 int cligen_terminal_rows(cligen_handle h);
 int cligen_terminal_rows_set(cligen_handle h, int rows);
 
