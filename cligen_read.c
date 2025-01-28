@@ -940,8 +940,14 @@ cligen_eval_pipe_post(cligen_handle h,
         /* Read until EOF */
         while (ret != 0) {
             if ((len = read(s, buf, 4096)) < 0){
-                perror("cli_pipe_exec_cb, read");
-                goto done;
+                switch (errno){
+                case ECONNRESET:
+                    break;
+                default:
+                    perror("cligen_eval_pipe_post, read");
+                    goto done;
+                    break;
+                }
             }
             if (len == 0)
                 break;

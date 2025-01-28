@@ -291,10 +291,16 @@ cligen_output(FILE       *f,
         goto done;
     if (s != -1){
         if (write(s, inbuf, inbuflen) < 0){
-            perror("cligen_output write on pipe socket");
-            close(s);
-            cli_pipe_output_socket_set(-1);
-            goto done;
+            switch (errno){
+            case EPIPE:
+                break;
+            default:
+                perror("cligen_output write on pipe socket");
+                close(s);
+                cli_pipe_output_socket_set(-1);
+                goto done;
+                break;
+            }
         }
     }
     else{

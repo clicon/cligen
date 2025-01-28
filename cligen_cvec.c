@@ -228,7 +228,6 @@ cvec_add(cvec        *cvv,
         return NULL;
     }
     len = cvv->vr_len + 1;
-
     if ((cvv->vr_vec = realloc(cvv->vr_vec, len*sizeof(cg_var))) == NULL)
         return NULL;
     cvv->vr_len = len;
