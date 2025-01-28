@@ -184,7 +184,7 @@ stripdup(char *s0)
 <CHOICE>\>              { BEGIN(INITIAL); return *yytext; }
 <CHOICE>[-+]?[0-9]+\.[0-9]+ { cligen_parselval.string = strdup(yytext); return DECIMAL;}
 <CHOICE>[-+]?[0-9]+     { cligen_parselval.string = strdup(yytext); return NUMBER;}
-<CHOICE>([^ \t\n>\|\"\(\)\[\]]|\\.)+ {
+<CHOICE>([^ \t\n>\|\"\[\]]|\\.)+ {
                                  cligen_parselval.string = strdup(yytext);
                                  return NAME; }
 

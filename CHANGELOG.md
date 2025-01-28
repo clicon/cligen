@@ -16,6 +16,7 @@ Expected: January 2025
 
 ### Corrected Bugs
 
+* Fixed: Added parenthesis as valid clispec choice tokens 
 * Fixed: [Expansion removes the double quote](https://github.com/clicon/clixon/issues/524)
   * Remove auto-escaping of expanded nodes
   * (Internal:) remove co_value and storing non-escaped command
