@@ -282,8 +282,10 @@ cvec_del(cvec   *cvv,
     i = 0;
     cv = NULL;
     while ((cv = cvec_each(cvv, cv)) != NULL) {
-        if (cv == del)
+        if (cv == del){
+            cv_reset(cv);
             break;
+        }
         i++;
     }
     if (i >= cvec_len(cvv)) /* Not found !?! */
