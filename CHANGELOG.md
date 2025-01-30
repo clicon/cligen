@@ -1,6 +1,6 @@
 # Cligen Changelog
 
-* [7.3.0](#730) Expected: January 2025
+* [7.3.0](#730) 30 January 2025
 * [7.2.0](#720) 28 October 2024
 * [7.1.0](#710) 3 July 2024
 * [7.0.0](#770) 8 March 2024
@@ -12,14 +12,14 @@
 * [6.0.0](#600) 29 Nov 2022
 
 ## 7.3.0
-Expected: January 2025
+30 January 2025
 
 ### Corrected Bugs
 
-* Fixed: Added parenthesis as valid clispec choice tokens 
+* Fixed: Added parenthesis as valid clispec choice tokens
 * Fixed: [Expansion removes the double quote](https://github.com/clicon/clixon/issues/524)
   * Remove auto-escaping of expanded nodes
-  * (Internal:) remove co_value and storing non-escaped command
+  * (Internal:) remove co_value and storing of non-escaped command
 
 ## 7.2.0
 28 October 2024
