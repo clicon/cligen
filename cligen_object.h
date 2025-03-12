@@ -160,6 +160,8 @@ struct cg_obj_common{
                                        */
     struct cg_obj      *coc_treeref_orig; /* Ref to original (if this is a tree reference)
                                           * Only set in co_copy */
+    char               *coc_value;     /* Expanded value can be a string with a constant. */
+
 };
 
 /*! cligen gen object is a parse-tree node. A cg_obj is either a command, a variable or a tree reference
@@ -206,6 +208,7 @@ typedef struct cg_obj cg_obj;
 #define co_flags         co_common.coc_flags
 #define co_ref           co_common.coc_ref
 #define co_treeref_orig  co_common.coc_treeref_orig
+#define co_value         co_common.coc_value
 
 /* Access fields for code traversing parse tree */
 #define co_vtype         u.cou_var.cgs_vtype
@@ -256,6 +259,7 @@ int         co_free(cg_obj *co, int recursive);
 cg_obj     *co_insert1(parse_tree *pt, cg_obj *co, int recursive);
 cg_obj     *co_insert(parse_tree *pt, cg_obj *co);
 cg_obj     *co_find_one(parse_tree *pt, char *name);
+int         co_value_set(cg_obj *co, char *str);
 int         co_terminal(cg_obj *co, cg_obj **cot);
 char       *cligen_reason(const char *fmt, ...) __attribute__ ((format (printf, 1, 2)));
 

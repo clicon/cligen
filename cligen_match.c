@@ -502,11 +502,14 @@ match_bindvars(cligen_handle h,
         co_orig = co->co_ref;
         /* Once so translate only is done once */
     if (co->co_type == CO_VARIABLE){
-        if ((cv = add_cov_to_cvec(h, co, token, cvv)) == NULL) // <-- 1
+        if ((cv = add_cov_to_cvec(h, co, token, cvv)) == NULL)
             goto done;
     }
     else if (co->co_type == CO_COMMAND && co_orig->co_type == CO_VARIABLE){
-        if ((cv = add_cov_to_cvec(h, co_orig, token, cvv)) == NULL)
+        /* Once so translate only is done once */
+        if ((cv = add_cov_to_cvec(h, co_orig,
+                                  co->co_value?co->co_value:co->co_command,
+                                  cvv)) == NULL)
             goto done;
     }
     else{
@@ -557,6 +560,7 @@ match_pattern_sets_local(cligen_handle  h,
 {
     int           retval = -1;
     cg_obj       *co_match = NULL;
+    cg_obj       *co_orig = NULL;
     int           lasttoken = 0;
     char         *token;
     char         *resttokens;
@@ -615,7 +619,8 @@ match_pattern_sets_local(cligen_handle  h,
     }
     /* Get the single match object */
     co_match = mr_pt_i_get(mr0, 0);
-
+    /* co_orig is original object in case of expansion */
+    co_orig = co_match->co_ref?co_match->co_ref: co_match;
     /* Already matched (sets functionality) */
     if (co_flags_get(co_match, CO_FLAGS_MATCH)){ /* XXX: orig?? */
         char *r;
@@ -644,6 +649,21 @@ match_pattern_sets_local(cligen_handle  h,
         mr_last_set(mr0); /* dont go to children */
     }
  ok:
+    /* mr0:local or mrc:child
+     * if mrc has result, take that, otherwise take mr0
+     */
+    switch (mr_pt_len_get(mr0)) {
+    case 0:
+        break;
+    case 1:
+        if (co_match->co_type == CO_COMMAND &&
+            co_orig && co_orig->co_type == CO_VARIABLE)
+            if (co_value_set(co_orig, co_match->co_command) < 0)
+                goto done;
+        break;
+    default:
+        break;
+    } /* matches */
     *mrp = mr0;
     mr0 = NULL;
     retval = 0;
@@ -1325,7 +1345,7 @@ match_complete(cligen_handle h,
             if (co->co_type != CO_COMMAND)
                 continue;
         }
-        command = co->co_command;
+        command = co->co_value?co->co_value:co->co_command;
         if (co1 == NULL){
             slen = strlen(mr_token_get(mr));
             minmatch = strlen(command);
@@ -1333,7 +1353,7 @@ match_complete(cligen_handle h,
             command1 = command;
         }
         else{
-            command1 = co1->co_command;
+            command1 = co1->co_value?co1->co_value:co1->co_command;
             if (!cligen_caseignore_get(h) && strcmp(command1, command)==0)
                 ; /* equal */
             else if (cligen_caseignore_get(h) && strcasecmp(command1, command)==0)

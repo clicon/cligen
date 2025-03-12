@@ -588,6 +588,9 @@ pt_expand_fn(cligen_handle h,
             goto done;
         }
         helpstr = NULL;
+        /* Save the unescaped string */
+        if (cmd != value)
+            co_value_set(con, (char*)value);
     }
     retval = 0;
  done:
@@ -699,6 +702,8 @@ pt_expand1_co(cligen_handle h,
     cg_obj *con = NULL;
     char   *label;
 
+    if (co_value_set(co, NULL) < 0)
+        goto done;
     if (hide && co_flags_get(co, CO_FLAGS_HIDE))
         goto ok;
     /* Loop labels from object itself and see if any of the elements are filtered, if so skip it
@@ -978,7 +983,19 @@ int
 pt_expand_cleanup(cligen_handle h,
                   parse_tree *pt)
 {
-    return 0;
+    int         retval = -1;
+    int         i;
+    cg_obj     *co;
+
+    for (i=0; i<pt_len_get(pt); i++){
+        if ((co = pt_vec_i_get(pt, i)) != NULL){
+            if (co_value_set(co, NULL) < 0)
+                goto done;
+        }
+    }
+    retval = 0;
+ done:
+    return retval;
 }
 
 /*! Return object in original tree from  object in a referenced tree
