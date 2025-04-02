@@ -116,10 +116,7 @@ cligen_regex_posix_compile(char  *regexp,
     memset(re, 0, sizeof(regex_t));
     if ((err = regcomp(re, cbuf_get(cb), REG_NOSUB|REG_EXTENDED)) != 0) {
         char errbuf[1024] = {0,};
-        if (regerror(err, re, errbuf, 1000) < 0){
-            perror("regerror");
-            goto done;
-        }
+        regerror(err, re, errbuf, 1000);
         goto fail;
     }
     *recomp = re;
