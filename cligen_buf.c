@@ -312,7 +312,7 @@ vcprintf(cbuf       *cb,
   */
 int
 cbuf_append_str(cbuf *cb,
-                char *str)
+                const char *str)
 {
     size_t  len0;
     size_t  len;
