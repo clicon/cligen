@@ -1094,7 +1094,7 @@ cg_range_create(cligen_yacc *cy,
         if ((yv->co_rangecvv_low = cvec_from_var(cv1)) == NULL)
             goto done;
     }
-    else if (cvec_append_var(yv->co_rangecvv_low, cv1) < 0)
+    else if (cvec_append_var(yv->co_rangecvv_low, cv1) == NULL)
         goto done;
     /* Then create upper bound cv */
     if ((cv2 = cv_new(cvtype)) == NULL){
@@ -1122,7 +1122,7 @@ cg_range_create(cligen_yacc *cy,
         if ((yv->co_rangecvv_upp = cvec_from_var(cv2)) == NULL)
             goto done;
     }
-    else if (cvec_append_var(yv->co_rangecvv_upp, cv2) < 0)
+    else if (cvec_append_var(yv->co_rangecvv_upp, cv2) == NULL)
         goto done;
     /* Then increment range vector length */
     yv->co_rangelen++;
