@@ -1228,7 +1228,7 @@ co_value_set(cg_obj *co,
     }
     if (str != NULL)
         if ((co->co_value = strdup(str)) == NULL){
-            fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
+            fprintf(stderr, "%s: strdup: %s\n", __func__, strerror(errno));
             return -1;
         }
     return 0;

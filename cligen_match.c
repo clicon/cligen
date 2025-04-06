@@ -761,7 +761,7 @@ callbacks_merge(cg_obj       *coref,
             strcmp(coref->co_callbacks->cc_fn_str, "prepend_me") == 0){
             /* Assume only single coref parameter */
             if ((cv = cvec_i(coref->co_callbacks->cc_cvec, 0)) == NULL){
-                fprintf(stderr, "%s no first element in coref cvec\n", __FUNCTION__);
+                fprintf(stderr, "%s no first element in coref cvec\n", __func__);
                 goto done;
             }
             cvv = cvec_from_var(cv);
@@ -838,7 +838,7 @@ match_pattern_sets(cligen_handle  h,
 
     token = cvec_i_str(cvt, level+1); /* for debugging */
 #ifdef _DEBUG_SETS
-    fprintf(stderr, "%s %*s level: %d token:%s\npt:\n", __FUNCTION__, level*3,"",
+    fprintf(stderr, "%s %*s level: %d token:%s\npt:\n", __func__, level*3,"",
                 level, strlen(token)?token:"\"\"");
     pt_print(stderr, pt);
 #endif
@@ -846,7 +846,7 @@ match_pattern_sets(cligen_handle  h,
     if (match_pattern_sets_local(h, cvt, cvr, pt, level, best, cvv, &mr0) < 0)
         goto done;
 #ifdef _DEBUG_SETS
-    fprintf(stderr, "%s %*s matchnr:%d\n", __FUNCTION__, level*3,"", mr_pt_len_get(mr0));
+    fprintf(stderr, "%s %*s matchnr:%d\n", __func__, level*3,"", mr_pt_len_get(mr0));
 #endif
     if (mr_pt_len_get(mr0) != 1){ /* If not unique match exit here */
         *mrp = mr0;
@@ -882,7 +882,7 @@ match_pattern_sets(cligen_handle  h,
             goto done;
     }
 #ifdef _DEBUG_SETS
-    fprintf(stderr, "%s %*s match co:%s\n", __FUNCTION__, level*3,"", co_match->co_command);
+    fprintf(stderr, "%s %*s match co:%s\n", __func__, level*3,"", co_match->co_command);
 #endif
     if (mr_last_get(mr0) && (strcmp(token, "") != 0)){
         mr_flags_set_co_match(mr0, co_match);
@@ -931,7 +931,7 @@ match_pattern_sets(cligen_handle  h,
     }
     if (pt_sets_get(ptn)){ /* For sets, iterate */
 #ifdef _DEBUG_SETS
-        fprintf(stderr, "%s %*s sets:\n", __FUNCTION__, level*3,"");
+        fprintf(stderr, "%s %*s sets:\n", __func__, level*3,"");
 #endif
         while (!last_level(cvt, level)){
             if (mrc != NULL)
@@ -946,12 +946,12 @@ match_pattern_sets(cligen_handle  h,
                                    &mrc) < 0)
                 goto done;
 #ifdef _DEBUG_SETS
-            fprintf(stderr, "%s %*s sets matchnr: %d\n", __FUNCTION__, level*3,"", mr_pt_len_get(mrc));
+            fprintf(stderr, "%s %*s sets matchnr: %d\n", __func__, level*3,"", mr_pt_len_get(mrc));
 #endif
             if (mr_pt_len_get(mrc) != 1)
                 break;
 #ifdef _DEBUG_SETS
-            fprintf(stderr, "%s %*s sets match co: %s\n", __FUNCTION__, level*3,"",
+            fprintf(stderr, "%s %*s sets match co: %s\n", __func__, level*3,"",
                     mr_pt_i_get(mrc, 0)->co_command);
 #endif
             if (mrcprev != NULL)

@@ -1336,7 +1336,7 @@ parse_dec64(char    *str,
 
     if (n<=0 || n>18){
         if (reason != NULL)
-            if ((*reason = cligen_reason("%s: fraction-digit=%d given but should be in interval [1:18]", __FUNCTION__, n)) == NULL){
+            if ((*reason = cligen_reason("%s: fraction-digit=%d given but should be in interval [1:18]", __func__, n)) == NULL){
                 goto done;
             }
         retval = 0;
@@ -2164,7 +2164,7 @@ cv_type2str(enum cv_type type)
         str="empty";
         break;
     default:
-        fprintf(stderr, "%s: invalid type: %d\n", __FUNCTION__, type);
+        fprintf(stderr, "%s: invalid type: %d\n", __func__, type);
         break;
     }
     return str;

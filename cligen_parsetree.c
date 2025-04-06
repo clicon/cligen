@@ -363,7 +363,7 @@ pt_copy(parse_tree *pt,
     }
     if (pt_len_get(ptn) &&
         (ptn->pt_vec = (cg_obj **)malloc(pt_len_get(ptn)*sizeof(cg_obj *))) == NULL){
-        fprintf(stderr, "%s: malloc: %s\n", __FUNCTION__, strerror(errno));
+        fprintf(stderr, "%s: malloc: %s\n", __func__, strerror(errno));
         goto done;
     }
     j=0;

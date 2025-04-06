@@ -321,7 +321,7 @@ show_help_columns(cligen_handle h,
     if (mr_pt_len_get(mr) > 0){ /* min, max only defined if matchlen > 0 */
         /* Go through match vector and collect commands and helps */
         if ((chvec = calloc(mr_pt_len_get(mr), sizeof(struct cligen_help))) ==NULL){
-            fprintf(stderr, "%s calloc: %s\n", __FUNCTION__, strerror(errno));
+            fprintf(stderr, "%s calloc: %s\n", __func__, strerror(errno));
             goto done;
         }
         nrcmd = 0;
@@ -348,7 +348,7 @@ show_help_columns(cligen_handle h,
                 continue;
             ch = &chvec[nrcmd];
             if ((ch->ch_cmd = strdup(cmd)) == NULL){
-                fprintf(stderr, "%s strdup: %s\n", __FUNCTION__, strerror(errno));
+                fprintf(stderr, "%s strdup: %s\n", __func__, strerror(errno));
                 goto done;
             }
             if (co->co_helpstring && cligen_txt2cvv(co->co_helpstring, &ch->ch_helpvec) < 0)
@@ -529,12 +529,12 @@ cli_complete(cligen_handle h,
 
     string = cligen_buf(h);
     if (string == NULL){
-        fprintf(stderr, "%s Input string NULL\n", __FUNCTION__);
+        fprintf(stderr, "%s Input string NULL\n", __func__);
         goto done;
     }
     slen = cligen_buf_size(h);
     if ((s = malloc(slen)) == NULL){ /* s is a temporary copy */
-        fprintf(stderr, "%s malloc: %s\n", __FUNCTION__, strerror(errno));
+        fprintf(stderr, "%s malloc: %s\n", __func__, strerror(errno));
         goto done;
     }
     strncpy(s, string, slen);
@@ -661,7 +661,7 @@ cliread_parse(cligen_handle  h,
         goto done;
     }
     if (cligen_logsyntax(h) > 0){
-        fprintf(stderr, "%s:\n", __FUNCTION__);
+        fprintf(stderr, "%s:\n", __func__);
         pt_print1(stderr, pt, 0);
     }
     cli_trim(&string, cligen_comment(h));
@@ -888,7 +888,7 @@ cligen_eval_pipe_pre(cligen_handle h,
         signal_unblock(SIGINT);
 
         if ((retval = (*fn)(cligen_userhandle(h)?cligen_userhandle(h):h, cvv, cc->cc_cvec)) != 0)
-            fprintf(stderr, "%s child retval:%d\n", __FUNCTION__, retval);
+            fprintf(stderr, "%s child retval:%d\n", __func__, retval);
         exit(retval);
     }
     /* parent */
@@ -1048,7 +1048,7 @@ cligen_eval(cligen_handle h,
             cligen_fn_str_set(h, cc->cc_fn_str);
             /* Eval wrapper function so upper layers can make checks before and after callback */
             if (wrapfn)
-                (*wrapfn)(wraparg, &wh, cc->cc_fn_str, __FUNCTION__);
+                (*wrapfn)(wraparg, &wh, cc->cc_fn_str, __func__);
             if ((*fn)(cligen_userhandle(h)?cligen_userhandle(h):h,
                                 cvv1,
                                 argv) < 0){
@@ -1058,7 +1058,7 @@ cligen_eval(cligen_handle h,
                 goto done;
             }
             if (wrapfn && wh != NULL)
-                (*wrapfn)(wraparg, &wh, cc->cc_fn_str, __FUNCTION__);
+                (*wrapfn)(wraparg, &wh, cc->cc_fn_str, __func__);
             if (argv != NULL)
                 cvec_free(argv);
             cligen_fn_str_set(h, NULL);

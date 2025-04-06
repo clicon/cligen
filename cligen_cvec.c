@@ -765,7 +765,7 @@ next_token(char **s0,
 
     s = *s0;
     if (s==NULL){
-        fprintf(stderr, "%s: null string\n", __FUNCTION__);
+        fprintf(stderr, "%s: null string\n", __func__);
         return -1;
     }
     for (s=*s0; *s; s++){ /* First iterate through delimiters */
@@ -818,7 +818,7 @@ next_token(char **s0,
         }
     }
     if ((token=malloc(len+1)) == NULL){
-        fprintf(stderr, "%s: malloc: %s\n", __FUNCTION__, strerror(errno));
+        fprintf(stderr, "%s: malloc: %s\n", __func__, strerror(errno));
         return -1;
     }
     memcpy(token, st, len);

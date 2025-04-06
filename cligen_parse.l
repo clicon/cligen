@@ -77,7 +77,7 @@ stripdup(char *s0)
   char *s;
 
   if ((s1 = strdup(s0)) == NULL){
-    fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
+    fprintf(stderr, "%s: strdup: %s\n", __func__, strerror(errno));
     return NULL;
   }
   while ((s = index(s1, '\\')) != NULL)

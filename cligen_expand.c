@@ -106,12 +106,12 @@ co_expand_sub(cg_obj  *co0,
     co_up_set(con, coparent);
     if (co0->co_command)
         if ((con->co_command = strdup(co0->co_command)) == NULL){
-            fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
+            fprintf(stderr, "%s: strdup: %s\n", __func__, strerror(errno));
             goto done;
         }
     if (co0->co_prefix)
         if ((con->co_prefix = strdup(co0->co_prefix)) == NULL){
-            fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
+            fprintf(stderr, "%s: strdup: %s\n", __func__, strerror(errno));
             goto done;
         }
     if (co0->co_cvec)
@@ -126,7 +126,7 @@ co_expand_sub(cg_obj  *co0,
     if (co0->co_type == CO_VARIABLE){
         if (co0->co_expand_fn_str)
             if ((con->co_expand_fn_str = strdup(co0->co_expand_fn_str)) == NULL){
-                fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
+                fprintf(stderr, "%s: strdup: %s\n", __func__, strerror(errno));
                 goto done;
             }
         if (co0->co_expand_fn_vec)
@@ -134,12 +134,12 @@ co_expand_sub(cg_obj  *co0,
                 goto done;
         if (co0->co_translate_fn_str)
             if ((con->co_translate_fn_str = strdup(co0->co_translate_fn_str)) == NULL){
-                fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
+                fprintf(stderr, "%s: strdup: %s\n", __func__, strerror(errno));
                 goto done;
             }
         if (co0->co_show)
             if ((con->co_show = strdup(co0->co_show)) == NULL){
-                fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
+                fprintf(stderr, "%s: strdup: %s\n", __func__, strerror(errno));
                 goto done;
             }
         if (co0->co_rangecvv_low)
@@ -150,12 +150,12 @@ co_expand_sub(cg_obj  *co0,
                 goto done;
         if (co0->co_choice)
             if ((con->co_choice = strdup(co0->co_choice)) == NULL){
-                fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
+                fprintf(stderr, "%s: strdup: %s\n", __func__, strerror(errno));
                 goto done;
             }
         if (co0->co_regex)
             if ((con->co_regex = cvec_dup(co0->co_regex)) == NULL){
-                fprintf(stderr, "%s: cvec_dup: %s\n", __FUNCTION__, strerror(errno));
+                fprintf(stderr, "%s: cvec_dup: %s\n", __func__, strerror(errno));
                 goto done;
             }
     } /* CO_VARIABLE */
@@ -962,7 +962,7 @@ pt_expand(cligen_handle h,
      */
     cligen_parsetree_sort(ptn, 0);
     if (cligen_logsyntax(h) > 0){
-        fprintf(stderr, "%s:\n", __FUNCTION__);
+        fprintf(stderr, "%s:\n", __func__);
         pt_print1(stderr, ptn, 0);
     }
  ok:

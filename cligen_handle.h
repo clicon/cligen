@@ -71,9 +71,9 @@
  * @retval     -1    Error
  * @code
  *  void *wh = NULL;
- *  cligen_eval_wrap_cb(h, &wh, "myfn", __FUNCTION__);
+ *  cligen_eval_wrap_cb(h, &wh, "myfn", __func__);
  *  .. User callback
- *  cligen_eval_wrap_cb(h, &wh, "myfn", __FUNCTION__);
+ *  cligen_eval_wrap_cb(h, &wh, "myfn", __func__);
  * See cligen_eval
  */
 typedef int (cligen_eval_wrap_fn)(void *arg, void **wh, const char *name, const char *fn);

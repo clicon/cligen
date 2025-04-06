@@ -111,7 +111,7 @@ clispec_parse_str(cligen_handle h,
         cy.cy_globals  = cvv;
     else
         if ((cy.cy_globals = cvec_new(0)) == NULL){
-            fprintf(stderr, "%s: malloc: %s\n", __FUNCTION__, strerror(errno));
+            fprintf(stderr, "%s: malloc: %s\n", __func__, strerror(errno));
             goto done;
         }
     if (strlen(str)){ /* Not empty */
@@ -200,7 +200,7 @@ clispec_parse_file(cligen_handle h,
             break;
         if (i == len-1){
             if ((buf = realloc(buf, 2*len)) == NULL){
-                fprintf(stderr, "%s: realloc: %s\n", __FUNCTION__, strerror(errno));
+                fprintf(stderr, "%s: realloc: %s\n", __func__, strerror(errno));
                 goto done;
             }
             memset(buf+len, 0, len);
@@ -263,7 +263,7 @@ cligen_callbackv_str2fn(parse_tree   *pt,
                     co_callback_fn_set(cc, str2fn(cc->cc_fn_str, arg, &callback_err));
                     if (callback_err != NULL){
                         fprintf(stderr, "%s: error: No such function: %s (%s)\n",
-                                __FUNCTION__, cc->cc_fn_str, callback_err);
+                                __func__, cc->cc_fn_str, callback_err);
                         goto done;
                     }
                 }
@@ -317,7 +317,7 @@ cligen_expandv_str2fn(parse_tree       *pt,
                 co->co_expandv_fn = str2fn(co->co_expand_fn_str, arg, &callback_err);
                 if (callback_err != NULL){
                     fprintf(stderr, "%s: error: No such function: %s\n",
-                            __FUNCTION__, co->co_expand_fn_str);
+                            __func__, co->co_expand_fn_str);
                     goto done;
                 }
             }
@@ -356,7 +356,7 @@ cligen_translate_str2fn(parse_tree         *pt,
                 co->co_translate_fn = str2fn(co->co_translate_fn_str, arg, &callback_err);
                 if (callback_err != NULL){
                     fprintf(stderr, "%s: error: No such function: %s\n",
-                            __FUNCTION__, co->co_translate_fn_str);
+                            __func__, co->co_translate_fn_str);
                     goto done;
                 }
             }
