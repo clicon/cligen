@@ -66,7 +66,7 @@ str2fn(char  *name,
 }
 
 /*! The command syntax specification */
-static char *hello_syntax = "prompt=\"hello> \";\n"
+static const char *hello_syntax = "prompt=\"hello> \";\n"
     "hello(\"Greet the world\") world, cb(\"Hello World!\");"
     ;
 

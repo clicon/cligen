@@ -71,8 +71,8 @@
  */
 int
 clispec_parse_str(cligen_handle h,
-                  char         *str,
-                  char         *name,
+                  const char   *str,
+                  const char   *name,
                   char         *treename,
                   parse_tree   *ptp,
                   cvec         *cvv)
@@ -176,7 +176,7 @@ clispec_parse_str(cligen_handle h,
 int
 clispec_parse_file(cligen_handle h,
                    FILE         *f,
-                   char         *name,
+                   const char   *name,
                    char         *treename,
                    parse_tree   *pt,
                    cvec         *cvv)

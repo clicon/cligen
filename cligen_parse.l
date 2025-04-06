@@ -231,8 +231,9 @@ cgl_init(cligen_yacc *cy)
   BEGIN(INITIAL);
   cy->cy_lexbuf = yy_scan_string (cy->cy_parse_string);
 #if 1 /* XXX: just to use unput to avoid warning  */
+  char bogus[] = "";
   if (0)
-    yyunput(0, "");
+    yyunput(0, bogus);
 #endif
 
   return 0;

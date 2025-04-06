@@ -56,10 +56,10 @@ AC_ARG_ENABLE(debug, AS_HELP_STRING([--enable-debug],[Build with debug symbols, 
 
 AC_MSG_RESULT(debug is $ac_enable_debug)        
 if test "$ac_enable_debug" = "yes"; then
-   : ${CFLAGS="-g -Wall"}
+   : ${CFLAGS="-g -Wall -Wwrite-strings"}
    INSTALLFLAGS=""      
 else
-   : ${CFLAGS="-O2 -Wall"}
+   : ${CFLAGS="-O2 -Wall -Wwrite-strings"}
 fi
 
 AC_CONFIG_HEADERS([cligen_config.h])

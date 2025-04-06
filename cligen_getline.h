@@ -23,7 +23,7 @@
 /*
  * Types
  */
-typedef size_t (*gl_strwidth_proc)(char *);
+typedef size_t (*gl_strwidth_proc)(const char *);
 
 /*
  * Prototypes

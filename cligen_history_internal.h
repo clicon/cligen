@@ -55,10 +55,10 @@
 /*
  * Prototypes
  */
-int   hist_add(cligen_handle h, char *);
+int   hist_add(cligen_handle h, const char *);
 int   hist_exit(cligen_handle h);
-char *hist_next(cligen_handle h);
-char *hist_prev(cligen_handle h);
+const char *hist_next(cligen_handle h);
+const char *hist_prev(cligen_handle h);
 int   hist_pos_set(cligen_handle h, int pos);
 int   hist_pos(cligen_handle h);
 int   hist_last_get(cligen_handle h);

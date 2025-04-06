@@ -68,7 +68,7 @@
 /*
  * URL protocol strings
  */
-static char *cg_urlprotostr[] = {
+static const char *cg_urlprotostr[] = {
     NULL,
     "file",
     "flash",
@@ -2089,7 +2089,7 @@ cv_str2type(const char *str)
 const char *
 cv_type2str(enum cv_type type)
 {
-    char *str = NULL;
+    const char *str = NULL;
     switch (type){
     case CGV_ERR:
         str="err";

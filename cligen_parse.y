@@ -126,7 +126,7 @@ cligen_parse_debug(int d)
  * @param[in]  cy  CLIgen yacc parse struct
  */
 void cligen_parseerror(void *_cy,
-                       char *s)
+                       const char *s)
 {
     cligen_yacc *cy = (cligen_yacc *)_cy;
 
@@ -147,7 +147,7 @@ void cligen_parseerror(void *_cy,
  */
 static cg_var *
 create_cv(cligen_yacc *cy,
-          char        *type,
+          const char  *type,
           char        *str)
 {
     cg_var   *cv = NULL;
@@ -281,7 +281,7 @@ cgy_assignment(cligen_yacc *cy,
     struct cgy_stack *cs = cy->cy_stack;
     int              retval = -1;
     cg_var          *cv;
-    char            *treename_keyword;
+    const char      *treename_keyword;
     cligen_handle    h = cy->cy_handle;
 
     if (cs == NULL){

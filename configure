@@ -2490,10 +2490,10 @@ fi
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: debug is $ac_enable_debug" >&5
 printf "%s\n" "debug is $ac_enable_debug" >&6; }
 if test "$ac_enable_debug" = "yes"; then
-   : ${CFLAGS="-g -Wall"}
+   : ${CFLAGS="-g -Wall -Wwrite-strings"}
    INSTALLFLAGS=""
 else
-   : ${CFLAGS="-O2 -Wall"}
+   : ${CFLAGS="-O2 -Wall -Wwrite-strings"}
 fi
 
 ac_config_headers="$ac_config_headers cligen_config.h"

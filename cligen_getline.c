@@ -55,18 +55,18 @@ static void     gl_init1(void);         /* prepare to edit a line */
 static void     gl_cleanup(void);       /* to undo gl_init1 */
 void            gl_char_init(void);     /* get ready for no echo input */
 void            gl_char_cleanup(void);  /* undo gl_char_init */
-static size_t   (*gl_strlen)(const char *) = (size_t(*)())strlen;
+static size_t   (*gl_strlen)(const char *) = strlen;
                                         /* returns printable prompt width */
 
 static int      gl_addchar(cligen_handle h, int c);     /* install specified char */
 static void     gl_del(cligen_handle h, int loc);       /* del, either left (-1) or cur (0) */
-static inline void gl_fixup(cligen_handle h, char*,int,int);/* fixup state variables and screen */
+static inline void gl_fixup(cligen_handle h, const char*,int,int);/* fixup state variables and screen */
 static int      gl_getc(cligen_handle h);               /* read one char from terminal */
 static void     gl_kill(cligen_handle h, int pos);      /* delete to EOL */
 static void     gl_kill_begin(cligen_handle h, int pos);        /* delete to BEGIN of line */
 static int      gl_kill_word(cligen_handle h, int pos); /* delete word */
 static void     gl_newline(cligen_handle);      /* handle \n or \r */
-static int      gl_puts(char *buf);     /* write a line to terminal */
+static int      gl_puts(const char *buf);     /* write a line to terminal */
 
 static void     gl_transpose(cligen_handle h);  /* transpose two chars */
 static int      gl_yank(cligen_handle h);               /* yank killed text */
@@ -488,7 +488,7 @@ gl_putc(int c)
 /******************** fairly portable part *********************************/
 
 static int
-gl_puts(char *buf)
+gl_puts(const char *buf)
 {
     int len;
 
@@ -586,7 +586,7 @@ gl_getline(cligen_handle h,
     int   c;
     int   loc;
     int   tmp;
-    char *gl_prompt;
+    const char *gl_prompt;
     int   escape = 0;
 #ifdef __unix__
     int   sig;
@@ -1172,7 +1172,7 @@ gl_redraw(cligen_handle h)
  */
 static void
 gl_fixup_noscroll(cligen_handle h,
-                  char         *prompt,
+                  const char   *prompt,
                   int           change,
                   int           cursor)
 {
@@ -1286,7 +1286,7 @@ gl_fixup_noscroll(cligen_handle h,
  */
 static void
 gl_fixup_scroll(cligen_handle h,
-                char         *prompt,
+                const char   *prompt,
                 int           change,
                 int           cursor)
 {
@@ -1396,20 +1396,20 @@ gl_fixup_scroll(cligen_handle h,
 
 static inline void
 gl_fixup(cligen_handle h,
-         char         *prompt,
+         const char         *prompt,
          int           change,
          int           cursor)
 {
     if (gl_scrolling_mode)
-        return gl_fixup_scroll(h, prompt, change, cursor);
+        gl_fixup_scroll(h, prompt, change, cursor);
     else
-        return gl_fixup_noscroll(h, prompt, change, cursor);
+        gl_fixup_noscroll(h, prompt, change, cursor);
 }
 
 /******************* strlen stuff **************************************/
 
 void
-gl_strwidth(size_t (*func)())
+gl_strwidth(size_t (*func)(const char*))
 {
     if (func != 0) {
         gl_strlen = func;
@@ -1509,7 +1509,7 @@ search_back(cligen_handle h,
             int           new_search)
 {
     int    found = 0;
-    char  *p, *loc;
+    const char  *p, *loc;
     int    last;
 
     search_forw_flg = 0;
@@ -1550,7 +1550,7 @@ search_forw(cligen_handle h,
             int           new_search)
 {
     int    found = 0;
-    char  *p, *loc;
+    const char  *p, *loc;
     int    last;
 
     search_forw_flg = 1;

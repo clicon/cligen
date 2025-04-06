@@ -303,7 +303,7 @@ cligen_prompt(cligen_handle h)
  */
 int
 cligen_prompt_set(cligen_handle h,
-                  char         *prompt)
+                  const char    *prompt)
 {
     struct cligen_handle *ch = handle(h);
 
@@ -372,7 +372,7 @@ cligen_pt_head_active_set(cligen_handle h,
  * bar @bar;
  * y;
  */
-char*
+const char*
 cligen_treename_keyword(cligen_handle h)
 {
     struct cligen_handle *ch = handle(h);
