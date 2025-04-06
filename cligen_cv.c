@@ -2510,14 +2510,14 @@ cv2str(cg_var *cv,
                        cv->var_ipv4masklen);
         break;
     case CGV_IPV6ADDR:
-        if (inet_ntop(AF_INET6, &cv->var_ipv6addr, straddr, sizeof(straddr)) < 0){
+        if (NULL == inet_ntop(AF_INET6, &cv->var_ipv6addr, straddr, sizeof(straddr))){
             fprintf(stderr, "inet_ntop: %s\n", strerror(errno));
             return -1;
         }
         len = snprintf(str, size, "%s", straddr);
         break;
     case CGV_IPV6PFX:
-        if (inet_ntop(AF_INET6, &cv->var_ipv6addr, straddr, sizeof(straddr)) < 0){
+        if (NULL == inet_ntop(AF_INET6, &cv->var_ipv6addr, straddr, sizeof(straddr))){
             fprintf(stderr, "inet_ntop: %s\n", strerror(errno));
             return -1;
         }
