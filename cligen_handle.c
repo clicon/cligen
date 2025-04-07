@@ -155,7 +155,7 @@ cligen_init(void)
     struct sigaction      sigh;
 
     if ((ch = malloc(sizeof(*ch))) == NULL){
-        fprintf(stderr, "%s: malloc: %s\n", __FUNCTION__, strerror(errno));
+        fprintf(stderr, "%s: malloc: %s\n", __func__, strerror(errno));
         goto done;
     }
     memset(ch, 0, sizeof(*ch));
@@ -303,7 +303,7 @@ cligen_prompt(cligen_handle h)
  */
 int
 cligen_prompt_set(cligen_handle h,
-                  char         *prompt)
+                  const char    *prompt)
 {
     struct cligen_handle *ch = handle(h);
 
@@ -372,7 +372,7 @@ cligen_pt_head_active_set(cligen_handle h,
  * bar @bar;
  * y;
  */
-char*
+const char*
 cligen_treename_keyword(cligen_handle h)
 {
     struct cligen_handle *ch = handle(h);
@@ -1106,12 +1106,12 @@ cligen_buf_init(cligen_handle h)
     struct cligen_handle *ch = handle(h);
 
     if ((ch->ch_buf = malloc(_getline_bufsize)) == NULL){
-        fprintf(stderr, "%s malloc: %s\n", __FUNCTION__, strerror(errno));
+        fprintf(stderr, "%s malloc: %s\n", __func__, strerror(errno));
         return -1;
     }
     memset(ch->ch_buf, 0, _getline_bufsize);
     if ((ch->ch_killbuf = malloc(_getline_killbufsize)) == NULL){
-        fprintf(stderr, "%s malloc: %s\n", __FUNCTION__, strerror(errno));
+        fprintf(stderr, "%s malloc: %s\n", __func__, strerror(errno));
         return -1;
     }
     memset(ch->ch_killbuf, 0, _getline_killbufsize);
@@ -1139,7 +1139,7 @@ cligen_buf_increase(cligen_handle h,
     while (_getline_bufsize < len1 + 1)
       _getline_bufsize *= 2;
     if ((ch->ch_buf = realloc(ch->ch_buf, _getline_bufsize)) == NULL){
-        fprintf(stderr, "%s realloc: %s\n", __FUNCTION__, strerror(errno));
+        fprintf(stderr, "%s realloc: %s\n", __func__, strerror(errno));
         return -1;
     }
     memset(ch->ch_buf+len0, 0, _getline_bufsize-len0);
@@ -1163,7 +1163,7 @@ cligen_killbuf_increase(cligen_handle h,
     while (_getline_killbufsize < len1 + 1)
       _getline_killbufsize *= 2;
     if ((ch->ch_killbuf = realloc(ch->ch_killbuf, _getline_killbufsize)) == NULL){
-        fprintf(stderr, "%s realloc: %s\n", __FUNCTION__, strerror(errno));
+        fprintf(stderr, "%s realloc: %s\n", __func__, strerror(errno));
         return -1;
     }
     memset(ch->ch_killbuf+len0, 0, _getline_killbufsize-len0);

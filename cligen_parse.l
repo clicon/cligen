@@ -77,7 +77,7 @@ stripdup(char *s0)
   char *s;
 
   if ((s1 = strdup(s0)) == NULL){
-    fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
+    fprintf(stderr, "%s: strdup: %s\n", __func__, strerror(errno));
     return NULL;
   }
   while ((s = index(s1, '\\')) != NULL)
@@ -231,8 +231,9 @@ cgl_init(cligen_yacc *cy)
   BEGIN(INITIAL);
   cy->cy_lexbuf = yy_scan_string (cy->cy_parse_string);
 #if 1 /* XXX: just to use unput to avoid warning  */
+  char bogus[] = "";
   if (0)
-    yyunput(0, "");
+    yyunput(0, bogus);
 #endif
 
   return 0;

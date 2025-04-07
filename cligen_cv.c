@@ -68,7 +68,7 @@
 /*
  * URL protocol strings
  */
-static char *cg_urlprotostr[] = {
+static const char *cg_urlprotostr[] = {
     NULL,
     "file",
     "flash",
@@ -1336,7 +1336,7 @@ parse_dec64(char    *str,
 
     if (n<=0 || n>18){
         if (reason != NULL)
-            if ((*reason = cligen_reason("%s: fraction-digit=%d given but should be in interval [1:18]", __FUNCTION__, n)) == NULL){
+            if ((*reason = cligen_reason("%s: fraction-digit=%d given but should be in interval [1:18]", __func__, n)) == NULL){
                 goto done;
             }
         retval = 0;
@@ -2089,7 +2089,7 @@ cv_str2type(const char *str)
 const char *
 cv_type2str(enum cv_type type)
 {
-    char *str = NULL;
+    const char *str = NULL;
     switch (type){
     case CGV_ERR:
         str="err";
@@ -2164,7 +2164,7 @@ cv_type2str(enum cv_type type)
         str="empty";
         break;
     default:
-        fprintf(stderr, "%s: invalid type: %d\n", __FUNCTION__, type);
+        fprintf(stderr, "%s: invalid type: %d\n", __func__, type);
         break;
     }
     return str;
@@ -2510,14 +2510,14 @@ cv2str(cg_var *cv,
                        cv->var_ipv4masklen);
         break;
     case CGV_IPV6ADDR:
-        if (inet_ntop(AF_INET6, &cv->var_ipv6addr, straddr, sizeof(straddr)) < 0){
+        if (NULL == inet_ntop(AF_INET6, &cv->var_ipv6addr, straddr, sizeof(straddr))){
             fprintf(stderr, "inet_ntop: %s\n", strerror(errno));
             return -1;
         }
         len = snprintf(str, size, "%s", straddr);
         break;
     case CGV_IPV6PFX:
-        if (inet_ntop(AF_INET6, &cv->var_ipv6addr, straddr, sizeof(straddr)) < 0){
+        if (NULL == inet_ntop(AF_INET6, &cv->var_ipv6addr, straddr, sizeof(straddr))){
             fprintf(stderr, "inet_ntop: %s\n", strerror(errno));
             return -1;
         }

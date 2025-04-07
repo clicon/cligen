@@ -126,7 +126,7 @@ cligen_parse_debug(int d)
  * @param[in]  cy  CLIgen yacc parse struct
  */
 void cligen_parseerror(void *_cy,
-                       char *s)
+                       const char *s)
 {
     cligen_yacc *cy = (cligen_yacc *)_cy;
 
@@ -147,7 +147,7 @@ void cligen_parseerror(void *_cy,
  */
 static cg_var *
 create_cv(cligen_yacc *cy,
-          char        *type,
+          const char  *type,
           char        *str)
 {
     cg_var   *cv = NULL;
@@ -184,16 +184,16 @@ cgy_flag(cligen_yacc *cy,
     int                  retval = -1;
 
     if (debug)
-        fprintf(stderr, "%s: %s 1\n", __FUNCTION__, var);
+        fprintf(stderr, "%s: %s 1\n", __func__, var);
     if (cs){ /* XXX: why cs? */
         if (cy->cy_cvec == NULL){
             if ((cy->cy_cvec = cvec_new(0)) == NULL){
-                fprintf(stderr, "%s: cvec_new:%s\n", __FUNCTION__, strerror(errno));
+                fprintf(stderr, "%s: cvec_new:%s\n", __func__, strerror(errno));
                 goto done;
             }
         }
         if ((cv = cvec_add(cy->cy_cvec, CGV_INT32)) == NULL){
-            fprintf(stderr, "%s: realloc:%s\n", __FUNCTION__, strerror(errno));
+            fprintf(stderr, "%s: realloc:%s\n", __func__, strerror(errno));
             goto done;
         }
         cv_name_set(cv, var);
@@ -260,7 +260,7 @@ cgy_treename(cligen_yacc *cy,
     if (cy->cy_treename)
         free(cy->cy_treename);
     if ((cy->cy_treename = strdup(name)) == NULL){
-        fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
+        fprintf(stderr, "%s: strdup: %s\n", __func__, strerror(errno));
         goto done;
     }
     retval = 0;
@@ -281,7 +281,7 @@ cgy_assignment(cligen_yacc *cy,
     struct cgy_stack *cs = cy->cy_stack;
     int              retval = -1;
     cg_var          *cv;
-    char            *treename_keyword;
+    const char      *treename_keyword;
     cligen_handle    h = cy->cy_handle;
 
     if (cs == NULL){
@@ -289,16 +289,16 @@ cgy_assignment(cligen_yacc *cy,
         goto done;
     }
     if (debug)
-        fprintf(stderr, "%s: %s=%s\n", __FUNCTION__, var, val);
+        fprintf(stderr, "%s: %s=%s\n", __func__, var, val);
 
     if (cs->cs_next != NULL){ /* local */
         if (cy->cy_cvec == NULL)
             if ((cy->cy_cvec = cvec_new(0)) == NULL){
-                fprintf(stderr, "%s: cvec_new:%s\n", __FUNCTION__, strerror(errno));
+                fprintf(stderr, "%s: cvec_new:%s\n", __func__, strerror(errno));
                 goto done;
             }
         if ((cv = cvec_add(cy->cy_cvec, CGV_STRING)) == NULL){
-            fprintf(stderr, "%s: realloc:%s\n", __FUNCTION__, strerror(errno));
+            fprintf(stderr, "%s: realloc:%s\n", __func__, strerror(errno));
             goto done;
         }
         cv_name_set(cv, var);
@@ -314,7 +314,7 @@ cgy_assignment(cligen_yacc *cy,
         else {
             if ((cv = cvec_find(cy->cy_globals, var)) == NULL){
                 if ((cv = cvec_add(cy->cy_globals, CGV_STRING)) == NULL){
-                    fprintf(stderr, "%s: realloc:%s\n", __FUNCTION__, strerror(errno));
+                    fprintf(stderr, "%s: realloc:%s\n", __func__, strerror(errno));
                     goto done;
                 }
                 cv_name_set(cv, var);
@@ -339,14 +339,14 @@ cgy_callback(cligen_yacc *cy,
     cg_callback      *cc, **ccp;
 
     if (debug)
-        fprintf(stderr, "%s: %s\n", __FUNCTION__, cb_str);
+        fprintf(stderr, "%s: %s\n", __func__, cb_str);
     if (cs == NULL)
         return 0;
     ccp = &cy->cy_callbacks;
     while (*ccp != NULL)
         ccp = &((*ccp)->cc_next);
     if ((cc = malloc(sizeof(*cc))) == NULL){
-        fprintf(stderr, "%s: malloc: %s\n", __FUNCTION__, strerror(errno));
+        fprintf(stderr, "%s: malloc: %s\n", __func__, strerror(errno));
         cligen_parseerror1(cy, "Allocating cligen callback");
         return -1;
     }
@@ -458,9 +458,9 @@ cgy_list_push(cg_obj           *co,
     struct cgy_list *cl;
 
     if (debug)
-        fprintf(stderr, "%s\n", __FUNCTION__);
+        fprintf(stderr, "%s\n", __func__);
     if ((cl = malloc(sizeof(*cl))) == NULL) {
-        fprintf(stderr, "%s: malloc: %s\n", __FUNCTION__, strerror(errno));
+        fprintf(stderr, "%s: malloc: %s\n", __func__, strerror(errno));
         return -1;
     }
     cl->cl_next = *cl0;
@@ -502,7 +502,7 @@ cgy_var_create(cligen_yacc *cy)
 
     /* Create unassigned variable object */
     if ((co = cov_new(CGV_ERR, NULL)) == NULL){
-        fprintf(stderr, "%s: malloc: %s\n", __FUNCTION__, strerror(errno));
+        fprintf(stderr, "%s: malloc: %s\n", __func__, strerror(errno));
         cligen_parseerror1(cy, "Allocating cligen object");
         return NULL;
     }
@@ -510,7 +510,7 @@ cgy_var_create(cligen_yacc *cy)
         co_flags_set(co, CO_FLAGS_OPTION);
     }
     if (debug)
-        fprintf(stderr, "%s: pre\n", __FUNCTION__);
+        fprintf(stderr, "%s: pre\n", __func__);
     return co;
 }
 
@@ -527,7 +527,7 @@ cgy_var_name_type(cligen_yacc *cy,
     cy->cy_var->co_command = name;
     if ((cy->cy_var->co_vtype = cv_str2type(type)) == CGV_ERR){
         cligen_parseerror1(cy, "Invalid type");
-        fprintf(stderr, "%s: Invalid type: %s\n", __FUNCTION__, type);
+        fprintf(stderr, "%s: Invalid type: %s\n", __func__, type);
         return -1;
     }
     return 0;
@@ -555,7 +555,7 @@ cgy_var_post(cligen_yacc *cy)
         coy->co_vtype = cv_str2type(coy->co_command);
 #endif
     if (debug)
-        fprintf(stderr, "%s: cmd:%s vtype:%d\n", __FUNCTION__,
+        fprintf(stderr, "%s: cmd:%s vtype:%d\n", __func__,
                 coy->co_command,
                 coy->co_vtype );
     if (coy->co_vtype == CGV_ERR){
@@ -611,7 +611,7 @@ cgy_cmd(cligen_yacc *cy,
         cop = cl->cl_obj;
         if (debug)
             fprintf(stderr, "%s: %s parent:%s\n",
-                    __FUNCTION__, cmd, cop->co_command);
+                    __func__, cmd, cop->co_command);
         if ((conew = co_new(cmd, cop)) == NULL) {
             cligen_parseerror1(cy, "Allocating cligen object");
             return -1;
@@ -739,7 +739,7 @@ cgy_var_choice_append(cligen_yacc *cy,
 
     len = strlen(str)+strlen(app) + 2;
     if ((s = realloc(str, len)) == NULL) {
-        fprintf(stderr, "%s: realloc: %s\n", __FUNCTION__, strerror(errno));
+        fprintf(stderr, "%s: realloc: %s\n", __func__, strerror(errno));
         return NULL;
     }
     strncat(s, "|", len-1);
@@ -789,7 +789,7 @@ cgy_terminal(cligen_yacc *cy)
             if (co->co_cvec)
                 cvec_free(co->co_cvec);
             if ((co->co_cvec = cvec_dup(cy->cy_cvec)) == NULL){ /* this leaks */
-                fprintf(stderr, "%s: cvec_dup: %s\n", __FUNCTION__, strerror(errno));
+                fprintf(stderr, "%s: cvec_dup: %s\n", __func__, strerror(errno));
                 goto done;
             }
         }
@@ -843,10 +843,10 @@ ctx_push(cligen_yacc *cy,
     cg_obj           *co;
 
     if (debug)
-        fprintf(stderr, "%s\n", __FUNCTION__);
+        fprintf(stderr, "%s\n", __func__);
     /* Create new stack element */
     if ((cs = malloc(sizeof(*cs))) == NULL) {
-        fprintf(stderr, "%s: malloc: %s\n", __FUNCTION__, strerror(errno));
+        fprintf(stderr, "%s: malloc: %s\n", __func__, strerror(errno));
         return -1;
     }
     memset(cs, 0, sizeof(*cs));
@@ -879,7 +879,7 @@ ctx_peek_swap(cligen_yacc *cy)
     cg_obj           *co;
 
     if (debug)
-        fprintf(stderr, "%s\n", __FUNCTION__);
+        fprintf(stderr, "%s\n", __func__);
     if ((cs = cy->cy_stack) == NULL){
 #if 1
         cligen_parseerror1(cy, "No surrounding () or []");
@@ -918,7 +918,7 @@ ctx_peek_swap2(cligen_yacc *cy)
     cg_obj           *co;
 
     if (debug)
-        fprintf(stderr, "%s\n", __FUNCTION__);
+        fprintf(stderr, "%s\n", __func__);
     if ((cs = cy->cy_stack) == NULL){
 #if 1
         cligen_parseerror1(cy, "No surrounding () or []");
@@ -962,9 +962,9 @@ ctx_pop_add(cligen_yacc *cy)
     cg_obj           *co;
 
     if (debug)
-        fprintf(stderr, "%s\n", __FUNCTION__);
+        fprintf(stderr, "%s\n", __func__);
     if ((cs = cy->cy_stack) == NULL){
-        fprintf(stderr, "%s: cgy_stack empty\n", __FUNCTION__);
+        fprintf(stderr, "%s: cgy_stack empty\n", __func__);
         return -1; /* shouldnt happen */
     }
     cy->cy_stack = cs->cs_next;
@@ -997,9 +997,9 @@ ctx_pop(cligen_yacc *cy)
     cg_obj           *co;
 
     if (debug)
-        fprintf(stderr, "%s\n", __FUNCTION__);
+        fprintf(stderr, "%s\n", __func__);
     if ((cs = cy->cy_stack) == NULL){
-        fprintf(stderr, "%s: cgy_stack empty\n", __FUNCTION__);
+        fprintf(stderr, "%s: cgy_stack empty\n", __func__);
         return -1; /* shouldnt happen */
     }
     cy->cy_stack = cs->cs_next;
@@ -1094,7 +1094,7 @@ cg_range_create(cligen_yacc *cy,
         if ((yv->co_rangecvv_low = cvec_from_var(cv1)) == NULL)
             goto done;
     }
-    else if (cvec_append_var(yv->co_rangecvv_low, cv1) < 0)
+    else if (cvec_append_var(yv->co_rangecvv_low, cv1) == NULL)
         goto done;
     /* Then create upper bound cv */
     if ((cv2 = cv_new(cvtype)) == NULL){
@@ -1122,7 +1122,7 @@ cg_range_create(cligen_yacc *cy,
         if ((yv->co_rangecvv_upp = cvec_from_var(cv2)) == NULL)
             goto done;
     }
-    else if (cvec_append_var(yv->co_rangecvv_upp, cv2) < 0)
+    else if (cvec_append_var(yv->co_rangecvv_upp, cv2) == NULL)
         goto done;
     /* Then increment range vector length */
     yv->co_rangelen++;
@@ -1212,7 +1212,7 @@ cgy_init(cligen_yacc *cy,
          cg_obj      *co_top)
 {
     if (debug)
-        fprintf(stderr, "%s\n", __FUNCTION__);
+        fprintf(stderr, "%s\n", __func__);
     /* Add top-level object */
     if (cgy_list_push(co_top, &cy->cy_list) < 0)
         return -1;
@@ -1230,7 +1230,7 @@ cgy_exit(cligen_yacc *cy)
     struct cgy_stack *cs;
 
     if (debug)
-        fprintf(stderr, "%s\n", __FUNCTION__);
+        fprintf(stderr, "%s\n", __func__);
 
     cy->cy_var = NULL;
     cgy_list_delete(&cy->cy_list);

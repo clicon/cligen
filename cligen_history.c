@@ -75,6 +75,13 @@
 #include "cligen_history_internal.h"
 #include "cligen_history.h"
 
+/*
+ * A well-defined empty string, used whenever one is needed as a placeholder,
+ * avoiding a malloc. By having it explicit, one can (more) easily spot a
+ * free(a) where a == CH_EMPTY_STR error.
+ */
+static char CH_EMPTY_STR[] = "";
+
 /*! Makes a copy of the string
  *
  * @param[in] p     String input
@@ -82,7 +89,7 @@
  * @retval    NULL  Error
  */
 static char *
-hist_save(char *p)
+hist_save(const char *p)
 {
     char *s = NULL;
     int   len = strlen(p)+1;
@@ -111,11 +118,11 @@ hist_save(char *p)
  */
 int
 hist_add(cligen_handle h,
-         char         *buf)
+         const char   *buf)
 {
     struct cligen_handle *ch = handle(h);
     int                   retval = -1;
-    char                 *p = buf;
+    const char                 *p = buf;
     int                   len;
 
     if (strlen(buf) >= cligen_buf_size(h))
@@ -136,7 +143,7 @@ hist_add(cligen_handle h,
             if (ch->ch_hist_buf[ch->ch_hist_last] && *ch->ch_hist_buf[ch->ch_hist_last]) {
                 free(ch->ch_hist_buf[ch->ch_hist_last]);
             }
-            ch->ch_hist_buf[ch->ch_hist_last] = ""; /* NB not-malloced, check in hist_free */
+            ch->ch_hist_buf[ch->ch_hist_last] = CH_EMPTY_STR;
         }
     }
     ch->ch_hist_cur = ch->ch_hist_last;
@@ -170,11 +177,11 @@ hist_exit(cligen_handle h)
  *
  * @param[in] h     CLIgen handle
  */
-char *
+const char *
 hist_prev(cligen_handle h)
 {
     struct cligen_handle *ch = handle(h);
-    char *p = 0;
+    const char *p = 0;
     int   next = (ch->ch_hist_cur - 1 + ch->ch_hist_size) % ch->ch_hist_size;
 
     if (ch->ch_hist_buf[ch->ch_hist_cur] != 0 && next != ch->ch_hist_last) {
@@ -192,11 +199,11 @@ hist_prev(cligen_handle h)
  *
  * @param[in] h     CLIgen handle
  */
-char *
+const char *
 hist_next(cligen_handle h)
 {
     struct cligen_handle *ch = handle(h);
-    char *p = 0;
+    const char *p = 0;
 
     if (ch->ch_hist_cur != ch->ch_hist_last) {
         ch->ch_hist_cur = (ch->ch_hist_cur+1) % ch->ch_hist_size;
@@ -263,7 +270,7 @@ hist_copy(cligen_handle h,
 int
 hist_copy_prev(cligen_handle h)
 {
-    char *ptr = hist_prev(h);
+    const char *ptr = hist_prev(h);
 
     strncpy(cligen_buf(h), ptr, cligen_buf_size(h));
     return 0;
@@ -289,7 +296,7 @@ hist_copy_pos(cligen_handle h)
 int
 hist_copy_next(cligen_handle h)
 {
-    char *ptr = hist_next(h);
+    const char *ptr = hist_next(h);
 
     strncpy(cligen_buf(h), ptr, cligen_buf_size(h));
     return 0;
@@ -322,7 +329,7 @@ cligen_hist_init(cligen_handle h,
     ch->ch_hist_size = lines+1; /* circular buffer needs an extra element */
     for (i=0; i < old_size; i++)
         if (ch->ch_hist_buf[i]){
-            if (strlen(ch->ch_hist_buf[i]))
+            if (CH_EMPTY_STR != ch->ch_hist_buf[i])
                 free(ch->ch_hist_buf[i]);
             ch->ch_hist_buf[i] = NULL;
         }
@@ -331,7 +338,7 @@ cligen_hist_init(cligen_handle h,
     ch->ch_hist_cur = 0;
     ch->ch_hist_last = 0;
     ch->ch_hist_pre = 0;
-    ch->ch_hist_buf[0] = ""; /* NB not-malloced, check in hist_free */
+    ch->ch_hist_buf[0] = CH_EMPTY_STR;
     for (i=1; i < ch->ch_hist_size; i++) /* reset all entries */
         ch->ch_hist_buf[i] = (char *)0;
     retval = 0;

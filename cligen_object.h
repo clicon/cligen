@@ -181,7 +181,7 @@ struct cg_obj{
     struct cg_obj_common co_common;   /* Inline of common fields accessed by macros below */
     /*--- Up to here common with cg_obj_cmd */
     union {                           /* depends on co_type: */
-        struct {        } cou_cmd;    /* CO_COMMAND */
+        // struct {        } cou_cmd;    /* CO_COMMAND */
         struct cg_varspec cou_var;    /* CO_VARIABLE */
         //                            /* CO_REFERENCE */
     } u;

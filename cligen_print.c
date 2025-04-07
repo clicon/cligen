@@ -361,7 +361,7 @@ pt_dump1(FILE       *f,
     int     i;
     cg_obj *co;
 
-    cligen_output(f, "%*s %p pt", indent*3, "", pt);
+    cligen_output(f, "%*s %p pt", indent*3, "", (void*)pt);
     cligen_output(f, " [%d]", pt_len_get(pt));
     cligen_output(f, "\n");
     for (i=0; i<pt_len_get(pt); i++){
@@ -400,24 +400,24 @@ co_dump1(FILE    *f,
 
     switch (co->co_type){
     case CO_COMMAND:
-        cligen_output(f, "%*s %p co %s", indent*3, "", co, co->co_command);
+        cligen_output(f, "%*s %p co %s", indent*3, "", (void*)co, co->co_command);
         if (co_sets_get(co))
             cligen_output(f, " SETS");
         if (co->co_ref)
-            cligen_output(f, " ref:%p", co->co_ref);
+            cligen_output(f, " ref:%p", (void*)co->co_ref);
         break;
     case CO_REFERENCE:
-        cligen_output(f, "%*s %p co @%s", indent*3, "", co, co->co_command);
+        cligen_output(f, "%*s %p co @%s", indent*3, "", (void*)co, co->co_command);
         break;
     case CO_VARIABLE:
-        cligen_output(f, "%*s %p co <%s> ", indent*3, "", co, co->co_command);
+        cligen_output(f, "%*s %p co <%s> ", indent*3, "", (void*)co, co->co_command);
         if (co->co_ref)
-            cligen_output(f, " ref:%p", co->co_ref);
+            cligen_output(f, " ref:%p", (void*)co->co_ref);
         if (co->co_treeref_orig)
-            cligen_output(f, " treeref:%p", co->co_treeref_orig);
+            cligen_output(f, " treeref:%p", (void*)co->co_treeref_orig);
         break;
     case CO_EMPTY:
-        cligen_output(f, "%*s %p empty", indent*3, "", co);
+        cligen_output(f, "%*s %p empty", indent*3, "", (void*)co);
         break;
     }
     if (co->co_flags & CO_FLAGS_TOPOFTREE)
