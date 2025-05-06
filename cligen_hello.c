@@ -77,15 +77,21 @@ main(int   argc,
     int             retval = -1;
     parse_tree     *pt;            /* cligen parse tree */
     pt_head        *ph;            /* cligen parse tree head */
+    char           *str;
+    cvec           *globals;   /* global variables from syntax */
     cligen_handle   h;
 
     if ((h = cligen_init()) == NULL)
         goto done;
-    if (clispec_parse_str(h, hello_syntax, "hello world", NULL, NULL, NULL) < 0)
+    if ((globals = cvec_new(0)) == NULL)
+        goto done;
+    if (clispec_parse_str(h, hello_syntax, "hello world", NULL, NULL, globals) < 0)
         goto done;
     /* find global assignments: prompt and comment sign */
-    cligen_prompt_set(h, "hello> ");
-    cligen_comment_set(h, '#');
+    if ((str = cvec_find_str(globals, "prompt")) != NULL)
+        cligen_prompt_set(h, str);
+    if ((str = cvec_find_str(globals, "comment")) != NULL)
+        cligen_comment_set(h, *str);
     /* Get the default (first) parse-tree */
     if ((ph = cligen_ph_i(h, 0)) == NULL)
         goto done;
