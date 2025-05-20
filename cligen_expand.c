@@ -314,6 +314,16 @@ co_find_label_filters(cligen_handle h,
                     cv_bool_set(cv1, 0); /* remove */
                 }
             }
+            else if (strncmp("@add:", name, strlen("@add:")) == 0){
+                filter = name+strlen("@add:");
+                /* If filter not in cvv, add it */
+                if (cvec_find(cvv, filter) == NULL){
+                    if ((cv1 = cvec_add(cvv, CGV_BOOL)) == NULL)
+                        goto done;
+                    cv_name_set(cv1, filter);
+                    cv_bool_set(cv1, 1); /* add */
+                }
+            }
         }
     }
     retval = 0;
@@ -552,6 +562,7 @@ pt_expand_fn(cligen_handle h,
         cligen_callback_arguments_set(h, callbacks->cc_cvec);
     }
     cligen_co_match_set(h, co);     /* For eventual use in callback */
+    cligen_labels_set(h, cvv_filter);
     if ((*co->co_expandv_fn)(cligen_userhandle(h)?cligen_userhandle(h):h,
                              co->co_expand_fn_str,
                              cvv1,
@@ -594,6 +605,7 @@ pt_expand_fn(cligen_handle h,
     }
     retval = 0;
  done:
+    cligen_labels_set(h, NULL);
     if (commands)
         cvec_free(commands);
     if (helptexts)

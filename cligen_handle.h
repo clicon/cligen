@@ -135,6 +135,9 @@ int cligen_co_match_set(cligen_handle h, cg_obj *co);
 cvec *cligen_callback_arguments_get(cligen_handle h);
 int cligen_callback_arguments_set(cligen_handle h, cvec *args);
 
+cvec *cligen_labels_get(cligen_handle h);
+int   cligen_labels_set(cligen_handle h, cvec *args);
+
 char *cligen_fn_str_get(cligen_handle h);
 int cligen_fn_str_set(cligen_handle h, char *fn_str);
 
