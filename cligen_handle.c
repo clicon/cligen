@@ -456,34 +456,6 @@ cligen_callback_arguments_set(cligen_handle h,
     return 0;
 }
 
-/*! Get cli tree labesl
- *
- * @param[in] h    CLIgen handle
- * @retval    cvv  Vector or cli tree labels
- */
-cvec *
-cligen_labels_get(cligen_handle h)
-{
-    struct cligen_handle *ch = handle(h);
-
-    return ch->ch_labels;
-}
-
-/*! Set cli tree labels
- *
- * @param[in]  h    CLIgen handle
- * @params[in] cvv  Vector or cli tree labels
- */
-int
-cligen_labels_set(cligen_handle h,
-                  cvec         *args)
-{
-    struct cligen_handle *ch = handle(h);
-
-    ch->ch_labels = args;
-    return 0;
-}
-
 /*! Get callback function name string
  *
  * @code

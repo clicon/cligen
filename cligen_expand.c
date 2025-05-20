@@ -536,7 +536,7 @@ pt_expand_fn(cligen_handle h,
     int         retval = -1;
     cvec       *commands = NULL;
     cvec       *helptexts = NULL;
-    cg_var     *cv = NULL;
+    cg_var     *cv;
     char       *helpstr = NULL;
     cg_obj     *con = NULL;
     int         i;
@@ -562,7 +562,11 @@ pt_expand_fn(cligen_handle h,
         cligen_callback_arguments_set(h, callbacks->cc_cvec);
     }
     cligen_co_match_set(h, co);     /* For eventual use in callback */
-    cligen_labels_set(h, cvv_filter);
+    cv = NULL;
+    while ((cv = cvec_each(cvv_filter, cv)) != NULL){
+        if (cv_bool_get(cv))
+            cvec_append_var(co->co_cvec, cv);
+    }
     if ((*co->co_expandv_fn)(cligen_userhandle(h)?cligen_userhandle(h):h,
                              co->co_expand_fn_str,
                              cvv1,
@@ -571,6 +575,7 @@ pt_expand_fn(cligen_handle h,
                              helptexts) < 0)
         goto done;
     i = 0;
+    cv = NULL;
     while ((cv = cvec_each(commands, cv)) != NULL) {
         if (i < cvec_len(helptexts)){
             if ((helpstr = strdup(cv_string_get(cvec_i(helptexts, i)))) == NULL)
@@ -605,7 +610,6 @@ pt_expand_fn(cligen_handle h,
     }
     retval = 0;
  done:
-    cligen_labels_set(h, NULL);
     if (commands)
         cvec_free(commands);
     if (helptexts)
