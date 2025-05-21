@@ -177,8 +177,6 @@ uninstall:
 	done
 
 # CLIGEN parser src
-YACC_SRC        = cligen_parse.y
-LEX_SRC         = cligen_parsel
 YACCOBJS := lex.cligen_parse.o cligen_parse.tab.o 
 
 clean:  

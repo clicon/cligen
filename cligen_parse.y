@@ -57,6 +57,7 @@
 
 %type <string> charseq
 %type <string> choices
+%type <string> choice
 %type <string> numdec
 %type <string> arg1
 %type <string> typecast
@@ -290,7 +291,6 @@ cgy_assignment(cligen_yacc *cy,
     }
     if (debug)
         fprintf(stderr, "%s: %s=%s\n", __FUNCTION__, var, val);
-
     if (cs->cs_next != NULL){ /* local */
         if (cy->cy_cvec == NULL)
             if ((cy->cy_cvec = cvec_new(0)) == NULL){
@@ -1507,14 +1507,15 @@ exparg     : typecast arg1 {
               }
            ;
 
-choices     : { $$ = NULL;}
-            | NUMBER { $$ = $1;}
-            | NAME { $$ = $1;}
-            | DECIMAL { $$ = $1;}
-            | choices '|' NUMBER  { $$ = cgy_var_choice_append(_cy, $1, $3); free($3);}
-            | choices '|' NAME    { $$ = cgy_var_choice_append(_cy, $1, $3); free($3);}
-            | choices '|' DECIMAL { $$ = cgy_var_choice_append(_cy, $1, $3); free($3);}
-            ;
+choices    : choice { $$ = $1; }
+           | choices '|' choice  { $$ = cgy_var_choice_append(_cy, $1, $3); free($3);}
+           ;
+
+choice     : { $$ = NULL;}
+           | NUMBER { $$ = $1;}
+           | NAME { $$ = $1;}
+           | DECIMAL { $$ = $1;}
+           ;
 
 charseq    : charseq CHARS
               {
