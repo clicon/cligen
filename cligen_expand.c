@@ -543,6 +543,7 @@ pt_expand_fn(cligen_handle h,
     const char *value;
     const char *cmd;
     cvec       *cvv1 = NULL; /* Modified */
+    int         co_cvec_add = 0;
 
     if (cvv_var == NULL){
         errno = EINVAL;
@@ -562,10 +563,13 @@ pt_expand_fn(cligen_handle h,
         cligen_callback_arguments_set(h, callbacks->cc_cvec);
     }
     cligen_co_match_set(h, co);     /* For eventual use in callback */
+    /* Temporary add all labels with prefix @add: */
     cv = NULL;
     while ((cv = cvec_each(cvv_filter, cv)) != NULL){
-        if (cv_bool_get(cv))
+        if (cv_bool_get(cv)){
             cvec_append_var(co->co_cvec, cv);
+            co_cvec_add++;
+        }
     }
     if ((*co->co_expandv_fn)(cligen_userhandle(h)?cligen_userhandle(h):h,
                              co->co_expand_fn_str,
@@ -574,6 +578,15 @@ pt_expand_fn(cligen_handle h,
                              commands,
                              helptexts) < 0)
         goto done;
+    /* Revert @add:s */
+    if (co_cvec_add){
+        for (i=0; i<co_cvec_add; i++){
+            if ((cv = cvec_i(co->co_cvec, cvec_len(co->co_cvec)-1)) != NULL){
+                cv_reset(cv);
+                cvec_del_i(co->co_cvec, cvec_len(co->co_cvec)-1);
+            }
+        }
+    }
     i = 0;
     cv = NULL;
     while ((cv = cvec_each(commands, cv)) != NULL) {
