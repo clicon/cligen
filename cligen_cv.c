@@ -981,12 +981,12 @@ cv_urlpasswd_set(cg_var     *cv,
  * @retval    -1       Error (fatal), with errno set to indicate error
  */
 static int
-parse_int64_base(char    *str,
-                 int      base,
-                 int64_t  imin,
-                 int64_t  imax,
-                 int64_t *val,
-                 char   **reason)
+parse_int64_base(const char *str,
+                 int         base,
+                 int64_t     imin,
+                 int64_t     imax,
+                 int64_t    *val,
+                 char      **reason)
 {
     int64_t i;
     char    *ep;
@@ -1048,9 +1048,9 @@ parse_int64_base(char    *str,
  * @retval    -1       Error (fatal), with errno set to indicate error
  */
 int
-parse_int8(char   *str,
-           int8_t *val,
-           char  **reason)
+parse_int8(const char *str,
+           int8_t     *val,
+           char      **reason)
 {
     int64_t  i;
     int      retval;
@@ -1072,9 +1072,9 @@ parse_int8(char   *str,
  * @retval    -1      Error (fatal), with errno set to indicate error
  */
 int
-parse_int16(char    *str,
-            int16_t *val,
-            char   **reason)
+parse_int16(const char *str,
+            int16_t    *val,
+            char      **reason)
 {
     int64_t i;
     int      retval;
@@ -1096,9 +1096,9 @@ parse_int16(char    *str,
  * @retval    -1       Error (fatal), with errno set to indicate error
  */
 int
-parse_int32(char    *str,
-            int32_t *val,
-            char   **reason)
+parse_int32(const char *str,
+            int32_t    *val,
+            char      **reason)
 {
     int64_t  i;
     int      retval;
@@ -1120,9 +1120,9 @@ parse_int32(char    *str,
  * @retval    -1       Error (fatal), with errno set to indicate error
  */
 int
-parse_int64(char    *str,
-            int64_t *val,
-            char   **reason)
+parse_int64(const char *str,
+            int64_t    *val,
+            char      **reason)
 {
     return parse_int64_base(str, 0, INT64_MIN, INT64_MAX, val, reason);
 }
@@ -1144,7 +1144,7 @@ parse_int64(char    *str,
  * @note: we have to detect a minus sign ourselves,....
  */
 static int
-parse_uint64_base(char     *str,
+parse_uint64_base(const char *str,
                   int       base,
                   uint64_t  umin,
                   uint64_t  umax,
@@ -1220,9 +1220,9 @@ parse_uint64_base(char     *str,
  * @retval    -1       Error (fatal), with errno set to indicate error
  */
 int
-parse_uint8(char    *str,
-            uint8_t *val,
-            char   **reason)
+parse_uint8(const char *str,
+            uint8_t    *val,
+            char      **reason)
 {
     uint64_t i;
     int      retval;
@@ -1244,9 +1244,9 @@ parse_uint8(char    *str,
  * @retval    -1       Error (fatal), with errno set to indicate error
  */
 int
-parse_uint16(char     *str,
-             uint16_t *val,
-             char    **reason)
+parse_uint16(const char *str,
+             uint16_t   *val,
+             char      **reason)
 {
     uint64_t i;
     int      retval;
@@ -1268,9 +1268,9 @@ parse_uint16(char     *str,
  * @retval    -1       Error (fatal), with errno set to indicate error
  */
 int
-parse_uint32(char     *str,
-             uint32_t *val,
-             char    **reason)
+parse_uint32(const char *str,
+             uint32_t   *val,
+             char      **reason)
 {
     uint64_t i;
     int      retval;
@@ -1293,9 +1293,9 @@ parse_uint32(char     *str,
  * @note: we have to detect a minus sign ourselves,....
  */
 int
-parse_uint64(char     *str,
-             uint64_t *val,
-             char   **reason)
+parse_uint64(const char *str,
+             uint64_t   *val,
+             char      **reason)
 {
     return parse_uint64_base(str, 0, 0, UINT64_MAX, val, reason);
 }
@@ -1311,10 +1311,10 @@ parse_uint64(char     *str,
  * @retval    -1          fatal error
  */
 int
-parse_dec64(char    *str,
-            uint8_t  n,
-            int64_t *dec64_i,
-            char   **reason)
+parse_dec64(const char *str,
+            uint8_t     n,
+            int64_t    *dec64_i,
+            char      **reason)
 {
     int      retval = 1;
     char    *s0 = NULL; /* the whole string, eg aaa.bbb*/
@@ -1413,9 +1413,9 @@ parse_dec64(char    *str,
  * @endcode
  */
 int
-parse_bool(char    *str,
-           uint8_t *val,
-           char   **reason)
+parse_bool(const char *str,
+           uint8_t    *val,
+           char      **reason)
 {
     int i;
     int retval = 1;
@@ -1460,7 +1460,7 @@ parse_bool(char    *str,
  * @retval    -1          fatal error
  */
 int
-parse_ipv4addr(char           *str,
+parse_ipv4addr(const char     *str,
                struct in_addr *val,
                char          **reason)
 {
@@ -1485,7 +1485,7 @@ parse_ipv4addr(char           *str,
  * @retval    -1          fatal error
  */
 int
-parse_ipv6addr(char            *str,
+parse_ipv6addr(const char      *str,
                struct in6_addr *val,
                char           **reason)
 {
@@ -1510,14 +1510,14 @@ parse_ipv6addr(char            *str,
 #define MACADDR_STRLEN  (MACADDR_OCTETS * 3) - 1    /* 6*sizeof("xx:")-1 */
 
 static int
-parse_macaddr(char  *str,
-              char   addr[MACADDR_OCTETS],
-              char **reason)
+parse_macaddr(const char *str,
+              char        addr[MACADDR_OCTETS],
+              char      **reason)
 {
-    char *s1;
-    int n_colons;
+    const char  *s1;
+    int          n_colons;
     unsigned int octets[MACADDR_OCTETS];
-    int i;
+    int          i;
 
     /*
      * MAC addresses are exactly MACADDR_STRLEN (17) bytes long.
@@ -1600,9 +1600,9 @@ parse_macaddr(char  *str,
  * @note The syntax is not complete: it is recommended to use regexps
  */
 static int
-parse_url(char   *url,
-          cg_var *cv,
-          char  **reason)
+parse_url(const char *url,
+          cg_var     *cv,
+          char      **reason)
 {
     char    *str0 = NULL;
     char    *str;
@@ -1686,9 +1686,9 @@ str2urlproto(const char *str)
  * @retval    -1    Error
  */
 int
-uuid2str(uuid_t u,
-         char  *fmt,
-         int    len)
+uuid2str(uuid_t  u,
+         char   *fmt,
+         int     len)
 {
     snprintf(fmt, len,
             "%02x%02x%02x%02x-" "%02x%02x-"     "%02x%02x-"     "%02x%02x-"

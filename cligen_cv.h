@@ -187,16 +187,16 @@ char *cv_urluser_set(cg_var *cv, const char *s0);
 char *cv_urlpasswd_get(cg_var *cv);
 char *cv_urlpasswd_set(cg_var *cv, const char *s0);
 
-int parse_int8(char *str, int8_t *val, char **reason);
-int parse_int16(char *str, int16_t *val, char **reason);
-int parse_int32(char *str, int32_t *val, char **reason);
-int parse_int64(char *str, int64_t *val, char **reason);
-int parse_uint8(char *str, uint8_t *val, char **reason);
-int parse_uint16(char *str, uint16_t *val, char **reason);
-int parse_uint32(char *str, uint32_t *val, char **reason);
-int parse_uint64(char *str, uint64_t *val, char **reason);
-int parse_dec64(char *str, uint8_t n, int64_t *dec64_i, char **reason);
-int parse_bool(char *str, uint8_t *val, char **reason);
+int parse_int8(const char *str, int8_t *val, char **reason);
+int parse_int16(const char *str, int16_t *val, char **reason);
+int parse_int32(const char *str, int32_t *val, char **reason);
+int parse_int64(const char *str, int64_t *val, char **reason);
+int parse_uint8(const char *str, uint8_t *val, char **reason);
+int parse_uint16(const char *str, uint16_t *val, char **reason);
+int parse_uint32(const char *str, uint32_t *val, char **reason);
+int parse_uint64(const char *str, uint64_t *val, char **reason);
+int parse_dec64(const char *str, uint8_t n, int64_t *dec64_i, char **reason);
+int parse_bool(const char *str, uint8_t *val, char **reason);
 
 int str2urlproto(const char *str);
 int str2uuid(const char *in, uuid_t u);
