@@ -17,17 +17,17 @@ cat > $fspec <<EOF
 
   set1, output_fn($lines);
   other;
-  set2, output_fn($lines); {     
-      @|mypipe, output_fn($lines); 
+  set2, output_fn($lines); {
+      @|mypipe, output_fn($lines);
   }
-  set3 {     
-      @|mypipe, output_fn($lines); 
+  set3 {
+      @|mypipe, output_fn($lines);
   }
   set4 @treeref;
 
   treename="|mypipe";
   pipetree="";
-  \| { 
+  \| {
       grep <arg:rest>, pipe_shell_fn("grep -e", "arg");
       tail,  pipe_shell_fn("tail -3");
       count, pipe_shell_fn("wc -l");
@@ -47,12 +47,12 @@ function runtest()
 {
     cmd=$1
     direct=$2
-    
+
     if $direct; then
         newtest "base"
         expectpart "$(echo "$cmd" | $cligen_file -f $fspec)" 0 "line1 abc" "line5 def"
     fi
-    
+
     newtest "grep"
     expectpart "$(echo "$cmd \| grep abc" | $cligen_file -f $fspec)" 0 "line1 abc" --not-- "line6 def"
 
@@ -61,6 +61,9 @@ function runtest()
 
     newtest "count"
     expectpart "$(echo "$cmd \| count" | $cligen_file -f $fspec)" 0 7
+
+    newtest "skip space: count"
+    expectpart "$(echo "$cmd\|count" | $cligen_file -f $fspec)" 0 7
 
     newtest "double: cat | cat expect fail"
     expectpart "$(echo "$cmd \| cat \| cat" | $cligen_file -f $fspec)" 0 "Unknown command"

@@ -760,6 +760,7 @@ next_token(char **s0,
     char  *token = NULL;
     size_t len;
     int    quote=0;
+    int    operator=0;
     int    leading=0;
     int    escape = 0;
 
@@ -779,22 +780,31 @@ next_token(char **s0,
         quote++;
         s++;
     }
-    st=s; /* token starts */
+    st = s; /* token starts */
+    if (*s && index(CLIGEN_OPERATORS, *s) != NULL){
+        /* Form one-char token regardless of next char */
+        s++;
+        operator++;
+    }
     escape = 0;
-    for (; *s; s++){ /* Then find token */
-        if (quote){
-            if (index(CLIGEN_QUOTES, *s) != NULL)
-                break;
-        }
-        else{ /* backspace tokens for escaping delimiters */
-            if (escape)
-                escape = 0;
-            else{
-                if (*s == '\\')
-                    escape++;
-                else
-                    if (index(CLIGEN_DELIMITERS, *s) != NULL)
+    if (!operator){
+        for (; *s; s++){ /* Then find token */
+            if (quote){
+                if (index(CLIGEN_QUOTES, *s) != NULL)
+                    break;
+            }
+            else{ /* backspace tokens for escaping delimiters */
+                if (escape)
+                    escape = 0;
+                else{
+                    if (*s == '\\')
+                        escape++;
+                    else if (index(CLIGEN_DELIMITERS, *s) != NULL)
                         break;
+                    else if (index(CLIGEN_OPERATORS, *s) != NULL){
+                        break;
+                    }
+                }
             }
         }
     }

@@ -37,6 +37,7 @@
 
 #define CLIGEN_DELIMITERS " \t"
 #define CLIGEN_QUOTES     "\""
+#define CLIGEN_OPERATORS  "|"
 
 /*
  * Parse tree nodes. The different types are associated to

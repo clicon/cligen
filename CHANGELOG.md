@@ -21,6 +21,10 @@ Expected: July 2025
 * Added label support in combination with tree references
   * Example: `@tree, @add:<label>
 
+### Corrected Bugs
+
+* Fixed: [Space needed before pipes](https://github.com/clicon/cligen/issues/103)
+
 ## 7.4.0
 3 April 2025
 
