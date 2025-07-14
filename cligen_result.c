@@ -59,7 +59,7 @@
  */
 struct match_result{
     parse_tree  *mr_pt;
-    char        *mr_reason; /* Error reason if mr_len=0. Can also be carried by a mr_len!=0 
+    char        *mr_reason; /* Error reason if mr_len=0. Can also be carried by a mr_len!=0
                              * to store first error in case it is needed in a later error */
     int          mr_level;
     int          mr_last;

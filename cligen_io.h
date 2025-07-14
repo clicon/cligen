@@ -1,7 +1,7 @@
 /*
   CLI generator input/output support functions.
 
-  ***** BEGIN LICENSE 
+  ***** BEGIN LICENSE
 
   Copyright (C) 2001-2022 Olof Hagsand
 

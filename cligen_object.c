@@ -1183,8 +1183,8 @@ co_insert1(parse_tree *pt,
     return co1;
 }
 
-/*! Backward compatible 
-*/
+/*! Backward compatible
+ */
 cg_obj*
 co_insert(parse_tree *pt,
           cg_obj     *co1)

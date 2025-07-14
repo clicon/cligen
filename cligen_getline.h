@@ -31,7 +31,7 @@ typedef size_t (*gl_strwidth_proc)(char *);
 int     gl_eof(void);
 void    gl_exitchar_add(char c);
 void    gl_char_init(void);
-void    gl_char_cleanup(void);  
+void    gl_char_cleanup(void);
 int     gl_getline(cligen_handle h, char **buf); /* read a line of input */
 int     gl_init(void);
 int     gl_putc(int c);         /* write one char to terminal */
