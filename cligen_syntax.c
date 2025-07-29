@@ -71,7 +71,7 @@
  */
 int
 clispec_parse_str(cligen_handle h,
-                  char         *str,
+                  const char   *str,
                   char         *name,
                   char         *treename,
                   parse_tree   *ptp,
@@ -133,9 +133,9 @@ clispec_parse_str(cligen_handle h,
             if (cligen_ph_parsetree_set(ph, pt) < 0)
                 goto done;
             if ((cv = cvec_find(cy.cy_globals, "pipetree")) != NULL){
-                char *str;
-                if ((str = cv_string_get(cv)) != NULL && strlen(str))
-                    if (cligen_ph_pipe_set(ph, str) < 0)
+                const char *str1;
+                if ((str1 = cv_string_get(cv)) != NULL && strlen(str1))
+                    if (cligen_ph_pipe_set(ph, str1) < 0)
                         goto done;
             }
         }

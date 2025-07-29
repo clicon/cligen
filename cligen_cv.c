@@ -540,6 +540,8 @@ cv_string_set(cg_var     *cv,
  * @param[in] s   String to directly assign (must have been alloced)
  * @retval    0   OK
  * @retval   -1   Error
+ * @note s should really be const, but then it is assigned to a field that is free:d
+ *       later, ie it is assumed s is malloced
  */
 int
 cv_string_set_direct(cg_var *cv,
@@ -562,15 +564,15 @@ cv_string_set_direct(cg_var *cv,
 /*! Allocate new string from original by copying using strncpy
  *
  * @param[in] cv     CLIgen variable
- * @param[in] s0     String to copy
+ * @param[in] s0     String to copy from
  * @param[in] n      Number of characters to copy (excluding NULL).
  * @retval    str    the new (malloced) string
  * @retval    NULL   Error
  */
 char *
-cv_strncpy(cg_var *cv,
-           char   *s0,
-           size_t  n)
+cv_strncpy(cg_var     *cv,
+           const char *s0,
+           size_t      n)
 {
     char *s1 = NULL;
 
@@ -701,8 +703,8 @@ cv_uuid_get(cg_var *cv)
  * @param[in] cv     CLIgen variable
  */
 unsigned char *
-cv_uuid_set(cg_var        *cv,
-            unsigned char *u)
+cv_uuid_set(cg_var              *cv,
+            const unsigned char *u)
 {
     if (cv == NULL)
         return 0;
@@ -1686,9 +1688,9 @@ str2urlproto(const char *str)
  * @retval    -1    Error
  */
 int
-uuid2str(uuid_t  u,
-         char   *fmt,
-         int     len)
+uuid2str(uuid_t u,
+         char  *fmt,
+         int    len)
 {
     snprintf(fmt, len,
             "%02x%02x%02x%02x-" "%02x%02x-"     "%02x%02x-"     "%02x%02x-"
@@ -3239,7 +3241,7 @@ int
 cv_validate(cligen_handle h,
             cg_var       *cv,
             cg_varspec   *cs,
-            char         *cmd,
+            const char   *cmd,
             char        **reason)
 {
     int      retval = 1; /* OK */

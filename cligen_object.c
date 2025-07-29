@@ -862,8 +862,8 @@ co_copy1(cg_obj  *co,
  * If we use strverscmp we also must use it in e.g. complete
  */
 static inline int
-str_cmp(char *s1,
-        char *s2)
+str_cmp(const char *s1,
+        const char *s2)
 {
     if (s1 == NULL && s2 == NULL)
         return 0;

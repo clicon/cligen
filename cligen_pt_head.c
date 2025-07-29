@@ -100,8 +100,8 @@ cligen_ph_name_get(pt_head *ph)
  * @retval    -1     Error
  */
 int
-cligen_ph_name_set(pt_head *ph,
-                   char    *name)
+cligen_ph_name_set(pt_head    *ph,
+                   const char *name)
 {
     if (ph == NULL){
        errno = EINVAL;
@@ -238,8 +238,8 @@ cligen_ph_pipe_get(pt_head *ph)
  * @param[in]  name  Name of output pipe tree, is copied
  */
 int
-cligen_ph_pipe_set(pt_head *ph,
-                   char    *pipe)
+cligen_ph_pipe_set(pt_head    *ph,
+                   const char *pipe)
 {
     if (ph->ph_output_pipe){
         free(ph->ph_output_pipe);
@@ -262,7 +262,7 @@ cligen_ph_pipe_set(pt_head *ph,
  */
 pt_head *
 cligen_ph_find(cligen_handle h,
-               char         *name)
+               const char   *name)
 {
     char    *phname;
     pt_head *ph = NULL;
@@ -311,7 +311,7 @@ cligen_ph_free(pt_head *ph)
  */
 pt_head *
 cligen_ph_add(cligen_handle h,
-              char         *name)
+              const char   *name)
 {
     pt_head *ph, *phlast;
 

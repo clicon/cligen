@@ -159,10 +159,10 @@ uint8_t cv_dec64_n_set(cg_var *cv, uint8_t x);
 int64_t cv_dec64_i_get(cg_var *cv);
 int64_t cv_dec64_i_set(cg_var *cv, int64_t x);
 
-char   *cv_string_get(cg_var *cv);
+char *cv_string_get(cg_var *cv);
 char   *cv_string_set(cg_var *cv, const char *s0);
 int     cv_string_set_direct(cg_var *cv, char *s);
-char   *cv_strncpy(cg_var *cv, char *s0, size_t n);
+char   *cv_strncpy(cg_var *cv, const char *s0, size_t n);
 struct in_addr *cv_ipv4addr_get(cg_var *cv);
 struct in_addr *cv_ipv4addr_set(cg_var *cv, struct in_addr *addr);
 uint8_t cv_ipv4masklen_get(cg_var *cv);
@@ -171,7 +171,7 @@ struct in6_addr *cv_ipv6addr_get(cg_var *cv);
 uint8_t cv_ipv6masklen_get(cg_var *cv);
 char *cv_mac_get(cg_var *cv);
 unsigned char *cv_uuid_get(cg_var *cv);
-unsigned char *cv_uuid_set(cg_var *cv, unsigned char *u);
+unsigned char *cv_uuid_set(cg_var *cv, const unsigned char *u);
 struct timeval cv_time_get(cg_var *cv);
 struct timeval cv_time_set(cg_var *cv, struct timeval t);
 void *cv_void_get(cg_var *cv);
@@ -225,7 +225,7 @@ cg_var *cv_dup(cg_var *old);
 int     cv_parse(const char *str, cg_var *cgv);
 int     cv_parse1(const char *str, cg_var *cgv, char **reason); /* better err-handling */
 
-int     cv_validate(cligen_handle h, cg_var *cv, struct cg_varspec *cs, char *cmd, char **reason);
+int     cv_validate(cligen_handle h, cg_var *cv, struct cg_varspec *cs, const char *cmd, char **reason);
 int     cv_reset(cg_var *cgv); /* not free cgv itself */ /* XXX: free_only */
 int     cv_free(cg_var *cv);   /* free cgv itself */
 cg_var *cv_new(enum cv_type type);

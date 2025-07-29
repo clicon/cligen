@@ -83,7 +83,7 @@
  * Local prototypes
  */
 static int show_help_columns(cligen_handle h, FILE *fout, char *s, parse_tree *pt, cvec *cvv);
-static int show_help_line(cligen_handle h, FILE *fout, char *s, parse_tree *pt, cvec *);
+static int show_help_line(cligen_handle h, FILE *fout, const char *s, parse_tree *pt, cvec *);
 static int cli_complete(cligen_handle h, int *lenp, parse_tree *pt, cvec *cvv);
 
 /*! Show help strings
@@ -96,7 +96,7 @@ static int cli_complete(cligen_handle h, int *lenp, parse_tree *pt, cvec *cvv);
  */
 static int
 cli_show_help_commands(cligen_handle h,
-                       char         *string)
+                       const char   *string)
 {
     int           retval = -1;
     parse_tree   *pt=NULL;     /* Orig parse-tree */
@@ -145,7 +145,7 @@ cli_show_help_commands(cligen_handle h,
  */
 static int
 cli_qmark_hook(cligen_handle h,
-               char         *string)
+               const char   *string)
 {
     return cli_show_help_commands(h, string);
 }
@@ -418,7 +418,7 @@ show_help_columns(cligen_handle h,
 static int
 show_help_line(cligen_handle h,
                FILE         *fout,
-               char         *string,
+               const char   *string,
                parse_tree   *pt,
                cvec         *cvv)
 {

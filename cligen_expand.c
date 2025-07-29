@@ -686,8 +686,8 @@ pt_expand_choice(cg_obj       *co,
  * @retval    0   No, label is not in co_filter, keep it
  */
 int
-co_isfilter(cvec *cvv_filter,
-            char *label)
+co_isfilter(cvec       *cvv_filter,
+            const char *label)
 {
     cg_var *cv = NULL;
     char   *name;

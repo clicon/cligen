@@ -89,7 +89,7 @@ typedef int (cligen_eval_wrap_fn)(void *arg, void **wh, const char *name, const 
  * @retval     0     OK
  * @retval    -1     Error
  */
-typedef int (cligen_tree_resolve_wrapper_fn)(cligen_handle h, char *name, cvec *cvt, void *arg, char **namep);
+typedef int (cligen_tree_resolve_wrapper_fn)(cligen_handle h, const char *name, cvec *cvt, void *arg, char **namep);
 
 /*! CLIgen history callback function, each added command makes a callback
  *
@@ -101,7 +101,7 @@ typedef int (cligen_tree_resolve_wrapper_fn)(cligen_handle h, char *name, cvec *
  * @retval     0     OK
  * @retval    -1     Error
  */
-typedef int (cligen_hist_fn)(cligen_handle h, char *cmd, void *arg);
+typedef int (cligen_hist_fn)(cligen_handle h, const char *cmd, void *arg);
 
 /*
  * Prototypes
@@ -117,7 +117,7 @@ char cligen_comment(cligen_handle h);
 int cligen_comment_set(cligen_handle h, char c);
 
 char* cligen_prompt(cligen_handle h);
-int cligen_prompt_set(cligen_handle h, char *prompt);
+int cligen_prompt_set(cligen_handle h, const char *prompt);
 
 pt_head *cligen_pt_head_get(cligen_handle h);
 int cligen_pt_head_set(cligen_handle h, pt_head *ph);
@@ -126,7 +126,7 @@ pt_head *cligen_pt_head_active_get(cligen_handle h);
 int cligen_pt_head_active_set(cligen_handle h, pt_head *ph);
 
 char *cligen_treename_keyword(cligen_handle h);
-int cligen_treename_keyword_set(cligen_handle h, char *name);
+int cligen_treename_keyword_set(cligen_handle h, const char *name);
 
 /* After an evaluation (callback), which node in the parse-tree? */
 cg_obj *cligen_co_match(cligen_handle h);
@@ -136,7 +136,7 @@ cvec *cligen_callback_arguments_get(cligen_handle h);
 int cligen_callback_arguments_set(cligen_handle h, cvec *args);
 
 char *cligen_fn_str_get(cligen_handle h);
-int cligen_fn_str_set(cligen_handle h, char *fn_str);
+int cligen_fn_str_set(cligen_handle h, const char *fn_str);
 
 int   cligen_spipe_get(cligen_handle h);
 int   cligen_spipe_set(cligen_handle h, int s);

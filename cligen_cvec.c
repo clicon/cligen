@@ -472,7 +472,7 @@ cvec_dup(cvec *old)
  * Help function when creating cvec to cligen callbacks.
  */
 cvec *
-cvec_start(char *cmd)
+cvec_start(const char *cmd)
 {
     cvec *cvec;
     cg_var    *cv;
@@ -680,8 +680,8 @@ cvec_size(cvec *cvv)
 }
 
 int
-cligen_txt2cvv(char  *str,
-               cvec **cvp)
+cligen_txt2cvv(const char *str,
+               cvec      **cvp)
 {
     int     retval = -1;
     int     i;
@@ -862,9 +862,9 @@ next_token(char **s0,
  * @note both out cvv:s should be freed with cvec_free()
  */
 int
-cligen_str2cvv(char  *string,
-               cvec **cvtp,
-               cvec **cvrp)
+cligen_str2cvv(const char *string,
+               cvec      **cvtp,
+               cvec      **cvrp)
 {
     int     retval = -1;
     char   *s;
