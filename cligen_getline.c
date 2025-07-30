@@ -363,7 +363,7 @@ gl_exitchar_add(char c)
 {
     int i;
 
-    for (i=0;sizeof(exitchars);i++)
+    for (i=0; i<sizeof(exitchars); i++)
         if (!exitchars[i]){
             exitchars[i] = c;
             break;
@@ -376,7 +376,7 @@ gl_exitchar(char c)
 {
     int i;
 
-    for (i=0;sizeof(exitchars);i++){
+    for (i=0; i<sizeof(exitchars); i++){
         if (!exitchars[i])
             break;
         if (exitchars[i] == c)

@@ -972,7 +972,7 @@ pt_expand(cligen_handle h,
                     (cop = co->co_prev) != NULL &&
                     cop->co_callbacks &&
                     co_pipe != NULL){
-                    if (co0->co_callbacks){
+                    if (co0 && co0->co_callbacks){
                         if (co_callback_copy(co0->co_callbacks, &co_pipe->co_callbacks) < 0)
                             goto done;
                     }
