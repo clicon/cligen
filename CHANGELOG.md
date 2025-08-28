@@ -17,6 +17,10 @@
 ## 7.6.0
 Expected: October 2025
 
+### Features
+
+* Added ac-strict-expand autocli label for disabling expansion
+
 ## 7.5.0
 29 July 2025
 

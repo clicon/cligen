@@ -684,6 +684,7 @@ pt_expand_choice(cg_obj       *co,
  *
  * @retval    1   Yes, it is filtered, remove it
  * @retval    0   No, label is not in co_filter, keep it
+ * @see co_filter_bool
  */
 int
 co_isfilter(cvec       *cvv_filter,
@@ -695,8 +696,29 @@ co_isfilter(cvec       *cvv_filter,
     /* use filter cache?
      */
     while ((cv = cvec_each(cvv_filter, cv)) != NULL){
-        if ((name = cv_name_get(cv)) != NULL && strcmp(cv_name_get(cv), label) == 0)
+        if ((name = cv_name_get(cv)) != NULL && strcmp(name, label) == 0)
             return 1;
+    }
+    return 0;
+}
+
+/*! Check if filter label is set
+ *
+ * @retval    1   Yes, it exists and is true
+ * @retval    0   No, it does not exist, or it exists but is false
+ * @see co_isfilter
+ */
+static int
+co_filter_bool(cvec       *cvv_filter,
+               const char *label)
+{
+    cg_var *cv = NULL;
+    char   *name;
+
+    while ((cv = cvec_each(cvv_filter, cv)) != NULL){
+        if ((name = cv_name_get(cv)) != NULL && strcmp(name, label) == 0){
+            return cv_bool_get(cv);
+        }
     }
     return 0;
 }
@@ -777,6 +799,13 @@ pt_expand1_co(cligen_handle h,
                              ptn) < 0)
                 goto done;
         }
+    }
+    else if (co->co_type == CO_VARIABLE &&
+             co->co_expandv_fn == NULL &&
+             expandvar &&
+             co_filter_bool(cvv_filter, "ac-strict-expand")){
+        /* Dont show generic variable if strict-expand and there are expand rules */
+        goto ok;
     }
     else{
         /* Copy original cg_obj to shadow list*/
