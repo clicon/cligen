@@ -41,12 +41,12 @@
 
 /********************* exported variables ********************************/
 
-int (*gl_in_hook)() = NULL;
-int (*gl_out_hook)() = NULL;
-int (*gl_tab_hook)() = NULL;
-int (*gl_qmark_hook)() = NULL;
-int (*gl_susp_hook)() = NULL;
-int (*gl_interrupt_hook)() = NULL;
+int (*gl_in_hook)(void *, const char *) = NULL;
+int (*gl_out_hook)(void *, const char *) = NULL;
+int (*gl_tab_hook)(cligen_handle, int *) = NULL;
+int (*gl_qmark_hook)(cligen_handle, const char *) = NULL;
+int (*gl_susp_hook)(void *, char *, int, int *) = NULL;
+int (*gl_interrupt_hook)(cligen_handle) = NULL;
 
 /******************** internal interface *********************************/
 
@@ -55,8 +55,7 @@ static void     gl_init1(void);         /* prepare to edit a line */
 static void     gl_cleanup(void);       /* to undo gl_init1 */
 void            gl_char_init(void);     /* get ready for no echo input */
 void            gl_char_cleanup(void);  /* undo gl_char_init */
-static size_t   (*gl_strlen)(const char *) = (size_t(*)())strlen;
-                                        /* returns printable prompt width */
+static size_t   (*gl_strlen)(const char *) = strlen;
 
 static int      gl_addchar(cligen_handle h, int c);     /* install specified char */
 static void     gl_del(cligen_handle h, int loc);       /* del, either left (-1) or cur (0) */
@@ -1409,7 +1408,7 @@ gl_fixup(cligen_handle h,
 /******************* strlen stuff **************************************/
 
 void
-gl_strwidth(size_t (*func)())
+gl_strwidth(size_t (*func)(const char *))
 {
     if (func != 0) {
         gl_strlen = func;
