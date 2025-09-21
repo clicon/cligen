@@ -29,6 +29,13 @@ Expected: October 2025
 * Added label support in combination with tree references
   * Example: `@tree, @add:<label>
 
+### API changes on existing protocol/config features
+
+* Minor modifications of string preference settings:
+  * string:         5 --> 6
+  * string(regexp): 7 --> 8
+  * string(expand): 8 --> 10
+
 ### Corrected Bugs
 
 * Fixed: [Space needed before pipes](https://github.com/clicon/cligen/issues/103)

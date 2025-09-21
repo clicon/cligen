@@ -1209,6 +1209,8 @@ cligen_delimiter_set(cligen_handle h,
 /*! Get preference mode, return all with same pref(ambiguos) or first (1)
  *
  * @param[in] h      CLIgen handle
+ * @retval    3      Non-terminal+terminal
+ * @retval    2      Non-terminal first match
  * @retval    1      Preference mode is set (return first)
  * @retval    0      Preference mode is not set (ambiguous)
  */

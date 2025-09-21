@@ -39,6 +39,41 @@
 #define CLIGEN_QUOTES     "\""
 #define CLIGEN_OPERATORS  "|"
 
+/* CLIgen preferences, see CLIgen tutorial appendix D, higher is "better"
+ */
+#define COV_PREF_ERROR           0
+#define COV_PREF_REST            1
+#define COV_PREF_COMMAND_PARTIAL 3
+#define COV_PREF_STRING          6
+#define COV_PREF_STRING_REGEXP   8
+#define COV_PREF_STRING_EXPAND  10
+#define COV_PREF_BOOL           12
+#define COV_PREF_INTERFACE      14
+#define COV_PREF_URL            20
+#define COV_PREF_UINT64         45
+#define COV_PREF_INT64          (COV_PREF_UINT64+1)
+#define COV_PREF_UINT32         (COV_PREF_UINT64+2)
+#define COV_PREF_INT32          (COV_PREF_UINT64+3)
+#define COV_PREF_UINT16         (COV_PREF_UINT64+4)
+#define COV_PREF_INT16          (COV_PREF_UINT64+5)
+#define COV_PREF_UINT8          (COV_PREF_UINT64+6)
+#define COV_PREF_INT8           (COV_PREF_UINT64+7)
+#define COV_PREF_UINT64_RANGE   45
+#define COV_PREF_INT64_RANGE    (COV_PREF_UINT64_RANGE+1)
+#define COV_PREF_UINT32_RANGE   (COV_PREF_UINT64_RANGE+2)
+#define COV_PREF_INT32_RANGE    (COV_PREF_UINT64_RANGE+3)
+#define COV_PREF_UINT16_RANGE   (COV_PREF_UINT64_RANGE+4)
+#define COV_PREF_INT16_RANGE    (COV_PREF_UINT64_RANGE+5)
+#define COV_PREF_UINT8_RANGE    (COV_PREF_UINT64_RANGE+6)
+#define COV_PREF_INT8_RANGE     (COV_PREF_UINT64_RANGE+7)
+#define COV_PREF_DECIMAL64      62
+#define COV_PREF_IPV4ADDR       70
+#define COV_PREF_IPV6ADDR       71
+#define COV_PREF_MACADDR        72
+#define COV_PREF_UUID           73
+#define COV_PREF_TIME           75
+#define COV_PREF_COMMAND        100
+
 /*
  * Parse tree nodes. The different types are associated to
  * different fields in the parse tree node object, each interpreted/parsed

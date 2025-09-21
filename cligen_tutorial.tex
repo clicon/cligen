@@ -7,7 +7,7 @@
 %
 % Title
 %
-\title {CLIgen Manual\\ {\small CLIgen version 7.5}}
+\title {CLIgen Manual\\ {\small CLIgen version 7.6}}
 
 \author{Olof Hagsand}
 %
@@ -18,7 +18,7 @@
 
 % If you want a logo
 % \lhead{\includegraphics[height=9mm]{../../doc/logga_crop.png}}
-\date{May, 2025}
+\date{September, 2025}
 \maketitle
 \setcounter{tocdepth}{2}
 \tableofcontents
@@ -1150,7 +1150,6 @@ Example: get name and type of cligen variable:
   enum cv_type type = cv_type_get(cv);
 \end{verbatim}
 
-
 \subsubsection{Types}
 
 CLIgen variables have a simple type-system, essentially following the
@@ -1662,36 +1661,37 @@ The full default preference table is as follows:
 \hline
   \textbf{ Type} & \textbf{Preference} \\
 \hline
-command         & $100$  \\
-time            & $74$   \\
-uuid            & $73$   \\
-macaddr         & $72$   \\
-ipv6addr        & $71$   \\
-ipv4addr        & $70$   \\
-decimal64       & $62$   \\
-int8 (range)    & $60$   \\
-uint8 (range)   & $59$   \\
-int16 (range)   & $58$   \\
-uint16 (range)  & $57$   \\
-int32 (range)   & $56$   \\
-uint32 (range)  & $55$   \\
-int64 (range)   & $54$   \\
-uint64 (range)  & $53$   \\
-int8            & $52$   \\
-uint8           & $51$   \\
-int16           & $50$   \\
-uint16          & $49$   \\
-int32           & $48$   \\
-uint32          & $47$   \\
-int64           & $46$   \\
-uint64          & $45$   \\
-url             & $20$   \\
-bool            & $12$   \\
-string (expand) & $8$    \\
-string (regexp) & $7$    \\
-string          & $5$    \\
-command (partial) & $3$ \\
-rest            & $1$    \\
+command           & $100$  \\
+time              & $74$   \\
+uuid              & $73$   \\
+macaddr           & $72$   \\
+ipv6addr          & $71$   \\
+ipv4addr          & $70$   \\
+decimal64         & $62$   \\
+int8 (range)      & $60$   \\
+uint8 (range)     & $59$   \\
+int16 (range)     & $58$   \\
+uint16 (range)    & $57$   \\
+int32 (range)     & $56$   \\
+uint32 (range)    & $55$   \\
+int64 (range)     & $54$   \\
+uint64 (range)    & $53$   \\
+int8              & $52$   \\
+uint8             & $51$   \\
+int16             & $50$   \\
+uint16            & $49$   \\
+int32             & $48$   \\
+uint32            & $47$   \\
+int64             & $46$   \\
+uint64            & $45$   \\
+url               & $20$   \\
+interface         & $14$   \\
+bool              & $12$   \\
+string (expand)   & $10$   \\
+string (regexp)   & $8$    \\
+string            & $6$    \\
+command (partial) & $3$    \\
+rest              & $1$    \\
 \hline
 \end{tabular}
 
