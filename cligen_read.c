@@ -167,11 +167,11 @@ static int
 cli_tab_hook(cligen_handle h,
              int          *cursorp)
 {
-    int           retval = -1;
-    int           prev_cursor;
-    parse_tree   *pt = NULL;     /* Orig */
-    parse_tree   *ptn = NULL;    /* Expanded */
-    cvec         *cvv = NULL;
+    int         retval = -1;
+    int         prev_cursor;
+    parse_tree *pt = NULL;     /* Orig */
+    parse_tree *ptn = NULL;    /* Expanded */
+    cvec       *cvv = NULL;
 
     if ((ptn = pt_new()) == NULL)
         goto done;
@@ -202,7 +202,7 @@ cli_tab_hook(cligen_handle h,
     fputs("\n", stdout);
     if (cligen_tabmode(h) & CLIGEN_TABMODE_COLUMNS){
         if (show_help_line(h, stdout, cligen_buf(h), ptn, cvv) <0)
-        goto done;
+            goto done;
     }
     else if (show_help_columns(h, stdout, cligen_buf(h), ptn, cvv) < 0)
             goto done;
@@ -233,17 +233,17 @@ cliread_init(cligen_handle h)
  * @param[in]  cw   Width of column
  */
 static int
-column_print(FILE            *fout,
-             int              cnr,
-             int              cw,
+column_print(FILE               *fout,
+             int                 cnr,
+             int                 cw,
              struct cligen_help *chvec,
-             int              len,
-             int              level)
+             int                 len,
+             int                 level)
 {
-    int              retval = -1;
-    int              li; /* line number */
-    int              ci; /* column number */
-    int              linenr;
+    int                 retval = -1;
+    int                 li; /* line number */
+    int                 ci; /* column number */
+    int                 linenr;
     struct cligen_help *ch;
 
     linenr = (len-1)/cnr + 1;
@@ -282,22 +282,22 @@ show_help_columns(cligen_handle h,
                   parse_tree   *pt,
                   cvec         *cvv)
 {
-    int              retval = -1;
-    int              level;
-    int              i;
-    int              nrcmd = 0;
+    int                 retval = -1;
+    int                 level;
+    int                 i;
+    int                 nrcmd = 0;
     struct cligen_help *chvec = NULL;
     struct cligen_help *ch;
-    cg_obj          *co;
-    cbuf            *cb = NULL;
-    char            *cmd;
-    int              maxlen = 0;
-    int              column_width;
-    int              column_nr;
-    int              rest;
-    cvec            *cvt = NULL;      /* Tokenized string: vector of tokens */
-    cvec            *cvr = NULL;      /* Rest variant,  eg remaining string in each step */
-    match_result    *mr = NULL;
+    cg_obj             *co;
+    cbuf               *cb = NULL;
+    char               *cmd;
+    int                 maxlen = 0;
+    int                 column_width;
+    int                 column_nr;
+    int                 rest;
+    cvec               *cvt = NULL;      /* Tokenized string: vector of tokens */
+    cvec               *cvr = NULL;      /* Rest variant,  eg remaining string in each step */
+    match_result       *mr = NULL;
 
     if (string == NULL){
         errno = EINVAL;
@@ -524,7 +524,8 @@ cli_complete(cligen_handle h,
     char   *s = NULL;
     size_t  slen;
     int     cursor = *cursorp;
-    int     i, n;
+    int     i;
+    int     n;
     int     extra;
 
     string = cligen_buf(h);
@@ -917,11 +918,11 @@ cligen_eval_pipe_post(cligen_handle h,
                       pid_t         childpid)
 {
     int     retval = -1;
-    int     ret;
     int     status;
     char    buf[4097];
     ssize_t len;
     int     s;
+    int     ret;
 
     cli_pipe_output_socket_get(&s);
     if (s != -1) {
@@ -997,16 +998,16 @@ cligen_eval(cligen_handle h,
             cg_obj       *co,
             cvec         *cvv)
 {
-    int            retval = -1;
-    cg_callback   *cc;
-    cvec          *argv;
-    cvec          *cvv1 = NULL; /* Modified */
-    cgv_fnstype_t *fn;
+    int                  retval = -1;
+    cg_callback         *cc;
+    cvec                *argv;
+    cvec                *cvv1 = NULL; /* Modified */
+    cgv_fnstype_t       *fn;
     cligen_eval_wrap_fn *wrapfn = NULL;
-    void          *wraparg = NULL;
-    void          *wh = NULL; /* eval wrap handle */
-    int            spipe = -1;
-    pid_t          childpid = 0;
+    void                *wraparg = NULL;
+    void                *wh = NULL; /* eval wrap handle */
+    int                  spipe = -1;
+    pid_t                childpid = 0;
 
     /* Save matched object for plugin use */
     if (h == NULL){
