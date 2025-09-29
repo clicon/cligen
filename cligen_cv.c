@@ -1545,7 +1545,7 @@ parse_macaddr(const char *str,
         }
 
         if (reason) {
-            *reason = cligen_reason("%s: Invalid MAC address (illegal character '%c')", str, *s1);
+            *reason = cligen_reason("%s: Invalid MAC address (invalid character '%c')", str, *s1);
             if (*reason == NULL) {
                 return -1;
             }

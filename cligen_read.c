@@ -783,7 +783,7 @@ cliread_eval(cligen_handle  h,
     parse_tree  *pt = NULL;     /* Orig */
 
     if (h == NULL){
-        fprintf(stderr, "Illegal cligen handle\n");
+        fprintf(stderr, "Invalid cligen handle\n");
         goto done;
     }
     if (cliread(h, line) < 0)

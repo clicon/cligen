@@ -388,7 +388,7 @@ cov_pref(cg_obj *co)
 
     switch (co->co_vtype){
     case CGV_ERR:
-        pref = COV_PREF_ERROR; /* Illegal */
+        pref = COV_PREF_ERROR; /* Invalid */
         break;
         /* ints in range 22-60 */
     case CGV_INT8:
