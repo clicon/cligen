@@ -45,10 +45,10 @@
 #define COV_PREF_REST            1
 #define COV_PREF_COMMAND_PARTIAL 3
 #define COV_PREF_STRING          6
-#define COV_PREF_STRING_REGEXP   8
-#define COV_PREF_STRING_EXPAND  10
-#define COV_PREF_BOOL           12
-#define COV_PREF_INTERFACE      14
+#define COV_PREF_STRING_REGEXP   8  /* Needs some slack to next for multiple matches */
+#define COV_PREF_STRING_EXPAND  14
+#define COV_PREF_BOOL           16
+#define COV_PREF_INTERFACE      18
 #define COV_PREF_URL            20
 #define COV_PREF_UINT64         45
 #define COV_PREF_INT64          (COV_PREF_UINT64+1)
@@ -83,7 +83,7 @@ enum cg_objtype{
   CO_COMMAND,   /* Simple string parsing */
   CO_VARIABLE,  /* Parse as type eg int */
   CO_REFERENCE, /* Symbolic reference to other tree */
-  CO_EMPTY       /* No subtree, indicates a callback (used to be empty) */
+  CO_EMPTY      /* No subtree, indicates a callback (used to be empty) */
 };
 
 /*
