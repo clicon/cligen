@@ -91,7 +91,7 @@
 static int
 match_variable(cligen_handle h,
                cg_obj       *co,
-               char         *str,
+               const char   *str,
                char        **reason)
 {
     int         retval = -1;
@@ -133,7 +133,7 @@ match_variable(cligen_handle h,
 /*! Given a string and one cligen object, return if the string matches
  *
  * @param[in]  h       CLIgen handle
- * @param[in]  str     Input string to match (NULL is match)
+ * @param[in]  str0    Input string to match (NULL is match)
  * @param[in]  co      cligen object
  * @param[in]  best    Only return best match (for command evaluation) instead of all possible options
  * @param[out] exact   1 if match is exact (CO_COMMANDS). VARS is 0.
@@ -147,7 +147,7 @@ match_variable(cligen_handle h,
  */
 static int
 match_object(cligen_handle h,
-             char         *str,
+             const char   *str0,
              cg_obj       *co,
              int           best,
              int          *exact,
@@ -155,35 +155,29 @@ match_object(cligen_handle h,
 {
   int          match = 0;
   size_t       len = 0;
+  char        *str1;
   enum cv_type t;
 
-  if (str)
-      len = strlen(str);
+  if (str0)
+      len = strlen(str0);
   if (exact)
       *exact = 0;
   if (co==NULL) /* shouldnt happen */
       return 0;
   switch (co->co_type){
   case CO_COMMAND:
-      if (str == NULL)
+      if (str0 == NULL)
           match++;
       else{
-          if (best && *co->co_command == '\"'){ /* escaped */
-              if (cligen_caseignore_get(h))
-                  match = (strncasecmp(co->co_command+1, str, len) == 0);
-              else
-                  match = (strncmp(co->co_command+1, str, len) == 0);
-              if (exact)
-                  *exact = strlen(co->co_command+1) == len;
-          }
-          else{
-              if (cligen_caseignore_get(h))
-                  match = (strncasecmp(co->co_command, str, len) == 0);
-              else
-                  match = (strncmp(co->co_command, str, len) == 0);
-              if (exact)
-                  *exact = strlen(co->co_command) == len;
-          }
+          str1 = co->co_command;
+          if (best && *co->co_command == '\"') /* escaped */
+              str1++;
+          if (cligen_caseignore_get(h))
+              match = (strncasecmp(str1, str0, len) == 0);
+          else
+              match = (strncmp(str1, str0, len) == 0);
+          if (exact)
+              *exact = strlen(str1) == len;
           if (match == 0 && reason){
               if ((*reason = strdup("Unknown command")) == NULL)
                   return -1;
@@ -192,16 +186,16 @@ match_object(cligen_handle h,
     break;
   case CO_VARIABLE:
       t = co->co_vtype;
-      if (str == NULL || len==0){
+      if (str0 == NULL || len==0){
           if (best && cv_isint(t)){
-              if ((match = match_variable(h, co, str, reason)) < 0)
+              if ((match = match_variable(h, co, str0, reason)) < 0)
                   return -1;
           }
           else
               match++;
       }
       else
-          if ((match = match_variable(h, co, str, reason)) < 0)
+          if ((match = match_variable(h, co, str0, reason)) < 0)
               return -1;
     break;
   case CO_REFERENCE: /* This should never match, it is an abstract object that is expanded */
@@ -386,6 +380,7 @@ match_vec(cligen_handle h,
     int     i;
     cg_obj *co;
     cg_obj *cop = NULL;
+    cg_obj *coref;
     int     match;
 
     /* Loop through parse-tree at this level to find matches */
@@ -452,6 +447,7 @@ match_vec(cligen_handle h,
                         /* Copy co and append it to mr parse-tree */
                         if (mr_pt_append(mr, co, ISREST(co)?resttokens:token) < 0)
                             goto done;
+                        mr_pref_set(mr, p);
                     }
                 }
                 else if (p > pref_upper){ /* Start again at this level */
@@ -460,6 +456,7 @@ match_vec(cligen_handle h,
                         goto done;
                     if (mr_pt_append(mr, co, ISREST(co)?resttokens:token) < 0)
                         goto done;
+                    mr_pref_set(mr, p);
                     cop = co;
                 }
                 else{ /* p < pref_upper : skip */
@@ -468,11 +465,34 @@ match_vec(cligen_handle h,
             else {
                 if (mr_pt_append(mr, co, ISREST(co)?resttokens:token) < 0)
                     goto done;
+                mr_pref_set(mr, p);
             }
         } /* switch match */
         assert(tmpreason == NULL);
     } /* for pt_len_get(pt) */
     /* Only return reason if matches == 0 */
+#ifdef CLIGEN_DONT_MATCH_PARTIAL_EXPANDS
+    /* Mask exact matches of partial expanded regexp matches
+     * This may be something that should be controlled by an option or
+     * config setting
+     */
+    if (best &&
+        mr_pt_len_get(mr) == 1 &&
+        mr_pref_get(mr) == COV_PREF_COMMAND_PARTIAL &&
+        (co = mr_pt_i_get(mr, 0)) != NULL &&
+        (coref = co->co_ref) != NULL &&
+        coref->co_type == CO_VARIABLE &&
+        // coref->co_vtype == CGV_STRING && // XXX?
+        coref->co_vtype != CGV_REST && // space
+        coref->co_expandv_fn != NULL
+        ){
+        mr_pt_reset(mr); /* remove match */
+        if ((tmpreason = strdup("Partial match")) == NULL)
+            return -1;
+        mr_reason_set(mr, tmpreason);
+        tmpreason = NULL;
+    }
+#endif
     if (mr_pt_len_get(mr) != 0)
         mr_reason_set(mr, NULL);
     retval = 0;
@@ -1036,7 +1056,10 @@ match_pattern_sets(cligen_handle  h,
  * @param[in]  cvr       Rest variant,  eg remaining string in each step
  * @param[in]  pt        Vector of commands (array of cligen object pointers (cg_obj)
  * @param[in]  best      If set, only return best match (for command evaluation) instead of
- *                       all possible options. Match also hidden options. Only from match_pattern_exact
+ *                       all possible options.
+ *                       Match also hidden options.
+ *                       Do not match partial commands
+ *                       Only from match_pattern_exact
  *                       If not set, return all possible matches, do not return hidden options
  * @param[out] cvv       cligen variable vector containing vars/values pair for completion
  * @param[out] mrp       CLIgen match result struct encapsulating several return parameters
@@ -1047,12 +1070,12 @@ match_pattern_sets(cligen_handle  h,
  *       command > ipv4,mac > string > rest
  */
 int
-match_pattern(cligen_handle h,
-              cvec         *cvt,
-              cvec         *cvr,
-              parse_tree   *pt,
-              int           best,
-              cvec         *cvv,
+match_pattern(cligen_handle  h,
+              cvec          *cvt,
+              cvec          *cvr,
+              parse_tree    *pt,
+              int            best,
+              cvec          *cvv,
               match_result **mrp)
 {
     int           retval = -1;

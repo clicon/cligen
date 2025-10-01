@@ -67,6 +67,8 @@ char *mr_reason_get(match_result *mr);
 int   mr_reason_set(match_result *mr, char *reason);
 int   mr_level_get(match_result *mr);
 int   mr_level_set(match_result *mr, int level);
+uint32_t mr_pref_get(match_result *mr);
+int   mr_pref_set(match_result *mr, uint32_t pref);
 char *mr_token_get(match_result *mr);
 int   mr_last_get(match_result *mr);
 int   mr_last_set(match_result *mr);

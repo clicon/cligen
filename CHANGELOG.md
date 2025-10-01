@@ -21,6 +21,10 @@ Expected: October 2025
 
 * Added ac-strict-expand autocli label for disabling expansion
 
+### Corrected Bugs
+
+* Fixed: [Partial match of expanded command](https://github.com/clicon/cligen/issues/133)
+
 ## 7.5.0
 29 July 2025
 

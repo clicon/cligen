@@ -62,6 +62,7 @@ struct match_result{
     char        *mr_reason; /* Error reason if mr_len=0. Can also be carried by a mr_len!=0
                              * to store first error in case it is needed in a later error */
     int          mr_level;
+    int          mr_pref;   /* Best preference level in mr_pt */
     int          mr_last;
     char        *mr_token;  /* Direct, not copied */
     cg_obj      *mr_co_match_orig; /* Kludge, save (latest) matched object, see
@@ -161,6 +162,20 @@ mr_level_set(match_result *mr,
              int           level)
 {
     mr->mr_level = level;
+    return 0;
+}
+
+uint32_t
+mr_pref_get(match_result *mr)
+{
+    return mr->mr_pref;
+}
+
+int
+mr_pref_set(match_result *mr,
+            uint32_t      pref)
+{
+    mr->mr_pref = pref;
     return 0;
 }
 
