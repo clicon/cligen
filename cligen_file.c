@@ -250,7 +250,7 @@ cli_expand_cb(cligen_handle h,
 
 /*! Trivial function translator/mapping function that just assigns same callback
  */
-static expandv_cb *
+static expand_cb *
 str2fn_exp(char  *name,
            void  *arg,
            char **error)
@@ -390,7 +390,7 @@ main(int   argc,
             if (cligen_callbackv_str2fn(pt, str2fn, NULL) < 0)   /* callback */
                 goto done;
             if (set_expand &&
-                cligen_expandv_str2fn(pt, str2fn_exp, NULL) < 0) /* expand */
+                cligen_expand_str2fn(pt, str2fn_exp, NULL) < 0) /* expand */
                 goto done;
         }
     }

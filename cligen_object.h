@@ -95,13 +95,17 @@ enum cg_objtype{
            1 if did not handle expand
           -1 on error.
 */
-typedef int (expandv_cb)(cligen_handle h,       /* handler: cligen or userhandle */
-                         char         *name,    /* name of this function (in text) */
-                         cvec         *cvv,     /* vars vector of values in command */
-                         cvec         *argv,    /* argument vector given to callback */
-                         cvec         *commands,/* vector of commands */
-                         cvec         *helptexts /* vector of help-texts */
-                             );
+typedef int (expand_cb)(cligen_handle h,       /* handler: cligen or userhandle */
+                        char         *name,    /* name of this function (in text) */
+                        cvec         *cvv,     /* vars vector of values in command */
+                        cvec         *argv,    /* argument vector given to callback */
+                        cvec         *commands,/* vector of commands */
+                        cvec         *helptexts /* vector of help-texts */
+                        );
+
+#if 1  // XXX backward-compatible
+typedef expand_cb expandv_cb;
+#endif
 
 /*! Callback for translating a variable,
  *
@@ -131,7 +135,7 @@ struct cg_varspec{
     enum cv_type    cgs_vtype;         /* its type */
     char           *cgs_show;          /* help text of variable */
     char           *cgs_expand_fn_str; /* expand callback string */
-    expandv_cb     *cgs_expandv_fn;    /* expand callback see pt_expand */
+    expand_cb      *cgs_expand_fn;     /* expand callback see pt_expand */
     cvec           *cgs_expand_fn_vec; /* expand callback argument vector */
     char           *cgs_translate_fn_str; /* translate function string */
     translate_cb_t *cgs_translate_fn;  /* variable translate function */
@@ -192,8 +196,8 @@ struct cg_obj_common{
     char               *coc_helpstring; /* String of CLIgen helptexts */
     uint32_t            coc_flags;     /* General purpose flags, see CO_FLAGS_HIDE and others above */
     struct cg_obj      *coc_ref;       /* Ref to original (if this is expanded)
-                                       * Typical from expanded command to original variable
-                                       */
+                                        * Typical from expanded command to orig variable
+                                        */
     struct cg_obj      *coc_treeref_orig; /* Ref to original (if this is a tree reference)
                                           * Only set in co_copy */
     char               *coc_value;     /* Expanded value can be a string with a constant. */
@@ -250,7 +254,10 @@ typedef struct cg_obj cg_obj;
 #define co_vtype         u.cou_var.cgs_vtype
 #define co_show          u.cou_var.cgs_show
 #define co_expand_fn_str u.cou_var.cgs_expand_fn_str
-#define co_expandv_fn    u.cou_var.cgs_expandv_fn
+#define co_expand_fn     u.cou_var.cgs_expand_fn
+#if 1 // backward compatible
+#define co_expandv_fn    co_expand_fn
+#endif
 #define co_expand_fn_vec u.cou_var.cgs_expand_fn_vec
 #define co_translate_fn_str u.cou_var.cgs_translate_fn_str
 #define co_translate_fn  u.cou_var.cgs_translate_fn

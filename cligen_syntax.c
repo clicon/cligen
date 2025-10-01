@@ -240,7 +240,7 @@ clispec_parse_file(cligen_handle h,
  * @retval     0       OK
  * @retval    -1       Error and statement written on stderr
  *
- * @see cligen_expandv_str2fn    For expansion/completion callbacks
+ * @see cligen_expand_str2fn    For expansion/completion callbacks
  * @note str2fn may return NULL on error and should then supply a (static) error string
  */
 int
@@ -300,9 +300,9 @@ cligen_callbackv_str2fn(parse_tree   *pt,
  * @see cligen_callbackv_str2fn for translating callback functions
  */
 int
-cligen_expandv_str2fn(parse_tree       *pt,
-                      expandv_str2fn_t *str2fn,
-                      void             *arg)
+cligen_expand_str2fn(parse_tree      *pt,
+                     expand_str2fn_t *str2fn,
+                     void            *arg)
 {
     int     retval = -1;
     cg_obj *co;
@@ -312,9 +312,9 @@ cligen_expandv_str2fn(parse_tree       *pt,
     for (i=0; i<pt_len_get(pt); i++){
         if ((co = pt_vec_i_get(pt, i)) != NULL){
             if (co->co_type == CO_VARIABLE &&
-                co->co_expand_fn_str != NULL && co->co_expandv_fn == NULL){
+                co->co_expand_fn_str != NULL && co->co_expand_fn == NULL){
                 /* Note str2fn is a function pointer */
-                co->co_expandv_fn = str2fn(co->co_expand_fn_str, arg, &callback_err);
+                co->co_expand_fn = str2fn(co->co_expand_fn_str, arg, &callback_err);
                 if (callback_err != NULL){
                     fprintf(stderr, "%s: error: No such function: %s\n",
                             __FUNCTION__, co->co_expand_fn_str);
@@ -322,7 +322,7 @@ cligen_expandv_str2fn(parse_tree       *pt,
                 }
             }
             /* recursive call to next level */
-            if (cligen_expandv_str2fn(co_pt_get(co), str2fn, arg) < 0)
+            if (cligen_expand_str2fn(co_pt_get(co), str2fn, arg) < 0)
                 goto done;
         }
     }

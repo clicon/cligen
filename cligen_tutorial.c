@@ -244,7 +244,7 @@ cli_expand_cb(cligen_handle h,
 
 /*! Trivial function translator/mapping function that just assigns same callback
  */
-static expandv_cb *
+static expand_cb *
 str2fn_exp(char  *name,
            void  *arg,
            char **error)
@@ -361,7 +361,7 @@ main(int   argc,
         pt = cligen_ph_parsetree_get(ph);
         if (cligen_callbackv_str2fn(pt, str2fn, NULL) < 0) /* map functions */
             goto done;
-        if (cligen_expandv_str2fn(pt, str2fn_exp, NULL) < 0)
+        if (cligen_expand_str2fn(pt, str2fn_exp, NULL) < 0)
             goto done;
         if (cligen_translate_str2fn(pt, str2fn_trans, NULL) < 0)
             goto done;

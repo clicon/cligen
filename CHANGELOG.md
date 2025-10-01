@@ -21,6 +21,15 @@ Expected: October 2025
 
 * Added ac-strict-expand autocli label for disabling expansion
 
+### C/CLI-API changes on existing features
+Developers may need to change their code
+
+* In the C-API replaced `expandv_` to `expand_`:
+  * Function `cligen_expandv_str2fn` --> `cligen_expand_str2fn`
+  * Type `expandv_cb` --> `expand_cb`
+  * Type `expandv_str2fn_t` --> `expand_str2fn_t`
+  * Struct field `co_expandv_fn` --> `co_expand_fn`
+
 ### Corrected Bugs
 
 * Fixed: [Partial match of expanded command](https://github.com/clicon/cligen/issues/133)

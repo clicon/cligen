@@ -484,7 +484,7 @@ match_vec(cligen_handle h,
         coref->co_type == CO_VARIABLE &&
         // coref->co_vtype == CGV_STRING && // XXX?
         coref->co_vtype != CGV_REST && // space
-        coref->co_expandv_fn != NULL
+        coref->co_expand_fn != NULL
         ){
         mr_pt_reset(mr); /* remove match */
         if ((tmpreason = strdup("Partial match")) == NULL)

@@ -1481,7 +1481,7 @@ in the specification is used.
     return 0;
   }
 
-  expandv_cb *
+  expand_cb *
   str2fn(char *name, void *arg, char **error)
   {
      return expand_ifname;
@@ -1491,7 +1491,7 @@ in the specification is used.
   {   
     [...]
     cligen_parse_file(h, f,  "mysyntax", &pt, &globals) < 0)
-    if (cligen_expandv_str2fn(pt, str2fn, NULL) < 0)
+    if (cligen_expand_str2fn(pt, str2fn, NULL) < 0)
       return -1;
     [...]
   }

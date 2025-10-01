@@ -54,7 +54,7 @@
 /*
  * Types
  */
-/* Here we should have expandv_cb but it is in cligen_object.h */
+/* Here we should have expand_cb but it is in cligen_object.h */
 
 /*
  * Prototypes

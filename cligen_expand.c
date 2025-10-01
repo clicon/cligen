@@ -192,8 +192,8 @@ transform_var_to_cmd(cg_obj *co,
         }
         co->co_helpstring = helptext;
     }
-    if (co->co_expandv_fn)
-        co->co_expandv_fn = NULL;
+    if (co->co_expand_fn)
+        co->co_expand_fn = NULL;
     if (co->co_expand_fn_str){
         free(co->co_expand_fn_str);
         co->co_expand_fn_str = NULL;
@@ -571,12 +571,12 @@ pt_expand_fn(cligen_handle h,
             co_cvec_add++;
         }
     }
-    if ((*co->co_expandv_fn)(cligen_userhandle(h)?cligen_userhandle(h):h,
-                             co->co_expand_fn_str,
-                             cvv1,
-                             co->co_expand_fn_vec,
-                             commands,
-                             helptexts) < 0)
+    if ((*co->co_expand_fn)(cligen_userhandle(h)?cligen_userhandle(h):h,
+                            co->co_expand_fn_str,
+                            cvv1,
+                            co->co_expand_fn_vec,
+                            commands,
+                            helptexts) < 0)
         goto done;
     /* Revert @add:s */
     if (co_cvec_add){
@@ -781,7 +781,7 @@ pt_expand1_co(cligen_handle h,
      * commands in place of the variable
      */
     else if (co->co_type == CO_VARIABLE &&
-             co->co_expandv_fn != NULL){
+             co->co_expand_fn != NULL){
         /* If I add conditional here, you need to explicitly have a
          * a "free" variable expression, not just expands.
          * eg (<v:int expand_dbvar()>|<v:int>)
@@ -801,7 +801,7 @@ pt_expand1_co(cligen_handle h,
         }
     }
     else if (co->co_type == CO_VARIABLE &&
-             co->co_expandv_fn == NULL &&
+             co->co_expand_fn == NULL &&
              expandvar &&
              co_filter_bool(cvv_filter, "ac-strict-expand")){
         /* Dont show generic variable if strict-expand and there are expand rules */
