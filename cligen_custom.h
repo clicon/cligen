@@ -49,4 +49,4 @@ typedef void *cligen_handle; /* API */
  * See https://github.com/clicon/cligen/issues/133
  * Should probably always be set
  */
-#define CLIGEN_DONT_MATCH_PARTIAL_EXPANDS
+#undef CLIGEN_DONT_MATCH_PARTIAL_EXPANDS

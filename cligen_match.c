@@ -380,8 +380,10 @@ match_vec(cligen_handle h,
     int     i;
     cg_obj *co;
     cg_obj *cop = NULL;
-    cg_obj *coref;
     int     match;
+#ifdef CLIGEN_DONT_MATCH_PARTIAL_EXPANDS
+    cg_obj *coref;
+#endif
 
     /* Loop through parse-tree at this level to find matches */
     for (i=0; i<pt_len_get(pt); i++){
