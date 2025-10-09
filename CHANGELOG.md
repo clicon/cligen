@@ -32,6 +32,7 @@ Developers may need to change their code
 
 ### Corrected Bugs
 
+* Fixed: Helpstrings can not include \ and \n
 * Fixed: [Partial match of expanded command](https://github.com/clicon/cligen/issues/133)
 
 ## 7.5.0
