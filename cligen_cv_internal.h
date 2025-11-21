@@ -72,7 +72,7 @@ struct cg_var {
         uint32_t varu_uint32;
         uint64_t varu_uint64;
         char    *varu_string;
-        char    *varu_interface;
+        char    *varu_interface; /* Obsolete */
         struct {
             int64_t  vardec64_i;    /* base number i in i x 10^-n */
             uint8_t  vardec64_n;    /* fraction n in i x 10^-n */

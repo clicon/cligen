@@ -537,7 +537,7 @@ cv_string_set(cg_var     *cv,
 /*! Set new string without malloc
  *
  * @param[in] cv  CLIgen variable
- * @param[in] s   String to directly assign (must have been alloced)
+ * @param[in] s   String to directly assign (must malloc, can be freed)
  * @retval    0   OK
  * @retval   -1   Error
  * @note s should really be const, but then it is assigned to a field that is free:d
@@ -2017,7 +2017,7 @@ time2str(const struct timeval *tv,
 
     tm = gmtime(&tv->tv_sec);
     if (snprintf(fmt, len, "%04d-%02d-%02dT%02d:%02d:%02d.%06ldZ",
-             tm->tm_year+1900, tm->tm_mon+1, tm->tm_mday, tm->tm_hour,
+                 tm->tm_year+1900, tm->tm_mon+1, tm->tm_mday, tm->tm_hour,
                  tm->tm_min, tm->tm_sec, tv->tv_usec) < 0)
         goto done;
     retval = 0;

@@ -102,6 +102,12 @@ mr_pt_trunc(match_result *mr,
 }
 
 /*! Copy co and append it to result parse-tree
+ *
+ * @param[in]  mr     Match result object
+ * @param[in]  co     CLIgen object
+ * @param[in]  token  Malloced string
+ * @retval     0      OK
+ * @retval    -1      Error
  */
 int
 mr_pt_append(match_result *mr,

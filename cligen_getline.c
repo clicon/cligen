@@ -45,7 +45,7 @@ int (*gl_in_hook)(void *, const char *) = NULL;
 int (*gl_out_hook)(void *, const char *) = NULL;
 int (*gl_tab_hook)(cligen_handle, int *) = NULL;
 int (*gl_qmark_hook)(cligen_handle, const char *) = NULL;
-int (*gl_susp_hook)(void *, char *, int, int *) = NULL;
+int (*gl_susp_hook)(void *, const char *, int, int *) = NULL;
 int (*gl_interrupt_hook)(cligen_handle) = NULL;
 
 /******************** internal interface *********************************/

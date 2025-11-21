@@ -118,7 +118,7 @@ typedef int (translate_cb_t)(cligen_handle h, cg_var *cv);
 
 /*! Cligen ^Z suspension callback
  */
-typedef int (cligen_susp_cb_t)(void *h, char *, int, int *);
+typedef int (cligen_susp_cb_t)(void *h, const char *, int, int *);
 
 /*! Cligen ^C interrupt callback
  */
@@ -288,11 +288,11 @@ int         co_flags_get(cg_obj *co, uint32_t flag);
 int         co_sets_get(cg_obj *co);
 void        co_sets_set(cg_obj *co, int sets);
 char       *co_prefix_get(cg_obj *co);
-int         co_prefix_set(cg_obj *co, char *prefix);
+int         co_prefix_set(cg_obj *co, const char *prefix);
 cvec       *co_filter_set(cg_obj *co, cvec *cvv);
 size_t      co_size(enum cg_objtype type);
 cg_obj     *co_new_only(enum cg_objtype type);
-cg_obj     *co_new(char *cmd, cg_obj *prev);
+cg_obj     *co_new(const char *cmd, cg_obj *prev);
 cg_obj     *cov_new(enum cv_type cvtype, cg_obj *prev);
 int         co_pref(cg_obj *co, int exact);
 int         co_copy(cg_obj *co, cg_obj *parent, uint32_t flags, cg_obj **conp);
@@ -301,8 +301,8 @@ int         co_eq(cg_obj *co1, cg_obj *co2);
 int         co_free(cg_obj *co, int recursive);
 cg_obj     *co_insert1(parse_tree *pt, cg_obj *co, int recursive);
 cg_obj     *co_insert(parse_tree *pt, cg_obj *co);
-cg_obj     *co_find_one(parse_tree *pt, char *name);
-int         co_value_set(cg_obj *co, char *str);
+cg_obj     *co_find_one(parse_tree *pt, const char *name);
+int         co_value_set(cg_obj *co, const char *str);
 int         co_terminal(cg_obj *co, cg_obj **cot);
 char       *cligen_reason(const char *fmt, ...) __attribute__ ((format (printf, 1, 2)));
 

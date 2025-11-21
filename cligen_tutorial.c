@@ -185,9 +185,9 @@ unknown(cligen_handle h,
  * Better to use dlopen, mmap or some other more flexible scheme.
  */
 cgv_fnstype_t *
-str2fn(char  *name,
-       void  *arg,
-       char **error)
+str2fn(const char *name,
+       void       *arg,
+       char      **error)
 {
     *error = NULL;
     if (strcmp(name, "hello") == 0)
@@ -245,9 +245,9 @@ cli_expand_cb(cligen_handle h,
 /*! Trivial function translator/mapping function that just assigns same callback
  */
 static expand_cb *
-str2fn_exp(char  *name,
-           void  *arg,
-           char **error)
+str2fn_exp(const char *name,
+           void       *arg,
+           char      **error)
 {
     return cli_expand_cb;
 }
@@ -277,9 +277,9 @@ incstr(cligen_handle h,
  *     increment <var:string translate:incstr()>, callback();
  */
 translate_cb_t *
-str2fn_trans(char  *name,
-             void  *arg,
-             char **error)
+str2fn_trans(const char *name,
+             void       *arg,
+             char      **error)
 {
     if (strcmp(name, "incstr") == 0)
         return incstr;

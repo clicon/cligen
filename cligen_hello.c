@@ -58,9 +58,9 @@ hello_cb(cligen_handle h,
 /*! Trivial function translator/mapping function that just assigns same callback
  */
 cgv_fnstype_t *
-str2fn(char  *name,
-       void  *arg,
-       char **error)
+str2fn(const char *name,
+       void       *arg,
+       char      **error)
 {
     return hello_cb;
 }

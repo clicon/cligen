@@ -133,19 +133,19 @@ cli_output_status(void)
  * @see cligen_output
  */
 static int
-cligen_output_scroll(FILE   *f,
-                     char   *ibuf,
-                     ssize_t linelen,
-                     int     term_rows)
+cligen_output_scroll(FILE       *f,
+                     const char *ibuf,
+                     ssize_t     linelen,
+                     int         term_rows)
 {
-    int     retval = -1;
-    char   *ibend;
-    char   *ib0;  /* Moving window start */
-    char   *ib1;  /* Moving window end */
-    char   *ibcr;
-    int     c;
-    char   *linebuf = NULL;
-    ssize_t remain;
+    int         retval = -1;
+    const char *ibend;
+    const char *ib0;  /* Moving window start */
+    const char *ib1;  /* Moving window end */
+    char       *ibcr;
+    int         c;
+    char       *linebuf = NULL;
+    ssize_t     remain;
 
     ib0 = ibuf;
     ib1 = ibuf;
@@ -324,14 +324,17 @@ cligen_output(FILE       *f,
 
 /*! Same as cligen_output, but no vararg and no pipe-output
  *
- * @param[in] f           Open stdio FILE pointer
- * @param[in] template... See man printf(3)
+ * @param[in] f         Open stdio FILE pointer
+ * @param[in] inbuf     Buffer to print
+ * @param[in] inbuflen  Length of inbuf
+ * @retval    0         OK
+ * @retval   -1         Error
  * @see cligen_output  with vararg and pipe output
  */
 int
-cligen_output_basic(FILE  *f,
-                    char  *inbuf,
-                    size_t inbuflen)
+cligen_output_basic(FILE       *f,
+                    const char *inbuf,
+                    size_t      inbuflen)
 {
     int     retval = -1;
     ssize_t linelen;

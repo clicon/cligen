@@ -38,15 +38,15 @@
 #ifndef _CLIGEN_REGEX_H_
 #define _CLIGEN_REGEX_H_
 
-int cligen_regex_posix_compile(char *regexp, void **recomp);
-int cligen_regex_posix_exec(void *recomp, char *string);
+int cligen_regex_posix_compile(const char *regexp, void **recomp);
+int cligen_regex_posix_exec(void *recomp, const char *string);
 int cligen_regex_posix_free(void *recomp);
-int cligen_regex_libxml2_compile(char  *regexp0, void **recomp);
-int cligen_regex_libxml2_exec(void *recomp, char *string0);
+int cligen_regex_libxml2_compile(const char *regexp0, void **recomp);
+int cligen_regex_libxml2_exec(void *recomp, const char *string0);
 int cligen_regex_libxml2_free(void *recomp);
-int cligen_regex_compile(cligen_handle h, char *regexp, void **recomp);
-int cligen_regex_exec(cligen_handle h, void *recomp, char *string);
+int cligen_regex_compile(cligen_handle h, const char *regexp, void **recomp);
+int cligen_regex_exec(cligen_handle h, void *recomp, const char *string);
 int cligen_regex_free(cligen_handle h, void *recomp);
-int match_regexp(cligen_handle h, char *string, char *pattern, int invert);
+int match_regexp(cligen_handle h, const char *string, const char *pattern, int invert);
 
 #endif /* _CLIGEN_REGEX_H_ */

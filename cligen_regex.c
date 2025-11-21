@@ -80,8 +80,8 @@
  * @retval     -1       Error
  */
 int
-cligen_regex_posix_compile(char  *regexp,
-                           void **recomp)
+cligen_regex_posix_compile(const char *regexp,
+                           void      **recomp)
 {
     int      retval = -1;
     cbuf    *cb = NULL;
@@ -142,8 +142,8 @@ cligen_regex_posix_compile(char  *regexp,
  * @retval -1   Error
  */
 int
-cligen_regex_posix_exec(void *recomp,
-                        char *string)
+cligen_regex_posix_exec(void       *recomp,
+                        const char *string)
 {
     int      retval = -1;
     int      status;
@@ -184,8 +184,8 @@ cligen_regex_posix_free(void *recomp)
  * @retval     -1       Error
  */
 int
-cligen_regex_libxml2_compile(char  *regexp0,
-                             void **recomp)
+cligen_regex_libxml2_compile(const char *regexp0,
+                             void      **recomp)
 {
     int        retval = -1;
 #ifdef HAVE_LIBXML_XMLREGEXP_H
@@ -214,8 +214,8 @@ cligen_regex_libxml2_compile(char  *regexp0,
  * @retval -1   Error
  */
 int
-cligen_regex_libxml2_exec(void *recomp,
-                          char *string0)
+cligen_regex_libxml2_exec(void       *recomp,
+                          const char *string0)
 {
     int        retval = -1;
 #ifdef HAVE_LIBXML_XMLREGEXP_H
@@ -256,7 +256,7 @@ cligen_regex_libxml2_free(void *recomp)
  */
 int
 cligen_regex_compile(cligen_handle h,
-                     char         *regexp,
+                     const char   *regexp,
                      void        **recomp)
 {
     int   retval = -1;
@@ -276,7 +276,7 @@ cligen_regex_compile(cligen_handle h,
 int
 cligen_regex_exec(cligen_handle h,
                   void         *recomp,
-                  char         *string)
+                  const char   *string)
 {
     int   retval = -1;
 
@@ -319,8 +319,8 @@ cligen_regex_free(cligen_handle h,
  */
 int
 match_regexp(cligen_handle h,
-             char         *string,
-             char         *pattern,
+             const char   *string,
+             const char   *pattern,
              int           invert)
 {
     int   retval = -1;

@@ -336,8 +336,8 @@ co_prefix_get(cg_obj *co)
 }
 
 int
-co_prefix_set(cg_obj *co,
-              char   *prefix)
+co_prefix_set(cg_obj     *co,
+              const char *prefix)
 {
     if (co->co_prefix != NULL){
         free(co->co_prefix);
@@ -573,8 +573,8 @@ co_new_only(enum cg_objtype type)
  * @see co_free
  */
 cg_obj *
-co_new(char   *cmd,
-       cg_obj *parent)
+co_new(const char *cmd,
+       cg_obj     *parent)
 {
     cg_obj     *co;
     parse_tree *pt;
@@ -1078,7 +1078,7 @@ co_free(cg_obj *co,
  */
 static cg_obj *
 co_search1(parse_tree *pt,
-           char       *name,
+           const char *name,
            int         low,
            int         upper)
 {
@@ -1204,7 +1204,7 @@ co_insert(parse_tree *pt,
  */
 cg_obj *
 co_find_one(parse_tree *pt,
-            char       *name)
+            const char *name)
 {
     return co_search1(pt, name, 0, pt_len_get(pt));
 }
@@ -1218,8 +1218,8 @@ co_find_one(parse_tree *pt,
  * @retval    -1     Error
  */
 int
-co_value_set(cg_obj *co,
-             char   *str)
+co_value_set(cg_obj     *co,
+             const char *str)
 {
     if (co->co_value){ /* This can happen in '?/TAB' since we call match twice */
         free(co->co_value);

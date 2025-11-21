@@ -82,7 +82,7 @@
  * @retval    NULL  Error
  */
 static char *
-hist_save(char *p)
+hist_save(const char *p)
 {
     char *s = NULL;
     int   len = strlen(p)+1;
@@ -111,11 +111,11 @@ hist_save(char *p)
  */
 int
 hist_add(cligen_handle h,
-         char         *buf)
+         const char   *buf)
 {
     struct cligen_handle *ch = handle(h);
     int                   retval = -1;
-    char                 *p = buf;
+    const char           *p = buf;
     int                   len;
 
     if (strlen(buf) >= cligen_buf_size(h))

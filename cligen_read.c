@@ -623,15 +623,15 @@ cli_trim(char **line,
  * Use this function if you already have a string but you want it syntax-checked
  * and parsed.
  *
- * @param[in]  h         Cligen handle
- * @param[in]  string    Input string to match
- * @param[in]  pt        Parse-tree
- * @param[out] co_orig   Object that matches (if retval == 1). Free with co_free(co, 0)
- * @param[out] cvvp      Vector of cligen variables present in the input string. (if retval == 1).
- * @param[out] result    Result, < 0: errors, >=0 number of matches
- * @param[out] reason    Error reason if result is nomatch. Need to be free:d
- * @retval     0         OK
- * @retval    -1         Error
+ * @param[in]     h         Cligen handle
+ * @param[in,out] string    Input string to match, can be trimmed
+ * @param[in]     pt        Parse-tree
+ * @param[out]    co_orig   Object that matches (if retval == 1). Free with co_free(co, 0)
+ * @param[out]    cvvp      Vector of cligen variables present in the input string. (if retval == 1).
+ * @param[out]    result    Result, < 0: errors, >=0 number of matches
+ * @param[out]    reason    Error reason if result is nomatch. Need to be free:d
+ * @retval        0         OK
+ * @retval       -1         Error
  *
  * cvv should be created but empty on entry
  * On exit it contains the command string as 0th element, and one entry per element

@@ -207,8 +207,8 @@ cligen_ph_prompt_get(pt_head *ph)
  * @param[in]  str   Prompt string (copied/malloced)
  */
 int
-cligen_ph_prompt_set(pt_head *ph,
-                     char    *prompt)
+cligen_ph_prompt_set(pt_head    *ph,
+                     const char *prompt)
 {
     if (ph->ph_prompt){
         free(ph->ph_prompt);
@@ -417,7 +417,7 @@ cligen_ph_active_get(cligen_handle h)
  */
 int
 cligen_ph_active_set_byname(cligen_handle h,
-                            char         *name)
+                            const char   *name)
 {
     pt_head *ph = cligen_ph_find(h, name);
 

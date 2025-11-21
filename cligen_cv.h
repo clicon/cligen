@@ -200,7 +200,7 @@ int parse_bool(const char *str, uint8_t *val, char **reason);
 
 int str2urlproto(const char *str);
 int str2uuid(const char *in, uuid_t u);
-int uuid2str(uuid_t u, char *in, int len);
+int uuid2str(uuid_t u, char *fmt, int len);
 int cligen_tonum(int n, const char *s);
 int str2time(const char *in, struct timeval *tv);
 int time2str(const struct timeval *tv, char *fmt, unsigned len);

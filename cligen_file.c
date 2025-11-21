@@ -199,9 +199,9 @@ pipe_shell_fn(cligen_handle h,
  * Note, the syntax need to something like: "a{help}, callback(42)"
  */
 cgv_fnstype_t *
-str2fn(char  *name,
-       void  *arg,
-       char **error)
+str2fn(const char *name,
+       void       *arg,
+       char      **error)
 {
     *error = NULL;
     if (strcmp(name, "callback") == 0)
@@ -251,9 +251,9 @@ cli_expand_cb(cligen_handle h,
 /*! Trivial function translator/mapping function that just assigns same callback
  */
 static expand_cb *
-str2fn_exp(char  *name,
-           void  *arg,
-           char **error)
+str2fn_exp(const char *name,
+           void       *arg,
+           char      **error)
 {
     return cli_expand_cb;
 }

@@ -430,10 +430,10 @@ cligen_alias_call(cligen_handle h,
  */
 int
 cligen_alias_add(cligen_handle  h,
-                 char          *phname,
-                 char          *name,
-                 char          *helpstr,
-                 char          *command,
+                 const char    *phname,
+                 const char    *name,
+                 const char    *helpstr,
+                 const char    *command,
                  cgv_fnstype_t *callback)
 {
     int          retval = -1;
