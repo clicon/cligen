@@ -85,7 +85,7 @@ typedef int (cligen_eval_wrap_fn)(void *arg, void **wh, const char *name, const 
  * @param[in]  name  Base tree name
  * @param[in]  cvt   Tokenized string: vector of tokens providing some context
  * @param[in]  arg   Argument given when registering wrap function (maybe not needed?)
- * @param[out] namep New (malloced) name
+ * @param[out] namep New (malloced) name or NULL if use original "name"
  * @retval     0     OK
  * @retval    -1     Error
  */

@@ -253,16 +253,13 @@ tree_resolve(cligen_handle h,
     cg_obj                         *cow;
     cligen_tree_resolve_wrapper_fn *fn = NULL;
     void                           *arg = NULL;
-    int                             ret;
 
     treename = coref->co_command;
     cligen_tree_resolve_wrapper_get(h, &fn, &arg);
     if (fn){
-        if ((ret = fn(h, treename, cvt, arg, &treename2)) < 0)
+        if (fn(h, treename, cvt, arg, &treename2) < 0)
             goto done;
-        if (ret == 0) /* No wrapper use existing */ // XXX empty tree
-            ;
-        else          /* New malloced name */
+        if (treename2)
             treename = treename2;
     }
     /* Get parse tree header */
