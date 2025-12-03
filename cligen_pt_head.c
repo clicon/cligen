@@ -330,9 +330,9 @@ cligen_ph_add(cligen_handle h,
         cligen_pt_head_active_set(h, ph);
         cligen_pt_head_set(h, ph);
         goto done;
-	}
+    }
 
-	/* append new parsetree header to the end */
+    /* append new parsetree header to the end */
     while (phlast->ph_next)
         phlast = phlast->ph_next;
     phlast->ph_next = ph;
