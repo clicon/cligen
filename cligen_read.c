@@ -43,6 +43,7 @@
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <dlfcn.h>
 #ifdef WIN32
 #include <winsock2.h>
 #else
@@ -281,22 +282,24 @@ show_help_columns(cligen_handle h,
                   parse_tree   *pt,
                   cvec         *cvv)
 {
-    int              retval = -1;
-    int              level;
-    int              i;
-    int              nrcmd = 0;
-    struct cligen_help *chvec = NULL;
-    struct cligen_help *ch;
-    cg_obj          *co;
-    cbuf            *cb = NULL;
-    char            *cmd;
-    int              maxlen = 0;
-    int              column_width;
-    int              column_nr;
-    int              rest;
-    cvec            *cvt = NULL;      /* Tokenized string: vector of tokens */
-    cvec            *cvr = NULL;      /* Rest variant,  eg remaining string in each step */
-    match_result    *mr = NULL;
+    int                     retval = -1;
+    int                     level;
+    int                     i;
+    int                     nrcmd = 0;
+    struct cligen_help     *chvec = NULL;
+    struct cligen_help     *ch;
+    cg_obj                 *co;
+    cbuf                   *cb = NULL;
+    char                   *cmd;
+    int                     maxlen = 0;
+    int                     column_width;
+    int                     column_nr;
+    int                     rest;
+    cvec                   *cvt = NULL;      /* Tokenized string: vector of tokens */
+    cvec                   *cvr = NULL;      /* Rest variant,  eg remaining string in each step */
+    match_result           *mr = NULL;
+    void                   *lib_handle = NULL;
+    cligen_match_inject_fn *inject_func = NULL;
 
     if (string == NULL){
         errno = EINVAL;
@@ -315,6 +318,20 @@ show_help_columns(cligen_handle h,
                       cvv,
                       &mr) < 0)
         goto done;
+
+    lib_handle = cligen_ext_lib_handle_get(h);
+    if (lib_handle) {
+        dlerror();
+        inject_func = (cligen_match_inject_fn*)dlsym(lib_handle, "cligen_ext_match_inject");
+        if (inject_func){
+            if (inject_func(mr, cvt, string) < 0) {
+                goto done;
+            }
+        }else {
+            fprintf(stderr, "CLIgen extension error (dlsym): %s\n", dlerror());
+        }
+    }
+
     if ((level = cligen_cvv_levels(cvt)) < 0)
         goto done;
     if (mr_pt_len_get(mr) > 0){ /* min, max only defined if matchlen > 0 */
@@ -421,14 +438,16 @@ show_help_line(cligen_handle h,
                parse_tree   *pt,
                cvec         *cvv)
 {
-    int           retval = -1;
-    int           level;
-    cvec         *cvt = NULL;      /* Tokenized string: vector of tokens */
-    cvec         *cvr = NULL;      /* Rest variant,  eg remaining string in each step */
-    cg_var       *cvlastt;         /* Last element in cvt */
-    cg_var       *cvlastr;         /* Last element in cvr */
-    cligen_result result;
-    match_result *mr = NULL;
+    int                     retval = -1;
+    int                     level;
+    cvec                   *cvt = NULL;      /* Tokenized string: vector of tokens */
+    cvec                   *cvr = NULL;      /* Rest variant,  eg remaining string in each step */
+    cg_var                 *cvlastt;         /* Last element in cvt */
+    cg_var                 *cvlastr;         /* Last element in cvr */
+    cligen_result           result;
+    match_result           *mr = NULL;
+    void                   *lib_handle = NULL;
+    cligen_match_inject_fn *inject_func = NULL;
 
     if (string == NULL){
         errno = EINVAL;
@@ -444,6 +463,19 @@ show_help_line(cligen_handle h,
                       cvv,
                       &mr) < 0)
         goto done;
+
+    lib_handle = cligen_ext_lib_handle_get(h);
+    if (lib_handle) {
+        inject_func = (cligen_match_inject_fn*)dlsym(lib_handle, "cligen_ext_match_inject");
+        if (inject_func){
+            if (inject_func(mr, cvt, string) < 0) {
+                goto done;
+            }
+        }else {
+            fprintf(stderr, "CLIgen extension error (dlsym): %s\n", dlerror());
+        }
+    }
+
     if ((level =  cligen_cvv_levels(cvt)) < 0)
         goto done;
 

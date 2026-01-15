@@ -57,7 +57,7 @@ ifneq ($(LINKAGE),dynamic)
  # -rdynamic for using -ldl
 LDFLAGS 	+=  -rdynamic
 endif
-LIBS		= @LIBS@
+LIBS		= @LIBS@ -ldl
 INCLUDES	= -I. -I@srcdir@ @INCLUDES@
 
 HOST_VENDOR     = @host_vendor@

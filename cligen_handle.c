@@ -75,6 +75,8 @@
  */
 #define TREENAME_KEYWORD_DEFAULT "treename"
 
+#include <dlfcn.h>
+
 /* forward */
 static int terminal_rows_set1(int rows);
 
@@ -153,6 +155,7 @@ cligen_init(void)
     struct cligen_handle *ch;
     cligen_handle         h = NULL;
     struct sigaction      sigh;
+    void                 *lib_handle;
 
     if ((ch = malloc(sizeof(*ch))) == NULL){
         fprintf(stderr, "%s: malloc: %s\n", __FUNCTION__, strerror(errno));
@@ -185,6 +188,14 @@ cligen_init(void)
     cligen_buf_init(h);
     /* getline cant function without some history */
     (void)cligen_hist_init(h, CLIGEN_HISTSIZE_DEFAULT);
+
+    lib_handle = dlopen("libcligen_ext.so", RTLD_LAZY);
+    if (lib_handle) {
+        cligen_ext_lib_handle_set(h, lib_handle);
+    }else {
+        cligen_ext_lib_handle_set(h, NULL);
+    }
+
   done:
     return h;
 }
@@ -1403,5 +1414,38 @@ cligen_tree_resolve_wrapper_get(cligen_handle            h,
         *fn = ch->ch_tree_resolve_wrapper_fn;
     if (arg)
         *arg = ch->ch_tree_resolve_wrapper_arg;
+    return 0;
+}
+
+
+/*! Get extension library handle
+ *
+ * This handle is typically used to store a pointer to a dynamically loaded
+ * library (via dlopen) that provides additional functionality.
+ * @param[in] h  CLIgen handle
+ * @retval    ptr Pointer to the library handle or NULL if not set
+ */
+void *
+cligen_ext_lib_handle_get(cligen_handle h)
+{
+    struct cligen_handle *ch = handle(h);
+
+    return ch->ch_ext_lib_handle;
+}
+
+/*! Set extension library handle
+ *
+ * Store a handle to a loaded shared object in the CLIgen handle.
+ * @param[in] h    CLIgen handle
+ * @param[in] data Pointer to store (e.g., dlopen handle)
+ * @retval    0    OK
+ */
+int
+cligen_ext_lib_handle_set(cligen_handle h,
+                          void         *data)
+{
+    struct cligen_handle *ch = handle(h);
+
+    ch->ch_ext_lib_handle = data;
     return 0;
 }
