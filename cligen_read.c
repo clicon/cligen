@@ -200,12 +200,15 @@ cli_tab_hook(cligen_handle h,
             goto done;
     }
     fputs("\n", stdout);
-    if (cligen_tabmode(h) & CLIGEN_TABMODE_COLUMNS){
-        if (show_help_line(h, stdout, cligen_buf(h), ptn, cvv) <0)
+    if (prev_cursor == *cursorp ||
+        (cligen_tabmode(h) & CLIGEN_TABMODE_SHOW) != 0x0){
+        if (cligen_tabmode(h) & CLIGEN_TABMODE_COLUMNS){
+            if (show_help_line(h, stdout, cligen_buf(h), ptn, cvv) <0)
+                goto done;
+        }
+        else if (show_help_columns(h, stdout, cligen_buf(h), ptn, cvv) < 0)
             goto done;
     }
-    else if (show_help_columns(h, stdout, cligen_buf(h), ptn, cvv) < 0)
-            goto done;
  ok:
     retval = 0;
  done:

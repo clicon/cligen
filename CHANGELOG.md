@@ -1,5 +1,6 @@
 # Cligen Changelog
 
+* [7.7.0](#770) Expected: February 2026
 * [7.6.0](#760) 21 November 2025
 * [7.5.0](#750) 29 July 2025
 * [7.4.0](#740) 3 April 2025
@@ -13,6 +14,20 @@
 * [6.2.0](#620) 30 April 2023
 * [6.1.0](#610) 19 Feb 2023
 * [6.0.0](#600) 29 Nov 2022
+
+## 7.7.0
+Expected: February 2026
+
+### Features
+
+* New: [TAB CLI behavior](https://github.com/clicon/clixon-controller/issues/113)
+
+### API changes on existing protocol/config features
+
+Users may have to change how they access the system
+
+* Default TAB behaviour has changed: a single TAB only completes and does NOT show further alternatives, a second TAB will
+  * To keep backward compatibility set cligen_tabmode flag `CLIGEN_TABMODE_SHOW` (-t 8)
 
 ## 7.6.0
 21 November 2025

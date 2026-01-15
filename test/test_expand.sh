@@ -91,12 +91,18 @@ cat > $fspec <<EOF
 
   abbb("First command"), callback();
   accc("Second command"), callback();
-   x {
+  x {
     b, callback();
     <c:int32>, callback();
    }	     
+   ya; {
+     d        ("A command");
+     e        ("A command");
+     <f:int32>("A variable");
+   }
    za zb zc, callback();
 EOF
+
 
 # Double tab tests
 # CLIGEN_TABMODE_COLUMNS
@@ -123,6 +129,15 @@ expectpart "$(echo "z	" | $cligen_file -t 0 -e -f $fspec 2>&1)" 0 'CLI syntax er
 newtest "cligen z<tab> tabmode:4"
 expectpart "$(echo "z	" | $cligen_file -t 4 -e -f $fspec 2>&1)" 0 "za zb zc" "1 name:za type:string value:za" "2 name:zb type:string value:zb" "3 name:zc type:string value:zc"
 
+# Test of show help strings
+newtest "cligen y<tab> tabmode: 1 no show"
+expectpart "$(echo "y	" | $cligen_file -t 1 -e -f $fspec 2>&1)" 0 "ya " --not-- "d                     A command" "<f>                   A variable"
+
+newtest "cligen y<tab><tab> tabmode: 1 no show"
+expectpart "$(echo "y		" | $cligen_file -t 1 -e -f $fspec 2>&1)" 0 "ya " "d                     A command" "<f>                   A variable"
+
+newtest "cligen y<tab> tabmode: 9 show"
+expectpart "$(echo "y	" | $cligen_file -t 9 -e -f $fspec 2>&1)" 0 "ya " "d                     A command" "<f>                   A variable"
 #----------------------------
 
 # Multi-command expansions

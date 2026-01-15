@@ -828,6 +828,13 @@ cligen_tabmode(cligen_handle h)
  * Example: syntax is 'a b;':
  * 0: gives completion to 'a ' on first TAB and to 'a b ' on second.
  * 1: gives completion to 'a b ' on first TAB.
+ *
+ * CLIGEN_TABMODE_SHOW
+ * 0: Dont  1: show alternatives after completion
+ * Example: syntax is abc {d; e;}
+ * 0: gives completion to 'abc ' on first tab and shows 'd e' on second
+ * 1: gives completion to 'abc ' and shows 'd e' in one go
+ *
  */
 int
 cligen_tabmode_set(cligen_handle h,
