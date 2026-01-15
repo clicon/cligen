@@ -57,11 +57,12 @@
  */
 #define CLIGEN_TABMODE_STEPS    0x04
 
-#include "cligen_result.h"
 /* Dont show alternatives after completion
  * 0: Dont  1: show alternatives / help after completion
  */
 #define CLIGEN_TABMODE_SHOW   0x08
+
+#include "cligen_result.h"
 
 /*
  * Types
