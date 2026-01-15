@@ -7,7 +7,7 @@
 %
 % Title
 %
-\title {CLIgen Manual\\ {\small CLIgen version 7.0}}
+\title {CLIgen Manual\\ {\small CLIgen version 7.6}}
 
 \author{Olof Hagsand}
 %
@@ -18,7 +18,7 @@
 
 % If you want a logo
 % \lhead{\includegraphics[height=9mm]{../../doc/logga_crop.png}}
-\date{May, 2024}
+\date{November, 2025}
 \maketitle
 \setcounter{tocdepth}{2}
 \tableofcontents
@@ -307,210 +307,27 @@ semantics for a global variable.
 \subsection{Trees}
 
 CLIgen can handle multiple syntax trees. A user can switch between
-trees (i.e., change CLI mode), or extend a tree with a sub-tree (using
-tree-references). 
+trees, or extend a tree with a sub-tree (using tree-references).
 
-A tree is named using a special global {\tt treename} assignment. The
-following example shows two syntax trees: {\tt tree1} and {\tt tree2}.
+A simple example of referencing another syntax tree ``tree1'' is the following:
+\begin{verbatim}
+  subtree @tree1;
+\end{verbatim}
+
+where ``tree1'' may have the following definition:
 \begin{verbatim}
   treename="tree1";
     x{
       y;
     }
-  treename="tree2";
-    z{
-      x;
-    }
 \end{verbatim}
 
-When parsing the syntax above, a CLIgen tree-list consisting of two
-trees will be created. By default, the first parsed tree is the active tree.
-
+A valid CLI command could be:
 \begin{verbatim}
- changetree <tree:string>, changetree("tree2");
+ cli> subtree x y
 \end{verbatim}
 
-Note that the {\tt changetree} callback needs to be implemented as a
-callback function in C to actually change the syntax mode. Such a
-callback is implemented in the tutorial and is also described in more
-detail in Section~\ref{sec:api}.
-
-Note, the {\tt treename} feature is not available in Clixon, only in stand-alone CLIgen.
-
-\subsubsection{Tree references}
-
-A CLIgen syntax tree may reference another tree as an extension using
-the reference operator {\tt @}.
-
-The following specification references itself:
-\begin{verbatim}
-  treename="T";
-  foo;
-  recurse @T;
-\end{verbatim}
-which means that the following sentences are valid commands:
-\begin{verbatim}
-  foo
-  recurse foo
-  recurse recurse foo
-  recurse recurse recurse foo
-\end{verbatim}
-and so on.
-
-Callbacks can be parametrized when using tree references. This means
-that you can specify which callback to use in the reference of the
-tree. This means that different callbacks can be called depending on
-how you reference the tree.
-
-The following examples shows a main tree and a sub-tree. 
-
-\begin{verbatim}
-  treename="main";
-  add @sub, addfn();
-  del @sub, delfn();
-  treename="sub";
-  x{
-    y, fn("a1");
-  }
-\end{verbatim}
-
-The main tree references the subtree twice. In the first reference,
-{\tt addfn("a1")} is called when invoking the command {\tt add x y}. In the
-second instance {\tt delfn("a")} is invoked when invoking the command {\tt del x y}.
-
-It may be useful with functional substitution as shown above when the
-subtree represents a large common data-modeling sub-tree, where the
-data (x y) is the same but the operation(add/del) is different.
-
-\subsubsection{Tree reference callback parameters}
-
-In the example above, the tree reference have no parameters ({\tt add();} and the local parameter. If instead the reference
-does have some parameters a special parameter appending mechanism is used.
-
-Assume the following tree spec:
-
-\begin{verbatim}
-  treename="main";
-  add @sub, addfn("x1","x2");
-  treename="sub";
-  x{
-    y, fn("a1","a2");
-  }
-\end{verbatim}
-
-The {\tt addfn()} callback is the called with the local parameters first, then the ones in the reference.
-
-In other words, if the user types {\tt add x y}, then the following function call is made: {\tt addfn("a1", "a2", "x1", "x2")}. You need to ensure that {\tt addfn()} can handle these arguments. 
-
-The reason for this mechanism is the autocli in Clixon, where it is used to generate a CLI from a YANG specification.
-
-\subsubsection{Filtering trees}
-
-When referencing a tree with the {\tt @tree} syntax, it is possible to filter the tree by removing
-objects with specific labels. This can be useful if multiple references to a tree is made, but
-the instanciations differ.
-
-For example, assume the following subtree ``T'', where one leaf is labelled with flag ``local'':
-\begin{verbatim}
-  x {
-    y, local;
-    z;
-  }
-\end{verbatim}
-
-Then this tree can be referenced as: {\tt @T, @remove:local;} in which case the expanded tree has removed all tree nodes labelled with ``local'' as follows:
-\begin{verbatim}
-  x {
-    z;
-  }
-\end{verbatim}
-
-\subsubsection{Direct sub-expansion}
-
-If a treeref statement is placed directly on the top level of the
-expanded tree, it will also be expanded.
-\begin{verbatim}
-  treename="main";
-  add @sub;
-  treename="sub";
-  @extra
-  x;
-  treename="extra";
-  y;  
-\end{verbatim}
-
-which means that both {\tt add x} and {\tt add y} are valid statements.
-
-\subsubsection{Tree workpoints}
-
-When using tree references it is possible to set an active {\em
-  workpoint} for that tree, which can change dynamically. In this way,
-a user can navigate up and down the tree in its references for it. This
-is useful when implementing automatic modes for example.
-
-To achieve this, a couple of C-API callbacks are available:
-\begin{itemize}
-  \item {\tt cligen\_wp\_set(<tree>)} - Set the workpoint
-  \item {\tt cligen\_wp\_show(<tree>)} - Show the tree at the active workpoint
-  \item {\tt cligen\_wp\_up(<tree>)} - Navigate up in the tree
-  \item {\tt cligen\_wp\_top(<tree>)} - Navigate to top of tree
-\end{itemize}
-
-Assume first a tree ``T'' is created that will be navigated in using workpoints:
-\begin{verbatim}
-     treename="T";
-     a; {
-       b <v:int32>; {
-         d;
-       }
-       c;
-     }
-\end{verbatim}
-
-Then, some main syntax for navigating in three is added in the main CLIgen spec:
-
-\begin{verbatim}
-  edit, cligen_wp_set("T");{
-    @T, cligen_wp_set("T");
-  }
-  show, cligen_wp_show("T");
-  up, cligen_wp_up("T");
-  top, cligen_wp_top("T");
-\end{verbatim}
-
-It is now possible to traverse the tree using the ``T'' tree as the following example illustrates (the prompt shows the location of the active workpoint):
-\begin{verbatim}
-     cli:/> show 
-     a;{
-        b <v>;{
-              d;
-           }
-        c;
-     }
-     cli:/> edit a 
-     cli:/a> show 
-     b <v>;{
-           d;
-        }
-     c;
-     cli:/a> edit b 23
-     cli:/a/b/23> show 
-     d;
-     cli:/a/b/23> up
-     cli:/a/b> show 
-     <v>;{
-        d;
-     }
-     cli> top
-     cli:/> show 
-     a;{
-        b <v>;{
-              d;
-           }
-        c;
-     }
-     cli:/> 
-\end{verbatim}
+Trees are described in more detail in Section~\ref{sec:trees}.
 
 \subsection{Output pipes}
 \label{sec:pipes}
@@ -559,7 +376,7 @@ Pipe trees also work for sub-trees, ie a subtree referenced by the top-level tre
 
 \subsection{Sets}
 \label{sec:sets}
-By default, listing several commands within {\tt \{\}} gives a choice of commands, but if instead commands are within the set operator {\tt @\{\}}, the commands can be given on any order, and at least once. For example:
+By default, listing several commands within {\tt \{\}} gives a choice of commands, but if instead commands are within the set operator {\tt @\{\}}, the commands can be given on any order, and at most once. For example:
 \begin{verbatim}
   x @{
     a;
@@ -1048,7 +865,6 @@ aa bb{
 \end{verbatim}
 which is similar to the syntax used in Section~\ref{sec:syntax}.
 
-
 \subsection{Caveat}
 
 Note that the choice, groupings and optional elements are only
@@ -1077,6 +893,237 @@ As an assistant, you can use the {\tt -p} option to {\tt cligen\_file} to see wh
 
 As an alternative solution, you can use the set mechanism as described in Sections~\ref{sec:sets}.
 
+\section{Trees}
+\label{sec:trees}
+
+CLIgen can handle multiple syntax trees. A user can switch between
+trees (i.e., change CLI mode), or extend a tree with a sub-tree (using
+tree-references).
+
+A tree is named using a special global {\tt treename} assignment. The
+following example shows two syntax trees: {\tt tree1} and {\tt tree2}.
+\begin{verbatim}
+  treename="tree1";
+    x{
+      y;
+    }
+  treename="tree2";
+    z{
+      x;
+    }
+\end{verbatim}
+
+When parsing the syntax above, a CLIgen tree-list consisting of two
+trees will be created. By default, the first parsed tree is the active tree.
+
+\begin{verbatim}
+ changetree <tree:string>, changetree("tree2");
+\end{verbatim}
+
+Note that the {\tt changetree} callback needs to be implemented as a
+callback function in C to actually change the syntax mode. Such a
+callback is implemented in the tutorial and is also described in more
+detail in Section~\ref{sec:api}.
+
+Note also that the {\tt treename} feature is not available in Clixon, only in stand-alone CLIgen.
+
+\subsection{Tree references}
+
+A CLIgen syntax tree may reference another tree as an extension using
+the reference operator {\tt @}.
+
+The following specification references itself:
+\begin{verbatim}
+  treename="T";
+  foo;
+  recurse @T;
+\end{verbatim}
+which means that the following sentences are valid commands:
+\begin{verbatim}
+  foo
+  recurse foo
+  recurse recurse foo
+  recurse recurse recurse foo
+\end{verbatim}
+and so on.
+
+\section{Tree reference parameters}
+
+A tree reference may be parametrized in a number of ways:
+\begin{enumerate}
+\item Substitute callbacks
+\item Append callback parameters
+\item Add labels
+\item Remove labels
+\end{enumerate}
+
+\subsection{Substitute callbacks}
+
+If a referenced tree has callbacks, those callbacks can be substituted by the calling statement.
+In other words, you can change the callback to use in the reference of the
+tree.
+
+The following examples shows a main tree and a sub-tree where the ``fn'' is substituted by ``addfn'' and ``delfn'' respectively:
+
+\begin{verbatim}
+  treename="main";
+  add @sub, addfn();
+  del @sub, delfn();
+  treename="sub";
+  x{
+    y, fn("a");
+  }
+\end{verbatim}
+
+The main tree references the subtree twice. In the first reference,
+{\tt addfn()} is called when invoking the command {\tt add x y}. In the
+second instance {\tt delfn("a")} is invoked when invoking the command {\tt del x y}.
+
+It may be useful with functional substitution as shown above when the
+subtree represents a large common data-modeling sub-tree, where the
+data (x y) is the same but the operation(add/del) is different.
+
+\subsection{Append callback parameters}
+
+In the example above, the tree reference callback (``addfn()'') have no parameters. However, you can provide parameters in the tree reference that are appended to the actual callback.
+
+In the following example, a ``b'' parameter is provided in the reference:
+\begin{verbatim}
+  treename="main";
+  add @sub, addfn("b");
+
+  treename="sub";
+  x{
+    y, fn("a");
+  }
+\end{verbatim}
+
+The {\tt addfn()} callback is then called with the local parameters first, then the ones in the reference.
+
+In other words, if the user types {\tt add x y}, then {\tt addfn("a", "b")} is called. You need to ensure that {\tt addfn()} can handle these arguments.
+
+Other invocations of the same tree may use other parameters.
+
+\subsection{Labeling}
+
+You may also add labels to a tree reference::
+\begin{verbatim}
+  add @sub, @add:mylabel, addfn("b");
+\end{verbatim}
+
+Such a label may be read by expand function using the C function: {\tt cligen\_labels\_get(h)}
+
+\subsection{Remove labels}
+
+You can also remove existing labels. This can be useful if multiple references to a tree is made, but the instantiations differ.
+
+For example, assume the following subtree ``T'', where one leaf is labelled with flag ``local'':
+\begin{verbatim}
+  x {
+    y, local;
+    z;
+  }
+\end{verbatim}
+
+Then this tree can be referenced as:
+\begin{verbatim}
+  @T, @remove:local;
+\end{verbatim}
+in which case the expanded tree has removed all tree nodes labelled with ``local'' as follows:
+
+\begin{verbatim}
+  x {
+    z;
+  }
+\end{verbatim}
+
+\subsection{Direct sub-expansion}
+
+If a treeref statement is placed directly on the top level of the
+expanded tree, it will also be expanded.
+\begin{verbatim}
+  treename="main";
+  add @sub;
+  treename="sub";
+  @extra
+  x;
+  treename="extra";
+  y;
+\end{verbatim}
+
+which means that both {\tt add x} and {\tt add y} are valid statements.
+
+\subsection{Tree workpoints}
+
+When using tree references it is possible to set an active {\em workpoint}
+for that tree, which can change dynamically. In this way,
+a user can navigate up and down the tree in its references for it. This
+is useful when implementing automatic modes for example.
+
+To achieve this, a couple of C-API callbacks are available:
+\begin{itemize}
+  \item {\tt cligen\_wp\_set(<tree>)} - Set the workpoint
+  \item {\tt cligen\_wp\_show(<tree>)} - Show the tree at the active workpoint
+  \item {\tt cligen\_wp\_up(<tree>)} - Navigate up in the tree
+  \item {\tt cligen\_wp\_top(<tree>)} - Navigate to top of tree
+\end{itemize}
+
+Assume first a tree ``T'' is created that will be navigated in using workpoints:
+\begin{verbatim}
+     treename="T";
+     a; {
+       b <v:int32>; {
+         d;
+       }
+       c;
+     }
+\end{verbatim}
+
+Then, some main syntax for navigating in three is added in the main CLIgen spec:
+
+\begin{verbatim}
+  edit, cligen_wp_set("T");{
+    @T, cligen_wp_set("T");
+  }
+  show, cligen_wp_show("T");
+  up, cligen_wp_up("T");
+  top, cligen_wp_top("T");
+\end{verbatim}
+
+It is now possible to traverse the tree using the ``T'' tree as the following example illustrates (the prompt shows the location of the active workpoint):
+\begin{verbatim}
+     cli:/> show
+     a;{
+        b <v>;{
+              d;
+           }
+        c;
+     }
+     cli:/> edit a
+     cli:/a> show
+     b <v>;{
+           d;
+        }
+     c;
+     cli:/a> edit b 23
+     cli:/a/b/23> show
+     d;
+     cli:/a/b/23> up
+     cli:/a/b> show
+     <v>;{
+        d;
+     }
+     cli> top
+     cli:/> show
+     a;{
+        b <v>;{
+              d;
+           }
+        c;
+     }
+     cli:/>
+\end{verbatim}
+
 \section{API}
 \label{sec:api}
 This section describes C-programming issues, including types, parsing and
@@ -1102,7 +1149,6 @@ Example: get name and type of cligen variable:
   char *name        = cv_name_get(cv);
   enum cv_type type = cv_type_get(cv);
 \end{verbatim}
-
 
 \subsubsection{Types}
 
@@ -1435,7 +1481,7 @@ in the specification is used.
     return 0;
   }
 
-  expandv_cb *
+  expand_cb *
   str2fn(char *name, void *arg, char **error)
   {
      return expand_ifname;
@@ -1445,7 +1491,7 @@ in the specification is used.
   {   
     [...]
     cligen_parse_file(h, f,  "mysyntax", &pt, &globals) < 0)
-    if (cligen_expandv_str2fn(pt, str2fn, NULL) < 0)
+    if (cligen_expand_str2fn(pt, str2fn, NULL) < 0)
       return -1;
     [...]
   }
@@ -1615,36 +1661,37 @@ The full default preference table is as follows:
 \hline
   \textbf{ Type} & \textbf{Preference} \\
 \hline
-command         & $100$  \\
-time            & $74$   \\
-uuid            & $73$   \\
-macaddr         & $72$   \\
-ipv6addr        & $71$   \\
-ipv4addr        & $70$   \\
-decimal64       & $62$   \\
-int8 (range)    & $60$   \\
-uint8 (range)   & $59$   \\
-int16 (range)   & $58$   \\
-uint16 (range)  & $57$   \\
-int32 (range)   & $56$   \\
-uint32 (range)  & $55$   \\
-int64 (range)   & $54$   \\
-uint64 (range)  & $53$   \\
-int8            & $52$   \\
-uint8           & $51$   \\
-int16           & $50$   \\
-uint16          & $49$   \\
-int32           & $48$   \\
-uint32          & $47$   \\
-int64           & $46$   \\
-uint64          & $45$   \\
-url             & $20$   \\
-bool            & $12$   \\
-string (expand) & $8$    \\
-string (regexp) & $7$    \\
-string          & $5$    \\
-command (partial) & $3$ \\
-rest            & $1$    \\
+command           & $100$  \\
+time              & $74$   \\
+uuid              & $73$   \\
+macaddr           & $72$   \\
+ipv6addr          & $71$   \\
+ipv4addr          & $70$   \\
+decimal64         & $62$   \\
+int8 (range)      & $60$   \\
+uint8 (range)     & $59$   \\
+int16 (range)     & $58$   \\
+uint16 (range)    & $57$   \\
+int32 (range)     & $56$   \\
+uint32 (range)    & $55$   \\
+int64 (range)     & $54$   \\
+uint64 (range)    & $53$   \\
+int8              & $52$   \\
+uint8             & $51$   \\
+int16             & $50$   \\
+uint16            & $49$   \\
+int32             & $48$   \\
+uint32            & $47$   \\
+int64             & $46$   \\
+uint64            & $45$   \\
+url               & $20$   \\
+interface         & $14$   \\
+bool              & $12$   \\
+string (expand)   & $10$   \\
+string (regexp)   & $8$    \\
+string            & $6$    \\
+command (partial) & $3$    \\
+rest              & $1$    \\
 \hline
 \end{tabular}
 

@@ -58,7 +58,6 @@
 #define VARIABLE_PRE  '<'
 #define VARIABLE_POST '>'
 
-
 /* Static prototypes */
 static int pt2cbuf(cbuf *cb, parse_tree *pt, int level, int brief);
 
@@ -276,7 +275,9 @@ pt2cbuf(cbuf       *cb,
  * @param[in] f      Output file
  * @param[in] pt     Cligen parse-tree consisting of cg objects and variables
  * @param[in] brief  Print brief output, otherwise clispec parsable format
- *
+ * @retval    0      OK
+ * @retval   -1      Error
+  *
  * The output may not be identical to the input syntax.
  * For example [dd|ee] is printed as:
  *   dd;
@@ -308,6 +309,13 @@ pt_print1(FILE       *f,
     return retval;
 }
 
+/*! Print CLIgen parse-tree to file
+ *
+ * @param[in] f   Output file
+ * @param[in] pt  Cligen parse-tree consisting of cg objects and variables
+ * @retval    0      OK
+ * @retval   -1      Error
+ */
 int
 pt_print(FILE       *f,
          parse_tree *pt)
@@ -475,7 +483,7 @@ cligen_print_trees(FILE         *f,
 
     ph = NULL;
     while ((ph = cligen_ph_each(h, ph)) != NULL) {
-        fprintf(stderr, "%s:\n", cligen_ph_name_get(ph));
+        fprintf(f, "%s:\n", cligen_ph_name_get(ph));
         pt = cligen_ph_parsetree_get(ph);
         if (!brief && pt_print1(f, pt, brief) < 0)
             goto done;

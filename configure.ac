@@ -71,10 +71,11 @@ AC_SUBST(CLIGEN_VERSION_MINOR)
 AC_SUBST(CLIGEN_VERSION_PATCH)
 
 # Use GIT version (what if no git?)
-CLIGEN_VERSION="$(git log --pretty="format:%(describe) %ci" -n1)"
-CLIXON_VERSION_MAJOR="7"
-CLIXON_VERSION_MINOR="1"
-CLIXON_VERSION_PATCH="0"
+CLIGEN_VERSION="$(./scripts/version.sh)"
+CLIGEN_VERSION2=$(echo ${CLIGEN_VERSION} | awk -F- '{print $1}')
+CLIGEN_VERSION_MAJOR=$(echo ${CLIGEN_VERSION2} | awk -F. '{print $1}')
+CLIGEN_VERSION_MINOR=$(echo ${CLIGEN_VERSION2} | awk -F. '{print $2}')
+CLIGEN_VERSION_PATCH=$(echo ${CLIGEN_VERSION2} | awk -F. '{print $3}')
 
 AC_MSG_RESULT(CLIGEN version is $CLIGEN_VERSION)
 

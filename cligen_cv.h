@@ -30,7 +30,6 @@
 
   ***** END LICENSE BLOCK *****
 
-
   CLIgen variables - cgv
   cgv:s are created when parsing an input string as instances of cg_obj variable
   when matching.
@@ -160,10 +159,10 @@ uint8_t cv_dec64_n_set(cg_var *cv, uint8_t x);
 int64_t cv_dec64_i_get(cg_var *cv);
 int64_t cv_dec64_i_set(cg_var *cv, int64_t x);
 
-char   *cv_string_get(cg_var *cv);
+char *cv_string_get(cg_var *cv);
 char   *cv_string_set(cg_var *cv, const char *s0);
 int     cv_string_set_direct(cg_var *cv, char *s);
-char   *cv_strncpy(cg_var *cv, char *s0, size_t n);
+char   *cv_strncpy(cg_var *cv, const char *s0, size_t n);
 struct in_addr *cv_ipv4addr_get(cg_var *cv);
 struct in_addr *cv_ipv4addr_set(cg_var *cv, struct in_addr *addr);
 uint8_t cv_ipv4masklen_get(cg_var *cv);
@@ -172,7 +171,7 @@ struct in6_addr *cv_ipv6addr_get(cg_var *cv);
 uint8_t cv_ipv6masklen_get(cg_var *cv);
 char *cv_mac_get(cg_var *cv);
 unsigned char *cv_uuid_get(cg_var *cv);
-unsigned char *cv_uuid_set(cg_var *cv, unsigned char *u);
+unsigned char *cv_uuid_set(cg_var *cv, const unsigned char *u);
 struct timeval cv_time_get(cg_var *cv);
 struct timeval cv_time_set(cg_var *cv, struct timeval t);
 void *cv_void_get(cg_var *cv);
@@ -188,20 +187,20 @@ char *cv_urluser_set(cg_var *cv, const char *s0);
 char *cv_urlpasswd_get(cg_var *cv);
 char *cv_urlpasswd_set(cg_var *cv, const char *s0);
 
-int parse_int8(char *str, int8_t *val, char **reason);
-int parse_int16(char *str, int16_t *val, char **reason);
-int parse_int32(char *str, int32_t *val, char **reason);
-int parse_int64(char *str, int64_t *val, char **reason);
-int parse_uint8(char *str, uint8_t *val, char **reason);
-int parse_uint16(char *str, uint16_t *val, char **reason);
-int parse_uint32(char *str, uint32_t *val, char **reason);
-int parse_uint64(char *str, uint64_t *val, char **reason);
-int parse_dec64(char *str, uint8_t n, int64_t *dec64_i, char **reason);
-int parse_bool(char *str, uint8_t *val, char **reason);
+int parse_int8(const char *str, int8_t *val, char **reason);
+int parse_int16(const char *str, int16_t *val, char **reason);
+int parse_int32(const char *str, int32_t *val, char **reason);
+int parse_int64(const char *str, int64_t *val, char **reason);
+int parse_uint8(const char *str, uint8_t *val, char **reason);
+int parse_uint16(const char *str, uint16_t *val, char **reason);
+int parse_uint32(const char *str, uint32_t *val, char **reason);
+int parse_uint64(const char *str, uint64_t *val, char **reason);
+int parse_dec64(const char *str, uint8_t n, int64_t *dec64_i, char **reason);
+int parse_bool(const char *str, uint8_t *val, char **reason);
 
 int str2urlproto(const char *str);
 int str2uuid(const char *in, uuid_t u);
-int uuid2str(uuid_t u, char *in, int len);
+int uuid2str(uuid_t u, char *fmt, int len);
 int cligen_tonum(int n, const char *s);
 int str2time(const char *in, struct timeval *tv);
 int time2str(const struct timeval *tv, char *fmt, unsigned len);
@@ -226,7 +225,7 @@ cg_var *cv_dup(cg_var *old);
 int     cv_parse(const char *str, cg_var *cgv);
 int     cv_parse1(const char *str, cg_var *cgv, char **reason); /* better err-handling */
 
-int     cv_validate(cligen_handle h, cg_var *cv, struct cg_varspec *cs, char *cmd, char **reason);
+int     cv_validate(cligen_handle h, cg_var *cv, struct cg_varspec *cs, const char *cmd, char **reason);
 int     cv_reset(cg_var *cgv); /* not free cgv itself */ /* XXX: free_only */
 int     cv_free(cg_var *cv);   /* free cgv itself */
 cg_var *cv_new(enum cv_type type);
@@ -234,4 +233,3 @@ cg_var *cv_new(enum cv_type type);
 size_t  cv_size(cg_var *cv);
 
 #endif /* _CLIGEN_CV_H_ */
-

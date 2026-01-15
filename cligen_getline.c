@@ -41,12 +41,12 @@
 
 /********************* exported variables ********************************/
 
-int (*gl_in_hook)() = NULL;
-int (*gl_out_hook)() = NULL;
-int (*gl_tab_hook)() = NULL;
-int (*gl_qmark_hook)() = NULL;
-int (*gl_susp_hook)() = NULL;
-int (*gl_interrupt_hook)() = NULL;
+int (*gl_in_hook)(void *, const char *) = NULL;
+int (*gl_out_hook)(void *, const char *) = NULL;
+int (*gl_tab_hook)(cligen_handle, int *) = NULL;
+int (*gl_qmark_hook)(cligen_handle, const char *) = NULL;
+int (*gl_susp_hook)(void *, const char *, int, int *) = NULL;
+int (*gl_interrupt_hook)(cligen_handle) = NULL;
 
 /******************** internal interface *********************************/
 
@@ -55,8 +55,7 @@ static void     gl_init1(void);         /* prepare to edit a line */
 static void     gl_cleanup(void);       /* to undo gl_init1 */
 void            gl_char_init(void);     /* get ready for no echo input */
 void            gl_char_cleanup(void);  /* undo gl_char_init */
-static size_t   (*gl_strlen)(const char *) = (size_t(*)())strlen;
-                                        /* returns printable prompt width */
+static size_t   (*gl_strlen)(const char *) = strlen;
 
 static int      gl_addchar(cligen_handle h, int c);     /* install specified char */
 static void     gl_del(cligen_handle h, int loc);       /* del, either left (-1) or cur (0) */
@@ -111,7 +110,6 @@ static int   search_forw_flg = 0; /* search direction flag */
 static int   search_last = 0;     /* last match found */
 
 /* end global variables */
-
 
 /************************ nonportable part *********************************/
 
@@ -274,7 +272,6 @@ int pc_keymap(int c)
 }
 #endif /* MSDOS || __EMX__ || __GO32__ */
 
-
 #if CLIGEN_REGFD
 struct regfd {
     int fd;
@@ -354,7 +351,6 @@ gl_select()
 }
 #endif
 
-
 int
 gl_eof()
 {
@@ -366,7 +362,7 @@ gl_exitchar_add(char c)
 {
     int i;
 
-    for (i=0;sizeof(exitchars);i++)
+    for (i=0; i<sizeof(exitchars); i++)
         if (!exitchars[i]){
             exitchars[i] = c;
             break;
@@ -379,7 +375,7 @@ gl_exitchar(char c)
 {
     int i;
 
-    for (i=0;sizeof(exitchars);i++){
+    for (i=0; i<sizeof(exitchars); i++){
         if (!exitchars[i])
             break;
         if (exitchars[i] == c)
@@ -1275,7 +1271,6 @@ gl_fixup_noscroll(cligen_handle h,
     gl_pos = cursor;
 }
 
-
 /*! Redrawing or moving within line
  *
  * This function is used both for redrawing when input changes or for
@@ -1413,16 +1408,14 @@ gl_fixup(cligen_handle h,
 /******************* strlen stuff **************************************/
 
 void
-gl_strwidth(size_t (*func)())
+gl_strwidth(size_t (*func)(const char *))
 {
     if (func != 0) {
         gl_strlen = func;
     }
 }
 
-
 /******************* Search stuff **************************************/
-
 
 static void
 search_update(cligen_handle h,
@@ -1587,4 +1580,3 @@ search_forw(cligen_handle h,
         gl_putc('\007');
     }
 }
-

@@ -74,4 +74,3 @@ int            co_callback2cbuf(cbuf *cb, cg_callback *cc);
 size_t         co_callback_size(cg_callback *cc);
 
 #endif /* _CLIGEN_CALLBACK_H_ */
-

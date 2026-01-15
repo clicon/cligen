@@ -30,7 +30,6 @@
 
   ***** END LICENSE BLOCK *****
 
-
   Custom file as boilerplate appended by cligen_config.h
 */
 
@@ -39,3 +38,15 @@ typedef struct {int a;} *cligen_handle;
 #else
 typedef void *cligen_handle; /* API */
 #endif
+
+/*! Do not match partial matches of expanded commands
+ *
+ * During command parsing, if a user enters a value that partially matches an existing configured value,
+ * the error is silently discarded.
+ * Example, set a mac-address:
+ * cli> set macaddress 00:11:22:33:44:55
+ * cli> set macaddress 00:
+ * See https://github.com/clicon/cligen/issues/133
+ * Should probably always be set
+ */
+#undef CLIGEN_DONT_MATCH_PARTIAL_EXPANDS

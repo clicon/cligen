@@ -311,8 +311,8 @@ vcprintf(cbuf       *cb,
   * @see cprintf for the generic function
   */
 int
-cbuf_append_str(cbuf *cb,
-                char *str)
+cbuf_append_str(cbuf       *cb,
+                const char *str)
 {
     size_t  len0;
     size_t  len;

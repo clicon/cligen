@@ -192,8 +192,8 @@ transform_var_to_cmd(cg_obj *co,
         }
         co->co_helpstring = helptext;
     }
-    if (co->co_expandv_fn)
-        co->co_expandv_fn = NULL;
+    if (co->co_expand_fn)
+        co->co_expand_fn = NULL;
     if (co->co_expand_fn_str){
         free(co->co_expand_fn_str);
         co->co_expand_fn_str = NULL;
@@ -230,7 +230,7 @@ transform_var_to_cmd(cg_obj *co,
     return 0;
 }
 
-/*! Look up treeref from @<treefer> and return expanded parse-tree
+/*! Look up treeref from @<treeref> and return expanded parse-tree
  *
  * @param[in]  h       Cligen handle
  * @param[in]  co      Cligen treeref object
@@ -253,27 +253,19 @@ tree_resolve(cligen_handle h,
     cg_obj                         *cow;
     cligen_tree_resolve_wrapper_fn *fn = NULL;
     void                           *arg = NULL;
-    int                             ret;
 
     treename = coref->co_command;
     cligen_tree_resolve_wrapper_get(h, &fn, &arg);
     if (fn){
-        if ((ret = fn(h, treename, cvt, arg, &treename2)) < 0)
+        if (fn(h, treename, cvt, arg, &treename2) < 0)
             goto done;
-        if (ret == 0) /* No wrapper use existing */
-            ;
-        else          /* New malloced name */
+        if (treename2)
             treename = treename2;
     }
     /* Get parse tree header */
-    if ((ph = cligen_ph_find(h, treename)) == NULL){
-        if (fn && treename2==NULL){
-            goto ok;
-        }
-        else{
-            fprintf(stderr, "CLIgen tree '%s' not found\n", treename);
-            goto done;
-        }
+    if ((ph = cligen_ph_find(h, treename)) == NULL) {
+        fprintf(stderr, "CLIgen tree '%s' not found\n", treename);
+        goto done;
     }
     /* Get working point of tree, if any,
      * and thereby the original tree (ptref)
@@ -282,7 +274,6 @@ tree_resolve(cligen_handle h,
         *ptrefp = co_pt_get(cow);
     else
         *ptrefp = cligen_ph_parsetree_get(ph);
- ok:
     retval = 0;
  done:
     if (treename2)
@@ -318,6 +309,16 @@ co_find_label_filters(cligen_handle h,
                         goto done;
                     cv_name_set(cv1, filter);
                     cv_bool_set(cv1, 0); /* remove */
+                }
+            }
+            else if (strncmp("@add:", name, strlen("@add:")) == 0){
+                filter = name+strlen("@add:");
+                /* If filter not in cvv, add it */
+                if (cvec_find(cvv, filter) == NULL){
+                    if ((cv1 = cvec_add(cvv, CGV_BOOL)) == NULL)
+                        goto done;
+                    cv_name_set(cv1, filter);
+                    cv_bool_set(cv1, 1); /* add */
                 }
             }
         }
@@ -360,6 +361,10 @@ co_expand_treeref_copy_shallow(cligen_handle h,
     cvec       *cvv = NULL;
     cg_var     *cv;
 
+    if (ptorig == NULL){
+        errno = EINVAL;
+        goto done;
+    }
     coparent = co_up(co0);
     for (i=0; i<pt_len_get(ptorig); i++){
         if ((cot = pt_vec_i_get(ptorig, i)) == NULL)
@@ -413,61 +418,90 @@ co_expand_treeref_copy_shallow(cligen_handle h,
     return retval;
 }
 
-/*! Escape special characters in a string for its usage as CLI keyword.
+/*! Count length of escaped string
  *
- * If no escaping is required, return original string.
- * Otherwise, allocate a new string for escaped result.
- * @param[in]   s    Original string.
- * @retval      e    Escaped string, malloced, must be freed
- * @retval      NULL Error
- *
- **/
-static const char*
-cligen_escape(const char* s)
+ * @param[in]  s    Original string.
+ * @retval     len  Length of string after escaping
+ */
+static int
+cligen_escape_nr(const char *s)
 {
-    char       *copy;
+    int         nr = 0;
+    const char *sp;
+
+    sp = s;
+    while ((sp = strpbrk(sp, "?\\ \t"))) {
+        if (nr == 0)
+            nr = 2; /* escapes */
+        if (!isspace(*sp)) {
+            nr++;
+        }
+        sp++;
+    }
+    return nr;
+}
+
+/*! Check if string needs escaping
+ *
+ * @param[in]  s    Original string.
+ * @retval     1    Yes needs escaping
+ * @retval     0    No does not need escaping
+ * @retval    -1    Error
+ */
+int
+cligen_escape_need(const char *s)
+{
     size_t      len;
-    int         chars_to_escape = 0;
-    const char *spec;
-    int         i, j;
+    int         nr = 0;
 
     if (s == NULL){
         errno = EINVAL;
-        return NULL;
+        return -1;
     }
-    spec = s;
-    //      while ((spec = strpbrk(spec, "?\\"))) {
-    while ((spec = strpbrk(spec, "?\\ \t"))) {
-        if (chars_to_escape == 0) {
-            chars_to_escape = 2; /* escapes */
-        }
-        if (!isspace(*spec)) {
-            chars_to_escape++;
-        }
-        spec++;
-    }
-
-    if (!chars_to_escape) {
-        return s;
-    }
-
+    nr = cligen_escape_nr(s);
+    if (nr == 0)
+        return 0;
     len = strlen(s);
+    if (len > 1 && s[0] == '"' && s[len-1] == '"')
+        return 0;
+    return 1;
+}
 
-    if ((copy = (char*)malloc(len + 1 + chars_to_escape)) == NULL){
+/*! Escape string
+ *
+ * @param[in]  s0   Original string.
+ * @retval     s1   New malloced string
+ * @retval     NULL Error does not need escaping
+ */
+char *
+cligen_escape_do(const char *s0)
+{
+    char  *s1 = NULL;
+    size_t len;
+    int    nr = 0;
+    int    i;
+    int    j;
+
+    if (s0 == NULL){
+        errno = EINVAL;
         return NULL;
     }
-
-    copy[0] = '"';
-    for (i = 0, j = 1; i < len; i++, j++) {
-        if ((s[i] == '?') || (s[i] == '\\')) {
-            copy[j++] = '\\';
-        }
-        copy[j] = s[i];
+    len = strlen(s0);
+    nr = cligen_escape_nr(s0);
+    if ((s1 = (char*)malloc(len + 1 + nr)) == NULL){
+        return NULL;
     }
-    copy[j++] = '"';
-    copy[j] = '\0';
-
-    return copy;
+    j = 0;
+    s1[j++] = '"';
+    for (i = 0; i < len; i++, j++) {
+        if ((s0[i] == '?') || (s0[i] == '\\')) {
+            s1[j++] = '\\';
+        }
+        s1[j] = s0[i];
+    }
+    s1[j++] = '"';
+    s1[j] = '\0';
+    return s1;
 }
 
 /*! Call expand callback and insert expanded commands in place of variable
@@ -487,25 +521,26 @@ cligen_escape(const char* s)
  * @see cligen_eval where cligen callbacks are invoked
  */
 static int
-pt_expand_fnv(cligen_handle h,
-              cg_obj       *co,
-              cg_obj       *co_parent,
-              cvec         *cvv_var,
-              cvec         *cvv_filter,
-              cg_callback  *callbacks,
-              int           transient,
-              parse_tree   *ptn)
+pt_expand_fn(cligen_handle h,
+             cg_obj       *co,
+             cg_obj       *co_parent,
+             cvec         *cvv_var,
+             cvec         *cvv_filter,
+             cg_callback  *callbacks,
+             int           transient,
+             parse_tree   *ptn)
 {
     int         retval = -1;
     cvec       *commands = NULL;
     cvec       *helptexts = NULL;
-    cg_var     *cv = NULL;
+    cg_var     *cv;
     char       *helpstr = NULL;
     cg_obj     *con = NULL;
     int         i;
     const char *value;
     const char *cmd;
     cvec       *cvv1 = NULL; /* Modified */
+    int         co_cvec_add = 0;
 
     if (cvv_var == NULL){
         errno = EINVAL;
@@ -524,14 +559,33 @@ pt_expand_fnv(cligen_handle h,
     if (callbacks && callbacks->cc_cvec){
         cligen_callback_arguments_set(h, callbacks->cc_cvec);
     }
-    if ((*co->co_expandv_fn)(cligen_userhandle(h)?cligen_userhandle(h):h,
-                             co->co_expand_fn_str,
-                             cvv1,
-                             co->co_expand_fn_vec,
-                             commands,
-                             helptexts) < 0)
+    cligen_co_match_set(h, co);     /* For eventual use in callback */
+    /* Temporary add all labels with prefix @add: */
+    cv = NULL;
+    while ((cv = cvec_each(cvv_filter, cv)) != NULL){
+        if (cv_bool_get(cv)){
+            cvec_append_var(co->co_cvec, cv);
+            co_cvec_add++;
+        }
+    }
+    if ((*co->co_expand_fn)(cligen_userhandle(h)?cligen_userhandle(h):h,
+                            co->co_expand_fn_str,
+                            cvv1,
+                            co->co_expand_fn_vec,
+                            commands,
+                            helptexts) < 0)
         goto done;
+    /* Revert @add:s */
+    if (co_cvec_add){
+        for (i=0; i<co_cvec_add; i++){
+            if ((cv = cvec_i(co->co_cvec, cvec_len(co->co_cvec)-1)) != NULL){
+                cv_reset(cv);
+                cvec_del_i(co->co_cvec, cvec_len(co->co_cvec)-1);
+            }
+        }
+    }
     i = 0;
+    cv = NULL;
     while ((cv = cvec_each(commands, cv)) != NULL) {
         if (i < cvec_len(helptexts)){
             if ((helpstr = strdup(cv_string_get(cvec_i(helptexts, i)))) == NULL)
@@ -552,12 +606,8 @@ pt_expand_fnv(cligen_handle h,
             if (co_filter_set(con, cvv_filter) == NULL)
                 goto done;
         value = cv_string_get(cv);
-        if ((cmd = cligen_escape(value)) == NULL)
+        if ((cmd = strdup(value)) == NULL)
             goto done;
-        if (cmd == value) {
-            if ((cmd = strdup(cmd)) == NULL)
-                goto done;
-        }
         /* 'cmd' always points to mutable string, helpstr is consumed */
         if (transform_var_to_cmd(con, (char*)cmd, helpstr) < 0){
             helpstr = NULL;
@@ -629,12 +679,13 @@ pt_expand_choice(cg_obj       *co,
 
 /*! Check if label is filtered in co
  *
- * @retval    0   No, label is not in co_filter, keep it
  * @retval    1   Yes, it is filtered, remove it
+ * @retval    0   No, label is not in co_filter, keep it
+ * @see co_filter_bool
  */
 int
-co_isfilter(cvec *cvv_filter,
-            char *label)
+co_isfilter(cvec       *cvv_filter,
+            const char *label)
 {
     cg_var *cv = NULL;
     char   *name;
@@ -642,8 +693,29 @@ co_isfilter(cvec *cvv_filter,
     /* use filter cache?
      */
     while ((cv = cvec_each(cvv_filter, cv)) != NULL){
-        if ((name = cv_name_get(cv)) != NULL && strcmp(cv_name_get(cv), label) == 0)
+        if ((name = cv_name_get(cv)) != NULL && strcmp(name, label) == 0)
             return 1;
+    }
+    return 0;
+}
+
+/*! Check if filter label is set
+ *
+ * @retval    1   Yes, it exists and is true
+ * @retval    0   No, it does not exist, or it exists but is false
+ * @see co_isfilter
+ */
+static int
+co_filter_bool(cvec       *cvv_filter,
+               const char *label)
+{
+    cg_var *cv = NULL;
+    char   *name;
+
+    while ((cv = cvec_each(cvv_filter, cv)) != NULL){
+        if ((name = cv_name_get(cv)) != NULL && strcmp(name, label) == 0){
+            return cv_bool_get(cv);
+        }
     }
     return 0;
 }
@@ -706,7 +778,7 @@ pt_expand1_co(cligen_handle h,
      * commands in place of the variable
      */
     else if (co->co_type == CO_VARIABLE &&
-             co->co_expandv_fn != NULL){
+             co->co_expand_fn != NULL){
         /* If I add conditional here, you need to explicitly have a
          * a "free" variable expression, not just expands.
          * eg (<v:int expand_dbvar()>|<v:int>)
@@ -716,14 +788,21 @@ pt_expand1_co(cligen_handle h,
          * this iteration and if not add it?
          */
         if (expandvar){
-            if (pt_expand_fnv(h, co, NULL,
-                              cvv_var,
-                              cvv_filter,
-                              callbacks,
-                              transient,
-                              ptn) < 0)
+            if (pt_expand_fn(h, co, NULL,
+                             cvv_var,
+                             cvv_filter,
+                             callbacks,
+                             transient,
+                             ptn) < 0)
                 goto done;
         }
+    }
+    else if (co->co_type == CO_VARIABLE &&
+             co->co_expand_fn == NULL &&
+             expandvar &&
+             co_filter_bool(cvv_filter, "ac-strict-expand")){
+        /* Dont show generic variable if strict-expand and there are expand rules */
+        goto ok;
     }
     else{
         /* Copy original cg_obj to shadow list*/
@@ -919,7 +998,7 @@ pt_expand(cligen_handle h,
                     (cop = co->co_prev) != NULL &&
                     cop->co_callbacks &&
                     co_pipe != NULL){
-                    if (co0->co_callbacks){
+                    if (co0 && co0->co_callbacks){
                         if (co_callback_copy(co0->co_callbacks, &co_pipe->co_callbacks) < 0)
                             goto done;
                     }
@@ -949,7 +1028,6 @@ pt_expand(cligen_handle h,
 
 /*! Go through tree and clean & delete all extra memory from pt_expand and pt_expand_treeref
  *
- * More specifically, delete all co_values and co_pt_exp and expanded subtrees co_ref
  * @param[in] h    CLIgen handle
  * @param[in] pt   Parsetree
  * @retval    0    OK

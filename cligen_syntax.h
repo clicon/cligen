@@ -47,21 +47,24 @@
  */
 
 /* Map function names as strings to cligen vector function callback */
-typedef cgv_fnstype_t *(cgv_str2fn_t)(char *str, void *arg, char **err);
+typedef cgv_fnstype_t *(cgv_str2fn_t)(const char *str, void *arg, char **err);
 
 /* Map function names as strings to CLIgen expand callback */
-typedef expandv_cb *(expandv_str2fn_t)(char *str, void *arg, char **err);
+typedef expand_cb *(expand_str2fn_t)(const char *str, void *arg, char **err);
+#if 1  // Backward-compatible
+typedef expand_str2fn_t expandv_str2fn_t;
+#endif
 
 /* Map function names as strings to CLIgen variable translate functions */
-typedef translate_cb_t *(translate_str2fn_t)(char *str, void *arg, char **err);
+typedef translate_cb_t *(translate_str2fn_t)(const char *str, void *arg, char **err);
 
 /*
  * Prototypes
  */
 int
 clispec_parse_str(cligen_handle  h,
-                  char          *str,
-                  char          *name,
+                  const char    *str,
+                  const char    *name,
                   char          *treename,
                   parse_tree    *pt,
                   cvec          *globals);
@@ -74,11 +77,14 @@ clispec_parse_file(cligen_handle h,
                    cvec         *globals);
 
 int cligen_callbackv_str2fn(parse_tree *pt, cgv_str2fn_t *str2fn, void *arg);
-int cligen_expandv_str2fn(parse_tree *pt, expandv_str2fn_t *str2fn, void *arg);
+int cligen_expand_str2fn(parse_tree *pt, expand_str2fn_t *str2fn, void *arg);
 int cligen_translate_str2fn(parse_tree *pt, translate_str2fn_t *str2fn, void *arg);
 int cligen_parse_debug(int d);
 int cligen_alias_call(cligen_handle h, cvec *cvv, cvec *argv);
-int cligen_alias_add(cligen_handle h, char *phname, char *name, char *helpstr, char *command, cgv_fnstype_t *callback);
+int cligen_alias_add(cligen_handle h, const char *phname, const char *name, const char *helpstr, const char *command, cgv_fnstype_t *callback);
+
+#if 1  // Backward-compatible
+#define cligen_expandv_str2fn(p, s, a) cligen_expand_str2fn((p), (s), (a))
+#endif
 
 #endif /* _CLIGEN_SYNTAX_H_ */
-

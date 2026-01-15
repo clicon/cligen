@@ -199,9 +199,9 @@ pipe_shell_fn(cligen_handle h,
  * Note, the syntax need to something like: "a{help}, callback(42)"
  */
 cgv_fnstype_t *
-str2fn(char  *name,
-       void  *arg,
-       char **error)
+str2fn(const char *name,
+       void       *arg,
+       char      **error)
 {
     *error = NULL;
     if (strcmp(name, "callback") == 0)
@@ -250,10 +250,10 @@ cli_expand_cb(cligen_handle h,
 
 /*! Trivial function translator/mapping function that just assigns same callback
  */
-static expandv_cb *
-str2fn_exp(char  *name,
-           void  *arg,
-           char **error)
+static expand_cb *
+str2fn_exp(const char *name,
+           void       *arg,
+           char      **error)
 {
     return cli_expand_cb;
 }
@@ -384,14 +384,13 @@ main(int   argc,
         goto done;
     if (clispec_parse_file(h, f, filename?filename:"stdin", NULL, NULL, globals) < 0)
         goto done;
-
     ph = NULL;
     while ((ph = cligen_ph_each(h, ph)) != NULL){
         if ((pt = cligen_ph_parsetree_get(ph)) != NULL){     /* map functions */
             if (cligen_callbackv_str2fn(pt, str2fn, NULL) < 0)   /* callback */
                 goto done;
             if (set_expand &&
-                cligen_expandv_str2fn(pt, str2fn_exp, NULL) < 0) /* expand */
+                cligen_expand_str2fn(pt, str2fn_exp, NULL) < 0) /* expand */
                 goto done;
         }
     }
@@ -408,17 +407,22 @@ main(int   argc,
     if ((str = cvec_find_str(globals, "mode")) != NULL)
         cligen_ph_active_set_byname(h, str);
     cvec_free(globals);
-    if (print_syntax){
-        pt_print1(stdout, pt, 0);
-        fflush(stdout);
-    }
-    if (dump_syntax){
-        uint64_t nr = 0;
-        size_t sz = 0;
-        pt_stats(pt, &nr, &sz);
-        fprintf(stdout, "nr:%" PRIu64 ", size:%zu\n", nr, sz);
-        pt_dump(stdout, pt);
-        fflush(stdout);
+    ph = NULL;
+    while ((ph = cligen_ph_each(h, ph)) != NULL){
+        if ((pt = cligen_ph_parsetree_get(ph)) != NULL){     /* map functions */
+            if (print_syntax){
+                pt_print1(stdout, pt, 0);
+                fflush(stdout);
+            }
+            if (dump_syntax){
+                uint64_t nr = 0;
+                size_t sz = 0;
+                pt_stats(pt, &nr, &sz);
+                fprintf(stdout, "nr:%" PRIu64 ", size:%zu\n", nr, sz);
+                pt_dump(stdout, pt);
+                fflush(stdout);
+            }
+        }
     }
     if (!once && cligen_loop(h) < 0)
         goto done;

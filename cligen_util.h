@@ -32,7 +32,6 @@
 
   ***** END LICENSE BLOCK *****
 
-
   This file includes utility functions (good-to-have) for CLIgen applications
  */
 

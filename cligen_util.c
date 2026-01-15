@@ -67,8 +67,8 @@
  * @param[in]   cvv  cligen variable vector
  * @param[in]   name Name to set (or NULL)
  * @param[val]  val  String value
- * @retval  0  OK
- * @retval -1  Error
+ * @retval      0    OK
+ * @retval     -1    Error
  */
 int
 cvec_add_string(cvec       *cvv,

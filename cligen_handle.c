@@ -165,6 +165,7 @@ cligen_init(void)
     ch->ch_magic = CLIGEN_MAGIC;
     ch->ch_tabmode = 0x0; /* see CLIGEN_TABMODE_* */
     ch->ch_delimiter = ' ';
+    ch->ch_spipe = -1;
     h = (cligen_handle)ch;
     cligen_prompt_set(h, CLIGEN_PROMPT_DEFAULT);
     /* Only if stdin and stdout refers to a terminal make win size check */
@@ -313,7 +314,7 @@ cligen_prompt(cligen_handle h)
  */
 int
 cligen_prompt_set(cligen_handle h,
-                  char         *prompt)
+                  const char   *prompt)
 {
     struct cligen_handle *ch = handle(h);
 
@@ -396,7 +397,7 @@ cligen_treename_keyword(cligen_handle h)
  */
 int
 cligen_treename_keyword_set(cligen_handle h,
-                            char         *treename)
+                            const char   *treename)
 {
     struct cligen_handle *ch = handle(h);
 
@@ -412,8 +413,8 @@ cligen_treename_keyword_set(cligen_handle h,
 
 /*! Return CLIgen object that matched in the current callback.
  *
- *  After an evaluation when calling a callback, a node has been matched in the
- * current parse-tree. This matching node is returned (and set) here.
+ * After an evaluation when calling a callback, a node has been matched in the
+ * current parse-tree. This matching node is returned here.
  * @param[in] h       CLIgen handle
  */
 cg_obj *
@@ -424,7 +425,9 @@ cligen_co_match(cligen_handle h)
     return ch->ch_co_match;
 }
 
-/*!
+/*! Set CLIgen object to use in the current callback.
+ *
+ * It can be useful for callbacks to know which cligen-object is matched
  * @param[in] h       CLIgen handle
  */
 int
@@ -474,7 +477,8 @@ cligen_callback_arguments_set(cligen_handle h,
  *   return 0;
  * }
  * @endcode
- * @param[in] h       CLIgen handle
+ * @param[in] h   CLIgen handle
+ * @retval    fn  Name of function that was called in currently active callback
  */
 char *
 cligen_fn_str_get(cligen_handle h)
@@ -487,11 +491,13 @@ cligen_fn_str_get(cligen_handle h)
 /*! Set callback function name string
  *
  * @param[in] h       CLIgen handle
- * @param[in] fn_str  Name of function that was called in this callback
+ * @param[in] fn_str  Name of function that was called in currently active callback
+ * @retval    0       OK
+ * @retval   -1       Error
  */
 int
 cligen_fn_str_set(cligen_handle h,
-                  char         *fn_str)
+                  const char   *fn_str)
 {
     struct cligen_handle *ch = handle(h);
 
@@ -503,6 +509,35 @@ cligen_fn_str_set(cligen_handle h,
         if ((ch->ch_fn_str = strdup(fn_str)) == NULL)
             return -1;
     }
+    return 0;
+}
+
+/*! Get socket of active output pipe
+ *
+ * @param[in] h   CLIgen handle
+ * @retval    s   Socket, -1 means not set
+ */
+int
+cligen_spipe_get(cligen_handle h)
+{
+    struct cligen_handle *ch = handle(h);
+
+    return ch->ch_spipe;
+}
+
+/*! Set socket of active output pipe
+ *
+ * @param[in]  h  CLIgen handle
+ * @param[in]  s  Socket, -1 means not set
+ * @retval     0  OK
+ */
+int
+cligen_spipe_set(cligen_handle h,
+                 int           s)
+{
+    struct cligen_handle *ch = handle(h);
+
+    ch->ch_spipe = s;
     return 0;
 }
 
@@ -636,8 +671,8 @@ cligen_terminal_width_set(cligen_handle h,
 /*! Get cligen/getline UTF-8 experimental mode
  *
  * @param[in] h       CLIgen handle
- * @retval    0       UTF-8 mode disabled
  * @retval    1       UTF-8 mode enabled
+ * @retval    0       UTF-8 mode disabled
  */
 int
 cligen_utf8_get(cligen_handle h)
@@ -648,8 +683,8 @@ cligen_utf8_get(cligen_handle h)
 /*! Set cligen/getline UTF-8 experimental mode
  *
  * @param[in] h       CLIgen handle
- * @retval    0       UTF-8 mode disabled
  * @retval    1       UTF-8 mode enabled
+ * @retval    0       UTF-8 mode disabled
  */
 int
 cligen_utf8_set(cligen_handle h,
@@ -661,8 +696,8 @@ cligen_utf8_set(cligen_handle h,
 /*! Get line scrolling mode
  *
  * @param[in] h       CLIgen handle
- * @retval    0       Line scrolling off
  * @retval    1       Line scrolling on
+ * @retval    0       Line scrolling off
  */
 int
 cligen_line_scrolling(cligen_handle h)
@@ -692,8 +727,8 @@ cligen_line_scrolling_set(cligen_handle h,
  * This only applies if you have really long help strings, such as when generating them from a
  * spec.
  * @param[in] h       CLIgen handle (dummy, need to be called where h is NULL)
- * @retval    0       Do not truncate help string on right margin (wrap long help lines)
  * @retval    1       Truncate help string on right margin (do not wrap long help lines)
+ * @retval    0       Do not truncate help string on right margin (wrap long help lines)
  * @see print_help_line
  */
 int
@@ -804,6 +839,13 @@ cligen_tabmode(cligen_handle h)
  * Example: syntax is 'a b;':
  * 0: gives completion to 'a ' on first TAB and to 'a b ' on second.
  * 1: gives completion to 'a b ' on first TAB.
+ *
+ * CLIGEN_TABMODE_SHOW
+ * 0: Dont  1: show alternatives after completion
+ * Example: syntax is abc {d; e;}
+ * 0: gives completion to 'abc ' on first tab and shows 'd e' on second
+ * 1: gives completion to 'abc ' and shows 'd e' in one go
+ *
  */
 int
 cligen_tabmode_set(cligen_handle h,
@@ -1001,8 +1043,8 @@ cligen_userdata_set(cligen_handle h,
 /*! Get regex engine / method
  *
  * @param[in] h   CLIgen handle
- * @retval    0   Posix regex
  * @retval    1   XSD Libxml2 regex
+ * @retval    0   Posix regex
  */
 int
 cligen_regex_xsd(cligen_handle h)
@@ -1026,7 +1068,6 @@ cligen_regex_xsd_set(cligen_handle h,
     ch->ch_regex_xsd = mode;
     return 0;
 }
-
 
 static int _getline_bufsize = GETLINE_BUFLEN_DEFAULT;
 static int _getline_killbufsize = GETLINE_BUFLEN_DEFAULT;
@@ -1186,6 +1227,8 @@ cligen_delimiter_set(cligen_handle h,
 /*! Get preference mode, return all with same pref(ambiguos) or first (1)
  *
  * @param[in] h      CLIgen handle
+ * @retval    3      Non-terminal+terminal
+ * @retval    2      Non-terminal first match
  * @retval    1      Preference mode is set (return first)
  * @retval    0      Preference mode is not set (ambiguous)
  */
@@ -1243,8 +1286,8 @@ cligen_preference_mode_set(cligen_handle h,
 /*! Get status of string case compare
  *
  * @param[in] h   CLIgen handle
- * @retval    0   Case-sensitive, ie aA != aa
  * @retval    1   Ignore case, ie aA == aa
+ * @retval    0   Case-sensitive, ie aA != aa
  */
 int
 cligen_caseignore_get(cligen_handle h)
@@ -1277,8 +1320,8 @@ cligen_caseignore_set(cligen_handle h,
  * If 1, expanded string matching keywords
  *
  * @param[in] h   CLIgen handle
- * @retval    0   cvv0 is original
  * @retval    1   cvv0 is expanded
+ * @retval    0   cvv0 is original
  * @see cvec_cvv0expand
  */
 int

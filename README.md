@@ -61,5 +61,3 @@ that the above copyright notices appear in all copies and that both the
 copyright notice and this permission notice appear in supporting
 documentation.  This software is provided "as is" without express or
 implied warranty.
-
-

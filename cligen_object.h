@@ -37,6 +37,42 @@
 
 #define CLIGEN_DELIMITERS " \t"
 #define CLIGEN_QUOTES     "\""
+#define CLIGEN_OPERATORS  "|"
+
+/* CLIgen preferences, see CLIgen tutorial appendix D, higher is "better"
+ */
+#define COV_PREF_ERROR           0
+#define COV_PREF_REST            1
+#define COV_PREF_COMMAND_PARTIAL 3
+#define COV_PREF_STRING          6
+#define COV_PREF_STRING_REGEXP   8  /* Needs some slack to next for multiple matches */
+#define COV_PREF_STRING_EXPAND  14
+#define COV_PREF_BOOL           16
+#define COV_PREF_INTERFACE      18
+#define COV_PREF_URL            20
+#define COV_PREF_UINT64         45
+#define COV_PREF_INT64          (COV_PREF_UINT64+1)
+#define COV_PREF_UINT32         (COV_PREF_UINT64+2)
+#define COV_PREF_INT32          (COV_PREF_UINT64+3)
+#define COV_PREF_UINT16         (COV_PREF_UINT64+4)
+#define COV_PREF_INT16          (COV_PREF_UINT64+5)
+#define COV_PREF_UINT8          (COV_PREF_UINT64+6)
+#define COV_PREF_INT8           (COV_PREF_UINT64+7)
+#define COV_PREF_UINT64_RANGE   45
+#define COV_PREF_INT64_RANGE    (COV_PREF_UINT64_RANGE+1)
+#define COV_PREF_UINT32_RANGE   (COV_PREF_UINT64_RANGE+2)
+#define COV_PREF_INT32_RANGE    (COV_PREF_UINT64_RANGE+3)
+#define COV_PREF_UINT16_RANGE   (COV_PREF_UINT64_RANGE+4)
+#define COV_PREF_INT16_RANGE    (COV_PREF_UINT64_RANGE+5)
+#define COV_PREF_UINT8_RANGE    (COV_PREF_UINT64_RANGE+6)
+#define COV_PREF_INT8_RANGE     (COV_PREF_UINT64_RANGE+7)
+#define COV_PREF_DECIMAL64      62
+#define COV_PREF_IPV4ADDR       70
+#define COV_PREF_IPV6ADDR       71
+#define COV_PREF_MACADDR        72
+#define COV_PREF_UUID           73
+#define COV_PREF_TIME           75
+#define COV_PREF_COMMAND        100
 
 /*
  * Parse tree nodes. The different types are associated to
@@ -47,7 +83,7 @@ enum cg_objtype{
   CO_COMMAND,   /* Simple string parsing */
   CO_VARIABLE,  /* Parse as type eg int */
   CO_REFERENCE, /* Symbolic reference to other tree */
-  CO_EMPTY       /* No subtree, indicates a callback (used to be empty) */
+  CO_EMPTY      /* No subtree, indicates a callback (used to be empty) */
 };
 
 /*
@@ -59,13 +95,17 @@ enum cg_objtype{
            1 if did not handle expand
           -1 on error.
 */
-typedef int (expandv_cb)(cligen_handle h,       /* handler: cligen or userhandle */
-                         char         *name,    /* name of this function (in text) */
-                         cvec         *cvv,     /* vars vector of values in command */
-                         cvec         *argv,    /* argument vector given to callback */
-                         cvec         *commands,/* vector of commands */
-                         cvec         *helptexts /* vector of help-texts */
-                             );
+typedef int (expand_cb)(cligen_handle h,       /* handler: cligen or userhandle */
+                        char         *name,    /* name of this function (in text) */
+                        cvec         *cvv,     /* vars vector of values in command */
+                        cvec         *argv,    /* argument vector given to callback */
+                        cvec         *commands,/* vector of commands */
+                        cvec         *helptexts /* vector of help-texts */
+                        );
+
+#if 1  // XXX backward-compatible
+typedef expand_cb expandv_cb;
+#endif
 
 /*! Callback for translating a variable,
  *
@@ -78,7 +118,7 @@ typedef int (translate_cb_t)(cligen_handle h, cg_var *cv);
 
 /*! Cligen ^Z suspension callback
  */
-typedef int (cligen_susp_cb_t)(void *h, char *, int, int *);
+typedef int (cligen_susp_cb_t)(void *h, const char *, int, int *);
 
 /*! Cligen ^C interrupt callback
  */
@@ -95,7 +135,7 @@ struct cg_varspec{
     enum cv_type    cgs_vtype;         /* its type */
     char           *cgs_show;          /* help text of variable */
     char           *cgs_expand_fn_str; /* expand callback string */
-    expandv_cb     *cgs_expandv_fn;    /* expand callback see pt_expand */
+    expand_cb      *cgs_expand_fn;     /* expand callback see pt_expand */
     cvec           *cgs_expand_fn_vec; /* expand callback argument vector */
     char           *cgs_translate_fn_str; /* translate function string */
     translate_cb_t *cgs_translate_fn;  /* variable translate function */
@@ -156,12 +196,12 @@ struct cg_obj_common{
     char               *coc_helpstring; /* String of CLIgen helptexts */
     uint32_t            coc_flags;     /* General purpose flags, see CO_FLAGS_HIDE and others above */
     struct cg_obj      *coc_ref;       /* Ref to original (if this is expanded)
-                                       * Typical from expanded command to original variable
-                                       */
+                                        * Typical from expanded command to orig variable
+                                        */
     struct cg_obj      *coc_treeref_orig; /* Ref to original (if this is a tree reference)
-                                          * Only set in co_copy
-                                          */
+                                          * Only set in co_copy */
     char               *coc_value;     /* Expanded value can be a string with a constant. */
+
 };
 
 /*! cligen gen object is a parse-tree node. A cg_obj is either a command, a variable or a tree reference
@@ -214,7 +254,10 @@ typedef struct cg_obj cg_obj;
 #define co_vtype         u.cou_var.cgs_vtype
 #define co_show          u.cou_var.cgs_show
 #define co_expand_fn_str u.cou_var.cgs_expand_fn_str
-#define co_expandv_fn    u.cou_var.cgs_expandv_fn
+#define co_expand_fn     u.cou_var.cgs_expand_fn
+#if 1 // backward compatible
+#define co_expandv_fn    co_expand_fn
+#endif
 #define co_expand_fn_vec u.cou_var.cgs_expand_fn_vec
 #define co_translate_fn_str u.cou_var.cgs_translate_fn_str
 #define co_translate_fn  u.cou_var.cgs_translate_fn
@@ -245,11 +288,11 @@ int         co_flags_get(cg_obj *co, uint32_t flag);
 int         co_sets_get(cg_obj *co);
 void        co_sets_set(cg_obj *co, int sets);
 char       *co_prefix_get(cg_obj *co);
-int         co_prefix_set(cg_obj *co, char *prefix);
+int         co_prefix_set(cg_obj *co, const char *prefix);
 cvec       *co_filter_set(cg_obj *co, cvec *cvv);
 size_t      co_size(enum cg_objtype type);
 cg_obj     *co_new_only(enum cg_objtype type);
-cg_obj     *co_new(char *cmd, cg_obj *prev);
+cg_obj     *co_new(const char *cmd, cg_obj *prev);
 cg_obj     *cov_new(enum cv_type cvtype, cg_obj *prev);
 int         co_pref(cg_obj *co, int exact);
 int         co_copy(cg_obj *co, cg_obj *parent, uint32_t flags, cg_obj **conp);
@@ -258,8 +301,8 @@ int         co_eq(cg_obj *co1, cg_obj *co2);
 int         co_free(cg_obj *co, int recursive);
 cg_obj     *co_insert1(parse_tree *pt, cg_obj *co, int recursive);
 cg_obj     *co_insert(parse_tree *pt, cg_obj *co);
-cg_obj     *co_find_one(parse_tree *pt, char *name);
-int         co_value_set(cg_obj *co, char *str);
+cg_obj     *co_find_one(parse_tree *pt, const char *name);
+int         co_value_set(cg_obj *co, const char *str);
 int         co_terminal(cg_obj *co, cg_obj **cot);
 char       *cligen_reason(const char *fmt, ...) __attribute__ ((format (printf, 1, 2)));
 

@@ -29,7 +29,6 @@
 
   ***** END LICENSE BLOCK *****
 
-
   CLIgen variables - cgv
   cgv:s are created when parsing an input string as instances of cg_obj variable
   when matching.
@@ -538,9 +537,11 @@ cv_string_set(cg_var     *cv,
 /*! Set new string without malloc
  *
  * @param[in] cv  CLIgen variable
- * @param[in] s   String to directly assign (must have been alloced)
+ * @param[in] s   String to directly assign (must malloc, can be freed)
  * @retval    0   OK
  * @retval   -1   Error
+ * @note s should really be const, but then it is assigned to a field that is free:d
+ *       later, ie it is assumed s is malloced
  */
 int
 cv_string_set_direct(cg_var *cv,
@@ -563,15 +564,15 @@ cv_string_set_direct(cg_var *cv,
 /*! Allocate new string from original by copying using strncpy
  *
  * @param[in] cv     CLIgen variable
- * @param[in] s0     String to copy
+ * @param[in] s0     String to copy from
  * @param[in] n      Number of characters to copy (excluding NULL).
  * @retval    str    the new (malloced) string
  * @retval    NULL   Error
  */
 char *
-cv_strncpy(cg_var *cv,
-           char   *s0,
-           size_t  n)
+cv_strncpy(cg_var     *cv,
+           const char *s0,
+           size_t      n)
 {
     char *s1 = NULL;
 
@@ -702,8 +703,8 @@ cv_uuid_get(cg_var *cv)
  * @param[in] cv     CLIgen variable
  */
 unsigned char *
-cv_uuid_set(cg_var        *cv,
-            unsigned char *u)
+cv_uuid_set(cg_var              *cv,
+            const unsigned char *u)
 {
     if (cv == NULL)
         return 0;
@@ -982,12 +983,12 @@ cv_urlpasswd_set(cg_var     *cv,
  * @retval    -1       Error (fatal), with errno set to indicate error
  */
 static int
-parse_int64_base(char    *str,
-                 int      base,
-                 int64_t  imin,
-                 int64_t  imax,
-                 int64_t *val,
-                 char   **reason)
+parse_int64_base(const char *str,
+                 int         base,
+                 int64_t     imin,
+                 int64_t     imax,
+                 int64_t    *val,
+                 char      **reason)
 {
     int64_t i;
     char    *ep;
@@ -1049,9 +1050,9 @@ parse_int64_base(char    *str,
  * @retval    -1       Error (fatal), with errno set to indicate error
  */
 int
-parse_int8(char   *str,
-           int8_t *val,
-           char  **reason)
+parse_int8(const char *str,
+           int8_t     *val,
+           char      **reason)
 {
     int64_t  i;
     int      retval;
@@ -1073,9 +1074,9 @@ parse_int8(char   *str,
  * @retval    -1      Error (fatal), with errno set to indicate error
  */
 int
-parse_int16(char    *str,
-            int16_t *val,
-            char   **reason)
+parse_int16(const char *str,
+            int16_t    *val,
+            char      **reason)
 {
     int64_t i;
     int      retval;
@@ -1097,9 +1098,9 @@ parse_int16(char    *str,
  * @retval    -1       Error (fatal), with errno set to indicate error
  */
 int
-parse_int32(char    *str,
-            int32_t *val,
-            char   **reason)
+parse_int32(const char *str,
+            int32_t    *val,
+            char      **reason)
 {
     int64_t  i;
     int      retval;
@@ -1121,9 +1122,9 @@ parse_int32(char    *str,
  * @retval    -1       Error (fatal), with errno set to indicate error
  */
 int
-parse_int64(char    *str,
-            int64_t *val,
-            char   **reason)
+parse_int64(const char *str,
+            int64_t    *val,
+            char      **reason)
 {
     return parse_int64_base(str, 0, INT64_MIN, INT64_MAX, val, reason);
 }
@@ -1145,7 +1146,7 @@ parse_int64(char    *str,
  * @note: we have to detect a minus sign ourselves,....
  */
 static int
-parse_uint64_base(char     *str,
+parse_uint64_base(const char *str,
                   int       base,
                   uint64_t  umin,
                   uint64_t  umax,
@@ -1221,9 +1222,9 @@ parse_uint64_base(char     *str,
  * @retval    -1       Error (fatal), with errno set to indicate error
  */
 int
-parse_uint8(char    *str,
-            uint8_t *val,
-            char   **reason)
+parse_uint8(const char *str,
+            uint8_t    *val,
+            char      **reason)
 {
     uint64_t i;
     int      retval;
@@ -1245,9 +1246,9 @@ parse_uint8(char    *str,
  * @retval    -1       Error (fatal), with errno set to indicate error
  */
 int
-parse_uint16(char     *str,
-             uint16_t *val,
-             char    **reason)
+parse_uint16(const char *str,
+             uint16_t   *val,
+             char      **reason)
 {
     uint64_t i;
     int      retval;
@@ -1269,9 +1270,9 @@ parse_uint16(char     *str,
  * @retval    -1       Error (fatal), with errno set to indicate error
  */
 int
-parse_uint32(char     *str,
-             uint32_t *val,
-             char    **reason)
+parse_uint32(const char *str,
+             uint32_t   *val,
+             char      **reason)
 {
     uint64_t i;
     int      retval;
@@ -1294,9 +1295,9 @@ parse_uint32(char     *str,
  * @note: we have to detect a minus sign ourselves,....
  */
 int
-parse_uint64(char     *str,
-             uint64_t *val,
-             char   **reason)
+parse_uint64(const char *str,
+             uint64_t   *val,
+             char      **reason)
 {
     return parse_uint64_base(str, 0, 0, UINT64_MAX, val, reason);
 }
@@ -1312,10 +1313,10 @@ parse_uint64(char     *str,
  * @retval    -1          fatal error
  */
 int
-parse_dec64(char    *str,
-            uint8_t  n,
-            int64_t *dec64_i,
-            char   **reason)
+parse_dec64(const char *str,
+            uint8_t     n,
+            int64_t    *dec64_i,
+            char      **reason)
 {
     int      retval = 1;
     char    *s0 = NULL; /* the whole string, eg aaa.bbb*/
@@ -1414,9 +1415,9 @@ parse_dec64(char    *str,
  * @endcode
  */
 int
-parse_bool(char    *str,
-           uint8_t *val,
-           char   **reason)
+parse_bool(const char *str,
+           uint8_t    *val,
+           char      **reason)
 {
     int i;
     int retval = 1;
@@ -1461,7 +1462,7 @@ parse_bool(char    *str,
  * @retval    -1          fatal error
  */
 int
-parse_ipv4addr(char           *str,
+parse_ipv4addr(const char     *str,
                struct in_addr *val,
                char          **reason)
 {
@@ -1486,7 +1487,7 @@ parse_ipv4addr(char           *str,
  * @retval    -1          fatal error
  */
 int
-parse_ipv6addr(char            *str,
+parse_ipv6addr(const char      *str,
                struct in6_addr *val,
                char           **reason)
 {
@@ -1501,7 +1502,6 @@ parse_ipv6addr(char            *str,
     return retval;
 }
 
-
 /*! Own version of ether_aton():
  *
  * parse string in colon hex notation and return a vector of chars.
@@ -1512,14 +1512,14 @@ parse_ipv6addr(char            *str,
 #define MACADDR_STRLEN  (MACADDR_OCTETS * 3) - 1    /* 6*sizeof("xx:")-1 */
 
 static int
-parse_macaddr(char  *str,
-              char   addr[MACADDR_OCTETS],
-              char **reason)
+parse_macaddr(const char *str,
+              char        addr[MACADDR_OCTETS],
+              char      **reason)
 {
-    char *s1;
-    int n_colons;
+    const char  *s1;
+    int          n_colons;
     unsigned int octets[MACADDR_OCTETS];
-    int i;
+    int          i;
 
     /*
      * MAC addresses are exactly MACADDR_STRLEN (17) bytes long.
@@ -1545,7 +1545,7 @@ parse_macaddr(char  *str,
         }
 
         if (reason) {
-            *reason = cligen_reason("%s: Invalid MAC address (illegal character '%c')", str, *s1);
+            *reason = cligen_reason("%s: Invalid MAC address (invalid character '%c')", str, *s1);
             if (*reason == NULL) {
                 return -1;
             }
@@ -1602,9 +1602,9 @@ parse_macaddr(char  *str,
  * @note The syntax is not complete: it is recommended to use regexps
  */
 static int
-parse_url(char   *url,
-          cg_var *cv,
-          char  **reason)
+parse_url(const char *url,
+          cg_var     *cv,
+          char      **reason)
 {
     char    *str0 = NULL;
     char    *str;
@@ -2017,7 +2017,7 @@ time2str(const struct timeval *tv,
 
     tm = gmtime(&tv->tv_sec);
     if (snprintf(fmt, len, "%04d-%02d-%02dT%02d:%02d:%02d.%06ldZ",
-             tm->tm_year+1900, tm->tm_mon+1, tm->tm_mday, tm->tm_hour,
+                 tm->tm_year+1900, tm->tm_mon+1, tm->tm_mday, tm->tm_hour,
                  tm->tm_min, tm->tm_sec, tv->tv_usec) < 0)
         goto done;
     retval = 0;
@@ -2085,8 +2085,8 @@ cv_str2type(const char *str)
 /*! Translate (print) a cv type to a static string.
  *
  * @param[in] tpe    CLIgen variable type
- * @retval    NULL   Error
  * @retval    str    Static string containing name of type as ASCII string
+ * @retval    NULL   Error
  */
 const char *
 cv_type2str(enum cv_type type)
@@ -2953,7 +2953,7 @@ cv_parse1(const char   *str0,
     }
     else
         if ((str = strdup(str0)) == NULL)
-        goto done;
+            goto done;
     switch (cv->var_type) {
     case CGV_INT8:
         retval = parse_int8(str, &cv->var_int8, reason);
@@ -3094,7 +3094,7 @@ cv_parse1(const char   *str0,
             *reason = cligen_reason("Invalid variable");
         break;
     } /* switch */
-  done:
+ done:
     if (str)
         free (str);
     if (reason && *reason)
@@ -3149,8 +3149,8 @@ cv_parse(const char *str,
  * @param[in] cvlow  cv containing lower bound
  * @param[in] cvupp  cv containing upper bound
  * @param[in] type   Numeric type string, eg "int32"
- * @retval    0      i is outside [low,upper]
  * @retval    1      i is in [low,upper]
+ * @retval    0      i is outside [low,upper]
  * @note need to use macro trick ## to fix different types
 */
 #define range_check(i, cvlow, cvupp, type)       \
@@ -3241,7 +3241,7 @@ int
 cv_validate(cligen_handle h,
             cg_var       *cv,
             cg_varspec   *cs,
-            char         *cmd,
+            const char   *cmd,
             char        **reason)
 {
     int      retval = 1; /* OK */
@@ -3670,8 +3670,8 @@ cv_dup(cg_var *old)
 
 /*! Create new cligen variable.
  *
- * @retval NULL  on error, error printed on stder
  * @retval cv    on success the malloc:ed cligen variable. Needs to be freed w cv_free()
+ * @retval NULL  on error, error printed on stder
  * @note returned cv needs to be freed with cv_free()
  * @note if type is CGV_DEC64, cv_dec64_n_set needs also be called
  * @see cvec_add  which adds a cv to an existing cvec
@@ -3688,7 +3688,6 @@ cv_new(enum cv_type type)
     cv->var_type = type;
   done:
     return cv;
-
 }
 
 /*! Free pointers and resets a single CLIgen variable cv

@@ -30,7 +30,6 @@
 
   ***** END LICENSE BLOCK *****
 
-
   CLIgen variable vectors - cvec
 */
 
@@ -87,8 +86,8 @@ static inline char * strdup4(const char *str)
  * Each individual cv initialized with CGV_ERR and no value.
  * Returned cvec needs to be freed with cvec_free().
  * @param[in] len    Number of cv elements. Can be zero and elements added incrementally.
- * @retval    NULL   errno set
  * @retval    cvv    allocated cligen var vector
+ * @retval    NULL   errno set
  * @see cvec_init
  */
 cvec *
@@ -184,9 +183,9 @@ cvec_reset(cvec *cvv)
 
 /*! Given an element (cv0) in a cligen variable vector (cvec) return the next element.
  *
- * @param[in]  cvv    The cligen variable vector
- * @param[in]  cv0    Return element after this, or first element if this is NULL
- * @retval cv  Next element
+ * @param[in]  cvv  The cligen variable vector
+ * @param[in]  cv0  Return element after this, or first element if this is NULL
+ * @retval     cv   Next element
  */
 cg_var *
 cvec_next(cvec   *cvv,
@@ -211,8 +210,8 @@ cvec_next(cvec   *cvv,
  *
  * @param[in] cvv   Cligen variable vector
  * @param[in] type  Append a new cv to the vector with this type
- * @retval    NULL  Error
  * @retval    cv    The new cligen variable
+ * @retval    NULL  Error
  * @see cv_new   but this is allocated contiguosly as a part of a cvec.
  * @see cvec_append_var
  * @see cvec_add_string  utility function for appending a string cv
@@ -229,7 +228,6 @@ cvec_add(cvec        *cvv,
         return NULL;
     }
     len = cvv->vr_len + 1;
-
     if ((cvv->vr_vec = realloc(cvv->vr_vec, len*sizeof(cg_var))) == NULL)
         return NULL;
     cvv->vr_len = len;
@@ -284,8 +282,10 @@ cvec_del(cvec   *cvv,
     i = 0;
     cv = NULL;
     while ((cv = cvec_each(cvv, cv)) != NULL) {
-        if (cv == del)
+        if (cv == del){
+            cv_reset(cv);
             break;
+        }
         i++;
     }
     if (i >= cvec_len(cvv)) /* Not found !?! */
@@ -472,7 +472,7 @@ cvec_dup(cvec *old)
  * Help function when creating cvec to cligen callbacks.
  */
 cvec *
-cvec_start(char *cmd)
+cvec_start(const char *cmd)
 {
     cvec *cvec;
     cg_var    *cv;
@@ -662,7 +662,6 @@ cvec_name_set(cvec       *cvv,
     return s1;
 }
 
-
 /*! Return the alloced memory of a CLIgen variable vector
  */
 size_t
@@ -681,8 +680,8 @@ cvec_size(cvec *cvv)
 }
 
 int
-cligen_txt2cvv(char  *str,
-               cvec **cvp)
+cligen_txt2cvv(const char *str,
+               cvec      **cvp)
 {
     int     retval = -1;
     int     i;
@@ -761,6 +760,7 @@ next_token(char **s0,
     char  *token = NULL;
     size_t len;
     int    quote=0;
+    int    operator=0;
     int    leading=0;
     int    escape = 0;
 
@@ -780,22 +780,31 @@ next_token(char **s0,
         quote++;
         s++;
     }
-    st=s; /* token starts */
+    st = s; /* token starts */
+    if (*s && index(CLIGEN_OPERATORS, *s) != NULL){
+        /* Form one-char token regardless of next char */
+        s++;
+        operator++;
+    }
     escape = 0;
-    for (; *s; s++){ /* Then find token */
-        if (quote){
-            if (index(CLIGEN_QUOTES, *s) != NULL)
-                break;
-        }
-        else{ /* backspace tokens for escaping delimiters */
-            if (escape)
-                escape = 0;
-            else{
-                if (*s == '\\')
-                    escape++;
-                else
-                    if (index(CLIGEN_DELIMITERS, *s) != NULL)
+    if (!operator){
+        for (; *s; s++){ /* Then find token */
+            if (quote){
+                if (index(CLIGEN_QUOTES, *s) != NULL)
+                    break;
+            }
+            else{ /* backspace tokens for escaping delimiters */
+                if (escape)
+                    escape = 0;
+                else{
+                    if (*s == '\\')
+                        escape++;
+                    else if (index(CLIGEN_DELIMITERS, *s) != NULL)
                         break;
+                    else if (index(CLIGEN_OPERATORS, *s) != NULL){
+                        break;
+                    }
+                }
             }
         }
     }
@@ -853,9 +862,9 @@ next_token(char **s0,
  * @note both out cvv:s should be freed with cvec_free()
  */
 int
-cligen_str2cvv(char  *string,
-               cvec **cvtp,
-               cvec **cvrp)
+cligen_str2cvv(const char *string,
+               cvec      **cvtp,
+               cvec      **cvrp)
 {
     int     retval = -1;
     char   *s;

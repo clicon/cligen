@@ -15,10 +15,10 @@ Architecture: any
 Multi-Arch: foreign
 Depends: ${misc:Depends},
          ${shlibs:Depends},
-         libcligen7
+         libcligen
 Description: Cligen development package
 
-Package: libcligen7
+Package: libcligen
 Architecture: any
 Multi-Arch: foreign
 Depends: ${misc:Depends},

@@ -54,12 +54,14 @@
 /*
  * Types
  */
-/* Here we should have expandv_cb but it is in cligen_object.h */
+/* Here we should have expand_cb but it is in cligen_object.h */
 
 /*
  * Prototypes
  */
-int   co_isfilter(cvec *cvv_filter, char *label);
+int   cligen_escape_need(const char *s);
+char *cligen_escape_do(const char *s);
+int   co_isfilter(cvec *cvv_filter, const char *label);
 char *pt_local_pipe(parse_tree *pt);
 int   pt_expand(cligen_handle h, cg_obj *co, parse_tree *pt, cvec *cvt, cvec *cvv,
               int hide, int expandvar, cg_callback *callbacks,

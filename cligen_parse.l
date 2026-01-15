@@ -34,7 +34,6 @@
 
 %{
 
-
 #include "cligen_config.h"
 
 #include <stdio.h>
@@ -127,7 +126,8 @@ stripdup(char *s0)
 <INITIAL>.                { return -1; }
 
 <HELP>\n                  { _CY->cy_linenum++;
-                            return *yytext; }
+                             cligen_parselval.string = yytext;
+                             return HELPSTR;}
 <HELP>\r
 <HELP><<EOF>>             { return MY_EOF; }
 <HELP>\"\)                { BEGIN(INITIAL); return DQP; /* double-quote parenthes */}
@@ -185,7 +185,7 @@ stripdup(char *s0)
 <CHOICE>\>              { BEGIN(INITIAL); return *yytext; }
 <CHOICE>[-+]?[0-9]+\.[0-9]+ { cligen_parselval.string = strdup(yytext); return DECIMAL;}
 <CHOICE>[-+]?[0-9]+     { cligen_parselval.string = strdup(yytext); return NUMBER;}
-<CHOICE>([^ \t\n>\|\"\(\)\[\]]|\\.)+ {
+<CHOICE>([^ \t\n>\|\"\[\]]|\\.)+ {
                                  cligen_parselval.string = strdup(yytext);
                                  return NAME; }
 
@@ -216,7 +216,7 @@ stripdup(char *s0)
 
 <ESCAPE>.                 { BEGIN(_CY->cy_lex_state);
                              cligen_parselval.string = strdup(yytext);
-                             return CHARS; }
+                             return HELPSTR; }
 
 <COMMENT>\n               { _CY->cy_linenum++; BEGIN(_CY->cy_lex_state);}
 <COMMENT><<EOF>>          { return MY_EOF; }
@@ -250,5 +250,3 @@ cgl_exit(cligen_yacc *cy)
     cligen_parselex_destroy();  /* modern */
     return 0;
 }
-
-

@@ -127,14 +127,17 @@ pt_stats(parse_tree *pt,
 
 /*! Access function to get the i:th CLIgen object child of a parse-tree
  *
- * @param[in]  pt  Parse tree
- * @param[in]  i   Which object to return
+ * @param[in]  pt   Parse tree
+ * @param[in]  i    Which object to return
+ * @retval     co   OK
+ * @retval     NULL Error or not found
  */
 cg_obj *
 pt_vec_i_get(parse_tree *pt,
              int         i)
 {
     struct cg_obj **ptvec;
+
     if (pt == NULL || i<0 || i>pt->pt_len){
        errno = EINVAL;
        return NULL;
@@ -151,6 +154,8 @@ pt_vec_i_get(parse_tree *pt,
  *
  * @param[in]  pt  Parse tree
  * @param[in]  i   Which object to return
+ * @retval     0   OK
+ * @retval    -1   Error
  */
 int
 pt_vec_i_clear(parse_tree *pt,
@@ -177,14 +182,16 @@ pt_vec_i_clear(parse_tree *pt,
  * @param[in]  pt  Parse tree
  * @param[in]  i   Which position to insert
  * @param[in]  co  Object to insert (can be NULL)
+ * @retval     0   OK
+ * @retval    -1   Error
  */
 int
 pt_vec_i_insert(parse_tree *pt,
                 int         i,
                 cg_obj     *co)
 {
-    int       retval = -1;
-    size_t    size;
+    int    retval = -1;
+    size_t size;
 
     if (pt == NULL){
        errno = EINVAL;
@@ -206,6 +213,13 @@ pt_vec_i_insert(parse_tree *pt,
     return retval;
 }
 
+/*! Append cligen object co to parse-tree pt
+ *
+ * @param[in]  pt  Parse tree
+ * @param[in]  co  Object to append
+ * @retval     0   OK
+ * @retval    -1   Error
+ */
 int
 pt_vec_append(parse_tree *pt,
               cg_obj     *co)
@@ -220,9 +234,9 @@ pt_vec_i_delete(parse_tree *pt,
                 int         i,
                 int         recurse)
 {
-    int       retval = -1;
-    size_t    size;
-    cg_obj   *co;
+    int     retval = -1;
+    size_t  size;
+    cg_obj *co;
 
     if (pt == NULL){
        errno = EINVAL;
@@ -252,8 +266,10 @@ pt_vec_i_delete(parse_tree *pt,
 /*! Access function to get a CLIgen objects child tree vector
  *
  * @param[in]  co  CLIgen parse object
+ * @retval     0   length
+ * @retval    -1   Error
  */
-unsigned int
+int
 pt_len_get(parse_tree *pt)
 {
     if (pt == NULL){
@@ -344,10 +360,10 @@ pt_copy(parse_tree *pt,
         uint32_t    flags,
         parse_tree *ptn)
 {
-    int        retval = -1;
-    int        i;
-    int        j;
-    cg_obj    *co;
+    int     retval = -1;
+    int     i;
+    int     j;
+    cg_obj *co;
 
     if (pt == NULL || ptn == NULL){
         errno = EINVAL;
@@ -424,12 +440,12 @@ cligen_parsetree_merge(parse_tree *pt0,
                        cg_obj     *parent,
                        parse_tree *pt1)
 {
-    cg_obj *co0=NULL;
+    int     retval = -1;
+    cg_obj *co0 = NULL;
     cg_obj *co1;
     cg_obj *co1c;
     int     i;
     int     j;
-    int     retval = -1;
     int     exist;
 
     for (j=0; j<pt_len_get(pt1); j++){
@@ -574,9 +590,9 @@ cligen_parsetree_free(parse_tree *pt,
 /*! Trunc parse-tree to specific length
  *
  * Keep "len" objects, free the rest and reallocate the vector
- * @param[in]  pt         CLIgen parse-tree
- * @retval     0          OK
- * @retval    -1          Error
+ * @param[in]  pt   CLIgen parse-tree
+ * @retval     0    OK
+ * @retval    -1    Error
  */
 int
 pt_trunc(parse_tree *pt,
@@ -627,9 +643,9 @@ pt_apply(parse_tree   *pt,
          int           depth,
          void         *arg)
 {
+    int     retval = -1;
     cg_obj *co;
     int     i;
-    int     retval = -1;
     int     ret;
 
     if (pt->pt_vec == NULL)

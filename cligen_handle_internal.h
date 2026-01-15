@@ -82,7 +82,8 @@ struct cligen_handle{
     char       *ch_treename_keyword; /* Name of treename parsing keyword */
     cg_obj     *ch_co_match;     /* Matching object in latest evaluation */
     cvec       *ch_callback_arguments; /* Callback arguments */
-    char       *ch_fn_str;       /* Name of active callback function */
+    char       *ch_fn_str;       /* Name of active callback function (useful in callbacks) */
+    int         ch_spipe;        /* Socket of active output pipe if != -1 (useful in callbacks) */
     int         ch_completion;   /* completion mode */
     char       *ch_nomatch;      /* Why did a string not match an evaluation? */
     int         ch_tabmode;      /* short or long output mode on TAB */

@@ -336,8 +336,8 @@ co_prefix_get(cg_obj *co)
 }
 
 int
-co_prefix_set(cg_obj *co,
-              char   *prefix)
+co_prefix_set(cg_obj     *co,
+              const char *prefix)
 {
     if (co->co_prefix != NULL){
         free(co->co_prefix);
@@ -388,103 +388,102 @@ cov_pref(cg_obj *co)
 
     switch (co->co_vtype){
     case CGV_ERR:
-        pref = 0; /* Illegal */
+        pref = COV_PREF_ERROR; /* Invalid */
         break;
         /* ints in range 22-60 */
     case CGV_INT8:
         if (co->co_rangelen)
-            pref = 60;
+            pref = COV_PREF_INT8_RANGE;
         else
-            pref = 52;
+            pref = COV_PREF_INT8;
         break;
     case CGV_INT16:
         if (co->co_rangelen)
-            pref = 58;
+            pref = COV_PREF_INT16_RANGE;
         else
-            pref = 50;
+            pref = COV_PREF_INT16;
         break;
     case CGV_INT32:
         if (co->co_rangelen)
-            pref = 56;
+            pref = COV_PREF_INT32_RANGE;
         else
-            pref = 48;
+            pref = COV_PREF_INT32;
         break;
     case CGV_INT64:
         if (co->co_rangelen)
-            pref = 54;
+            pref = COV_PREF_INT64_RANGE;
         else
-            pref = 46;
+            pref = COV_PREF_INT64;
         break;
     case CGV_UINT8:
         if (co->co_rangelen)
-            pref = 59;
+            pref = COV_PREF_UINT8_RANGE;
         else
-            pref = 51;
+            pref = COV_PREF_UINT8;
         break;
     case CGV_UINT16:
         if (co->co_rangelen)
-            pref = 57;
+            pref = COV_PREF_UINT16_RANGE;
         else
-            pref = 49;
+            pref = COV_PREF_UINT16;
         break;
     case CGV_UINT32:
         if (co->co_rangelen)
-            pref = 55;
+            pref = COV_PREF_UINT32_RANGE;
         else
-            pref = 47;
+            pref = COV_PREF_UINT32;
         break;
     case CGV_UINT64:
         if (co->co_rangelen)
-            pref = 53;
+            pref = COV_PREF_UINT64_RANGE;
         else
-            pref = 45;
+            pref = COV_PREF_UINT64;
         break;
     case CGV_DEC64:
-        pref = 62;
+        pref = COV_PREF_DECIMAL64;
         break;
     case CGV_BOOL:
-        pref = 12;
+        pref = COV_PREF_BOOL;
         break;
     case CGV_REST:
-        pref = 1;
+        pref = COV_PREF_REST;
         break;
     case CGV_STRING:
         if (co->co_expand_fn_str != NULL)
-            pref = 8;
+            pref = COV_PREF_STRING_EXPAND;
         else if (co->co_regex)
-            pref = 7;
+            pref = COV_PREF_STRING_REGEXP;
         else
-            pref = 5;
+            pref = COV_PREF_STRING;
         break;
     case CGV_INTERFACE:
-        pref = 10;
+        pref = COV_PREF_INTERFACE;
         break;
     case CGV_IPV4ADDR:
     case CGV_IPV4PFX:
-        pref = 70;
+        pref = COV_PREF_IPV4ADDR;
         break;
     case CGV_IPV6ADDR:
     case CGV_IPV6PFX:
-        pref = 71;
+        pref = COV_PREF_IPV6ADDR;
         break;
     case CGV_MACADDR:
-        pref = 72;
+        pref = COV_PREF_MACADDR;
         break;
     case CGV_URL:
-        pref = 20;
+        pref = COV_PREF_URL;
         break;
     case CGV_UUID:
-        pref = 73;
+        pref = COV_PREF_UUID;
         break;
     case CGV_TIME:
-        pref = 74;
+        pref = COV_PREF_TIME;
         break;
     case CGV_VOID: /* N/A */
         break;
     case CGV_EMPTY:
         break;
     }
-
     return pref;
 }
 
@@ -526,7 +525,6 @@ co_pref(cg_obj *co,
         }
     return pref;
 }
-
 
 /*! Return size of cligen object
  */
@@ -575,8 +573,8 @@ co_new_only(enum cg_objtype type)
  * @see co_free
  */
 cg_obj *
-co_new(char   *cmd,
-       cg_obj *parent)
+co_new(const char *cmd,
+       cg_obj     *parent)
 {
     cg_obj     *co;
     parse_tree *pt;
@@ -863,8 +861,8 @@ co_copy1(cg_obj  *co,
  * If we use strverscmp we also must use it in e.g. complete
  */
 static inline int
-str_cmp(char *s1,
-        char *s2)
+str_cmp(const char *s1,
+        const char *s2)
 {
     if (s1 == NULL && s2 == NULL)
         return 0;
@@ -1080,7 +1078,7 @@ co_free(cg_obj *co,
  */
 static cg_obj *
 co_search1(parse_tree *pt,
-           char       *name,
+           const char *name,
            int         low,
            int         upper)
 {
@@ -1184,8 +1182,8 @@ co_insert1(parse_tree *pt,
     return co1;
 }
 
-/*! Backward compatible 
-*/
+/*! Backward compatible
+ */
 cg_obj*
 co_insert(parse_tree *pt,
           cg_obj     *co1)
@@ -1206,7 +1204,7 @@ co_insert(parse_tree *pt,
  */
 cg_obj *
 co_find_one(parse_tree *pt,
-            char       *name)
+            const char *name)
 {
     return co_search1(pt, name, 0, pt_len_get(pt));
 }
@@ -1214,14 +1212,14 @@ co_find_one(parse_tree *pt,
 /*! Set CLIgen object value
  *
  * Allocate new string, remove old if already set.
- * @param[in]  co      CLIgen object
- * @param[in]  str     Value to set
- * @retval     0       OK
- * @retval     -1      Error
+ * @param[in]  co    CLIgen object
+ * @param[in]  str   Value to set
+ * @retval     0     OK
+ * @retval    -1     Error
  */
 int
-co_value_set(cg_obj *co,
-             char   *str)
+co_value_set(cg_obj     *co,
+             const char *str)
 {
     if (co->co_value){ /* This can happen in '?/TAB' since we call match twice */
         free(co->co_value);
@@ -1241,8 +1239,8 @@ co_value_set(cg_obj *co,
  * Parsingwise, it means it is printed with a ';'
  * @param[in]  co   CLIgen object
  * @param[out] cot  CLIgen object of empty statement, if any
- * @retval     0    No, it is not a terminal command
  * @retval     1    Yes, is a terminal command, cot may be returned if exists
+ * @retval     0    No, it is not a terminal command
  */
 int
 co_terminal(cg_obj  *co,
@@ -1295,4 +1293,3 @@ cligen_reason(const char *fmt, ...)
     va_end(ap);
     return reason;
 }
-

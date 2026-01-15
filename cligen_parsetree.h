@@ -72,7 +72,7 @@ int         pt_vec_i_clear(parse_tree *pt, int i);
 int         pt_vec_i_insert(parse_tree *pt, int i, cg_obj *co);
 int         pt_vec_append(parse_tree *pt, cg_obj *co);
 int         pt_vec_i_delete(parse_tree *pt, int i, int recurse);
-unsigned int pt_len_get(parse_tree *pt);
+int         pt_len_get(parse_tree *pt);
 int         pt_sets_get(parse_tree *pt);
 int         pt_sets_set(parse_tree *pt, int sets);
 void        cligen_parsetree_sort(parse_tree *pt, int recursive);
@@ -87,4 +87,3 @@ parse_tree *pt_new(void);
 int         pt_apply(parse_tree *pt, cg_applyfn_t fn, int depth, void *arg);
 
 #endif /* _CLIGEN_PARSETREE_H_ */
-

@@ -48,4 +48,3 @@ struct cvec{
 };
 
 #endif /* _CLIGEN_CVEC_INTERNAL_H_ */
-

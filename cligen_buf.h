@@ -69,7 +69,7 @@ int      cprintf(cbuf *cb, const char *format, ...) __attribute__ ((format (prin
 int      vcprintf(cbuf *cb, const char *format, va_list ap);
 void     cbuf_reset(cbuf *cb);
 int      cbuf_append(cbuf *cb, int c);
-int      cbuf_append_str(cbuf *cb, char *str);
+int      cbuf_append_str(cbuf *cb, const char *str);
 int      cbuf_append_buf(cbuf *cb, void *src, size_t n);
 int      cbuf_trunc(cbuf *cb, size_t i);
 

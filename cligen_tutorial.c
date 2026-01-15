@@ -127,7 +127,6 @@ secret(cligen_handle h,
     return 0;
 }
 
-
 /*! This callback changes the prompt to the variable setting
  */
 int
@@ -186,9 +185,9 @@ unknown(cligen_handle h,
  * Better to use dlopen, mmap or some other more flexible scheme.
  */
 cgv_fnstype_t *
-str2fn(char  *name,
-       void  *arg,
-       char **error)
+str2fn(const char *name,
+       void       *arg,
+       char      **error)
 {
     *error = NULL;
     if (strcmp(name, "hello") == 0)
@@ -245,10 +244,10 @@ cli_expand_cb(cligen_handle h,
 
 /*! Trivial function translator/mapping function that just assigns same callback
  */
-static expandv_cb *
-str2fn_exp(char  *name,
-           void  *arg,
-           char **error)
+static expand_cb *
+str2fn_exp(const char *name,
+           void       *arg,
+           char      **error)
 {
     return cli_expand_cb;
 }
@@ -278,9 +277,9 @@ incstr(cligen_handle h,
  *     increment <var:string translate:incstr()>, callback();
  */
 translate_cb_t *
-str2fn_trans(char  *name,
-             void  *arg,
-             char **error)
+str2fn_trans(const char *name,
+             void       *arg,
+             char      **error)
 {
     if (strcmp(name, "incstr") == 0)
         return incstr;
@@ -362,7 +361,7 @@ main(int   argc,
         pt = cligen_ph_parsetree_get(ph);
         if (cligen_callbackv_str2fn(pt, str2fn, NULL) < 0) /* map functions */
             goto done;
-        if (cligen_expandv_str2fn(pt, str2fn_exp, NULL) < 0)
+        if (cligen_expand_str2fn(pt, str2fn_exp, NULL) < 0)
             goto done;
         if (cligen_translate_str2fn(pt, str2fn_trans, NULL) < 0)
             goto done;

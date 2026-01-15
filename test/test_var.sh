@@ -23,6 +23,7 @@ cat > $fspec <<EOF
 
 # * Choice with variable
   extra (<crypto:string>|<crypto:string choice:mc:aes|mc:foo|des:des|des:des3>), callback();
+  extra2 <crypto:string choice:mc:aes|mc:foo>, callback();
 EOF
 
 newtest "$cligen_file -f $fspec"
@@ -103,6 +104,9 @@ expectpart "$(echo -n "extra ?" | $cligen_file -f $fspec 2>&1)" 0 "<crypto>" "de
 
 newtest "extra des:?"
 expectpart "$(echo -n "extra des:?" | $cligen_file -f $fspec 2>&1)" 0 "<crypto>" "des:des" "des:des3" --not-- "mc:aes" "mc:foo"
+
+newtest "extra fo expand to foo"
+expectpart "$(echo "extra2 mc:fo" | $cligen_file -f $fspec 2>&1)" 0 "2 name:crypto type:string value:mc:foo"
 
 newtest "endtest"
 endtest

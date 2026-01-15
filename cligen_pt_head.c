@@ -100,8 +100,8 @@ cligen_ph_name_get(pt_head *ph)
  * @retval    -1     Error
  */
 int
-cligen_ph_name_set(pt_head *ph,
-                   char    *name)
+cligen_ph_name_set(pt_head    *ph,
+                   const char *name)
 {
     if (ph == NULL){
        errno = EINVAL;
@@ -207,8 +207,8 @@ cligen_ph_prompt_get(pt_head *ph)
  * @param[in]  str   Prompt string (copied/malloced)
  */
 int
-cligen_ph_prompt_set(pt_head *ph,
-                     char    *prompt)
+cligen_ph_prompt_set(pt_head    *ph,
+                     const char *prompt)
 {
     if (ph->ph_prompt){
         free(ph->ph_prompt);
@@ -238,8 +238,8 @@ cligen_ph_pipe_get(pt_head *ph)
  * @param[in]  name  Name of output pipe tree, is copied
  */
 int
-cligen_ph_pipe_set(pt_head *ph,
-                   char    *pipe)
+cligen_ph_pipe_set(pt_head    *ph,
+                   const char *pipe)
 {
     if (ph->ph_output_pipe){
         free(ph->ph_output_pipe);
@@ -262,7 +262,7 @@ cligen_ph_pipe_set(pt_head *ph,
  */
 pt_head *
 cligen_ph_find(cligen_handle h,
-               char         *name)
+               const char   *name)
 {
     char    *phname;
     pt_head *ph = NULL;
@@ -311,7 +311,7 @@ cligen_ph_free(pt_head *ph)
  */
 pt_head *
 cligen_ph_add(cligen_handle h,
-              char         *name)
+              const char   *name)
 {
     pt_head *ph, *phlast;
 
@@ -330,9 +330,9 @@ cligen_ph_add(cligen_handle h,
         cligen_pt_head_active_set(h, ph);
         cligen_pt_head_set(h, ph);
         goto done;
-	}
+    }
 
-	/* append new parsetree header to the end */
+    /* append new parsetree header to the end */
     while (phlast->ph_next)
         phlast = phlast->ph_next;
     phlast->ph_next = ph;
@@ -343,10 +343,10 @@ cligen_ph_add(cligen_handle h,
 
 /*! Iterate through all parsed cligen trees
  *
- * @param[in] h   CLIgen handle
- * @param[in] pt  Cligen parse-tree iteration variable. Must be initialized to NULL
- * @retval pt     Next parse-tree structure.
- * @retval NULL   When end of list reached.
+ * @param[in] h    CLIgen handle
+ * @param[in] pt   Cligen parse-tree iteration variable. Must be initialized to NULL
+ * @retval    pt   Next parse-tree structure.
+ * @retval    NULL When end of list reached.
  * @code
  *    pt_head *ph = NULL;
  *    while ((ph = cligen_ph_each(h, ph)) != NULL) {
@@ -417,7 +417,7 @@ cligen_ph_active_get(cligen_handle h)
  */
 int
 cligen_ph_active_set_byname(cligen_handle h,
-                            char         *name)
+                            const char   *name)
 {
     pt_head *ph = cligen_ph_find(h, name);
 

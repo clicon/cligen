@@ -53,25 +53,25 @@ typedef struct pt_head pt_head;  /* defined in cligen_handle_internal.h */
  * Prototypes
  */
 char       *cligen_ph_name_get(pt_head *ph);
-int         cligen_ph_name_set(pt_head *ph, char *name);
+int         cligen_ph_name_set(pt_head *ph, const char *name);
 parse_tree *cligen_ph_parsetree_get(pt_head *ph);
 int         cligen_ph_parsetree_set(pt_head *ph, parse_tree *pt);
 cg_obj     *cligen_ph_workpoint_get(pt_head *ph);
 int         cligen_ph_workpoint_set(pt_head *ph, cg_obj *cow);
 char       *cligen_ph_prompt_get(pt_head *ph);
-int         cligen_ph_prompt_set(pt_head *ph, char *prompt);
+int         cligen_ph_prompt_set(pt_head *ph, const char *prompt);
 char       *cligen_ph_pipe_get(pt_head *ph);
-int         cligen_ph_pipe_set(pt_head *ph, char *pipe);
-pt_head    *cligen_ph_find(cligen_handle h, char *name);
+int         cligen_ph_pipe_set(pt_head *ph, const char *pipe);
+pt_head    *cligen_ph_find(cligen_handle h, const char *name);
 int         cligen_ph_free(pt_head *ph);
-pt_head    *cligen_ph_add(cligen_handle h, char *name);
+pt_head    *cligen_ph_add(cligen_handle h, const char *name);
 pt_head    *cligen_ph_each(cligen_handle h, pt_head *ph);
 pt_head    *cligen_ph_i(cligen_handle h, int i);
 
 parse_tree *cligen_pt_active_get(cligen_handle h); /* consider replace w cligen_ph_active_get */
 pt_head    *cligen_ph_active_get(cligen_handle h);
 
-int         cligen_ph_active_set_byname(cligen_handle h, char *name);
+int         cligen_ph_active_set_byname(cligen_handle h, const char *name);
 
 /* CLIgen callbacks */
 int         cligen_wp_set(cligen_handle h, cvec *cvv, cvec *argv);

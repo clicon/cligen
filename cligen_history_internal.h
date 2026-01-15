@@ -55,7 +55,7 @@
 /*
  * Prototypes
  */
-int   hist_add(cligen_handle h, char *);
+int   hist_add(cligen_handle h, const char *buf);
 int   hist_exit(cligen_handle h);
 char *hist_next(cligen_handle h);
 char *hist_prev(cligen_handle h);

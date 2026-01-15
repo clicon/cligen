@@ -51,4 +51,3 @@ int pt_dump(FILE *f, parse_tree *pt);
 #define cligen_print(f, h, b) pt_print((f), (h), (b))
 
 #endif /* _CLIGEN_PRINT_H_ */
-

@@ -71,8 +71,8 @@ co_callback_next(cg_callback *cc)
  *
  * @param[in]  cc0  The object to copy from
  * @param[out] ccn  Pointer to the object to copy to (is allocated)
- * @retval     0      OK
- * @retval     -1     Error
+ * @retval     0    OK
+ * @retval    -1    Error
  */
 int
 co_callback_copy(cg_callback  *cc0,

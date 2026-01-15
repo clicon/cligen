@@ -1,6 +1,11 @@
 # Cligen Changelog
 
-* [7.2.0](#720) Expected: October 2024
+* [7.7.0](#770) Expected: February 2026
+* [7.6.0](#760) 21 November 2025
+* [7.5.0](#750) 29 July 2025
+* [7.4.0](#740) 3 April 2025
+* [7.3.0](#730) 30 January 2025
+* [7.2.0](#720) 28 October 2024
 * [7.1.0](#710) 3 July 2024
 * [7.0.0](#770) 8 March 2024
 * [6.5.0](#650) 5 December 2023
@@ -10,11 +15,84 @@
 * [6.1.0](#610) 19 Feb 2023
 * [6.0.0](#600) 29 Nov 2022
 
-## 7.2.0
-Expected: October 2024
+## 7.7.0
+Expected: February 2026
 
 ### Features
 
+* New: [TAB CLI behavior](https://github.com/clicon/clixon-controller/issues/113)
+
+### API changes on existing protocol/config features
+
+Users may have to change how they access the system
+
+* Default TAB behaviour has changed: a single TAB only completes and does NOT show further alternatives, a second TAB will
+  * To keep backward compatibility set cligen_tabmode flag `CLIGEN_TABMODE_SHOW` (-t 8)
+
+## 7.6.0
+21 November 2025
+
+### Features
+
+* Added ac-strict-expand autocli label for disabling expansion
+
+### C/CLI-API changes on existing features
+Developers may need to change their code
+
+* In the C-API replaced `expandv_` to `expand_`:
+  * Function `cligen_expandv_str2fn` --> `cligen_expand_str2fn`
+  * Type `expandv_cb` --> `expand_cb`
+  * Type `expandv_str2fn_t` --> `expand_str2fn_t`
+  * Struct field `co_expandv_fn` --> `co_expand_fn`
+
+### Corrected Bugs
+
+* Fixed: Helpstrings can not include \ and \n
+* Fixed: [Partial match of expanded command](https://github.com/clicon/cligen/issues/133)
+
+## 7.5.0
+29 July 2025
+
+### Features
+
+* Added label support in combination with tree references
+  * Example: `@tree, @add:<label>
+
+### API changes on existing protocol/config features
+
+* Minor modifications of string preference settings:
+  * string:         5 --> 6
+  * string(regexp): 7 --> 8
+  * string(expand): 8 --> 10
+
+### Corrected Bugs
+
+* Fixed: [Space needed before pipes](https://github.com/clicon/cligen/issues/103)
+
+## 7.4.0
+3 April 2025
+
+### Corrected Bugs
+
+* Fixed: [Expand of variables broken in 7.3](https://github.com/clicon/cligen/issues/127)
+
+## 7.3.0
+30 January 2025
+
+### Corrected Bugs
+
+* Fixed: Added parenthesis as valid clispec choice tokens
+* Fixed: [Expansion removes the double quote](https://github.com/clicon/clixon/issues/524)
+  * Remove auto-escaping of expanded nodes
+  * (Internal:) remove co_value and storing of non-escaped command
+
+## 7.2.0
+28 October 2024
+
+### Features
+
+* New version string on the form: `7.1.0-1+11+g2b25294`
+* Deb build script
 * New: [CLI simple alias](https://github.com/clicon/cligen/issues/112)
 
 ### Corrected Bugs
