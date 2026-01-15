@@ -62,6 +62,8 @@
  */
 #define CLIGEN_TABMODE_SHOW   0x08
 
+#include "cligen_result.h"
+
 /*
  * Types
  */
@@ -107,6 +109,15 @@ typedef int (cligen_tree_resolve_wrapper_fn)(cligen_handle h, const char *name, 
  * @retval    -1     Error
  */
 typedef int (cligen_hist_fn)(cligen_handle h, const char *cmd, void *arg);
+
+/*! Function type for injecting custom data into match results.
+ * @param[in] mr     Match results to be modified
+ * @param[in] cvt    Tokenized string vector providing context
+ * @param[in] string Original input string
+ * @retval     0     OK
+ * @retval    -1     Error
+ */
+typedef int (cligen_match_inject_fn)(match_result *mr, cvec *cvt, const char *string);
 
 /*
  * Prototypes
@@ -220,5 +231,8 @@ int   cligen_eval_wrap_fn_get(cligen_handle h, cligen_eval_wrap_fn **fn, void **
 
 int   cligen_tree_resolve_wrapper_set(cligen_handle h, cligen_tree_resolve_wrapper_fn *fn, void *arg);
 int   cligen_tree_resolve_wrapper_get(cligen_handle h, cligen_tree_resolve_wrapper_fn **fn, void **arg);
+
+void *cligen_ext_lib_handle_get(cligen_handle h);
+int   cligen_ext_lib_handle_set(cligen_handle h, void *data);
 
 #endif /* _CLIGEN_HANDLE_H_ */
