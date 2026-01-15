@@ -72,7 +72,7 @@
 int
 clispec_parse_str(cligen_handle h,
                   const char   *str,
-                  char         *name,
+                  const char   *name,
                   char         *treename,
                   parse_tree   *ptp,
                   cvec         *cvv)

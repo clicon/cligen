@@ -64,7 +64,7 @@ typedef translate_cb_t *(translate_str2fn_t)(const char *str, void *arg, char **
 int
 clispec_parse_str(cligen_handle  h,
                   const char    *str,
-                  char          *name,
+                  const char    *name,
                   char          *treename,
                   parse_tree    *pt,
                   cvec          *globals);

@@ -63,7 +63,7 @@ struct cgy_list{
 /*! CLIgen yacc parse structure, with all accumulated state of a parse session */
 struct cligen_parse_yacc{
     cligen_handle         cy_handle;       /* cligen_handle */
-    char                 *cy_name;         /* Name of syntax (for error string) */
+    const char           *cy_name;         /* Name of syntax (for error string) */
     char                 *cy_treename;     /* Name of syntax (for error string) */
     int                   cy_linenum;      /* Number of \n in parsed buffer */
     const char           *cy_parse_string; /* original (copy of) parse string */
