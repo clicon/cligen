@@ -29,6 +29,10 @@ Users may have to change how they access the system
 * Default TAB behaviour has changed: a single TAB only completes and does NOT show further alternatives, a second TAB will
   * To keep backward compatibility set cligen_tabmode flag `CLIGEN_TABMODE_SHOW` (-t 8)
 
+### Corrected Bugs
+
+* Fixed: [YANG Impossible to compare two numbers different types in "must" expression](https://github.com/clicon/clixon/issues/650)
+
 ## 7.6.0
 21 November 2025
 

@@ -3480,6 +3480,111 @@ cv_validate(cligen_handle h,
     return retval;
 }
 
+static int
+cv_cmp_int64_uint64(int64_t  i64,
+                    uint64_t u64)
+{
+    if (i64 < 0)
+        return -1;
+    if ((uint64_t)i64 < u64)
+        return -1;
+    if ((uint64_t)i64 > u64)
+        return 1;
+    return 0;
+}
+
+/*! Typecast a cg_var to int64_t for comparison
+ *
+ * @param[in]  cv   CLIgen variable
+ * @param[out] i64  int64_t value, if cv is signed integer type
+ * @param[out] u64  uint64_t value, if cv is unsigned integer type
+ * @retval     1    cv is int64_t, or smaller signed integer type
+ * @retval     0    cv is uint64_t, or smaller unsigned integer type
+ * @retval    -1    cv is not an integer type or error
+ */
+static int
+cv_to_int64(cg_var   *cv,
+            int64_t  *i64,
+            uint64_t *u64)
+{
+    int retval = -1;
+
+    switch (cv->var_type) {
+    case CGV_INT8:
+        retval = 1;
+        *i64 = cv->var_int8;
+    case CGV_INT16:
+        retval = 1;
+        *i64 = cv->var_int16;
+    case CGV_INT32:
+        retval = 1;
+        *i64 = cv->var_int32;
+    case CGV_INT64:
+        retval = 1;
+        *i64 = cv->var_int64;
+    case CGV_UINT8:
+        retval = 0;
+        *u64 = cv->var_uint8;
+    case CGV_UINT16:
+        retval = 0;
+        *u64 = cv->var_uint16;
+    case CGV_UINT32:
+        retval = 0;
+        *u64 = cv->var_uint32;
+    case CGV_UINT64:
+        retval = 0;
+        *u64 = cv->var_uint64;
+    default:
+        break;
+    }
+    return retval;
+}
+
+/*! Compare two CLIgen variables which both are ints or uints
+ *
+ * @param[in]  cv1   CLIgen variable #1
+ * @param[in]  cv2   CLIgen variable #2
+ * @retval     0     equal
+ * @retval    <0     cv1 is less than cv2
+ */
+static int
+cv_cmp_ints(cg_var *cv1,
+            cg_var *cv2)
+{
+    int64_t  i641;
+    int64_t  i642;
+    uint64_t u641;
+    uint64_t u642;
+    int      ret1;
+    int      ret2;
+
+    if ((ret1 = cv_to_int64(cv1, &i641, &u641)) < 0)
+        return -1;
+    if ((ret2 = cv_to_int64(cv2, &i642, &u642)) < 0)
+        return -1;
+    if (ret1 > 0 && ret2 > 0){ /* both signed */
+        if (i641 < i642)
+            return -1;
+        if (i641 > i642)
+            return 1;
+        return 0;
+    }
+    else if (ret1 == 0 && ret2 == 0){ /* both unsigned */
+        if (u641 < u642)
+            return -1;
+        if (u641 > u642)
+            return 1;
+        return 0;
+    }
+    else if (ret1 > 0 && ret2 == 0){ /* cv1 signed, cv2 unsigned */
+        return cv_cmp_int64_uint64(i641, u642);
+    }
+    else if (ret1 == 0 && ret2 > 0){ /* cv1 unsigned, cv2 signed */
+        return -cv_cmp_int64_uint64(i642, u641);
+    }
+    return 0;
+}
+
 /*! Compare two CLIgen variables as strcmp(3)
  *
  * @param[in]  cv1   CLIgen variable #1
@@ -3495,77 +3600,81 @@ cv_cmp(cg_var *cv1,
 {
     int n;
 
-    /* Same type? */
-    if(cv1->var_type != cv2->var_type &&
-       (!cv_isstring(cv1->var_type) || !cv_isstring(cv2->var_type))){
-        return cv1->var_type - cv2->var_type;
+    if (cv_isint(cv1->var_type) && cv_isint(cv2->var_type)){            /* Both are integer */
+        return cv_cmp_ints(cv1, cv2);
     }
-    switch (cv1->var_type) {
-    case CGV_ERR:
-        return 0;
-    case CGV_INT8:
-        return (cv1->var_int8 - cv2->var_int8);
-    case CGV_INT16:
-        return (cv1->var_int16 - cv2->var_int16);
-    case CGV_INT32:
-        return (cv1->var_int32 - cv2->var_int32);
-    case CGV_INT64:
-        return (cv1->var_int64 - cv2->var_int64);
-    case CGV_UINT8:
-        return (cv1->var_uint8 - cv2->var_uint8);
-    case CGV_UINT16:
-        return (cv1->var_uint16 - cv2->var_uint16);
-    case CGV_UINT32:
-        return (cv1->var_uint32 - cv2->var_uint32);
-    case CGV_UINT64:
-        return (cv1->var_uint64 - cv2->var_uint64);
-    case CGV_DEC64:
-        /* XXX assume dec64_n are equal */
-        return (cv_dec64_i_get(cv1) - cv_dec64_i_get(cv2));
-    case CGV_BOOL:
-        return (cv1->var_bool - cv2->var_bool);
-    case CGV_REST:
-    case CGV_STRING:
-    case CGV_INTERFACE:  /* All strings have the same address */
+    else if (cv_isstring(cv1->var_type) && cv_isstring(cv2->var_type)){ /* Both are strings */
         return strcmp(cv1->var_string, cv2->var_string);
-    case CGV_IPV4ADDR:
-        return memcmp(&cv1->var_ipv4addr, &cv2->var_ipv4addr,
-                      sizeof(cv1->var_ipv4addr));
-    case CGV_IPV4PFX:
-        if ((n =  memcmp(&cv1->var_ipv4addr, &cv2->var_ipv4addr,
-                         sizeof(cv1->var_ipv4addr))))
-            return n;
-        return cv1->var_ipv4masklen - cv2->var_ipv4masklen;
-    case CGV_IPV6ADDR:
-        return memcmp(&cv1->var_ipv6addr, &cv2->var_ipv6addr,
-                      sizeof(cv1->var_ipv6addr));
-    case CGV_IPV6PFX:
-        if ((n =  memcmp(&cv1->var_ipv6addr, &cv2->var_ipv6addr,
-                         sizeof(cv1->var_ipv6addr))))
-            return n;
-        return cv1->var_ipv6masklen - cv2->var_ipv6masklen;
-    case CGV_MACADDR:
-        return memcmp(&cv1->var_macaddr, &cv2->var_macaddr,
-                      sizeof(cv1->var_macaddr));
-    case CGV_URL:
-        if ((n = strcmp(cv1->var_urlproto, cv2->var_urlproto)))
-            return n;
-        if ((n = strcmp(cv1->var_urladdr, cv2->var_urladdr)))
-            return n;
-        if ((n = strcmp(cv1->var_urlpath, cv2->var_urlpath)))
-            return n;
-        if ((n = strcmp(cv1->var_urluser, cv2->var_urluser)))
-            return n;
-        return  strcmp(cv1->var_urlpasswd, cv2->var_urlpasswd);
-    case CGV_UUID:
-        return memcmp(cv1->var_uuid, cv2->var_uuid, 16);
-    case CGV_TIME:
-        return memcmp(&cv1->var_time, &cv2->var_time, sizeof(struct timeval));
-    case CGV_VOID: /* compare pointers */
-        return (cv1->var_void == cv2->var_void);
-    case CGV_EMPTY: /* Always equal */
-        return 0;
     }
+    else if (cv1->var_type != cv2->var_type)      /* Different types */
+        return cv1->var_type - cv2->var_type;
+    else
+        switch (cv1->var_type) {
+        case CGV_ERR:
+            return 0;
+        case CGV_INT8:
+            return (cv1->var_int8 - cv2->var_int8);
+        case CGV_INT16:
+            return (cv1->var_int16 - cv2->var_int16);
+        case CGV_INT32:
+            return (cv1->var_int32 - cv2->var_int32);
+        case CGV_INT64:
+            return (cv1->var_int64 - cv2->var_int64);
+        case CGV_UINT8:
+            return (cv1->var_uint8 - cv2->var_uint8);
+        case CGV_UINT16:
+            return (cv1->var_uint16 - cv2->var_uint16);
+        case CGV_UINT32:
+            return (cv1->var_uint32 - cv2->var_uint32);
+        case CGV_UINT64:
+            return (cv1->var_uint64 - cv2->var_uint64);
+        case CGV_DEC64:
+            /* XXX assume dec64_n are equal */
+            return (cv_dec64_i_get(cv1) - cv_dec64_i_get(cv2));
+        case CGV_BOOL:
+            return (cv1->var_bool - cv2->var_bool);
+        case CGV_REST:
+        case CGV_STRING:
+        case CGV_INTERFACE:  /* All strings have the same address */
+            return strcmp(cv1->var_string, cv2->var_string);
+        case CGV_IPV4ADDR:
+            return memcmp(&cv1->var_ipv4addr, &cv2->var_ipv4addr,
+                          sizeof(cv1->var_ipv4addr));
+        case CGV_IPV4PFX:
+            if ((n =  memcmp(&cv1->var_ipv4addr, &cv2->var_ipv4addr,
+                             sizeof(cv1->var_ipv4addr))))
+                return n;
+            return cv1->var_ipv4masklen - cv2->var_ipv4masklen;
+        case CGV_IPV6ADDR:
+            return memcmp(&cv1->var_ipv6addr, &cv2->var_ipv6addr,
+                          sizeof(cv1->var_ipv6addr));
+        case CGV_IPV6PFX:
+            if ((n =  memcmp(&cv1->var_ipv6addr, &cv2->var_ipv6addr,
+                             sizeof(cv1->var_ipv6addr))))
+                return n;
+            return cv1->var_ipv6masklen - cv2->var_ipv6masklen;
+        case CGV_MACADDR:
+            return memcmp(&cv1->var_macaddr, &cv2->var_macaddr,
+                          sizeof(cv1->var_macaddr));
+        case CGV_URL:
+            if ((n = strcmp(cv1->var_urlproto, cv2->var_urlproto)))
+                return n;
+            if ((n = strcmp(cv1->var_urladdr, cv2->var_urladdr)))
+                return n;
+            if ((n = strcmp(cv1->var_urlpath, cv2->var_urlpath)))
+                return n;
+            if ((n = strcmp(cv1->var_urluser, cv2->var_urluser)))
+                return n;
+            return  strcmp(cv1->var_urlpasswd, cv2->var_urlpasswd);
+        case CGV_UUID:
+            return memcmp(cv1->var_uuid, cv2->var_uuid, 16);
+        case CGV_TIME:
+            return memcmp(&cv1->var_time, &cv2->var_time, sizeof(struct timeval));
+        case CGV_VOID: /* compare pointers */
+            return (cv1->var_void == cv2->var_void);
+        case CGV_EMPTY: /* Always equal */
+            return 0;
+        }
     return -1;
 }
 
