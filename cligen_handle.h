@@ -100,13 +100,14 @@ typedef int (cligen_tree_resolve_wrapper_fn)(cligen_handle h, const char *name, 
  *
  * Could be used for logging all CLI commands for example, or just mirroring the history file
  * Note this is not exactly the same as the history command file, which filters equal commands.
- * @param[in]  h     CLIgen handle
- * @param[in]  cmd   CLI command. Do not modify or free
- * @param[in]  arg   Argument given when registering
- * @retval     0     OK
- * @retval    -1     Error
+ * @param[in]  h            CLIgen handle
+ * @param[in]  cmd          Input string as entered by user (potentially abbreviated)
+ * @param[in]  cmd_expanded Expanded/completed command string (all keywords spelled out)
+ * @param[in]  arg          Callback argument
+ * @retval     0            OK
+ * @retval    -1            Error
  */
-typedef int (cligen_hist_fn)(cligen_handle h, const char *cmd, void *arg);
+typedef int (cligen_hist_fn)(cligen_handle h, const char *cmd, const char *cmd_expanded, void *arg);
 
 /*
  * Prototypes

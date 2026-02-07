@@ -937,6 +937,7 @@ cligen_logsyntax_set(cligen_handle h,
 
 /*! Set CLIgen history callback function
  *
+ * This callback receives both the input command and the expanded/completed command
  * @param[in] h     CLIgen handle
  * @param[in] fn    Register function to call each CLI command
  * @param[in] arg   Call function with this argument

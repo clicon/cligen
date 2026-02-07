@@ -289,6 +289,24 @@ str2fn_trans(const char *name,
 /*
  * Global variables.
  */
+
+/*! Example history callback with expanded command
+ *
+ * This callback receives both the raw input and expanded/completed command
+ * Useful for command logging, TACACS+ authorization, etc.
+ */
+static int
+history_expanded_cb(cligen_handle h,
+                    const char   *cmd,
+                    const char   *cmd_expanded,
+                    void         *arg)
+{
+    /* Only log if commands differ (abbreviated) */
+    if (strcmp(cmd, cmd_expanded) != 0)
+        fprintf(stderr, "# Expanded: '%s' -> '%s'\n", cmd, cmd_expanded);
+    return 0;
+}
+
 static void
 usage(char *argv)
 {
@@ -374,6 +392,8 @@ main(int   argc,
         if (strcmp(str,"long") == 0)
             cligen_tabmode_set(h, CLIGEN_TABMODE_COLUMNS);
     cvec_free(globals);
+    /* Register expanded history callback to demonstrate issue #135 fix */
+    cligen_hist_fn_set(h, history_expanded_cb, NULL);
     if (!quiet){
         ph = NULL;
         while ((ph = cligen_ph_each(h, ph)) != NULL) {

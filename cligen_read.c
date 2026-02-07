@@ -727,8 +727,6 @@ cliread(cligen_handle h,
 {
     int             retval = -1;
     char           *buf = NULL;
-    cligen_hist_fn *fn = NULL;
-    void           *arg = NULL;
 
     if (stringp == NULL){
         errno = EINVAL;
@@ -745,18 +743,52 @@ cliread(cligen_handle h,
         goto eof;
     if (hist_add(h, buf) < 0)
         goto done;
-    /* Check callback: the reason it is separated from hist_add, is that the latter filters
-     * some commands and is also used in file load
-     */
-    cligen_hist_fn_get(h, &fn, &arg);
-    if (fn && (*fn)(h, buf, arg) < 0) {
-        goto done;
-    }
     *stringp = buf;
  eof:
     retval = 0;
  done:
     return retval;
+}
+
+/*! Check if history callback, expand command and call callback if needed.
+ *
+ * @param[in]  h       CLIgen handle
+ * @param[in]  line    Input line
+ * @param[in]  cvv     Vector of cligen variables present in the input string. (if retval == 1).
+ * @retval     0       OK
+ * @retval    -1       Error
+ */
+static int
+hist_expand_callback(cligen_handle h,
+                     const char   *line,
+                     cvec         *cvv)
+{
+    int             retval = -1;
+    cligen_hist_fn *fn = NULL;
+    void           *arg = NULL;
+    cbuf           *cb = NULL;
+    cg_var         *cv;
+    int             i;
+
+    cligen_hist_fn_get(h, &fn, &arg);
+    if (fn && cvv){
+        /* Build expanded command string from cvv (skip element 0 which is the original) */
+        if ((cb = cbuf_new()) != NULL){
+            for (i = 1; i < cvec_len(cvv); i++){
+                if (i > 1)
+                    cprintf(cb, " ");
+                if ((cv = cvec_i(cvv, i)) != NULL)
+                    cv2cbuf(cv, cb);
+            }
+            if ((*fn)(h, line, cbuf_get(cb), arg) < 0)
+                goto done;
+        }
+    }
+    retval = 0;
+ done:
+    if (cb)
+        cbuf_free(cb);
+     return retval;
 }
 
 /*! Read line from terminal, parse the string, and invoke callbacks.
@@ -801,8 +833,12 @@ cliread_eval(cligen_handle  h,
     }
     if (cliread_parse(h, *line, pt, &matchobj, &cvv, result, reason) < 0)
         goto done;
-    if (*result == CG_MATCH)
+    /* Call expanded history callback if registered and command matched */
+    if (*result == CG_MATCH){
+        if (hist_expand_callback(h, *line, cvv) < 0)
+            goto done;
         *cb_retval = cligen_eval(h, matchobj, cvv);
+    }
  ok:
     retval = 0;
  done:

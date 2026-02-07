@@ -21,6 +21,7 @@ Expected: February 2026
 ### Features
 
 * New: [TAB CLI behavior](https://github.com/clicon/clixon-controller/issues/113)
+* New: [Expanded history callback](https://github.com/clicon/cligen/issues/135) - Modified `cligen_hist_fn_set()` API that passes both raw input and expanded/completed command to callback. Useful for command logging, TACACS+ authorization, etc.
 
 ### API changes on existing protocol/config features
 
@@ -28,6 +29,14 @@ Users may have to change how they access the system
 
 * Default TAB behaviour has changed: a single TAB only completes and does NOT show further alternatives, a second TAB will
   * To keep backward compatibility set cligen_tabmode flag `CLIGEN_TABMODE_SHOW` (-t 8)
+
+### C/CLI-API changes on existing features
+
+Developers may need to change their code
+
+* C-API change:
+  * Callback fn to `cligen_hist_fn_set(h, fn, arg)` has changed signature:
+    * `fn(h, cmd, arg)`--> `fn(h, cmd, cmd_expanded, arg)`
 
 ### Corrected Bugs
 
