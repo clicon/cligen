@@ -58,5 +58,7 @@ int match_pattern_exact(cligen_handle h, cvec *cvt, cvec *cvr,
 int cligen_cvv_levels(cvec *cvv);
 int match_complete(cligen_handle h, parse_tree *pt,
                    char **stringp, size_t *slen, cvec *cvec);
+int match_complete_mr(cligen_handle h, match_result *mr,
+                      char **stringp, size_t *slenp);
 
 #endif /* _CLIGEN_MATCH_H */

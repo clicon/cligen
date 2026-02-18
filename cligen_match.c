@@ -1304,23 +1304,22 @@ match_pattern_exact(cligen_handle  h,
     return retval;
 } /* match_pattern_exact */
 
-/*! Try to complete a string as far as possible using the syntax.
+/*! Try to complete a string using pre-computed match result
  *
  * @param[in]     h       cligen handle
- * @param[in]     pt      Vector of commands (array of cligen object pointers)
+ * @param[in]     mr      Pre-computed match result from match_pattern
  * @param[in,out] stringp Input string to match and to complete (append to)
- * @param[in,out] slen    Current string length
- * @param[out]    cvv     cligen variable vector containing vars/values pair for completion
+ * @param[in,out] slenp   Current string length
  * @retval        1       Function completed by adding characters at the end of "string"
  * @retval        0       No matches, no completions made
  * @retval       -1       Error
+ * @see match_complete  Wrapper that calls match_pattern + this function
  */
 int
-match_complete(cligen_handle h,
-               parse_tree   *pt,
-               char        **stringp,
-               size_t       *slenp,
-               cvec         *cvv)
+match_complete_mr(cligen_handle  h,
+                  match_result  *mr,
+                  char         **stringp,
+                  size_t        *slenp)
 {
     int      slen = 0;
     int      equal;
@@ -1329,34 +1328,17 @@ match_complete(cligen_handle h,
     int      minmatch;
     cg_obj  *co;
     cg_obj  *co1 = NULL;
-    cvec    *cvt = NULL;      /* Tokenized string: vector of tokens */
-    cvec    *cvr = NULL;      /* Rest variant,  eg remaining string in each step */
     char    *string;
-    char    *s;
-    int      append = 0; /* Has appended characters */
+    int      append = 0;
     int      retval = -1;
     size_t   len;
-    match_result *mr = NULL;
     char    *command;
-    char    *command1 = NULL; /* prev */
+    char    *command1 = NULL;
 
-    /* ignore any leading whitespace */
     string = *stringp;
-    /* Tokenize the string and transform it into two CLIgen vectors: tokens and rests */
-    if (cligen_str2cvv(string, &cvt, &cvr) < 0)
-        goto done;
-    s = string;
-    while ((strlen(s) > 0) && isblank(*s))
-        s++;
-    if (match_pattern(h, cvt, cvr,
-                      pt,
-                      0, /* best: Return all options, not only best, exclude hidden options */
-                      cvv,
-                      &mr) < 0)
-        goto done;
     if (mr == NULL || mr_pt_len_get(mr) == 0){
         retval = 0;
-        goto done; /*  No matches */
+        goto done;
     }
     equal = 1;
     for (i=0; i<mr_pt_len_get(mr); i++){
@@ -1412,12 +1394,47 @@ match_complete(cligen_handle h,
     }
     retval = append?1:0;
   done:
+    return retval;
+}
+
+/*! Try to complete a string as far as possible using the syntax.
+ *
+ * @param[in]     h       cligen handle
+ * @param[in]     pt      Vector of commands (array of cligen object pointers)
+ * @param[in,out] stringp Input string to match and to complete (append to)
+ * @param[in,out] slen    Current string length
+ * @param[out]    cvv     cligen variable vector containing vars/values pair for completion
+ * @retval        1       Function completed by adding characters at the end of "string"
+ * @retval        0       No matches, no completions made
+ * @retval       -1       Error
+ */
+int
+match_complete(cligen_handle h,
+               parse_tree   *pt,
+               char        **stringp,
+               size_t       *slenp,
+               cvec         *cvv)
+{
+    int           retval = -1;
+    cvec         *cvt = NULL;
+    cvec         *cvr = NULL;
+    match_result *mr = NULL;
+
+    if (cligen_str2cvv(*stringp, &cvt, &cvr) < 0)
+        goto done;
+    if (match_pattern(h, cvt, cvr,
+                      pt,
+                      0,
+                      cvv,
+                      &mr) < 0)
+        goto done;
+    retval = match_complete_mr(h, mr, stringp, slenp);
+  done:
     if (cvt)
         cvec_free(cvt);
     if (cvr)
         cvec_free(cvr);
-    if (mr){
+    if (mr)
         mr_free(mr);
-    }
     return retval;
 }

@@ -82,9 +82,9 @@
 /*
  * Local prototypes
  */
-static int show_help_columns(cligen_handle h, FILE *fout, char *s, parse_tree *pt, cvec *cvv);
+static int show_help_columns_mr(cligen_handle h, FILE *fout, match_result *mr);
 static int show_help_line(cligen_handle h, FILE *fout, const char *s, parse_tree *pt, cvec *);
-static int cli_complete(cligen_handle h, int *lenp, parse_tree *pt, cvec *cvv);
+static int show_help_line_mr(cligen_handle h, FILE *fout, const char *s, parse_tree *pt, cvec *, match_result *mr);
 
 /*! Show help strings
  *
@@ -167,11 +167,14 @@ static int
 cli_tab_hook(cligen_handle h,
              int          *cursorp)
 {
-    int         retval = -1;
-    int         prev_cursor;
-    parse_tree *pt = NULL;     /* Orig */
-    parse_tree *ptn = NULL;    /* Expanded */
-    cvec       *cvv = NULL;
+    int           retval = -1;
+    int           prev_cursor;
+    parse_tree   *pt = NULL;     /* Orig */
+    parse_tree   *ptn = NULL;    /* Expanded */
+    cvec         *cvv = NULL;
+    cvec         *cvt = NULL;
+    cvec         *cvr = NULL;
+    match_result *mr = NULL;
 
     if ((ptn = pt_new()) == NULL)
         goto done;
@@ -188,11 +191,73 @@ cli_tab_hook(cligen_handle h,
                   NULL, NULL,
                   ptn) < 0)      /* expansion */
         goto done;
-    /* Note, can change cligen buf pointer (append and increase) */
+    /* Compute match_pattern once and reuse for both completion and help display.
+     * This avoids calling custom expansion functions multiple times (issue #92).
+     */
     do {
         prev_cursor = *cursorp;
-        if (cli_complete(h, cursorp, ptn, cvv) < 0) /* XXX expand-cleanup must be done here before show commands */
-            goto done;
+        /* Tokenize current string for match_pattern */
+        if (cvt)
+            cvec_free(cvt);
+        if (cvr)
+            cvec_free(cvr);
+        cvt = cvr = NULL;
+        if (mr)
+            mr_free(mr);
+        mr = NULL;
+        {
+            char  *s0;
+            char  *s = NULL;
+            size_t slen;
+            int    cursor = *cursorp;
+
+            s0 = cligen_buf(h);
+            if (s0 == NULL){
+                fprintf(stderr, "%s Input string NULL\n", __FUNCTION__);
+                goto done;
+            }
+            slen = cligen_buf_size(h);
+            if ((s = malloc(slen)) == NULL){
+                fprintf(stderr, "%s malloc: %s\n", __FUNCTION__, strerror(errno));
+                goto done;
+            }
+            strncpy(s, s0, slen);
+            s[cursor] = '\0';
+            if (cligen_str2cvv(s, &cvt, &cvr) < 0){
+                free(s);
+                goto done;
+            }
+            if (match_pattern(h, cvt, cvr,
+                              ptn,
+                              0,
+                              cvv,
+                              &mr) < 0){
+                free(s);
+                goto done;
+            }
+            /* Use match result for completion */
+            if (match_complete_mr(h, mr, &s, &slen) < 0){
+                free(s);
+                goto done;
+            }
+            {
+                int extra = strlen(s) - cursor;
+                if (extra){
+                    int i, n;
+
+                    cligen_buf_increase(h, strlen(s));
+                    s0 = cligen_buf(h);
+                    n = strlen(s0) - cursor;
+                    cligen_buf_increase(h, strlen(s0)+cursor+n);
+                    s0 = cligen_buf(h);
+                    for (i=cursor+n; i>=cursor; i--)
+                        s0[i + extra] = s0[i];
+                    strncpy(s0 + cursor, s + cursor, extra);
+                    *cursorp += extra;
+                }
+            }
+            free(s);
+        }
     } while (cligen_tabmode(h)&CLIGEN_TABMODE_STEPS && prev_cursor != *cursorp);
     if (cvv){
         cvec_free(cvv);
@@ -202,16 +267,42 @@ cli_tab_hook(cligen_handle h,
     fputs("\n", stdout);
     if (prev_cursor == *cursorp ||
         (cligen_tabmode(h) & CLIGEN_TABMODE_SHOW) != 0x0){
-        if (cligen_tabmode(h) & CLIGEN_TABMODE_COLUMNS){
-            if (show_help_line(h, stdout, cligen_buf(h), ptn, cvv) <0)
+        /* Recompute match result after completion loop if cursor changed */
+        if (prev_cursor != *cursorp){
+            if (cvt)
+                cvec_free(cvt);
+            if (cvr)
+                cvec_free(cvr);
+            cvt = cvr = NULL;
+            if (mr)
+                mr_free(mr);
+            mr = NULL;
+            if (cligen_str2cvv(cligen_buf(h), &cvt, &cvr) < 0)
+                goto done;
+            if (match_pattern(h, cvt, cvr,
+                              ptn,
+                              0,
+                              cvv,
+                              &mr) < 0)
                 goto done;
         }
-        else if (show_help_columns(h, stdout, cligen_buf(h), ptn, cvv) < 0)
+        /* Use pre-computed match result for help display */
+        if (cligen_tabmode(h) & CLIGEN_TABMODE_COLUMNS){
+            if (show_help_line_mr(h, stdout, cligen_buf(h), ptn, cvv, mr) < 0)
+                goto done;
+        }
+        else if (show_help_columns_mr(h, stdout, mr) < 0)
             goto done;
     }
  ok:
     retval = 0;
  done:
+    if (cvt)
+        cvec_free(cvt);
+    if (cvr)
+        cvec_free(cvr);
+    if (mr)
+        mr_free(mr);
     if (cvv)
         cvec_free(cvv);
     if (ptn && pt_free(ptn, 0) < 0)
@@ -267,23 +358,19 @@ column_print(FILE               *fout,
     return retval;
 }
 
-/*! Show briefly the commands available (show no help)
+/*! Show matching commands as columns using pre-computed match result
  *
- * Typically called when TAB is pressed and there are multiple options.
- * @param[in]  fout    This is where the output (help text) is shown.
- * @param[in]  string  Input string to match
- * @param[in]  pt      Vector of commands (array of cligen object pointers (cg_obj)
- * @param[out] cvv     Cligen variable vector containing vars/values pair for completion
+ * @param[in]  h       CLIgen handle
+ * @param[in]  fout    Output file
+ * @param[in]  mr      Pre-computed match result from match_pattern
  * @retval     0       OK
  * @retval    -1       Error
- * @see print_help_lines
+ * @see show_help_columns  Wrapper that calls match_pattern + this function
  */
 static int
-show_help_columns(cligen_handle h,
-                  FILE         *fout,
-                  char         *string,
-                  parse_tree   *pt,
-                  cvec         *cvv)
+show_help_columns_mr(cligen_handle  h,
+                     FILE          *fout,
+                     match_result  *mr)
 {
     int                 retval = -1;
     int                 level;
@@ -298,37 +385,19 @@ show_help_columns(cligen_handle h,
     int                 column_width;
     int                 column_nr;
     int                 rest;
-    cvec               *cvt = NULL;      /* Tokenized string: vector of tokens */
-    cvec               *cvr = NULL;      /* Rest variant,  eg remaining string in each step */
-    match_result       *mr = NULL;
 
-    if (string == NULL){
-        errno = EINVAL;
-        goto done;
-    }
     if ((cb = cbuf_new()) == NULL){
         fprintf(stderr, "cbuf_new: %s\n", strerror(errno));
         return -1;
     }
-    /* Tokenize the string and transform it into two CLIgen vectors: tokens and rests */
-    if (cligen_str2cvv(string, &cvt, &cvr) < 0)
-        goto done;
-    if (match_pattern(h, cvt, cvr,
-                      pt,
-                      0, /* best: Return all options, not only best, exclude hidden */
-                      cvv,
-                      &mr) < 0)
-        goto done;
-    if ((level = cligen_cvv_levels(cvt)) < 0)
-        goto done;
-    if (mr_pt_len_get(mr) > 0){ /* min, max only defined if matchlen > 0 */
-        /* Go through match vector and collect commands and helps */
-        if ((chvec = calloc(mr_pt_len_get(mr), sizeof(struct cligen_help))) ==NULL){
+    level = mr_level_get(mr);
+    if (mr_pt_len_get(mr) > 0){
+        if ((chvec = calloc(mr_pt_len_get(mr), sizeof(struct cligen_help))) == NULL){
             fprintf(stderr, "%s calloc: %s\n", __FUNCTION__, strerror(errno));
             goto done;
         }
         nrcmd = 0;
-        for (i = 0; i<mr_pt_len_get(mr); i++){ // nr-1?
+        for (i = 0; i<mr_pt_len_get(mr); i++){
             if ((co = mr_pt_i_get(mr, i)) == NULL)
                 continue;
             if (co->co_command == NULL)
@@ -377,7 +446,7 @@ show_help_columns(cligen_handle h,
                          nrcmd,
                          level) < 0)
             goto done;
-    } /* nr>0 */
+    }
     retval = 0;
   done:
     if (chvec){
@@ -385,15 +454,8 @@ show_help_columns(cligen_handle h,
             cligen_help_clear(&chvec[i]);
         free(chvec);
     }
-    if (cvt)
-        cvec_free(cvt);
-    if (cvr)
-        cvec_free(cvr);
     if (cb)
         cbuf_free(cb);
-    if (mr){
-        mr_free(mr);
-    }
     return retval;
 }
 
@@ -506,61 +568,70 @@ show_help_line(cligen_handle h,
     return retval;
 }
 
-/*! Try to complete a command as much as possible.
+/*! Show one row per command with help text, using pre-computed match result
  *
- * @param[in]  h       CLIgen handle
- * @param[in]  string  Input string to match
- * @param[in]  cursorp Pointer to the current cursor in string.
- * @param[in]  pt      Vector of commands (array of cligen object pointers)
- * @param[out] cvv     cligen variable vector containing vars/values pair for completion
- * @retval     0       Success
- * @retval    -1       Error
+ * @param[in]   h       cligen handle
+ * @param[in]   fout    This is where the output (help text) is shown.
+ * @param[in]   string  Input string to match
+ * @param[in]   pt      Parse tree (needed for match_pattern_exact <cr> check)
+ * @param[out]  cvv     Cligen variable vector
+ * @param[in]   mr      Pre-computed match result from match_pattern
+ * @retval      0       OK
+ * @retval     -1       Error
+ * @see show_help_line  Wrapper that calls match_pattern + this function
  */
 static int
-cli_complete(cligen_handle h,
-             int          *cursorp,
-             parse_tree   *pt,
-             cvec         *cvv)
+show_help_line_mr(cligen_handle h,
+                  FILE         *fout,
+                  const char   *string,
+                  parse_tree   *pt,
+                  cvec         *cvv,
+                  match_result *mr)
 {
-    int     retval = -1;
-    char   *string;
-    char   *s = NULL;
-    size_t  slen;
-    int     cursor = *cursorp;
-    int     i;
-    int     n;
-    int     extra;
+    int           retval = -1;
+    cvec         *cvt = NULL;
+    cvec         *cvr = NULL;
+    cg_var       *cvlastt;
+    cg_var       *cvlastr;
+    cligen_result result;
 
-    string = cligen_buf(h);
     if (string == NULL){
-        fprintf(stderr, "%s Input string NULL\n", __FUNCTION__);
+        errno = EINVAL;
         goto done;
     }
-    slen = cligen_buf_size(h);
-    if ((s = malloc(slen)) == NULL){ /* s is a temporary copy */
-        fprintf(stderr, "%s malloc: %s\n", __FUNCTION__, strerror(errno));
+    if (cligen_str2cvv(string, &cvt, &cvr) < 0)
+        goto done;
+    cvlastt = cvec_i(cvt, cvec_len(cvt)-1);
+    if (cvec_len(cvt) > 2 && strcmp(cv_string_get(cvlastt), "")==0){
+        if (cvlastt)
+            cv_reset(cvlastt);
+        cvec_del_i(cvt, cvec_len(cvt)-1);
+        if ((cvlastr = cvec_i(cvr, cvec_len(cvr)-1)) != NULL)
+            cv_reset(cvlastr);
+        cvec_del_i(cvr, cvec_len(cvr)-1);
+        if (match_pattern_exact(h, cvt, cvr, pt,
+                                cvv,
+                                NULL,
+                                &result,
+                                NULL) < 0)
+            goto done;
+        if (result == CG_MATCH){
+            fprintf(fout, "  <cr>\n");
+            fflush(fout);
+        }
+    }
+    if (mr_pt_len_get(mr) == 0){
+        retval = 0;
         goto done;
     }
-    strncpy(s, string, slen);
-    s[cursor] = '\0';
-    if (match_complete(h, pt, &s, &slen, cvv) < 0)
+    if (print_help_lines(h, fout, mr_pt_get(mr)) < 0)
         goto done;
-    extra = strlen(s) - cursor;      /* Extra characters added? */
-    if (extra){
-        cligen_buf_increase(h, strlen(s));
-        string = cligen_buf(h);
-        n = strlen(string) - cursor; /* Nr of chars right of cursor to copy */
-        cligen_buf_increase(h, strlen(string)+cursor+n);
-        string = cligen_buf(h);
-        for (i=cursor+n; i>=cursor; i--)             /* Copy right of cursor */
-            string[i + extra] = string[i];
-        strncpy(string + cursor, s + cursor, extra); /* Copy the new stuff */
-        *cursorp += extra;                           /* Increase cursor */
-    }
     retval = 0;
- done:
-    if (s)
-        free(s);
+  done:
+    if (cvt)
+        cvec_free(cvt);
+    if (cvr)
+        cvec_free(cvr);
     return retval;
 }
 

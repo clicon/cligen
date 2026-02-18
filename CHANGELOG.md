@@ -19,6 +19,10 @@
 ## 7.8.0
 Expected: May 2026
 
+### Corrected Bugs
+
+* Fixed: [Custom Expansion Functions called twice on Pressing TAB](https://github.com/clicon/cligen/issues/92)
+
 ## 7.7.0
 21 February 2026
 
