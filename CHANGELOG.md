@@ -1,6 +1,6 @@
 # Cligen Changelog
 
-* [7.7.0](#770) Expected: February 2026
+* [7.7.0](#770) 21 February 2026
 * [7.6.0](#760) 21 November 2025
 * [7.5.0](#750) 29 July 2025
 * [7.4.0](#740) 3 April 2025
@@ -16,7 +16,7 @@
 * [6.0.0](#600) 29 Nov 2022
 
 ## 7.7.0
-Expected: February 2026
+21 February 2026
 
 ### Features
 
@@ -27,7 +27,7 @@ Expected: February 2026
 
 Users may have to change how they access the system
 
-* Default TAB behaviour has changed: a single TAB only completes and does NOT show further alternatives, a second TAB will
+* Default TAB behaviour has changed: a single TAB only completes and does NOT show further alternatives, a second TAB shows alternatives.
   * To keep backward compatibility set cligen_tabmode flag `CLIGEN_TABMODE_SHOW` (-t 8)
 
 ### C/CLI-API changes on existing features
