@@ -96,12 +96,13 @@ done:
 EOF
 
 # Compile the test program - use the newly built library in parent directory
-newtest "Compile test program"
 if [ "$LINKAGE" = static ]; then
+    newtest "Compile test program: $CC -DHAVE_CONFIG_H -g -Wall $CFLAGS -I.. $cfile ../libcligen.a -o $app"
     COMPILE="$CC -DHAVE_CONFIG_H -g -Wall $CFLAGS -I.. $cfile ../libcligen.a -o $app"
 else
     # Link directly with .so file to pick up new symbols
-    COMPILE="$CC -DHAVE_CONFIG_H -g -Wall $CFLAGS -I.. $cfile ../libcligen.so.7.6 -o $app"
+    newtest "Compile test program: $CC -DHAVE_CONFIG_H -g -Wall $CFLAGS -I.. $cfile ../libcligen.so.${CLIGEN_VERSION_MAJOR}.${CLIGEN_VERSION_MINOR} -o $app"
+    COMPILE="$CC -DHAVE_CONFIG_H -g -Wall $CFLAGS -I.. $cfile ../libcligen.so.${CLIGEN_VERSION_MAJOR}.${CLIGEN_VERSION_MINOR} -o $app"
 fi
 expectpart "$($COMPILE 2>&1)" 0 ""
 
