@@ -495,8 +495,18 @@ match_vec(cligen_handle h,
         tmpreason = NULL;
     }
 #endif
-    if (mr_pt_len_get(mr) != 0)
-        mr_reason_set(mr, NULL);
+    if (mr_pt_len_get(mr) != 0){
+        if (mr_pref_get(mr) == COV_PREF_COMMAND_PARTIAL &&
+            mr_reason_get(mr) != NULL &&
+            pref_lower > COV_PREF_COMMAND_PARTIAL){
+            /* Partial command match with a validation error from a variable:
+             * remove the partial match and keep the validation reason
+             */
+            mr_pt_reset(mr);
+        }
+        else
+            mr_reason_set(mr, NULL);
+    }
     retval = 0;
  done:
     return retval;
