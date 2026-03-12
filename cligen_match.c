@@ -111,9 +111,21 @@ match_variable(cligen_handle h,
         goto done;
     if (t == CGV_DEC64) /* XXX: Seems misplaced? / too specific */
         cv_dec64_n_set(cv, cs->cgs_dec64_n);
-    if ((retval = cv_parse1(str, cv, reason)) <= 0)
+    if ((retval = cv_parse1(str, cv, reason)) <= 0){
+        /* If broad type parse failed, re-parse with specific type for correct error message */
+        if (retval == 0 && t != co->co_vtype){
+            if (reason != NULL && *reason != NULL){
+                free(*reason);
+                *reason = NULL;
+            }
+            cv_reset(cv);
+            cv_type_set(cv, co->co_vtype);
+            retval = cv_parse1(str, cv, reason);
+            if (retval > 0)
+                retval = 0;
+        }
         goto done;
-    /* here retval should be 1 */
+    }
     /* Validate value */
     if ((retval = cv_validate(h, cv, cs, co->co_command, reason)) <= 0)
         goto done;
