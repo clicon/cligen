@@ -51,6 +51,7 @@ int  cliread(cligen_handle h, char **stringp);
 void cli_trim(char **line, char comment);
 int  cliread_parse(cligen_handle h, char *string, parse_tree *pt, cg_obj **,
                    cvec **cvvp, cligen_result *result, char **reason);
+int  hist_expand_callback(cligen_handle h, const char *line, cvec *cvv);
 int  cliread_eval(cligen_handle h, char **line, int *cb_ret, cligen_result *result, char **reason);
 int  cligen_eval(cligen_handle h, cg_obj *co_match, cvec *cvv);
 void cligen_echo_on(void);

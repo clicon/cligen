@@ -829,7 +829,7 @@ cliread(cligen_handle h,
  * @retval     0       OK
  * @retval    -1       Error
  */
-static int
+int
 hist_expand_callback(cligen_handle h,
                      const char   *line,
                      cvec         *cvv)
