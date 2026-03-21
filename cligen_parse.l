@@ -46,7 +46,6 @@
 #define isblank(c) (c==' ')
 #endif /* isblank */
 
-#include "cligen_parse_type.h"  /* cgy_choice_pair_t */
 #include "cligen_parse.tab.h" /* generated */
 
 #include "cligen_buf.h"

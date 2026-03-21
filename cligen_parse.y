@@ -83,8 +83,6 @@
 
 #include "cligen_config.h"
 
-#include "cligen_parse_type.h"  /* cgy_choice_pair_t */
-
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
@@ -96,8 +94,6 @@
 #include <netinet/in.h>
 #include <net/if.h>
 
-#include <assert.h>
-
 #include "cligen_buf.h"
 #include "cligen_cv.h"
 #include "cligen_cvec.h"
@@ -108,6 +104,12 @@
 #include "cligen_syntax.h"
 #include "cligen_handle.h"
 #include "cligen_parse.h"
+
+/*! Choice pair: parallel '|'-separated lists of choice names and help texts */
+typedef struct {
+    char *names;
+    char *helps;
+} cgy_choice_pair_t;
 
 static int debug = 0;
 
