@@ -89,10 +89,26 @@ cov2cbuf(cbuf   *cb,
     cg_var *cv2;
 
     if (co->co_choice){
-        if (strchr(co->co_choice, '|'))
-            cprintf(cb, "(%s)", co->co_choice);
-        else
-            cprintf(cb, "%s", co->co_choice);
+        /* Print choice names only, without help texts */
+        char  *choice_copy;
+        char  *s;
+        char  *tok;
+        int    first = 1;
+        int    multiple = (strchr(co->co_choice, '|') != NULL);
+        if ((choice_copy = strdup(co->co_choice)) != NULL){
+            s = choice_copy;
+            if (multiple)
+                cprintf(cb, "(");
+            while ((tok = strsep(&s, "|")) != NULL) {
+                if (!first)
+                    cprintf(cb, "|");
+                cprintf(cb, "%s", tok);
+                first = 0;
+            }
+            if (multiple)
+                cprintf(cb, ")");
+            free(choice_copy);
+        }
     }
     else{
         if (brief){

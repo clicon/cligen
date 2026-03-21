@@ -46,6 +46,7 @@
 #define isblank(c) (c==' ')
 #endif /* isblank */
 
+#include "cligen_parse_type.h"  /* cgy_choice_pair_t */
 #include "cligen_parse.tab.h" /* generated */
 
 #include "cligen_buf.h"
@@ -183,9 +184,12 @@ stripdup(char *s0)
 <CHOICE>\n              { _CY->cy_linenum++; }
 <CHOICE>\|              { return *yytext; }
 <CHOICE>\>              { BEGIN(INITIAL); return *yytext; }
+<CHOICE>\(              { return *yytext; }
+<CHOICE>\)              { return *yytext; }
+<CHOICE>\"              { _CY->cy_lex_string_state=CHOICE; BEGIN(STRING); return DQ; }
 <CHOICE>[-+]?[0-9]+\.[0-9]+ { cligen_parselval.string = strdup(yytext); return DECIMAL;}
 <CHOICE>[-+]?[0-9]+     { cligen_parselval.string = strdup(yytext); return NUMBER;}
-<CHOICE>([^ \t\n>\|\"\[\]]|\\.)+ {
+<CHOICE>([^ \t\n>\|\"\(\)\[\]]|\\.)+ {
                                  cligen_parselval.string = strdup(yytext);
                                  return NAME; }
 

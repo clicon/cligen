@@ -39,6 +39,7 @@
   int intval;
   char *string;
   void *stack;
+  void *choicepair; /* cgy_choice_pair_t* in grammar actions */
 }
 
 %token MY_EOF
@@ -56,8 +57,9 @@
 %token <string> HELPSTR
 
 %type <string> charseq
-%type <string> choices
-%type <string> choice
+%type <choicepair> choices
+%type <choicepair> choice
+%type <string> choicehelp
 %type <string> numdec
 %type <string> arg1
 %type <string> typecast
@@ -81,6 +83,8 @@
 
 #include "cligen_config.h"
 
+#include "cligen_parse_type.h"  /* cgy_choice_pair_t */
+
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
@@ -91,6 +95,8 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <net/if.h>
+
+#include <assert.h>
 
 #include "cligen_buf.h"
 #include "cligen_cv.h"
@@ -720,31 +726,60 @@ cgy_helpstring(cligen_yacc *cy,
     return retval;
  }
 
-/*! Append a new choice option to a choice variable string
+/*! Append a name+helptext pair to an accumulated choicepair
  *
- * @param[in]  cy   CLIgen yacc parse struct
- * @param[in]  str  Accumulated choice string on the form: "a|..|z"
- * @param[in]  app  Choice option to append
- * @retval     s    New string created by appending: "<str>|<app>"
- * This is just string manipulation, the complete string is linked into CLIgen structs by upper rule
- * Note that this is variable choice. There is also command choice, eg [a|b] which is different.
+ * @param[in]  pair  Existing choicepair (names and helps strings), or NULL for first entry
+ * @param[in]  name  Choice name to append
+ * @param[in]  help  Help text to append (may be NULL)
+ * @retval     pair  Updated choicepair, or NULL on error
  */
-static char *
-cgy_var_choice_append(cligen_yacc *cy,
-                      char        *str,
-                      char        *app)
+static cgy_choice_pair_t *
+cgy_choicepair_append(cgy_choice_pair_t *pair,
+                      char              *name,
+                      char              *help)
 {
-    int len;
-    char *s;
+    size_t nlen;
+    size_t hlen;
+    char  *names;
+    char  *helps;
 
-    len = strlen(str)+strlen(app) + 2;
-    if ((s = realloc(str, len)) == NULL) {
-        fprintf(stderr, "%s: realloc: %s\n", __FUNCTION__, strerror(errno));
-        return NULL;
+    if (pair == NULL){
+        if ((pair = malloc(sizeof(*pair))) == NULL){
+            fprintf(stderr, "%s: malloc: %s\n", __FUNCTION__, strerror(errno));
+            return NULL;
+        }
+        pair->names = NULL;
+        pair->helps = NULL;
     }
-    strncat(s, "|", len-1);
-    strncat(s, app, len-1);
-    return s;
+    /* Append name */
+    if (pair->names == NULL){
+        names = strdup(name ? name : "");
+    }
+    else {
+        nlen = strlen(pair->names) + 1 + strlen(name ? name : "") + 1;
+        if ((names = realloc(pair->names, nlen)) == NULL){
+            fprintf(stderr, "%s: realloc names: %s\n", __FUNCTION__, strerror(errno));
+            return NULL;
+        }
+        strcat(names, "|");
+        strcat(names, name ? name : "");
+    }
+    pair->names = names;
+    /* Append help (always maintain parallel string, empty if no help) */
+    if (pair->helps == NULL){
+        helps = strdup(help ? help : "");
+    }
+    else {
+        hlen = strlen(pair->helps) + 1 + strlen(help ? help : "") + 1;
+        if ((helps = realloc(pair->helps, hlen)) == NULL){
+            fprintf(stderr, "%s: realloc helps: %s\n", __FUNCTION__, strerror(errno));
+            return NULL;
+        }
+        strcat(helps, "|");
+        strcat(helps, help ? help : "");
+    }
+    pair->helps = helps;
+    return pair;
 }
 
 /*! Post-processing of commands, eg at ';':
@@ -1467,8 +1502,13 @@ keypair     : NAME '(' ')' {
               }
             | V_CHOICE choices {
                  _PARSE_DEBUG("keypair->choice choices");
-                 _CY->cy_var->co_choice = $2;
-              }
+                 if ($2) {
+                     cgy_choice_pair_t *_p2 = (cgy_choice_pair_t *)$2;
+                     _CY->cy_var->co_choice      = _p2->names;
+                     _CY->cy_var->co_choice_help = _p2->helps;
+                     free(_p2);
+                 }
+               }
             | V_KEYWORD ':' NAME {
                  _PARSE_DEBUG("keypair->keyword name");
                 _CY->cy_var->co_keyword = $3;
@@ -1508,13 +1548,36 @@ exparg     : typecast arg1 {
            ;
 
 choices    : choice { $$ = $1; }
-           | choices '|' choice  { $$ = cgy_var_choice_append(_cy, $1, $3); free($3);}
+           | choices '|' choice {
+                 if ($3) {
+                     cgy_choice_pair_t *_p3 = (cgy_choice_pair_t *)$3;
+                     $$ = cgy_choicepair_append((cgy_choice_pair_t *)$1, _p3->names, _p3->helps);
+                     free(_p3->names); free(_p3->helps); free(_p3);
+                 } else
+                     $$ = $1;
+             }
            ;
 
-choice     : { $$ = NULL;}
-           | NUMBER { $$ = $1;}
-           | NAME { $$ = $1;}
-           | DECIMAL { $$ = $1;}
+choice     : { $$ = NULL; }
+           | NUMBER choicehelp {
+                 $$ = (void *)cgy_choicepair_append(NULL, $1, $2);
+                 free($1); if ($2) free($2);
+                 if ($$ == NULL) _YYERROR("choice");
+               }
+           | NAME choicehelp {
+                 $$ = (void *)cgy_choicepair_append(NULL, $1, $2);
+                 free($1); if ($2) free($2);
+                 if ($$ == NULL) _YYERROR("choice");
+               }
+           | DECIMAL choicehelp {
+                 $$ = (void *)cgy_choicepair_append(NULL, $1, $2);
+                 free($1); if ($2) free($2);
+                 if ($$ == NULL) _YYERROR("choice");
+               }
+           ;
+
+choicehelp : /* empty */ { $$ = NULL; }
+           | '(' DQ charseq DQ ')' { $$ = $3; }
            ;
 
 charseq    : charseq CHARS

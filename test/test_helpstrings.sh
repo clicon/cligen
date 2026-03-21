@@ -60,6 +60,66 @@ if [ $count -ne 1 ]; then
     err "number of ddd: 1" $count
 fi
 
+# Per-choice helptexts: choice:opt1("help1")|opt2("help2")|opt3
+cat > $fspec << 'SPEC'
+  prompt="cli> ";
+  comment="#";
+  treename="example";
+  set fmt <fmt:string choice:xml("XML format")|json("JSON format")|text>("Output format"), callback();
+SPEC
+
+newtest "choice helptext: xml"
+expectpart "$(echo "set fmt ?" | $cligen_file -f $fspec 2>&1)" 0 "xml" "XML format"
+
+newtest "choice helptext: json"
+expectpart "$(echo "set fmt ?" | $cligen_file -f $fspec 2>&1)" 0 "json" "JSON format"
+
+newtest "choice helptext: text falls back to leaf helptext"
+expectpart "$(echo "set fmt ?" | $cligen_file -f $fspec 2>&1)" 0 "text" "Output format"
+
+newtest "choice helptext: xml match"
+expectpart "$(echo "set fmt xml" | $cligen_file -f $fspec 2>&1)" 0 "value:xml" --not-- "value:json"
+
+# Per-choice helptexts with number type
+cat > $fspec << 'SPEC'
+  prompt="cli> ";
+  comment="#";
+  treename="example";
+  set level <level:int32 choice:1("Low")|2("Medium")|3>("Level"), callback();
+SPEC
+
+newtest "choice helptext number: 1 shows help"
+expectpart "$(echo "set level ?" | $cligen_file -f $fspec 2>&1)" 0 "1" "Low"
+
+newtest "choice helptext number: 2 shows help"
+expectpart "$(echo "set level ?" | $cligen_file -f $fspec 2>&1)" 0 "2" "Medium"
+
+newtest "choice helptext number: 3 falls back to leaf helptext"
+expectpart "$(echo "set level ?" | $cligen_file -f $fspec 2>&1)" 0 "3" "Level"
+
+newtest "choice helptext number: match 2"
+expectpart "$(echo "set level 2" | $cligen_file -f $fspec 2>&1)" 0 "value:2" --not-- "value:1"
+
+# Per-choice helptexts with decimal type
+cat > $fspec << 'SPEC'
+  prompt="cli> ";
+  comment="#";
+  treename="example";
+  set ratio <ratio:decimal64 fraction-digits:2 choice:0.25("Quarter")|0.50("Half")|0.75>("Ratio"), callback();
+SPEC
+
+newtest "choice helptext decimal: 0.25 shows help"
+expectpart "$(echo "set ratio ?" | $cligen_file -f $fspec 2>&1)" 0 "0.25" "Quarter"
+
+newtest "choice helptext decimal: 0.50 shows help"
+expectpart "$(echo "set ratio ?" | $cligen_file -f $fspec 2>&1)" 0 "0.50" "Half"
+
+newtest "choice helptext decimal: 0.75 falls back to leaf helptext"
+expectpart "$(echo "set ratio ?" | $cligen_file -f $fspec 2>&1)" 0 "0.75" "Ratio"
+
+newtest "choice helptext decimal: match 0.50"
+expectpart "$(echo "set ratio 0.50" | $cligen_file -f $fspec 2>&1)" 0 "value:0.50" --not-- "value:0.25"
+
 newtest "endtest"
 endtest
 

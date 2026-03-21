@@ -7,7 +7,7 @@
 %
 % Title
 %
-\title {CLIgen Manual\\ {\small CLIgen version 7.6}}
+\title {CLIgen Manual\\ {\small CLIgen version 7.7}}
 
 \author{Olof Hagsand}
 %
@@ -602,7 +602,7 @@ A CLI user will get the following choice:
   cli> interface '?'
      eth0        Interface name
      eth1        Interface name
-  cli> 
+  cli>
 \end{verbatim}
 The user can only select eth0 or eth1, and thus the value of the {\tt
   ifname} variable is either {\tt eth0} or {\tt eth1}.
@@ -618,6 +618,20 @@ Again, the former variant allows for naming of the variable which can
 be better when writing a callback function. In the example, the name
 of the variable in the first example is {\tt ifname} whereas in the
 second it is \emph{either} {\tt eth0} or {\tt eth1}.
+
+In the example above, the same helpstring ("Interface name") was applied to all options.
+You can add specialized help string to each choice options:
+\begin{verbatim}
+  interface <ifname:string choice:eth0("Ethernet")|lo0("loopback")>;
+\end{verbatim}
+
+The options are then presented as following:
+\begin{verbatim}
+  cli> interface '?'
+     eth0              Ethernet
+     lo0               Loopback
+  cli>
+\end{verbatim}
 
 \subsection{Expand}
 \label{sec:expand1}

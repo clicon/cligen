@@ -153,6 +153,11 @@ co_expand_sub(cg_obj  *co0,
                 fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
                 goto done;
             }
+        if (co0->co_choice_help)
+            if ((con->co_choice_help = strdup(co0->co_choice_help)) == NULL){
+                fprintf(stderr, "%s: strdup: %s\n", __FUNCTION__, strerror(errno));
+                goto done;
+            }
         if (co0->co_regex)
             if ((con->co_regex = cvec_dup(co0->co_regex)) == NULL){
                 fprintf(stderr, "%s: cvec_dup: %s\n", __FUNCTION__, strerror(errno));
@@ -221,6 +226,10 @@ transform_var_to_cmd(cg_obj *co,
     if (co->co_choice){
         free(co->co_choice);
         co->co_choice = NULL;
+    }
+    if (co->co_choice_help){
+        free(co->co_choice_help);
+        co->co_choice_help = NULL;
     }
     if (co->co_regex){
         cvec_free(co->co_regex);
@@ -651,14 +660,20 @@ pt_expand_choice(cg_obj       *co,
     char   *cp = NULL;
     char   *c;
     cg_obj *con = NULL;
+    char   *helptext;
 
-    /* parse co_command and get alternatives <alt:hej,hopp> */
+    /* parse co_choice and get alternatives, with optional parallel help texts in co_choice_help */
     if (co->co_choice){
+        char *helps = co->co_choice_help;   /* parallel '|'-separated helptexts, may be NULL */
+        char *cp_help = helps ? strdup(helps) : NULL;
+        char *hcmd = cp_help;
         cp = ccmd = strdup(co->co_choice);
         while ((c = strsep(&ccmd, ",|")) != NULL){
+            char *h = hcmd ? strsep(&hcmd, "|") : NULL;
+            helptext = (h && *h) ? strdup(h) : NULL;
             if (co_expand_sub(co, NULL, &con) < 0)
                 goto done;
-            if (transform_var_to_cmd(con, strdup(c), NULL) < 0)
+            if (transform_var_to_cmd(con, strdup(c), helptext) < 0)
                 goto done;
             if (cvv_filter && co_filter_set(con, cvv_filter) == NULL)
                 goto done;
@@ -667,6 +682,8 @@ pt_expand_choice(cg_obj       *co,
                 goto done;
             con = NULL;
         }
+        if (cp_help)
+            free(cp_help);
     }
     retval = 0;
  done:

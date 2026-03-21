@@ -131,6 +131,8 @@ co_stats_one(cg_obj   *co,
             sz += strlen(cgs->cgs_translate_fn_str) + 1;
         if (cgs->cgs_choice)
             sz += strlen(cgs->cgs_choice) + 1;
+        if (cgs->cgs_choice_help)
+            sz += strlen(cgs->cgs_choice_help) + 1;
         if (cgs->cgs_rangecvv_low)
             sz += cvec_size(cgs->cgs_rangecvv_low);
         if (cgs->cgs_rangecvv_upp)
@@ -717,6 +719,10 @@ co_copy(cg_obj  *co,
             if ((con->co_choice = strdup(co->co_choice)) == NULL)
                 goto done;
         }
+        if (co->co_choice_help){
+            if ((con->co_choice_help = strdup(co->co_choice_help)) == NULL)
+                goto done;
+        }
         if (co->co_regex){
             if ((con->co_regex = cvec_dup(co->co_regex)) == NULL)
                 goto done;
@@ -827,6 +833,10 @@ co_copy1(cg_obj  *co,
                 goto done;
         if (co->co_choice){
             if ((con->co_choice = strdup(co->co_choice)) == NULL)
+                goto done;
+        }
+        if (co->co_choice_help){
+            if ((con->co_choice_help = strdup(co->co_choice_help)) == NULL)
                 goto done;
         }
         if (co->co_regex){
@@ -1049,6 +1059,8 @@ co_free(cg_obj *co,
             cvec_free(co->co_expand_fn_vec);
         if (co->co_choice)
             free(co->co_choice);
+        if (co->co_choice_help)
+            free(co->co_choice_help);
         if (co->co_regex)
             cvec_free(co->co_regex);
         if (co->co_rangecvv_low)
