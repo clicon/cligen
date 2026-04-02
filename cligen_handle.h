@@ -109,6 +109,36 @@ typedef int (cligen_tree_resolve_wrapper_fn)(cligen_handle h, const char *name, 
  */
 typedef int (cligen_hist_fn)(cligen_handle h, const char *cmd, const char *cmd_expanded, void *arg);
 
+/*! CLIgen node filter callback: called for each candidate node during expand/completion
+ *
+ * Called just before a node is added to the expansion result.  The callback may
+ * set *skip=1 to exclude the node from completions (e.g. for NACM filtering).
+ * @param[in]  h    CLIgen handle
+ * @param[in]  co   Candidate cligen object being considered for inclusion
+ * @param[in]  cvv  Accumulated matched tokens so far.
+ *                  CO_COMMAND entries have cv_const=1 and cv_name==cv_value (YANG node names).
+ *                  CO_VARIABLE entries have cv_name=variable name, cv_value=user input.
+ * @param[in]  arg  Argument provided at registration time
+ * @param[out] skip Set to 1 to exclude this node from completions
+ * @retval     0    OK
+ * @retval    -1    Error
+ */
+typedef int (cligen_node_filter_fn)(cligen_handle h, cg_obj *co, cvec *cvv, void *arg, int *skip);
+
+/*! Callback type: determine CO_FLAGS_TREEREF propagation during tree-reference expansion
+ *
+ * Called by CLIgen for each CO_REFERENCE encountered during expansion.
+ * The callback decides what flags to OR onto every copy produced within
+ * the expansion of tree @treename (and transitively into nested expansions).
+ * @param[in]  h         CLIgen handle
+ * @param[in]  treename  Name of tree being expanded (co_command, '@' already stripped)
+ * @param[in]  inherit   Flags propagated from the enclosing expansion (0 at top level)
+ * @param[out] flagsp    Flags to OR onto all copies within this expansion
+ * @retval     0         OK
+ * @retval    -1         Error
+ */
+typedef int (cligen_treeref_flags_fn)(cligen_handle h, const char *treename, uint32_t inherit, uint32_t *flagsp);
+
 /*
  * Prototypes
  */
@@ -221,5 +251,11 @@ int   cligen_eval_wrap_fn_get(cligen_handle h, cligen_eval_wrap_fn **fn, void **
 
 int   cligen_tree_resolve_wrapper_set(cligen_handle h, cligen_tree_resolve_wrapper_fn *fn, void *arg);
 int   cligen_tree_resolve_wrapper_get(cligen_handle h, cligen_tree_resolve_wrapper_fn **fn, void **arg);
+
+int   cligen_node_filter_set(cligen_handle h, cligen_node_filter_fn *fn, void *arg);
+int   cligen_node_filter_get(cligen_handle h, cligen_node_filter_fn **fn, void **arg);
+
+int cligen_treeref_flags_fn_set(cligen_handle h, cligen_treeref_flags_fn *fn);
+int cligen_treeref_flags_fn_get(cligen_handle h, cligen_treeref_flags_fn **fn);
 
 #endif /* _CLIGEN_HANDLE_H_ */

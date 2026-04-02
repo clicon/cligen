@@ -117,6 +117,9 @@ struct cligen_handle{
     void        *ch_eval_wrap_arg; /* Argument to eval wrap function */
     cligen_tree_resolve_wrapper_fn *ch_tree_resolve_wrapper_fn;  /* Wrap function for treeref lookup */
     void        *ch_tree_resolve_wrapper_arg; /* Argument to treeref wrap function */
+    cligen_node_filter_fn *ch_node_filter_fn; /* Callback to filter nodes from expand/completion */
+    void        *ch_node_filter_arg;          /* Argument to node filter callback */
+    cligen_treeref_flags_fn *ch_treeref_flags_fn; /* Callback to compute CO_FLAGS_TREEREF propagation */
 };
 
 #endif /* _CLIGEN_HANDLE_INTERNAL_H_ */

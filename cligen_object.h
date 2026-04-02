@@ -167,6 +167,7 @@ typedef struct cg_varspec cg_varspec;
 #define CO_FLAGS_OPTION    0x08  /* Generated from optional [] */
 #define CO_FLAGS_MATCH     0x10  /* For sets: avoid selecting same more than once */
 #define CO_FLAGS_ALIAS     0x20  /* Added as an alias (see cligen_alias_cb) */
+#define CO_FLAGS_TREEREF   0x40  /* Set by application treeref-flags callback; propagated to all copies within a tagged expansion */
 
 /* Flags for pt_copy and co_copy
  */

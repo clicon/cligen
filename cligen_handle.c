@@ -1449,3 +1449,79 @@ cligen_tree_resolve_wrapper_get(cligen_handle            h,
         *arg = ch->ch_tree_resolve_wrapper_arg;
     return 0;
 }
+
+/*! Set CLIgen node filter callback
+ *
+ * The callback is invoked for each candidate node during expand/completion,
+ * just before the node is added to the result.  Set *skip=1 to exclude it.
+ * @param[in]  h    CLIgen handle
+ * @param[in]  fn   Filter function, or NULL to clear
+ * @param[in]  arg  Argument passed to fn
+ * @retval     0    OK
+ */
+int
+cligen_node_filter_set(cligen_handle         h,
+                       cligen_node_filter_fn *fn,
+                       void                  *arg)
+{
+    struct cligen_handle *ch = handle(h);
+
+    ch->ch_node_filter_fn = fn;
+    ch->ch_node_filter_arg = arg;
+    return 0;
+}
+
+/*! Get CLIgen node filter callback
+ *
+ * @param[in]  h    CLIgen handle
+ * @param[out] fn   Registered filter function (may be NULL)
+ * @param[out] arg  Argument registered with the function
+ * @retval     0    OK
+ */
+int
+cligen_node_filter_get(cligen_handle          h,
+                       cligen_node_filter_fn **fn,
+                       void                  **arg)
+{
+    struct cligen_handle *ch = handle(h);
+
+    if (fn)
+        *fn = ch->ch_node_filter_fn;
+    if (arg)
+        *arg = ch->ch_node_filter_arg;
+    return 0;
+}
+
+/*! Get the treeref-flags callback
+ *
+ * @param[in]  h    CLIgen handle
+ * @param[out] fnp  Callback function pointer (may be NULL)
+ * @retval     0    OK
+ */
+int
+cligen_treeref_flags_fn_get(cligen_handle           h,
+                             cligen_treeref_flags_fn **fnp)
+{
+    struct cligen_handle *ch = handle(h);
+
+    *fnp = ch->ch_treeref_flags_fn;
+    return 0;
+}
+
+/*! Set the treeref-flags callback
+ *
+ * The callback is invoked for each CO_REFERENCE encountered during expansion.
+ * It returns the flags to OR onto all copies produced within that expansion.
+ * @param[in]  h   CLIgen handle
+ * @param[in]  fn  Callback, or NULL to clear
+ * @retval     0   OK
+ */
+int
+cligen_treeref_flags_fn_set(cligen_handle           h,
+                             cligen_treeref_flags_fn *fn)
+{
+    struct cligen_handle *ch = handle(h);
+
+    ch->ch_treeref_flags_fn = fn;
+    return 0;
+}

@@ -21,6 +21,8 @@ Expected: May 2026
 
 ### Features
 
+* Added new nodetest and treeref-flags callbacks to be able to skip commands dynamically
+
 ### Corrected Bugs
 
 * Fixed: [cli description should be enumeration's desc not the leaf's. for yang enum type](https://github.com/clicon/clixon/issues/183)

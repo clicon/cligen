@@ -275,6 +275,7 @@ usage(char *argv)
             "\t-e \t\tSet automatic expansion/completion for all expand() functions\n"
             "\t-E \t\tExclude keys in callback cvv. Default include keys\n"
             "\t-c \t\tExpand first arg of callback cvv to string matching keywords\n"
+            "\t-n <name> \tHide node with this command name via node filter callback (repeatable)\n"
             "\t-P <mode> \tSet preference mode: 1: tiebreak terminals, 2: also non-terminals\n"
             "\t-t <nr> \tSet tab mode: 1:columns, 2: same pref for vars, 4: all steps\n"
             "\t-s <nr> \tScrolling 0: disable line scrolling, 1: enable line scrolling (default 1)\n"
@@ -282,6 +283,37 @@ usage(char *argv)
             ,
             argv);
     exit(0);
+}
+
+/*! Node filter callback: skip nodes whose co_command appears in the skip-list
+ *
+ * @param[in]  h    CLIgen handle
+ * @param[in]  co   Candidate node
+ * @param[in]  cvv  Accumulated matched tokens
+ * @param[in]  arg  cvec of node names to skip (string values)
+ * @param[out] skip Set to 1 to exclude this node
+ * @retval     0    OK
+ * @retval    -1    Error
+ */
+static int
+node_filter_cb(cligen_handle h,
+               cg_obj       *co,
+               cvec         *cvv,
+               void         *arg,
+               int          *skip)
+{
+    cvec   *skip_names = (cvec *)arg;
+    cg_var *cv = NULL;
+
+    if (co->co_type != CO_COMMAND)
+        return 0;
+    while ((cv = cvec_each(skip_names, cv)) != NULL){
+        if (strcmp(cv_string_get(cv), co->co_command) == 0){
+            *skip = 1;
+            break;
+        }
+    }
+    return 0;
 }
 
 /* Main */
@@ -307,8 +339,11 @@ main(int   argc,
     int         scrollmode = 0;
     int         exclude_keys = 0;
     int         expand_first = 0;
+    cvec       *skip_names = NULL;   /* Node names to hide via node filter callback */
 
     if ((h = cligen_init()) == NULL)
+        goto done;
+    if ((skip_names = cvec_new(0)) == NULL)
         goto done;
     argv++;argc--;
     for (;(argc>0)&& *argv; argc--, argv++){
@@ -342,6 +377,15 @@ main(int   argc,
             break;
         case 'c': /* Expand first arg of callback cvv */
             expand_first++;
+            break;
+        case 'n': /* Node filter: hide node by name */
+            argc--;argv++;
+            {
+                cg_var *cv;
+                if ((cv = cvec_add(skip_names, CGV_STRING)) == NULL)
+                    goto done;
+                cv_string_set(cv, *argv);
+            }
             break;
         case 'P': /* Return first if several have same preference, for terminals */
             argc--;argv++;
@@ -377,6 +421,9 @@ main(int   argc,
         cligen_expand_first_set(h, 1);
     cligen_lexicalorder_set(h, 1);
     cligen_ignorecase_set(h, 1);
+    if (cvec_len(skip_names) > 0)
+        if (cligen_node_filter_set(h, node_filter_cb, skip_names) < 0)
+            goto done;
     if (set_preference)
         cligen_preference_mode_set(h, set_preference);
 //    cligen_parse_debug(1);
@@ -430,6 +477,8 @@ main(int   argc,
     retval = 0;
  done:
     fclose(f);
+    if (skip_names)
+        cvec_free(skip_names);
     if (h)
         cligen_exit(h);
     return retval;
