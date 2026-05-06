@@ -95,12 +95,12 @@ enum cg_objtype{
            1 if did not handle expand
           -1 on error.
 */
-typedef int (expand_cb)(cligen_handle h,       /* handler: cligen or userhandle */
-                        char         *name,    /* name of this function (in text) */
-                        cvec         *cvv,     /* vars vector of values in command */
-                        cvec         *argv,    /* argument vector given to callback */
-                        cvec         *commands,/* vector of commands */
-                        cvec         *helptexts /* vector of help-texts */
+typedef int (expand_cb)(cligen_handle h,             /* handler: cligen or userhandle */
+                        const char   *name,          /* name of this function (in text) */
+                        cvec         *cvv,           /* vars vector of values in command */
+                        cvec         *argv,          /* argument vector given to callback */
+                        cvec         *commands,      /* vector of commands */
+                        cvec         *helptexts      /* vector of help-texts */
                         );
 
 #if 1  // XXX backward-compatible
