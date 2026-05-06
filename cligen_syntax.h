@@ -65,14 +65,14 @@ int
 clispec_parse_str(cligen_handle  h,
                   const char    *str,
                   const char    *name,
-                  char          *treename,
+                  const char    *treename,
                   parse_tree    *pt,
                   cvec          *globals);
 int
 clispec_parse_file(cligen_handle h,
                    FILE         *f,
-                   char         *name,
-                   char         *treename,
+                   const char   *name,
+                   const char   *treename,
                    parse_tree   *obsolete,
                    cvec         *globals);
 

@@ -135,7 +135,7 @@ cligen_parse_debug(int d)
  * @param[in]  cy  CLIgen yacc parse struct
  */
 void cligen_parseerror(void *_cy,
-                       char *s)
+                       const char *s)
 {
     cligen_yacc *cy = (cligen_yacc *)_cy;
 

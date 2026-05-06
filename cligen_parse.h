@@ -99,7 +99,7 @@ int cgy_exit(cligen_yacc *cy);
 
 int cligen_parselex(void *_ya);
 int cligen_parseparse(void *);
-void cligen_parseerror(void *_ya, char*);
+void cligen_parseerror(void *_ya, const char*);
 int cligen_parse_debug(int d);
 
 #endif  /* _CLIGEN_PARSE_H_ */

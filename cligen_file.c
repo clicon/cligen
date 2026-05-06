@@ -225,7 +225,7 @@ str2fn(const char *name,
  */
 static int
 cli_expand_cb(cligen_handle h,
-              char         *fn_str,
+              const char   *fn_str,
               cvec         *cvv,
               cvec         *argv,
               cvec         *commands,     /* vector of function strings */
