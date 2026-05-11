@@ -326,8 +326,12 @@ cligen_hist_init(cligen_handle h,
                 free(ch->ch_hist_buf[i]);
             ch->ch_hist_buf[i] = NULL;
         }
-    if ((ch->ch_hist_buf = (char**)realloc(ch->ch_hist_buf, ch->ch_hist_size*sizeof(char*))) == NULL)
-        goto done;
+    {
+        char **tmp_buf;
+        if ((tmp_buf = (char**)realloc(ch->ch_hist_buf, ch->ch_hist_size*sizeof(char*))) == NULL)
+            goto done;
+        ch->ch_hist_buf = tmp_buf;
+    }
     ch->ch_hist_cur = 0;
     ch->ch_hist_last = 0;
     ch->ch_hist_pre = 0;

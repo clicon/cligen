@@ -521,6 +521,10 @@ cligen_escape_do(const char *s0)
     }
     len = strlen(s0);
     nr = cligen_escape_nr(s0);
+    if (len > SIZE_MAX - (size_t)nr - 1){
+        errno = EOVERFLOW;
+        return NULL;
+    }
     if ((s1 = (char*)malloc(len + 1 + nr)) == NULL){
         return NULL;
     }
