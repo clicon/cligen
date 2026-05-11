@@ -1620,7 +1620,8 @@ parse_url(const char *url,
     if (strncmp(tmp, "://", 3)) /* :// */
         goto warn;
     *tmp = '\0';
-    cv->var_urlproto = strdup(str);
+    if ((cv->var_urlproto = strdup(str)) == NULL)
+        goto done;
     str = tmp+3;
     if ((tmp = strchr(str, '@')) != NULL){
         /* user field */
@@ -1628,26 +1629,34 @@ parse_url(const char *url,
         if ((tmp2 = strchr(str, ':')) != NULL){
             /* user:passwd field */
             *tmp2 = '\0';
-            cv->var_urlpasswd = strdup(tmp2+1);
+            if ((cv->var_urlpasswd = strdup(tmp2+1)) == NULL)
+                goto done;
         }
         else
-            cv->var_urlpasswd = strdup("");
-        cv->var_urluser = strdup(str);
+            if ((cv->var_urlpasswd = strdup("")) == NULL)
+                goto done;
+        if ((cv->var_urluser = strdup(str)) == NULL)
+            goto done;
         str = tmp+1;
     }
     else{
-        cv->var_urluser = strdup("");
-        cv->var_urlpasswd = strdup("");
+        if ((cv->var_urluser = strdup("")) == NULL)
+            goto done;
+        if ((cv->var_urlpasswd = strdup("")) == NULL)
+            goto done;
     }
     if ((tmp = strchr(str, '/')) != NULL)
         *tmp = '\0';
-    cv->var_urladdr = strdup(str);
+    if ((cv->var_urladdr = strdup(str)) == NULL)
+        goto done;
     if (tmp){
         str = tmp+1;
-        cv->var_urlpath = strdup(str);
+        if ((cv->var_urlpath = strdup(str)) == NULL)
+            goto done;
     }
     else
-        cv->var_urlpath = strdup("");
+        if ((cv->var_urlpath = strdup("")) == NULL)
+            goto done;
     retval = 1; /* OK */
   done:
     if (str0)

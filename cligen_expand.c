@@ -682,22 +682,31 @@ pt_expand_choice(cg_obj       *co,
     int     retval = -1;
     char   *ccmd;
     char   *cp = NULL;
+    char   *cp_help = NULL;
     char   *c;
+    char   *cdup;
     cg_obj *con = NULL;
     char   *helptext;
 
     /* parse co_choice and get alternatives, with optional parallel help texts in co_choice_help */
     if (co->co_choice){
         char *helps = co->co_choice_help;   /* parallel '|'-separated helptexts, may be NULL */
-        char *cp_help = helps ? strdup(helps) : NULL;
+        if (helps && (cp_help = strdup(helps)) == NULL)
+            goto done;
         char *hcmd = cp_help;
-        cp = ccmd = strdup(co->co_choice);
+        if ((cp = strdup(co->co_choice)) == NULL)
+            goto done;
+        ccmd = cp;
         while ((c = strsep(&ccmd, ",|")) != NULL){
             char *h = hcmd ? strsep(&hcmd, "|") : NULL;
-            helptext = (h && *h) ? strdup(h) : NULL;
+            helptext = NULL;
+            if (h && *h && (helptext = strdup(h)) == NULL)
+                goto done;
             if (co_expand_sub(co, NULL, &con) < 0)
                 goto done;
-            if (transform_var_to_cmd(con, strdup(c), helptext) < 0)
+            if ((cdup = strdup(c)) == NULL)
+                goto done;
+            if (transform_var_to_cmd(con, cdup, helptext) < 0)
                 goto done;
             if (cvv_filter && co_filter_set(con, cvv_filter) == NULL)
                 goto done;
@@ -706,11 +715,11 @@ pt_expand_choice(cg_obj       *co,
                 goto done;
             con = NULL;
         }
-        if (cp_help)
-            free(cp_help);
     }
     retval = 0;
  done:
+    if (cp_help)
+        free(cp_help);
     if (con)
         co_free(con, 0);
     if (cp)

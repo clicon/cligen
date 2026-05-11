@@ -68,9 +68,9 @@ cligen_exec_cb(cligen_handle handle,
                cvec         *argv)
 {
     cg_var *cv = NULL;
-    char    buf[64];
+    char   *buf = NULL;
     int     pid;
-    int     ret;
+    int     ret = -1;
     int     status;
 
     if (argv == NULL)
@@ -79,15 +79,20 @@ cligen_exec_cb(cligen_handle handle,
         while ((cv = cvec_each1(cvv, cv)) != NULL) {
             if (cv_const_get(cv))
                 continue;
-            cv2str(cv, buf, sizeof(buf)-1);
-            setenv(cv_name_get(cv), buf, 1 );
+            if ((buf = cv2str_dup(cv)) == NULL)
+                exit(1);
+            setenv(cv_name_get(cv), buf, 1);
+            free(buf);
+            buf = NULL;
         }
-        cv2str(cvec_i(argv, 0), buf, sizeof(buf)-1);
+        if ((buf = cv2str_dup(cvec_i(argv, 0))) == NULL)
+            exit(1);
         ret = system(buf);
+        free(buf);
         exit(ret);
     }
     /* Wait for child to finish */
-    if(waitpid (pid, &status, 0) == pid)
+    if (waitpid(pid, &status, 0) == pid)
         ret = WEXITSTATUS(status);
     else
         ret = -1;
@@ -151,8 +156,9 @@ output_fn(cligen_handle handle,
 
 /*! Output pipe function
  *
- * First argv is a shell command,
- * the following argv:s are names of variables in cvv whose values are appended to the shell
+ * First argv is a shell command prefix (e.g. "grep -e"), the following argv:s are names
+ * of variables in cvv whose values are appended as separate arguments.
+ * Uses execv() to avoid shell injection from user-supplied variable values.
  * @param[in]  h     CLIgen handle / user handle
  * @param[in]  cvv   Vector of variables: function parameters
  * @param[in]  argv  Vector of variables from command-line
@@ -167,30 +173,46 @@ pipe_shell_fn(cligen_handle h,
               cvec         *argv)
 {
     int     retval = -1;
-    cbuf   *cb = NULL;
     cg_var *av;
     cg_var *cv;
     char   *name;
+    char  **exec_argv = NULL;
+    int     exec_argc = 0;
+    char   *cmd_copy = NULL;
+    char   *tok;
+    char   *saveptr;
 
-    if ((cb = cbuf_new()) == NULL){
-        perror("cbuf_new");
+    if (argv == NULL || (av = cvec_i(argv, 0)) == NULL)
+        goto done;
+    if ((exec_argv = calloc(cvec_len(argv) + 64, sizeof(char *))) == NULL){
+        perror("calloc");
         goto done;
     }
-    if (argv && (av = cvec_i(argv, 0)) != NULL){
-        /* First arg is command */
-        cprintf(cb, "%s", cv_string_get(av));
-        /* Rest are names of parameters from cvv */
-        av = NULL;
-        while ((av = cvec_each1(argv, av)) != NULL){
-            name = cv_string_get(av);
-            if ((cv = cvec_find_var(cvv, name)) != NULL)
-                cprintf(cb, " %s", cv_string_get(cv));
-        }
-        retval = execl("/bin/sh", "sh", "-c", cbuf_get(cb), (char *) NULL);
+    /* Tokenize the fixed command prefix into separate args to avoid shell injection */
+    if ((cmd_copy = strdup(cv_string_get(av))) == NULL){
+        perror("strdup");
+        goto done;
     }
+    tok = strtok_r(cmd_copy, " \t", &saveptr);
+    while (tok != NULL){
+        exec_argv[exec_argc++] = tok;
+        tok = strtok_r(NULL, " \t", &saveptr);
+    }
+    /* Append user variable values as separate arguments (not shell-interpreted) */
+    av = NULL;
+    while ((av = cvec_each1(argv, av)) != NULL){
+        name = cv_string_get(av);
+        if ((cv = cvec_find_var(cvv, name)) != NULL)
+            exec_argv[exec_argc++] = cv_string_get(cv);
+    }
+    exec_argv[exec_argc] = NULL;
+    if (exec_argc > 0)
+        retval = execvp(exec_argv[0], exec_argv);
  done:
-    if (cb)
-        cbuf_free(cb);
+    if (cmd_copy)
+        free(cmd_copy);
+    if (exec_argv)
+        free(exec_argv);
     return retval;
 }
 

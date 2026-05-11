@@ -583,8 +583,10 @@ co_new(const char *cmd,
 
     if ((co = co_new_only(CO_COMMAND)) == NULL)
         return NULL;
-    if (cmd)
-        co->co_command = strdup(cmd);
+    if (cmd && (co->co_command = strdup(cmd)) == NULL){
+        free(co);
+        return NULL;
+    }
     co_up_set(co, parent);
     /* parse-tree created implicitly */
     if ((pt = pt_new()) == NULL){

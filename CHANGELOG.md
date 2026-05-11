@@ -1,4 +1,4 @@
-# Cligen Changelog
+# CLIgen Changelog
 
 * [7.8.0](#780) Expected: May 2026
 * [7.7.0](#770) 21 February 2026
@@ -21,7 +21,8 @@ Expected: May 2026
 
 ### Features
 
-* Added new nodetest and treeref-flags callbacks to be able to skip commands dynamically
+Check before validate in case of "when" statement
+* Part of solution for https://github.com/clicon/cligen/issues/94
 
 ### Corrected Bugs
 
