@@ -66,7 +66,7 @@ str2fn(const char *name, void *arg, char **error)
 
 /* Callback for pt_apply: count nodes */
 static int
-count_fn(cg_obj *co, int depth, void *arg)
+count_fn(cg_obj *co, void *arg)
 {
     int *count = (int *)arg;
     (*count)++;
