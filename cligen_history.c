@@ -87,7 +87,7 @@ hist_save(const char *p)
 {
     char *s = NULL;
     int   len = strlen(p)+1;
-    char *nl = strchr(p, '\n'); /* newline */
+    const char *nl = strchr(p, '\n'); /* newline */
 
     if (nl) {
         if ((s = malloc(len)) == NULL)

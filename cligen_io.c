@@ -143,7 +143,7 @@ cligen_output_scroll(FILE       *f,
     const char *ibend;
     const char *ib0;  /* Moving window start */
     const char *ib1;  /* Moving window end */
-    char       *ibcr;
+    const char *ibcr;
     int         c;
     char       *linebuf = NULL;
     ssize_t     remain;
