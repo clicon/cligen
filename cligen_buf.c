@@ -60,6 +60,7 @@
 
 #include "cligen_buf.h"              /* External API */
 #include "cligen_buf_internal.h"
+#include "banned.h"
 
 /*
  * Variables
@@ -213,20 +214,36 @@ static int
 cbuf_realloc(cbuf  *cb,
              size_t sz)
 {
-    int retval = -1;
-    int diff;
+    int    retval = -1;
+    size_t needed;
+    char  *tmp;
 
-    diff = cb->cb_buflen - (cb->cb_strlen + sz + 1);
-    if (diff <= 0){
-        while (diff <= 0){
-            if (cbuflen_threshold == 0 || cb->cb_buflen < cbuflen_threshold)
+    /* Guard against overflow in required size calculation */
+    if (sz > SIZE_MAX - cb->cb_strlen - 1){
+        errno = ENOMEM;
+        goto done;
+    }
+    needed = cb->cb_strlen + sz + 1;
+    if (needed > cb->cb_buflen){
+        while (cb->cb_buflen < needed){
+            if (cbuflen_threshold == 0 || cb->cb_buflen < cbuflen_threshold){
+                if (cb->cb_buflen > SIZE_MAX / 2){
+                    errno = ENOMEM;
+                    goto done;
+                }
                 cb->cb_buflen *= 2; /* Double the space - exponential */
-            else
-                cb->cb_buflen += cbuflen_threshold; /* Add - linear growth*/
-            diff = cb->cb_buflen - (cb->cb_strlen + sz + 1);
+            }
+            else {
+                if (cb->cb_buflen > SIZE_MAX - cbuflen_threshold){
+                    errno = ENOMEM;
+                    goto done;
+                }
+                cb->cb_buflen += cbuflen_threshold; /* Add - linear growth */
+            }
         }
-        if ((cb->cb_buffer = realloc(cb->cb_buffer, cb->cb_buflen)) == NULL)
+        if ((tmp = realloc(cb->cb_buffer, cb->cb_buflen)) == NULL)
             goto done;
+        cb->cb_buffer = tmp;
     }
     retval = 0;
  done:

@@ -54,6 +54,7 @@
 #include "cligen_handle.h"
 #include "cligen_io.h"
 #include "cligen_print.h"
+#include "banned.h"
 
 #define VARIABLE_PRE  '<'
 #define VARIABLE_POST '>'

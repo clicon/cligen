@@ -59,6 +59,7 @@
 #include "cligen_result.h"
 #include "cligen_read.h"
 #include "cligen_util.h"
+#include "banned.h"
 
 /*! Utility function to append string cv to a cligen vector
  *

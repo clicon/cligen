@@ -1444,7 +1444,7 @@ helpstring1 : helpstring1 HELPSTR
                   size_t len = strlen($1);
                   _PARSE_DEBUG("helpstring1 -> helpstring1 HELPSTR");
                   if (($$ = realloc($1, len+strlen($2) +1)) == NULL) _YYERROR("cmd");
-                  sprintf($$+len, "%s", $2);
+                  memcpy($$+len, $2, strlen($2)+1);
               }
             | HELPSTR
                {
@@ -1603,7 +1603,7 @@ charseq    : charseq CHARS
                   int len = strlen($1);
                   _PARSE_DEBUG("charseq->charseq CHARS");
                   $$ = realloc($1, len+strlen($2) +1);
-                  sprintf($$+len, "%s", $2);
+                  memcpy($$+len, $2, strlen($2)+1);
                   free($2);
                  }
            | CHARS {_PARSE_DEBUG("charseq->CHARS");

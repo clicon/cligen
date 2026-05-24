@@ -69,6 +69,7 @@
 #include "cligen_handle_internal.h"
 #include "cligen_history.h"
 #include "cligen_history_internal.h"
+#include "banned.h"
 
 /*
  * Constants

@@ -64,6 +64,7 @@
 
 #include "cligen_cv_internal.h"
 #include "cligen_cvec_internal.h"
+#include "banned.h"
 
 /*! A malloc version that aligns on 4 bytes. To avoid warning from valgrind */
 #define align4(s) (((s)/4)*4 + 4)
@@ -77,7 +78,7 @@ static inline char * strdup4(const char *str)
     len = align4(strlen(str)+1);
     if ((dup = malloc(len)) == NULL)
         return NULL;
-    strcpy(dup, str);
+    memcpy(dup, str, len);
     return dup;
 }
 
@@ -326,7 +327,7 @@ int
 cvec_del_i(cvec *cvv,
            int   i)
 {
-    if (cvec_len(cvv) == 0 || cvec_len(cvv) < i){
+    if (cvec_len(cvv) == 0 || cvec_len(cvv) <= i){
         errno = EINVAL;
         return -1;
     }

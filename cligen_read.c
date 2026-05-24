@@ -78,6 +78,7 @@
 #include "cligen_expand.h"
 #include "cligen_history_internal.h"
 #include "cligen_getline.h"
+#include "banned.h"
 
 /*
  * Local prototypes

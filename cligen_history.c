@@ -74,6 +74,7 @@
 #include "cligen_handle_internal.h"
 #include "cligen_history_internal.h"
 #include "cligen_history.h"
+#include "banned.h"
 
 /*! Makes a copy of the string
  *
@@ -91,7 +92,7 @@ hist_save(const char *p)
     if (nl) {
         if ((s = malloc(len)) == NULL)
             goto done;
-        strcpy(s, p);
+        memcpy(s, p, len);
         s[len-1] = 0;
     }
     else {

@@ -64,6 +64,7 @@
 #include "cligen_getline.h"
 
 #include "cligen_cv_internal.h"
+#include "banned.h"
 
 /*
  * URL protocol strings

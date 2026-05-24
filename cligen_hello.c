@@ -40,6 +40,7 @@
 #include <netinet/in.h>
 
 #include <cligen/cligen.h>
+#include "banned.h"
 
 /*! CLI callback that just prints the function argument
  */

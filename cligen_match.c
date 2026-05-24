@@ -67,6 +67,7 @@
 #include "cligen_result.h"
 #include "cligen_read.h"
 #include "cligen_match.h"
+#include "banned.h"
 
 #ifndef MIN
 #define MIN(x,y) ((x)<(y)?(x):(y))

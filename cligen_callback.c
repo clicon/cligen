@@ -43,6 +43,7 @@
 #include "cligen_cv.h"
 #include "cligen_cvec.h"
 #include "cligen_callback.h"
+#include "banned.h"
 
 cgv_fnstype_t *
 co_callback_fn_get(cg_callback *cc)

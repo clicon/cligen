@@ -51,6 +51,7 @@
 #include "cligen_result.h"
 #include "cligen_read.h"
 #include "cligen_syntax.h"
+#include "banned.h"
 
 /*! Parse a string containing a CLIgen spec into a parse-tree
  *

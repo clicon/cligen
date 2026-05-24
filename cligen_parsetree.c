@@ -73,6 +73,7 @@
 #include "cligen_parse.h"
 #include "cligen_handle.h"
 #include "cligen_getline.h"
+#include "banned.h"
 
 /* Private definition of parsetree. Public is defined in cligen_parsetree.h
  *

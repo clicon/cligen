@@ -68,6 +68,7 @@
 #include "cligen_parse.h"
 #include "cligen_handle.h"
 #include "cligen_getline.h"
+#include "banned.h"
 
 /* Stats: nr of created cligen objects */
 uint64_t _co_created = 0;

@@ -163,6 +163,7 @@ struct termio   new_termio, old_termio;
 #include <descrip.h>
 #include <ttdef.h>
 #include <iodef.h>
+#include "banned.h"
 #include unixio
 
 static int   setbuff[2];             /* buffer to set terminal attributes */

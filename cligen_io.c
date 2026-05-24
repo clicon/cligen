@@ -63,6 +63,7 @@
 #include "cligen_print.h"
 #include "cligen_io.h"
 #include "cligen_getline.h"
+#include "banned.h"
 
 /*
  * Constants

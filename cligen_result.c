@@ -54,6 +54,7 @@
 #include "cligen_object.h"
 #include "cligen_parsetree.h"
 #include "cligen_result.h"
+#include "banned.h"
 
 /*! Result vector from match_pattern_* family of functions
  */

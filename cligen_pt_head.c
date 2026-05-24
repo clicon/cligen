@@ -72,6 +72,7 @@
 #include "cligen_getline.h"
 #include "cligen_print.h"
 #include "cligen_handle_internal.h"
+#include "banned.h"
 
 /*
  * Access functions

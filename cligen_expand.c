@@ -73,6 +73,7 @@
 #include "cligen_print.h"
 #include "cligen_expand.h"
 #include "cligen_syntax.h"
+#include "banned.h"
 
 /*! Copy and expand a cligen object.
  *
