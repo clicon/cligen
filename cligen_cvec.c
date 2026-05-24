@@ -228,8 +228,12 @@ cvec_add(cvec        *cvv,
         return NULL;
     }
     len = cvv->vr_len + 1;
-    if ((cvv->vr_vec = realloc(cvv->vr_vec, len*sizeof(cg_var))) == NULL)
-        return NULL;
+    {
+        cg_var *tmp;
+        if ((tmp = realloc(cvv->vr_vec, len*sizeof(cg_var))) == NULL)
+            return NULL;
+        cvv->vr_vec = tmp;
+    }
     cvv->vr_len = len;
     cv = cvec_i(cvv, len-1);
     memset(cv, 0, sizeof(*cv));
@@ -296,7 +300,11 @@ cvec_del(cvec   *cvv,
                 (cvv->vr_len-i-1) * sizeof(cvv->vr_vec[0]));
 
     cvv->vr_len--;
-    cvv->vr_vec = realloc(cvv->vr_vec, cvv->vr_len*sizeof(cvv->vr_vec[0])); /* Shrink should not fail? */
+    {
+        cg_var *tmp = realloc(cvv->vr_vec, cvv->vr_len*sizeof(cvv->vr_vec[0]));
+        if (tmp != NULL) /* Shrink: keep old pointer if realloc fails (benign) */
+            cvv->vr_vec = tmp;
+    }
 
     return cvec_len(cvv);
 }

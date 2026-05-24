@@ -707,13 +707,21 @@ cgy_helpstring(cligen_yacc *cy,
         co = cl->cl_obj;
         if (co->co_helpstring){
             if (merge){
-                if ((co->co_helpstring = realloc(co->co_helpstring,
-                                                 strlen(co->co_helpstring) + strlen(helpstr) + 2)) == NULL){
+                size_t  olen = strlen(co->co_helpstring);
+                size_t  alen = strlen(helpstr);
+                char   *tmp;
+
+                if (alen > SIZE_MAX - olen - 2){
+                    cligen_parseerror1(cy, "Allocating helpstr: size overflow");
+                    goto done;
+                }
+                if ((tmp = realloc(co->co_helpstring, olen + alen + 2)) == NULL){
                     cligen_parseerror1(cy, "Allocating helpstr");
                     goto done;
                 }
-                strcat(co->co_helpstring, "\n");
-                strcat(co->co_helpstring, helpstr);
+                co->co_helpstring = tmp;
+                tmp[olen] = '\n';
+                memcpy(tmp + olen + 1, helpstr, alen + 1);
             }
         }
         else
@@ -759,6 +767,10 @@ cgy_choicepair_append(cgy_choice_pair_t *pair,
     }
     else {
         nlen = strlen(pair->names) + 1 + strlen(name ? name : "") + 1;
+        if (nlen < strlen(pair->names)){
+            fprintf(stderr, "%s: names size overflow\n", __FUNCTION__);
+            return NULL;
+        }
         if ((names = realloc(pair->names, nlen)) == NULL){
             fprintf(stderr, "%s: realloc names: %s\n", __FUNCTION__, strerror(errno));
             return NULL;
@@ -773,6 +785,10 @@ cgy_choicepair_append(cgy_choice_pair_t *pair,
     }
     else {
         hlen = strlen(pair->helps) + 1 + strlen(help ? help : "") + 1;
+        if (hlen < strlen(pair->helps)){
+            fprintf(stderr, "%s: helps size overflow\n", __FUNCTION__);
+            return NULL;
+        }
         if ((helps = realloc(pair->helps, hlen)) == NULL){
             fprintf(stderr, "%s: realloc helps: %s\n", __FUNCTION__, strerror(errno));
             return NULL;
