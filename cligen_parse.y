@@ -67,8 +67,19 @@
 %type <string> helpstring1
 %type <intval> preline
 
-%lex-param     {void *_cy} /* Add this argument to parse() and lex() function */
-%parse-param   {void *_cy}
+%lex-param     {yyscan_t yyscanner}    /* passed to yylex() */
+%parse-param   {void *_cy}             /* passed to yyparse() and yyerror() */
+%parse-param   {yyscan_t yyscanner}    /* passed to yyparse(), yylex(), and yyerror() */
+%define api.pure full                  /* make yylval a local, not a global */
+
+%code requires {
+/* Inject yyscan_t typedef into the generated cligen_parse.tab.h so the
+ * cligen_parseparse() prototype compiles without including the flex header. */
+#ifndef YY_TYPEDEF_YY_SCANNER_T
+#define YY_TYPEDEF_YY_SCANNER_T
+typedef void *yyscan_t;
+#endif
+}
 
 %{
 /* Here starts user C-code */
@@ -76,10 +87,15 @@
 /* typecast macro */
 #define _CY ((cligen_yacc *)_cy)
 
-#define _YYERROR(msg) { cligen_parseerror(_CY, (msg)); YYERROR; }
+#define _YYERROR(msg) { cligen_parseerror(_CY, yyscanner, (msg)); YYERROR; }
 
 /* add _cy to error paramaters */
 #define YY_(msgid) msgid
+
+#ifndef YY_TYPEDEF_YY_SCANNER_T
+#define YY_TYPEDEF_YY_SCANNER_T
+typedef void *yyscan_t;
+#endif
 
 #include "cligen_config.h"
 
@@ -104,6 +120,10 @@
 #include "cligen_syntax.h"
 #include "cligen_handle.h"
 #include "cligen_parse.h"
+#include "banned.h"
+
+/* Forward declaration: reentrant flex accessor, defined in lex.cligen_parse.c */
+char *cligen_parseget_text(yyscan_t yyscanner);
 
 /*! Choice pair: parallel '|'-separated lists of choice names and help texts */
 typedef struct {
@@ -120,8 +140,6 @@ static int debug = 0;
 #define _PARSE_DEBUG(s)
 #endif
 
-extern int cligen_parseget_lineno  (void);
-
 int
 cligen_parse_debug(int d)
 {
@@ -131,23 +149,26 @@ cligen_parse_debug(int d)
 
 /*! CLIGEN parse error routine
  *
- * Also called from yacc generated code *
- * @param[in]  cy  CLIgen yacc parse struct
+ * Also called from yacc generated code.
+ * @param[in]  cy        CLIgen yacc parse struct
+ * @param[in]  yyscanner Reentrant flex scanner handle
+ * @param[in]  s         Error message string
  */
 void cligen_parseerror(void *_cy,
+                       yyscan_t yyscanner,
                        const char *s)
 {
     cligen_yacc *cy = (cligen_yacc *)_cy;
 
     fprintf(stderr, "%s:%d: Error: %s: at or before: '%s'\n",
             cy->cy_name,
-            cy->cy_linenum ,
+            cy->cy_linenum,
             s,
-            cligen_parsetext);
+            cligen_parseget_text(yyscanner));
     return;
 }
 
-#define cligen_parseerror1(cy, s) cligen_parseerror(cy, s)
+#define cligen_parseerror1(cy, s) cligen_parseerror((cy), (cy)->cy_scanner, (s))
 
 /*! Create a CLIgen variable (cv) and store it in the current variable object
  *
@@ -202,7 +223,7 @@ cgy_flag(cligen_yacc *cy,
             }
         }
         if ((cv = cvec_add(cy->cy_cvec, CGV_INT32)) == NULL){
-            fprintf(stderr, "%s: realloc:%s\n", __FUNCTION__, strerror(errno));
+            fprintf(stderr, "%s: cvec_add:%s\n", __FUNCTION__, strerror(errno));
             goto done;
         }
         cv_name_set(cv, var);
@@ -306,7 +327,7 @@ cgy_assignment(cligen_yacc *cy,
                 goto done;
             }
         if ((cv = cvec_add(cy->cy_cvec, CGV_STRING)) == NULL){
-            fprintf(stderr, "%s: realloc:%s\n", __FUNCTION__, strerror(errno));
+            fprintf(stderr, "%s: cvec_add:%s\n", __FUNCTION__, strerror(errno));
             goto done;
         }
         cv_name_set(cv, var);
@@ -322,7 +343,7 @@ cgy_assignment(cligen_yacc *cy,
         else {
             if ((cv = cvec_find(cy->cy_globals, var)) == NULL){
                 if ((cv = cvec_add(cy->cy_globals, CGV_STRING)) == NULL){
-                    fprintf(stderr, "%s: realloc:%s\n", __FUNCTION__, strerror(errno));
+                    fprintf(stderr, "%s: cvec_add:%s\n", __FUNCTION__, strerror(errno));
                     goto done;
                 }
                 cv_name_set(cv, var);
@@ -775,8 +796,12 @@ cgy_choicepair_append(cgy_choice_pair_t *pair,
             fprintf(stderr, "%s: realloc names: %s\n", __FUNCTION__, strerror(errno));
             return NULL;
         }
-        strcat(names, "|");
-        strcat(names, name ? name : "");
+        {
+            size_t pos = strlen(names);
+            const char *app = name ? name : "";
+            names[pos++] = '|';
+            memcpy(names + pos, app, strlen(app) + 1);
+        }
     }
     pair->names = names;
     /* Append help (always maintain parallel string, empty if no help) */
@@ -793,8 +818,12 @@ cgy_choicepair_append(cgy_choice_pair_t *pair,
             fprintf(stderr, "%s: realloc helps: %s\n", __FUNCTION__, strerror(errno));
             return NULL;
         }
-        strcat(helps, "|");
-        strcat(helps, help ? help : "");
+        {
+            size_t pos = strlen(helps);
+            const char *app = help ? help : "";
+            helps[pos++] = '|';
+            memcpy(helps + pos, app, strlen(app) + 1);
+        }
     }
     pair->helps = helps;
     return pair;

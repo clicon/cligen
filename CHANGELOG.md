@@ -1,5 +1,6 @@
 # CLIgen Changelog
 
+* [7.9.0](#790) Expected: September 2026
 * [7.8.0](#780) 29 May 2026
 * [7.7.0](#770) 21 February 2026
 * [7.6.0](#760) 21 November 2025
@@ -15,6 +16,13 @@
 * [6.2.0](#620) 30 April 2023
 * [6.1.0](#610) 19 Feb 2023
 * [6.0.0](#600) 29 Nov 2022
+
+## 7.9.0
+Expected: September 2026
+
+### Features
+
+* Cligen spec parser is now reentrant
 
 ## 7.8.0
 29 May 2026

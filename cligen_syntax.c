@@ -120,7 +120,7 @@ clispec_parse_str(cligen_handle h,
             goto done;
         if (cgy_init(&cy, cot) < 0)
             goto done;
-        if (cligen_parseparse(&cy) != 0) { /* yacc returns 1 on error */
+        if (cligen_parseparse(&cy, cy.cy_scanner) != 0) { /* yacc returns 1 on error */
             cgy_exit(&cy);
             cgl_exit(&cy);
             goto done;

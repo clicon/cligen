@@ -4121,6 +4121,9 @@ if test "$YACC" != "bison -y"; then
    as_fn_error $? "CLIGEN does not find bison.  There are several problems with yacc and byacc. Please install bison." "$LINENO" 5
    # byacc leaks, may need byacc -P?
 fi
+# Override: drop -y (POSIX yacc compat mode) so modern Bison directives work
+# without -Wyacc warnings (api.pure full, %code requires, etc.)
+YACC="bison"
 
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: Compiler is $CC" >&5
 printf "%s\n" "Compiler is $CC" >&6; }
