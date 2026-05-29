@@ -1,6 +1,6 @@
 # CLIgen Changelog
 
-* [7.8.0](#780) Expected: May 2026
+* [7.8.0](#780) 29 May 2026
 * [7.7.0](#770) 21 February 2026
 * [7.6.0](#760) 21 November 2025
 * [7.5.0](#750) 29 July 2025
@@ -17,7 +17,7 @@
 * [6.0.0](#600) 29 Nov 2022
 
 ## 7.8.0
-Expected: May 2026
+29 May 2026
 
 ### Features
 
