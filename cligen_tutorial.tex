@@ -7,7 +7,7 @@
 %
 % Title
 %
-\title {CLIgen Manual\\ {\small CLIgen version 7.7}}
+\title {CLIgen Manual\\ {\small CLIgen version 7.8}}
 
 \author{Olof Hagsand}
 %
@@ -18,7 +18,7 @@
 
 % If you want a logo
 % \lhead{\includegraphics[height=9mm]{../../doc/logga_crop.png}}
-\date{November, 2025}
+\date{May, 2026}
 \maketitle
 \setcounter{tocdepth}{2}
 \tableofcontents
@@ -1540,6 +1540,123 @@ incstr(cligen_handle h,
 In the function, the CLIgen variable {\tt cv} assumed to be a string, every character is incremented, so that the string HAL would be translated to IBM, for example.
 
 In the same way as expand functions, the translator functions must be registered using {\tt cligen\_translate\_str2fn()}. See the tutorial example and code for more details.
+
+\subsection{Node filter callback}
+\label{sec:node-filter}
+
+An application can register a \emph{node filter callback} to suppress individual
+parse-tree nodes from completion and expansion results. This is useful for
+implementing access control, such as hiding commands from users who lack the
+required privileges.
+
+The callback type is:
+\begin{verbatim}
+int filter_fn(cligen_handle h,
+              cg_obj       *co,
+              cvec         *cvv,
+              void         *arg,
+              int          *skip);
+\end{verbatim}
+
+The parameters are:
+\begin{itemize}
+\item {\tt h} -- CLIgen handle.
+\item {\tt co} -- The candidate node being considered for inclusion in the
+  result.
+\item {\tt cvv} -- The tokens matched so far on the current command line.
+  {\tt CO\_COMMAND} entries have {\tt cv\_name} equal to the keyword;
+  {\tt CO\_VARIABLE} entries carry the user-supplied value.
+\item {\tt arg} -- The opaque pointer supplied at registration time.
+\item {\tt skip} -- Output parameter. Set {\tt *skip = 1} to exclude this node
+  from the completion result; leave it 0 to include the node.
+\end{itemize}
+
+The function returns 0 on success and $-1$ on error.
+
+Registration and lookup use:
+\begin{verbatim}
+cligen_node_filter_set(h, filter_fn, arg);
+cligen_node_filter_get(h, &filter_fn, &arg);
+\end{verbatim}
+
+A minimal example that hides any node whose command name starts with an
+underscore:
+\begin{verbatim}
+int
+hide_internal(cligen_handle h,
+              cg_obj       *co,
+              cvec         *cvv,
+              void         *arg,
+              int          *skip)
+{
+    char *name = co_command(co);
+    if (name && name[0] == '_')
+        *skip = 1;
+    return 0;
+}
+/* Registration */
+cligen_node_filter_set(h, hide_internal, NULL);
+\end{verbatim}
+
+\subsection{Tree reference flags callback}
+\label{sec:treeref-flags}
+
+When a tree reference ({\tt @treename}) is expanded, CLIgen copies all nodes
+from the referenced tree into the current expansion.  An application can
+register a \emph{tree reference flags callback} to attach custom flags to every
+node copied from a given tree reference.  The flags are OR-ed onto each copy
+and are propagated transitively into any nested tree references encountered
+during the same expansion.
+
+The callback type is:
+\begin{verbatim}
+int flags_fn(cligen_handle h,
+             const char   *treename,
+             uint32_t      inherit,
+             uint32_t     *flagsp);
+\end{verbatim}
+
+The parameters are:
+\begin{itemize}
+\item {\tt h} -- CLIgen handle.
+\item {\tt treename} -- Name of the tree being expanded (the part after {\tt @},
+  with the leading {\tt |} stripped for pipe trees).
+\item {\tt inherit} -- Flags already accumulated from an enclosing tree
+  reference expansion; 0 at the top level.
+\item {\tt flagsp} -- Output parameter. The callback writes the flags to OR
+  onto all node copies produced within this expansion.
+\end{itemize}
+
+The function returns 0 on success and $-1$ on error.
+
+Registration and lookup use:
+\begin{verbatim}
+cligen_treeref_flags_fn_set(h, flags_fn);
+cligen_treeref_flags_fn_get(h, &flags_fn);
+\end{verbatim}
+
+A typical use-case is to mark all nodes that originate from a particular
+subtree, so that a command callback or a node filter can later identify them
+via {\tt co\_flags\_get(co)}. For example, to set a custom application flag
+{\tt MY\_FLAG} on every node expanded from the tree named {\tt "config"}:
+\begin{verbatim}
+#define MY_FLAG 0x01
+
+int
+config_tree_flags(cligen_handle h,
+                  const char   *treename,
+                  uint32_t      inherit,
+                  uint32_t     *flagsp)
+{
+    if (strcmp(treename, "config") == 0)
+        *flagsp = inherit | MY_FLAG;
+    else
+        *flagsp = inherit;
+    return 0;
+}
+/* Registration */
+cligen_treeref_flags_fn_set(h, config_tree_flags);
+\end{verbatim}
 
 \subsection{History}
 
