@@ -301,7 +301,11 @@ cvec_del(cvec   *cvv,
                 (cvv->vr_len-i-1) * sizeof(cvv->vr_vec[0]));
 
     cvv->vr_len--;
-    {
+    if (cvv->vr_len == 0){
+        free(cvv->vr_vec);
+        cvv->vr_vec = NULL;
+    }
+    else {
         cg_var *tmp = realloc(cvv->vr_vec, cvv->vr_len*sizeof(cvv->vr_vec[0]));
         if (tmp != NULL) /* Shrink: keep old pointer if realloc fails (benign) */
             cvv->vr_vec = tmp;
