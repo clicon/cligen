@@ -512,10 +512,20 @@ match_vec(cligen_handle h,
         if (mr_pref_get(mr) == COV_PREF_COMMAND_PARTIAL &&
             mr_reason_get(mr) != NULL &&
             pref_lower > COV_PREF_COMMAND_PARTIAL){
-            /* Partial command match with a validation error from a variable:
-             * remove the partial match and keep the validation reason
+            /*
+             * Keep partial matches originating from commands/keywords,
+             * but discard partial matches originating from expanded
+             * variable values. This preserves command completion and
+             * execution while still reporting genuine variable
+             * validation failures.
              */
-            mr_pt_reset(mr);
+            co = mr_pt_i_get(mr, 0);
+            if (co &&
+                co->co_ref &&
+                co->co_ref->co_type == CO_VARIABLE) {
+                /* Partial match came from an expanded variable value. */
+                mr_pt_reset(mr);
+            }
         }
         else
             mr_reason_set(mr, NULL);
