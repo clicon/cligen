@@ -145,24 +145,26 @@ match_variable(cligen_handle h,
 
 /*! Given a string and one cligen object, return if the string matches
  *
- * @param[in]  h       CLIgen handle
- * @param[in]  str0    Input string to match (NULL is match)
- * @param[in]  co      cligen object
- * @param[in]  best    Only return best match (for command evaluation) instead of all possible options
- * @param[out] exact   1 if match is exact (CO_COMMANDS). VARS is 0.
- * @param[out] reason  if not match and co type is 0, reason points to a (malloced)
- *                     string containing an error explanation string. If reason is
- *                     NULL no such string will be malloced. This string needs to
- *                     be freed.
- * @retval   1         Match
- * @retval   0         Not match
- * @retval  -1         Error
+ * @param[in]  h         CLIgen handle
+ * @param[in]  str0      Input string to match (NULL is match)
+ * @param[in]  co        cligen object
+ * @param[in]  best      Only return best match (for command evaluation) instead of all possible options
+ * @param[in]  lasttoken Set to True if this is the final token being matched
+ * @param[out] exact     1 if match is exact (CO_COMMANDS). VARS is 0.
+ * @param[out] reason    if not match and co type is 0, reason points to a (malloced)
+ *                       string containing an error explanation string. If reason is
+ *                       NULL no such string will be malloced. This string needs to
+ *                       be freed.
+ * @retval   1           Match
+ * @retval   0           Not match
+ * @retval  -1           Error
  */
 static int
 match_object(cligen_handle h,
              const char   *str0,
              cg_obj       *co,
              int           best,
+             int           lasttoken,
              int          *exact,
              char        **reason)
 {
@@ -207,9 +209,17 @@ match_object(cligen_handle h,
           else
               match++;
       }
-      else
-          if ((match = match_variable(h, co, str0, reason)) < 0)
-              return -1;
+      else {
+        /* During expansion of the last token, do not reject candidates
+         * based on variable validation failures.
+         */
+        if (!best && lasttoken) {
+            match++;
+        } else {
+            if ((match = match_variable(h, co, str0, reason)) < 0)
+                return -1;
+        }
+      }
     break;
   case CO_REFERENCE: /* This should never match, it is an abstract object that is expanded */
       if (reason){
@@ -406,7 +416,7 @@ match_vec(cligen_handle h,
         tmpreason = NULL;
         if ((match = match_object(h,
                                   ISREST(co)?resttokens:token,
-                                  co, best, &exact,
+                                  co, best, lasttoken, &exact,
                                   &tmpreason      /* if match == 0 */
                                   )) < 0)
             goto done;
