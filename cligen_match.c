@@ -78,13 +78,14 @@
 
 /*! Match variable against input string
  *
- * @param[in]  h       CLIgen handle
- * @param[in]  co      cligen object
- * @param[in]  str     Input string to match
- * @param[out] reason  if not match and co type is 0, reason points to a (malloced) err string
- * @retval     1       Match
- * @retval     0       Not match and reason returned as malloced string.
- * @retval    -1       Error (print msg on stderr)
+ * @param[in]  h             CLIgen handle
+ * @param[in]  co            CLIgen object
+ * @param[in]  str           Input string to match
+ * @param[out] reason        If not match and co type is 0, reason points to a (malloced) err string
+ * @param[out] is_constraint If set, no-match is due to a constraint violation not type mismatch
+ * @retval     1             Match
+ * @retval     0             Not match and reason returned as malloced string.
+ * @retval    -1             Error (print msg on stderr)
  * Who prints errors?
  * @see cvec_match where actual allocation of variables is made not only sanity
  * For ints a double parse for most specific error, see https://github.com/clicon/clixon/issues/319
@@ -93,7 +94,8 @@ static int
 match_variable(cligen_handle h,
                cg_obj       *co,
                const char   *str,
-               char        **reason)
+               char        **reason,
+               int          *is_constraint)
 {
     int         retval = -1;
     cg_var     *cv; /* Just a temporary cv for validation */
@@ -102,7 +104,8 @@ match_variable(cligen_handle h,
 
     cs = &co->u.cou_var;
     t = co->co_vtype;
-
+    if (is_constraint)
+        *is_constraint = 0;
     /* First parse as least specific type */
     if (t==CGV_INT8 || t==CGV_INT16|| t==CGV_INT32)
         t = CGV_INT64;
@@ -127,9 +130,12 @@ match_variable(cligen_handle h,
         }
         goto done;
     }
-    /* Validate value */
-    if ((retval = cv_validate(h, cv, cs, co->co_command, reason)) <= 0)
+    /* Validate value: failure here is constraint violation, not a type mismatch */
+    if ((retval = cv_validate(h, cv, cs, co->co_command, reason)) <= 0){
+        if (is_constraint)
+            *is_constraint = 1;
         goto done;
+    }
     if (t != co->co_vtype){         /* Second parse as specific type */
         cv_reset(cv);
         cv_type_set(cv, co->co_vtype);
@@ -145,18 +151,21 @@ match_variable(cligen_handle h,
 
 /*! Given a string and one cligen object, return if the string matches
  *
- * @param[in]  h       CLIgen handle
- * @param[in]  str0    Input string to match (NULL is match)
- * @param[in]  co      cligen object
- * @param[in]  best    Only return best match (for command evaluation) instead of all possible options
- * @param[out] exact   1 if match is exact (CO_COMMANDS). VARS is 0.
- * @param[out] reason  if not match and co type is 0, reason points to a (malloced)
- *                     string containing an error explanation string. If reason is
- *                     NULL no such string will be malloced. This string needs to
- *                     be freed.
- * @retval   1         Match
- * @retval   0         Not match
- * @retval  -1         Error
+ * @param[in]  h             CLIgen handle
+ * @param[in]  str0          Input string to match (NULL is match)
+ * @param[in]  co            cligen object
+ * @param[in]  best          Only return best match (for command evaluation) instead of all possible options
+ * @param[out] exact         1 if match is exact (CO_COMMANDS). VARS is 0.
+ * @param[out] reason        if not match and co type is 0, reason points to a (malloced)
+ *                           string containing an error explanation string. If reason is
+ *                           NULL no such string will be malloced. This string needs to
+ *                           be freed.
+ * @param[out] is_constraint Set to 1 when no-match is due to a constraint violation
+ *                           (value parsed as the right type but failed cv_validate),
+ *                           0 when no-match is a type-parse failure.  May be NULL.
+ * @retval   1               Match
+ * @retval   0               Not match
+ * @retval  -1               Error
  */
 static int
 match_object(cligen_handle h,
@@ -164,13 +173,16 @@ match_object(cligen_handle h,
              cg_obj       *co,
              int           best,
              int          *exact,
-             char        **reason)
+             char        **reason,
+             int          *is_constraint)
 {
   int          match = 0;
   size_t       len = 0;
   char        *str1;
   enum cv_type t;
 
+  if (is_constraint)
+      *is_constraint = 0;
   if (str0)
       len = strlen(str0);
   if (exact)
@@ -201,14 +213,14 @@ match_object(cligen_handle h,
       t = co->co_vtype;
       if (str0 == NULL || len==0){
           if (best && cv_isint(t)){
-              if ((match = match_variable(h, co, str0, reason)) < 0)
+              if ((match = match_variable(h, co, str0, reason, is_constraint)) < 0)
                   return -1;
           }
           else
               match++;
       }
       else
-          if ((match = match_variable(h, co, str0, reason)) < 0)
+          if ((match = match_variable(h, co, str0, reason, is_constraint)) < 0)
               return -1;
     break;
   case CO_REFERENCE: /* This should never match, it is an abstract object that is expanded */
@@ -394,6 +406,8 @@ match_vec(cligen_handle h,
     cg_obj *co;
     cg_obj *cop = NULL;
     int     match;
+    int     is_constraint;          /* Rejection was a constraint violation, not type mismatch */
+    int     pref_lower_is_constraint = 0; /* is_constraint for the pref_lower winner */
 #ifdef CLIGEN_DONT_MATCH_PARTIAL_EXPANDS
     cg_obj *coref;
 #endif
@@ -404,10 +418,12 @@ match_vec(cligen_handle h,
             continue;
         /* Return -1: error, 0: nomatch, 1: match */
         tmpreason = NULL;
+        is_constraint = 0;
         if ((match = match_object(h,
                                   ISREST(co)?resttokens:token,
                                   co, best, &exact,
-                                  &tmpreason      /* if match == 0 */
+                                  &tmpreason,     /* if match == 0 */
+                                  &is_constraint
                                   )) < 0)
             goto done;
         p = co_pref(co, exact); /* get match preferences (higher is better match) */
@@ -418,6 +434,7 @@ match_vec(cligen_handle h,
              */
             if (p < pref_lower && co->co_type == CO_VARIABLE){
                 pref_lower = p;
+                pref_lower_is_constraint = is_constraint;
                 mr_reason_set(mr, tmpreason);
                 tmpreason = NULL;
             }
@@ -509,11 +526,20 @@ match_vec(cligen_handle h,
     }
 #endif
     if (mr_pt_len_get(mr) != 0){
-        if (mr_pref_get(mr) == COV_PREF_COMMAND_PARTIAL &&
+        if (best &&
+            mr_pref_get(mr) == COV_PREF_COMMAND_PARTIAL &&
             mr_reason_get(mr) != NULL &&
-            pref_lower > COV_PREF_COMMAND_PARTIAL){
-            /* Partial command match with a validation error from a variable:
-             * remove the partial match and keep the validation reason
+            pref_lower > COV_PREF_COMMAND_PARTIAL &&
+            pref_lower_is_constraint){
+            /* During command execution (best=1), a partial keyword match must
+             * be suppressed when a sibling variable rejects the token with a
+             * constraint-validation error (value parses as the right type but
+             * violates range/regexp/etc.).  The validation error is the better
+             * diagnostic to return to the user.
+             * A pure type-parse failure (wrong type entirely) does not suppress
+             * the partial keyword match — the keyword is a better candidate.
+             * During tab-completion (best=0) partial matches are always kept so
+             * all valid completions remain visible regardless of sibling failures.
              */
             mr_pt_reset(mr);
         }

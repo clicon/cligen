@@ -93,5 +93,36 @@ expectpart "$(echo "config eth0 address eth1" | $cligen_tutorial -q -f $fspec 2>
 newtest "triple tab shows columns help"
 expectpart "$(echo "set person 			" | $cligen_tutorial -q -f $fspec)" 0 "cli>"
 
+# Test 6: Issue #140 Issue 1 — expand completions must not be blocked by a
+# sibling variable whose type rejects the partial token.
+# Syntax has both an expand string variable and a uint32 sibling.
+# Typing "e<TAB>" fails the uint32 type-parse, but must still show expand completions.
+cat > $fspec <<EOF
+  prompt="cli> ";
+  comment="#";
+  treename="tutorial";
+
+  set (<name:string interface()>("interface name") | <count:uint32>("count")), cb();
+EOF
+
+newtest "expand completions not blocked by sibling uint32 type-parse failure"
+expectpart "$(echo "set e		" | $cligen_tutorial -q -f $fspec)" 0 "eth0" "eth1"
+
+# Test 7: Issue #140 Issue 1 — remaining case: sibling variable with a regexp
+# constraint.  The token "et" parses as a valid string but fails the regexp
+# "e[0-9]+" (constraint violation, not a type-parse failure).
+# Fixed by guarding the post-loop mr_pt_reset with "best" so tab-completion
+# never clears partial matches due to sibling constraint failures.
+cat > $fspec <<EOF
+  prompt="cli> ";
+  comment="#";
+  treename="tutorial";
+
+  set (<name:string interface()>("interface name") | <seq:string regexp:"e[0-9]+">("seq")), cb();
+EOF
+
+newtest "expand completions not blocked by sibling regexp constraint failure"
+expectpart "$(echo "set et		" | $cligen_tutorial -q -f $fspec)" 0 "eth0" "eth1"
+
 newtest "endtest"
 endtest

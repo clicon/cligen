@@ -22,7 +22,11 @@ Expected: September 2026
 
 ### Features
 
-* Cligen spec parser is now reentrant
+* Made CLIgen spec parser reentrant
+
+### Corrected Bugs
+
+* Fixed: [Partial command matching is incorrectly suppressed by variable validation](https://github.com/clicon/cligen/issues/140)
 
 ## 7.8.0
 29 May 2026
