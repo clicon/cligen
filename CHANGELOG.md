@@ -26,6 +26,8 @@ Expected: September 2026
 
 ### Corrected Bugs
 
+* Invalid: [Unescaped vertical bar in values does not work](https://github.com/clicon/cligen/issues/144)
+  * Need to escape virtual bar, documented and added tests
 * Fixed: [Partial command matching is incorrectly suppressed by variable validation](https://github.com/clicon/cligen/issues/140)
 
 ## 7.8.0

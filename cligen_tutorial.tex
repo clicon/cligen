@@ -216,6 +216,7 @@ that for example {\tt '?'} can appear in a keyword or value:
 \begin{verbatim}
 > a\?b # Gives the string "a?b"
 > a\\b # Gives the string "a\b"
+> a\|b # Gives the string "a|b"
 \end{verbatim}
 
 \subsection{Help texts}
@@ -373,6 +374,14 @@ An example of an implicit rule is as follows:
 where the pipe tree is added implicitly to all commands.
 
 Pipe trees also work for sub-trees, ie a subtree referenced by the top-level tree may also use output pipes.
+
+\subsubsection{Escaping vertical bar}
+
+If you use a vertical bar elsewhere, eg in values, you need to escape it:
+\begin{verbatim}
+  cli> set a\|b
+  cli> set "a|b"
+\end{verbatim}
 
 \subsection{Sets}
 \label{sec:sets}

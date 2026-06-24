@@ -14,7 +14,6 @@ cat > $fspec <<EOF
   comment="#";                 # Same comment as in syntax
   treename="test";             # Name of syntax (used when referencing)
   pipetree="|mypipe";
-
   set1, output_fn($lines);
   other;
   set2, output_fn($lines); {
@@ -24,6 +23,7 @@ cat > $fspec <<EOF
       @|mypipe, output_fn($lines);
   }
   set4 @treeref;
+  set5 <string>, callback();
 
   treename="|mypipe";
   pipetree="";
@@ -82,6 +82,15 @@ runtest set3 false
 
 newtest "Implicit via treeref"
 runtest "set4 extra" true
+
+newtest "Unescaped vertical bar generates error"
+expectpart "$(echo "set5 (lag|hostif)-*" | $cligen_file -f $fspec)" 0 "CLI syntax error" "Unknown command"
+
+newtest "Escaped vertical bar backslash"
+expectpart "$(echo "set5 (lag\\\|hostif)-*" | $cligen_file -f $fspec 2>&1)" 0 "value:(lag|hostif)-*"
+
+newtest "Escaped vertical bar quotes"
+expectpart "$(echo "set5 \"(lag|hostif)-*\"" | $cligen_file -f $fspec 2>&1)" 0 "value:(lag|hostif)-*"
 
 newtest "endtest"
 endtest
