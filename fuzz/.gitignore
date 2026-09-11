@@ -2,6 +2,7 @@
 libfuzzer/fuzz_spec
 libfuzzer/fuzz_cv
 libfuzzer/fuzz_input
+libfuzzer/fuzz_system
 # Build cache
 libfuzzer/obj/
 # Runtime outputs — grow during fuzzing, store findings as issues instead

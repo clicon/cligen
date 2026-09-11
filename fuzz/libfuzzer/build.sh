@@ -15,6 +15,7 @@
 #   ./fuzz_spec   corpus_spec   -dict=cligen.dict
 #   ./fuzz_match  corpus_match
 #   ./fuzz_cv     corpus_cv
+#   ./fuzz_system corpus_system -dict=tutorial.dict
 #
 set -euo pipefail
 
@@ -81,14 +82,14 @@ build_target() {
 
 TARGETS=("$@")
 if [ ${#TARGETS[@]} -eq 0 ]; then
-  TARGETS=(fuzz_spec fuzz_cv fuzz_input)
+  TARGETS=(fuzz_spec fuzz_cv fuzz_input fuzz_system)
 fi
 for t in "${TARGETS[@]}"; do
   build_target "${t}"
 done
 
 echo "== Seeding corpora =="
-mkdir -p "${FUZZDIR}/corpus_spec" "${FUZZDIR}/corpus_cv" "${FUZZDIR}/corpus_input"
+mkdir -p "${FUZZDIR}/corpus_spec" "${FUZZDIR}/corpus_cv" "${FUZZDIR}/corpus_input" "${FUZZDIR}/corpus_system"
 # Spec corpus: existing .cli files are ideal seeds.
 cp -f "${ROOT}"/*.cli "${FUZZDIR}/corpus_spec/" 2>/dev/null || true
 cp -f "${ROOT}"/test/*.cli "${FUZZDIR}/corpus_spec/" 2>/dev/null || true
@@ -123,4 +124,24 @@ printf 'save file backup.cfg compress\n'                          > "${FUZZDIR}/
 printf 'show\n'                                                   > "${FUZZDIR}/corpus_input/seed24"
 printf 'sh\n'                                                     > "${FUZZDIR}/corpus_input/seed25"
 
+# System corpus: multi-line sessions against the real tutorial.cli spec.
+printf 'hello world\n'                                            > "${FUZZDIR}/corpus_system/seed01"
+printf 'ip tcp 80\n'                                               > "${FUZZDIR}/corpus_system/seed02"
+printf 'ip udp 1.2.3.4\n'                                          > "${FUZZDIR}/corpus_system/seed03"
+printf 'access-list permit 1.2.3.4 5.6.7.8\n'                     > "${FUZZDIR}/corpus_system/seed04"
+printf 'ex 42\n'                                                   > "${FUZZDIR}/corpus_system/seed05"
+printf 'aa bb\naa bb ff\n'                                         > "${FUZZDIR}/corpus_system/seed06"
+printf 'values aa\nvalues 42\nvalues hello\n'                     > "${FUZZDIR}/corpus_system/seed07"
+printf 'aa bb ca 3 dd\naa bb cb ee\n'                             > "${FUZZDIR}/corpus_system/seed08"
+printf 'interface eth0\ninterface eth1\n'                          > "${FUZZDIR}/corpus_system/seed09"
+printf 'secret\n'                                                  > "${FUZZDIR}/corpus_system/seed10"
+printf 'change prompt newprompt>\n'                                > "${FUZZDIR}/corpus_system/seed11"
+printf 'recurse hello world\n'                                     > "${FUZZDIR}/corpus_system/seed12"
+printf 'recurse recurse recurse hello world\n'                    > "${FUZZDIR}/corpus_system/seed13"
+printf 'increment HAL\n'                                           > "${FUZZDIR}/corpus_system/seed14"
+printf 'change tree\nz x\nchange tree\nhello world\n'             > "${FUZZDIR}/corpus_system/seed15"
+printf 'add x y\ndel x y\n'                                        > "${FUZZDIR}/corpus_system/seed16"
+printf 'quit\nhello world\n'                                       > "${FUZZDIR}/corpus_system/seed17"
+
 echo "Done. Example: ${FUZZDIR}/fuzz_input ${FUZZDIR}/corpus_input -dict=${FUZZDIR}/cligen.dict"
+echo "Example: ${FUZZDIR}/fuzz_system ${FUZZDIR}/corpus_system -dict=${FUZZDIR}/tutorial.dict"

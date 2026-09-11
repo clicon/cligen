@@ -10,6 +10,14 @@ Detects crashes, memory errors, and leaks. Requires `clang` (ships with libFuzze
 | `fuzz_spec`   | `clispec_parse_str()`                                                                 | The `.cli` syntax grammar (Bison/Flex) and parse-tree construction. |
 | `fuzz_cv`     | `cv_parse1()`                                                                         | Per-type value parsers (ipv4/ipv6/mac/uuid/time/url/decimal/int/...). The first input byte selects the type. |
 | `fuzz_input`  | `cligen_str2cvv()` + `match_pattern()` + `match_complete()` + `match_pattern_exact()` | The full user-input pipeline against a complex spec with subtrees, pipe trees, @{} sets, optionals, and many variable types; exercises both the prefix-match/completion path and the exact-match/execute path. |
+| `fuzz_system` | `cliread_parse()` + `cligen_eval()`, multi-line, against the real `tutorial.cli`      | A whole-system session, not a single unit: the unmodified `tutorial.cli` spec is loaded and bound to its real callbacks (as `cligen_tutorial.c` does), then each `\n`-separated line of the input is matched *and executed*. Reaches callback code (`hello`, `letters`, `setprompt`, `changetree`, `quit`, the `incstr` translator, the `interface` expand callback) and cross-line session state such as active-tree switching (`change tree`), tree recursion (`recurse @tutorial`), and early session exit (`quit`) that a single-shot input fuzzer never reaches. |
+
+`fuzz_input` and `fuzz_system` are complementary, not redundant: `fuzz_input`
+uses a synthetic spec designed to maximise matcher-grammar coverage (pipes,
+sets, every variable type) but never calls a real callback or evolves state
+across lines; `fuzz_system` uses the real, comparatively narrow
+`tutorial.cli` grammar but drives full sessions through real callbacks with
+real side effects on the handle.
 
 ## Build
 
@@ -38,10 +46,29 @@ Instrumented library objects are cached in `obj/`.
 ## Run
 
 ```sh
-./fuzz_spec  corpus_spec  -dict=cligen.dict
-./fuzz_cv    corpus_cv    -dict=cligen.dict
-./fuzz_input corpus_input -dict=cligen.dict
+./fuzz_spec   corpus_spec   -dict=cligen.dict
+./fuzz_cv     corpus_cv     -dict=cligen.dict
+./fuzz_input  corpus_input  -dict=cligen.dict
+./fuzz_system corpus_system -dict=tutorial.dict
 ```
+
+`fuzz_system` reads `tutorial.cli` off disk (not embedded), found relative to
+the current directory (tries `tutorial.cli`, `../tutorial.cli`,
+`../../tutorial.cli`, `../../../tutorial.cli` in that order — the default
+`../../tutorial.cli` is correct when run from `fuzz/libfuzzer/`, as shown
+above). Point it at a different spec with `CLIGEN_FUZZ_SPEC`:
+
+```sh
+CLIGEN_FUZZ_SPEC=/path/to/other.cli ./fuzz_system corpus_system
+```
+
+Any such spec must define a tree named `tutorial` (see the `ACTIVE_TREE`
+define in `fuzz_system.c`) and its callbacks are resolved through
+`fuzz_system.c`'s own `str2fn()`, which falls back to a no-op `unknown()`
+stub for unrecognised names, so a different spec will parse but its
+callbacks other than the tutorial's own (`hello`, `cb`, `add`, `del`, `fn`,
+`letters`, `secret`, `setprompt`, `quit`, `changetree`) will not do anything
+beyond that stub.
 
 Or via the `fuzz/` Makefile:
 
@@ -49,6 +76,7 @@ Or via the `fuzz/` Makefile:
 make -C .. run_spec
 make -C .. run_cv
 make -C .. run_input
+make -C .. run_system
 ```
 
 The first argument is the corpus directory (created and seeded by `build.sh`);

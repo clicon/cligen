@@ -27,15 +27,16 @@
 #   make run_spec     - run fuzz_spec in the background (nohup)
 #   make run_cv       - run fuzz_cv  in the background
 #   make run_input    - run fuzz_input in the background
+#   make run_system   - run fuzz_system in the background
 #   make clean        - remove compiled harnesses
 #
 # The generated parser sources (cligen_parse.tab.c, lex.cligen_parse.c) must
 # exist in the repo root before building; run './configure && make' there first.
 
-TARGETS = fuzz_spec fuzz_cv fuzz_input
-ARTIFACTS = artifacts_spec artifacts_cv artifacts_input
+TARGETS = fuzz_spec fuzz_cv fuzz_input fuzz_system
+ARTIFACTS = artifacts_spec artifacts_cv artifacts_input artifacts_system
 
-.PHONY: all clean run_spec run_cv run_input
+.PHONY: all clean run_spec run_cv run_input run_system
 
 all: $(TARGETS)
 
@@ -65,3 +66,9 @@ run_input: artifacts_input fuzz_input
 	    -fork=4 -ignore_crashes=1 -ignore_timeouts=1 -ignore_ooms=1 \
 	    -max_len=512 -rss_limit_mb=2048 -timeout=10 \
 	    -artifact_prefix=artifacts_input/
+
+run_system: artifacts_system fuzz_system
+	./fuzz_system corpus_system -dict=tutorial.dict \
+	    -fork=4 -ignore_crashes=1 -ignore_timeouts=1 -ignore_ooms=1 \
+	    -max_len=1024 -rss_limit_mb=2048 -timeout=10 \
+	    -artifact_prefix=artifacts_system/
