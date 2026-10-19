@@ -47,6 +47,7 @@
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/select.h>
 #include <netinet/in.h>
 #include <net/if.h>
 
@@ -103,6 +104,57 @@ int
 cli_pipe_output_socket_set(int s)
 {
     PIPE_OUTPUT_SOCKET = s;
+    return 0;
+}
+
+/*! Write to pipe socket without deadlock against the pipe child
+ *
+ * The child (eg grep) reads from and writes to the same socketpair. If this process
+ * blocks in write() while the child blocks writing its (large) output back, both
+ * wait for each other. Therefore, while the socket is not writable, drain what the
+ * child has produced to stdout.
+ * @retval  0  OK
+ * @retval -1  Error, or child closed its side (EPIPE)
+ */
+static int
+pipe_socket_write(int         s,
+                  const char *buf,
+                  size_t      len)
+{
+    size_t  off = 0;
+    ssize_t n;
+    fd_set  rfds, wfds;
+    char    rbuf[4097];
+
+    while (off < len){
+        FD_ZERO(&rfds);
+        FD_ZERO(&wfds);
+        FD_SET(s, &rfds);
+        FD_SET(s, &wfds);
+        if (select(s+1, &rfds, &wfds, NULL, NULL) < 0){
+            if (errno == EINTR)
+                continue;
+            return -1;
+        }
+        if (FD_ISSET(s, &rfds)){
+            if ((n = recv(s, rbuf, sizeof(rbuf)-1, MSG_DONTWAIT)) > 0){
+                rbuf[n] = '\0';
+                cligen_output_basic(stdout, rbuf, n);
+            }
+            else if (n == 0){
+                errno = EPIPE;
+                return -1;
+            }
+            else if (errno != EAGAIN && errno != EINTR)
+                return -1;
+        }
+        if (FD_ISSET(s, &wfds)){
+            if ((n = send(s, buf+off, len-off, MSG_DONTWAIT|MSG_NOSIGNAL)) > 0)
+                off += n;
+            else if (n < 0 && errno != EAGAIN && errno != EINTR)
+                return -1;
+        }
+    }
     return 0;
 }
 
@@ -291,7 +343,7 @@ cligen_output(FILE       *f,
     if (cli_pipe_output_socket_get(&s) < 0)
         goto done;
     if (s != -1){
-        if (write(s, inbuf, inbuflen) < 0){
+        if (pipe_socket_write(s, inbuf, inbuflen) < 0){
             switch (errno){
             case EPIPE:
                 break;
