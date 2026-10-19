@@ -7,7 +7,7 @@
 %
 % Title
 %
-\title {CLIgen Manual\\ {\small CLIgen version 7.8}}
+\title {CLIgen Manual\\ {\small CLIgen version 7.9}}
 
 \author{Olof Hagsand}
 %
@@ -18,7 +18,7 @@
 
 % If you want a logo
 % \lhead{\includegraphics[height=9mm]{../../doc/logga_crop.png}}
-\date{May, 2026}
+\date{October, 2026}
 \maketitle
 \setcounter{tocdepth}{2}
 \tableofcontents
@@ -68,7 +68,7 @@ of the CLIgen library to interpret the commands.
 
 An example of a CLIgen specification file of the hello world application is:
 \begin{verbatim}
-  prompt="hello> "             # Assignment of prompt
+  prompt="hello> ";            # Assignment of prompt
   hello("Greet the world"){    # 'hello' command with help text
     world, cb("Hello World!"); # 'world' command with callback
   }
@@ -167,11 +167,11 @@ Note the following:
 \subsection{Runtime behaviour}
 
 A CLI with the syntax above will present the user with a list of
-commands. On the top-level, only {\tt aa} or {\tt bb} may be chosen when a question mark is entered:
+commands. On the top-level, only {\tt aa} or {\tt ff} may be chosen when a question mark is entered:
 \begin{verbatim}
   > '?'
     aa
-    gg
+    ff
 \end{verbatim}
 
 If the user prints an 'a', followed by a 'TAB', the CLI performs
@@ -274,14 +274,14 @@ You can assign values to \emph{global} and \emph{local}
 variables. Global variables are valid for the whole syntax, while
 local variables only apply to a single command.
 
-In the current release, there are three pre-defined local variables:
+In the current release, there is one pre-defined local variable:
 \begin{itemize}
 \item
 {\tt hide} : specifies that a command is not visible in auto completion, meaning when listing or completing commands with '?' and 'TAB'. This can be useful if there are commands that should be known only by expert users.
 \end{itemize}
 
-In the following example, {\tt aa bb cb dd} and {\tt aa bb cc} are not visible in database and/or auto completion
-depending on the variable used as mentioned above :
+In the following example, {\tt aa bb cb dd} and {\tt aa bb cc} are not visible in auto completion
+when listing or completing commands with '?' and 'TAB' :
 \begin{verbatim}
   aa bb{
     ca;
@@ -292,9 +292,10 @@ depending on the variable used as mentioned above :
   }
 \end{verbatim}
 
-A {\em global} variable is assigned on the top-level.  There is
-currently only one pre-defined global variable ({\tt treename} as
-described in the next section).  But it is easy for a programmer to
+A {\em global} variable is assigned on the top-level.  There are
+currently two pre-defined global variables ({\tt treename}, described
+in the next section, and {\tt pipetree}, see
+Section~\ref{sec:pipes}).  But it is easy for a programmer to
 implement a global variable and define semantics to it. 
 
 The tutorial application supports prompt and comment character:
@@ -368,7 +369,7 @@ An example of an implicit rule is as follows:
   pipetree="|mypipe";
   print {
     all, print_cb("all");
-    detail, print_cb("detail);
+    detail, print_cb("detail");
   }
 \end{verbatim}
 where the pipe tree is added implicitly to all commands.
@@ -480,7 +481,7 @@ Example:
   <addr:string length[12]>
   <addr:string length[2:4] length[8:12]>
 \end{verbatim}
-which means that the {\tt addr} string, if given, must be between 8 and 12 characters long, or just limited to 12 characters, or be between 2-4 and 8-12 charcters respectively.
+which means that the {\tt addr} string, if given, must be between 8 and 12 characters long, or just limited to 12 characters, or be between 2-4 and 8-12 characters respectively.
 
 \subsubsection{Rest}
 A variant of string is {\tt rest} which accepts all characters until end-of-line, regardless of white space. This is useful for variable argument input.
@@ -508,7 +509,7 @@ Further, an allowed range of integer can specified, either as an interval or as 
 Examples:
 \begin{verbatim}
   <x:uint32>
-  <x:int8 range[-12:80] range[100:110]>>
+  <x:int8 range[-12:80] range[100:110]>
   <x:int64 range[1000]>
 \end{verbatim}
 
@@ -569,7 +570,7 @@ Examples of decimal64 specification is:
   <d:decimal64 fraction-digits:4>;
   <d:decimal64 fraction-digits:4 range[0.1:10]>;
 \end{verbatim}
-which allows numbers with four decimals. The econd example limits the numbers to be between 0.1000 and 10.0000.
+which allows numbers with four decimals. The second example limits the numbers to be between 0.1000 and 10.0000.
 
 Note that the {\tt fraction-digits} statement should come before the {\tt range} statement.
 
@@ -638,7 +639,7 @@ The options are then presented as following:
 \begin{verbatim}
   cli> interface '?'
      eth0              Ethernet
-     lo0               Loopback
+     lo0               loopback
   cli>
 \end{verbatim}
 
@@ -691,7 +692,7 @@ is, a regular expression defines which values are valid.
 For example, a variable may be specified as:
 \begin{verbatim}
   <name:string regexp:"(ab|a)b*c">;
-  <name:string regexp:"[a-z]+[0-8]+\\.[0-9]">;
+  <name:string regexp:"[a-z]+[0-8]+\.[0-9]">;
 \end{verbatim}
 The first rule matches the following strings, for example:
 \begin{verbatim}
@@ -711,7 +712,7 @@ CLIgen by default uses POSIX Extended regular expression syntax.
 However, XML schema regexps can be used instead by configuring CLIgen with libxml2 as follows:
 \begin{verbatim}
    ./configure --with-libxml2     # At configure time
-   cligen_regexp_xsd\_set(h, 1);  # In C init code
+   cligen_regex_xsd_set(h, 1);    /* In C init code */
 \end{verbatim}
 
 \subsection{Variable translation}
@@ -785,7 +786,7 @@ First, the {\tt preference} keyword alters the preference of a variable, such as
   <name:string regexp:"[b-c]+">;
 \end{verbatim}
 
-The effect is that the default preference ($7$) is overruled ($9$) in the first rule and therefore preferred over the second.
+The effect is that the default preference ($8$) is overruled ($9$) in the first rule and therefore preferred over the second.
 
 \subsubsection{Preference API}
 
@@ -823,7 +824,7 @@ defines a choice between the sequence {\tt aa bb} and {\tt cc}.
 It is also possible to explicitly define choices, optional elements and syntactical groupings.
 
 \subsection{Choice and grouping}
-Explit choice between several elements can be made as follows:
+Explicit choice between several elements can be made as follows:
 \begin{verbatim}
   (aa bb) | cc;
 \end{verbatim}
@@ -859,7 +860,7 @@ using brackets:
 \begin{verbatim}
   aa [[bb] cc];
 \end{verbatim}
-which accepts the commands: {\tt aa}, {\tt aa bb} and  {\tt aa bb cc}.
+which accepts the commands: {\tt aa}, {\tt aa cc} and  {\tt aa bb cc}.
 
 Any combination of these operations are possible, such as in the line:
 \begin{verbatim}
@@ -1060,7 +1061,17 @@ You may also add labels to a tree reference::
   add @sub, @add:mylabel, addfn("b");
 \end{verbatim}
 
-Such a label may be read by expand function using the C function: {\tt cligen\_labels\_get(h)}
+Such labels are temporarily appended to the matched object's variable
+vector and may be read by an expand function via the {\tt co\_cvec}
+field of the object returned by {\tt cligen\_co\_match(h)}. Note that
+this vector also contains other local variables of the object, such as
+{\tt hide}. Example:
+\begin{verbatim}
+  cg_obj *co = cligen_co_match(h);
+  cg_var *cv = NULL;
+  while ((cv = cvec_each(co->co_cvec, cv)) != NULL)
+    printf("label: %s\n", cv_name_get(cv));
+\end{verbatim}
 
 \subsection{Remove labels}
 
@@ -1178,9 +1189,11 @@ It is now possible to traverse the tree using the ``T'' tree as the following ex
 This section describes C-programming issues, including types, parsing and
 callbacks.
 
-Appendix A contains a complete program illustrating many of the topics
-of this tutorial.  More advanced applications can be found in the CLIgen
-source repository.
+The source repository contains a complete example program, {\tt cligen\_tutorial.c},
+illustrating many of the topics of this tutorial, together with the
+corresponding command syntax in the {\tt tutorial.cli} file (see
+Appendix~\ref{app:syntax}).  More advanced applications can be found
+in the CLIgen source repository.
 
 \subsection{CLIgen variables}
 
@@ -1210,7 +1223,7 @@ the user inputs "12.34.56.78". The CLI will then generate a cv which
 can be accessed in C. The string
 "12.34.56.78" is accessed with:
 \begin{verbatim}
-  struct in_addr addr = cv_ipv4addr_get(cv);
+  struct in_addr *addr = cv_ipv4addr_get(cv);
 \end{verbatim}
 
 Accessors for other types are shown in the table
@@ -1231,16 +1244,16 @@ uint32 & {\tt cv\_uint32\_get()} & {\tt uint32\_t} \\
 uint64 & {\tt cv\_uint64\_get()} & {\tt uint64\_t} \\
 decimal64 & {\tt cv\_dec64\_i\_get()} & {\tt int64\_t}\\
            & {\tt cv\_dec64\_n\_get()} & {\tt uint8\_t}\\
-bool & {\tt cv\_bool\_get()} & {\tt uint8\_t} \\
+bool & {\tt cv\_bool\_get()} & {\tt char} \\
 string & {\tt cv\_string\_get()} & {\tt char*} \\
-ipv4addr   & {\tt cv\_ipv4addr\_get()} & {\tt struct in\_addr}\\
-ipv4prefix & {\tt cv\_ipv4addr\_get()} & {\tt struct in\_addr}\\
-           & {\tt cv\_ipv4masklen\_get()} & {\tt uint8}\\
-ipv6addr   & {\tt cv\_ipv6addr\_get()} & {\tt struct in6\_addr}\\
-ipv6prefix & {\tt cv\_ipv6addr\_get()} & {\tt struct in6\_addr}\\
-           & {\tt cv\_ipv6masklen\_get()} & {\tt uint8}\\
-macaddr    & {\tt cv\_mac\_get()} & {\tt char[6]}\\
-uuid       & {\tt cv\_uuid\_get()} & {\tt char[16]}\\
+ipv4addr   & {\tt cv\_ipv4addr\_get()} & {\tt struct in\_addr*}\\
+ipv4prefix & {\tt cv\_ipv4addr\_get()} & {\tt struct in\_addr*}\\
+           & {\tt cv\_ipv4masklen\_get()} & {\tt uint8\_t}\\
+ipv6addr   & {\tt cv\_ipv6addr\_get()} & {\tt struct in6\_addr*}\\
+ipv6prefix & {\tt cv\_ipv6addr\_get()} & {\tt struct in6\_addr*}\\
+           & {\tt cv\_ipv6masklen\_get()} & {\tt uint8\_t}\\
+macaddr    & {\tt cv\_mac\_get()} & {\tt char*}\\
+uuid       & {\tt cv\_uuid\_get()} & {\tt unsigned char*}\\
 time       & {\tt cv\_time\_get()} & {\tt struct timeval}\\
 url        & {\tt cv\_urlproto\_get()} & {\tt char*}\\
            & {\tt cv\_urladdr\_get()} & {\tt char*}\\
@@ -1250,9 +1263,9 @@ url        & {\tt cv\_urlproto\_get()} & {\tt char*}\\
 \hline
 \end{tabular}
 
-You may also access a value with an unspecified type using:
+A generic pointer stored in a cv (of type {\tt void}) is accessed with:
 \begin{verbatim}
-  void *v = cv_value_get(cv);
+  void *v = cv_void_get(cv);
 \end{verbatim}
 
 
@@ -1337,8 +1350,8 @@ An example of parsing syntax file {\tt mysyntax.cli} is the following:
   cligen_handle h;
   FILE         *f;
   h = cligen_init();
-  f = fopen("mysyntax.cli");
-  cligen_parse_file(h, f,  "mytree", NULL, NULL);
+  f = fopen("mysyntax.cli", "r");
+  clispec_parse_file(h, f, "mysyntax.cli", "mytree", NULL, NULL);
   cligen_loop(h);
 \end{verbatim}
 
@@ -1352,7 +1365,7 @@ functions.
 \label{sec:global}
 
 A syntax file may contain global variable assignments which can be
-accessed by the the C-code. Suppose a syntax file contains the following global assignments:
+accessed by the C-code. Suppose a syntax file contains the following global assignments:
 \begin{verbatim}
   prompt="cli> ";              # Assignment of prompt
 \end{verbatim}
@@ -1361,7 +1374,7 @@ These global variables are parsed and may be read by the C-code as follows:
 \begin{verbatim}
   char *prompt;
   [...]
-  cligen_parse_file(h, f,  "mytree", NULL, globals);
+  clispec_parse_file(h, f, "mysyntax.cli", "mytree", NULL, globals);
   prompt = cvec_find_str(globals, "prompt");
   cligen_prompt_set(h, prompt);
 \end{verbatim}
@@ -1376,15 +1389,18 @@ A programmer can use the pre-defined {\tt cligen\_loop} function, or create a ta
 
 \begin{verbatim}
  for (;;){
-     retval = cliread_eval(h, &line, &ret);
+     cligen_result result;
+     char         *reason = NULL;
+     retval = cliread_eval(h, &line, &ret, &result, &reason);
 \end{verbatim}
-The return value of the {\tt cliread\_eval} function is as follows:
+The {\tt cliread\_eval} function returns $0$ on success and $-1$ on
+error. The match outcome is given in the {\tt result} out-parameter, as follows:
 \begin{itemize}
 \item {\tt CG\_EOF}: end-of-file
 \item {\tt CG\_ERROR}: CLIgen read or matching error, typically if the syntax is not well-defined.
-\item {\tt CG\_NOMATCH}: No match, the input line did not match the syntax. By calling {\tt cligen\_nomatch(h)}, the reason for why no match was made is retrieved.
+\item {\tt CG\_NOMATCH}: No match, the input line did not match the syntax. The reason for why no match was made is returned in the {\tt reason} out-parameter (which the caller should free).
 \item {\tt CG\_MATCH}: Match, the line matched exactly one syntactic node. The variable {\tt ret} contains the return value of the callback (if any).
-\item $> 1$: Multiple matches, the line matched several syntax lines.
+\item {\tt CG\_MULTIPLE}: Multiple matches, the line matched several syntax lines.
 \end{itemize}
 
 
@@ -1440,7 +1456,7 @@ In the example, the cligen variable vector {\tt cvv} has four elements and can b
 Two API functions control the format of {\tt cvv} and changes the rules above (should be called initially in the program):
 \begin{enumerate}
 \item {\tt cligen\_expand\_first\_set()}: Instead of showing the first {\tt cvv} argument as the user typed it, the \emph{expanded} variant (after completion) is shown. Example: the user types {\tt per m 67}, whereas the expanded version of that string is {\tt person male 67}.
-\item {\tt cligen\_exclude\_keys\_set()}: Do \emph{not} include keywords in the {\tt ccv} argument. With this option enabled, there are only two elements in {\tt cvv} of the example: The complete command string; and the integer, while the two keywords {\tt person} and {\tt male} are omitted.
+\item {\tt cligen\_exclude\_keys\_set()}: Do \emph{not} include keywords in the {\tt cvv} argument. With this option enabled, there are only two elements in {\tt cvv} of the example: The complete command string; and the integer, while the two keywords {\tt person} and {\tt male} are omitted.
 \end{enumerate}
 
 \subsubsection{The argv parameter}
@@ -1477,7 +1493,7 @@ function name strings and actual functions and calling a mapping
 funtion, for example:
 \begin{verbatim}
   cgv_fnstype_t *
-  mapper(char *name, void *arg, char **error)
+  mapper(const char *name, void *arg, char **error)
   {
     *error = NULL;
     if (strcmp(name, "callback") == 0)
@@ -1520,18 +1536,18 @@ in the specification is used.
 
 \begin{verbatim}
   int 
-  expand_ifname(cligen_handle h, char *fn_str, cvec *cvv, cg_var *argv, 
+  expand_ifname(cligen_handle h, const char *name, cvec *cvv, cvec *argv,
                 cvec *commands, cvec *helptexts)
   {
     cvec_add_string(commands, NULL, "eth0");
-    cvec_add_string(helptext, NULL, "The first interface");
+    cvec_add_string(helptexts, NULL, "The first interface");
     cvec_add_string(commands, NULL, "eth1");
-    cvec_add_string(helptext, NULL, "The second interface");
+    cvec_add_string(helptexts, NULL, "The second interface");
     return 0;
   }
 
   expand_cb *
-  str2fn(char *name, void *arg, char **error)
+  str2fn(const char *name, void *arg, char **error)
   {
      return expand_ifname;
   }
@@ -1539,7 +1555,9 @@ in the specification is used.
   main()
   {   
     [...]
-    cligen_parse_file(h, f,  "mysyntax", &pt, &globals) < 0)
+    if (clispec_parse_file(h, f, "mysyntax.cli", NULL, NULL, globals) < 0)
+      return -1;
+    pt = cligen_ph_parsetree_get(cligen_ph_i(h, 0));
     if (cligen_expand_str2fn(pt, str2fn, NULL) < 0)
       return -1;
     [...]
@@ -1581,10 +1599,9 @@ The tab-completion behaviour can be tuned with a bitfield passed to
 
 \item[Bit 4 ({\tt CLIGEN\_TABMODE\_SHOW}, 0x08)]
   Controls whether completion and listing of alternatives happen together.
-  When \emph{off}, the first TAB completes as far as possible and a second
+  When \emph{off} (default), the first TAB completes as far as possible and a second
   TAB shows the available alternatives.
   When \emph{on}, a single TAB both completes and shows alternatives.
-  This bit is \emph{set by default}.
 
 \item[Bit 5 ({\tt CLIGEN\_TABMODE\_KEYWORD\_AMBIG}, 0x10)]
   Relevant only when bit 2 ({\tt CLIGEN\_TABMODE\_VARS}) is \emph{off}.
@@ -1598,7 +1615,7 @@ The tab-completion behaviour can be tuned with a bitfield passed to
 
 \end{description}
 
-Example: enable keyword-ambiguity detection alongside the default show flag:
+Example: enable keyword-ambiguity detection together with the show flag:
 \begin{verbatim}
 cligen_tabmode_set(h, CLIGEN_TABMODE_SHOW | CLIGEN_TABMODE_KEYWORD_AMBIG);
 \end{verbatim}
@@ -1763,9 +1780,10 @@ The history callback may be used to log CLI commands or in other ways mirror com
 
 \begin{verbatim}
    int
-   history_cb(cligen_handle h, char *cmd, void *arg)
+   history_cb(cligen_handle h, const char *cmd, const char *cmd_expanded, void *arg)
    {
-      return syslog(LOG_MAKEPRI(LOG_USER, LOG_INFO), "CLI command:%s", cmd);
+      syslog(LOG_MAKEPRI(LOG_USER, LOG_INFO), "CLI command:%s", cmd);
+      return 0;
    }
 \end{verbatim}
 
@@ -1820,7 +1838,7 @@ Ctrl + A & Go to beginning of line & \\
 \hline
 Ctrl + B & One char backwards & \\
 \hline
-Ctrl + C & Exit CLI & Add extra w cligen\_exitchar\_add().\\
+Ctrl + C & Exit CLI & Add extra exit chars with {\tt cligen\_exitchar\_add()}.\\
 \hline
 Ctrl + D & End-of-file. & Exit if at beginning of line \\
 \hline
@@ -1880,32 +1898,32 @@ The full default preference table is as follows:
   \textbf{ Type} & \textbf{Preference} \\
 \hline
 command           & $100$  \\
-time              & $74$   \\
+time              & $75$   \\
 uuid              & $73$   \\
 macaddr           & $72$   \\
 ipv6addr          & $71$   \\
 ipv4addr          & $70$   \\
 decimal64         & $62$   \\
-int8 (range)      & $60$   \\
-uint8 (range)     & $59$   \\
-int16 (range)     & $58$   \\
-uint16 (range)    & $57$   \\
-int32 (range)     & $56$   \\
-uint32 (range)    & $55$   \\
-int64 (range)     & $54$   \\
-uint64 (range)    & $53$   \\
+int8 (range)      & $52$   \\
 int8              & $52$   \\
+uint8 (range)     & $51$   \\
 uint8             & $51$   \\
+int16 (range)     & $50$   \\
 int16             & $50$   \\
+uint16 (range)    & $49$   \\
 uint16            & $49$   \\
+int32 (range)     & $48$   \\
 int32             & $48$   \\
+uint32 (range)    & $47$   \\
 uint32            & $47$   \\
+int64 (range)     & $46$   \\
 int64             & $46$   \\
+uint64 (range)    & $45$   \\
 uint64            & $45$   \\
 url               & $20$   \\
-interface         & $14$   \\
-bool              & $12$   \\
-string (expand)   & $10$   \\
+interface         & $18$   \\
+bool              & $16$   \\
+string (expand)   & $14$   \\
 string (regexp)   & $8$    \\
 string            & $6$    \\
 command (partial) & $3$    \\
@@ -1913,11 +1931,11 @@ rest              & $1$    \\
 \hline
 \end{tabular}
 
-Note that integers with ranges have higher preference than integers lacking ranges.
+Note that integers with ranges have the same preference as integers lacking ranges.
 
-Also, expanded strings have higher regexp:s than strings with regexp:s and regular strings.
+Also, expanded strings have higher preference than strings with regexp:s and regular strings.
 
-Note also that ``command'' occurs twice, first as exact command match with preference $100$, second as partial matchwith preference $3$.
+Note also that ``command'' occurs twice, first as exact command match with preference $100$, second as partial match with preference $3$.
 
 
 \end{document}
