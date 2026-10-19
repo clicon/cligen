@@ -9,6 +9,11 @@ fspec=$dir/spec.cli
 
 lines='"line6 def", "line7 def", "line1 abc", "line2 abc", "line3 abc", "line4 abc", "line5 def"'
 
+# Large output: every line matches grep, total much larger than the socketpair buffer
+biglines=""
+for i in $(seq 1 30000); do biglines="$biglines\"line$i abc xxxxxxxxxxxxxxxxxxxx\", "; done
+biglines="${biglines}\"last abc\""
+
 cat > $fspec <<EOF
   prompt="cli> ";              # Assignment of prompt
   comment="#";                 # Same comment as in syntax
@@ -24,6 +29,7 @@ cat > $fspec <<EOF
   }
   set4 @treeref;
   set5 <string>, callback();
+  big, output_fn($biglines);
 
   treename="|mypipe";
   pipetree="";
@@ -91,6 +97,13 @@ expectpart "$(echo "set5 (lag\\\|hostif)-*" | $cligen_file -f $fspec 2>&1)" 0 "v
 
 newtest "Escaped vertical bar quotes"
 expectpart "$(echo "set5 \"(lag|hostif)-*\"" | $cligen_file -f $fspec 2>&1)" 0 "value:(lag|hostif)-*"
+
+# Pipe child output larger than the socket buffer must not deadlock with the writer
+newtest "Large output: grep matching every line"
+expectpart "$(echo "big \| grep abc" | timeout 30 $cligen_file -f $fspec 2>&1 | grep -c xxxxxxxx)" 0 "30000"
+
+newtest "Large output: cat"
+expectpart "$(echo "big \| cat" | timeout 30 $cligen_file -f $fspec 2>&1 | grep -c xxxxxxxx)" 0 "30000"
 
 newtest "endtest"
 endtest
