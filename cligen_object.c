@@ -367,20 +367,21 @@ co_filter_set(cg_obj *co,
  * Prefer more specific commands/variables  if you have to choose from several.
  * @param[in] co   Cligen obe
  * @retval    pref Preference: positive integer
- * The preference is (higher more preferred):
+ * The preference is (higher more preferred), see COV_PREF_* in cligen_object.h:
  * command / keyword
- * (ip|mac)
+ * time, uuid, macaddr, ipv6addr, ipv4addr
  * decimal64
- * int8 with range , uint8 with range
- * ...
- * int64 with range , uint64 with range
  * int8 , uint8
  * ...
  * int64 , uint64
+ * url
  * interface
- * regexp
+ * bool
+ * string with expand
+ * string with regexp
  * string
  * rest
+ * Integers with range have the same preference as integers without range.
  * Note in a choice: <int32>|<uint16>, uint16 is preferred.
  * XXX: It does not cover: <int32 range:0-12>|<int32 range:6-18>
  */
@@ -393,7 +394,7 @@ cov_pref(cg_obj *co)
     case CGV_ERR:
         pref = COV_PREF_ERROR; /* Invalid */
         break;
-        /* ints in range 22-60 */
+        /* ints in range 45-52 */
     case CGV_INT8:
         if (co->co_rangelen)
             pref = COV_PREF_INT8_RANGE;
